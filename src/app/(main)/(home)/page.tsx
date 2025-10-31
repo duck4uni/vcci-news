@@ -35,25 +35,11 @@ const Home = () => {
     filters: submitSearch ? `title @=${submitSearch}` : undefined,
   })
 
-  console.log(BASE_URL.imageEndpoint, allData?.responseData.rows[0]?.thumbnail)
-
-  // //tab filter
-  let data
-  if (tab === 'all') {
-    data = allData
-  } else {
-    // fillter by category
-    const filteredRows = allData?.responseData?.rows?.filter(
-      (news) => news.category === tab
-    )
-    data = {
-      ...allData,
-      responseData: {
-        ...allData?.responseData,
-        rows: filteredRows ?? []
-      }
-    }
-  }
+  //tab filter
+  const rows = allData?.responseData?.rows ?? [];
+  const filteredRows = tab === 'all'
+    ? rows
+    : rows.filter(news => news.category === tab);
 
   // update slidesPerView on resize to match the Swiper breakpoints
   useEffect(() => {
@@ -139,7 +125,7 @@ const Home = () => {
                   setCurrentIndex(typeof swiper.realIndex === 'number' ? swiper.realIndex : swiper.activeIndex)
                 }}
               >
-                {allData?.responseData.rows.map((news) => (
+                {allData?.responseData?.rows.map((news) => (
                   <SwiperSlide key={news.id}>
                     <a href={`/tin-tuc/${news.id}`} className='block bg-white shadow-md overflow-hidden relative'>
                       <img
@@ -205,7 +191,7 @@ const Home = () => {
 
                   {/* News list */}
                   <div className='pb-5 overflow-hidden'>
-                    {data?.responseData.rows.slice(0, 5).map((news) => (
+                    {allData?.responseData.rows.slice(0, 5).map((news) => (
                       <NewsContent key={news.id} news={news} />
                     ))}
                   </div>
@@ -249,7 +235,7 @@ const Home = () => {
                 </div>
                 {/* News list */}
                 <div className='w-[50%] pb-5 overflow-hidden'>
-                  {data?.responseData.rows.slice(0, 5).map((news) => (
+                  {allData?.responseData.rows.slice(0, 5).map((news) => (
                     <NewsContent key={news.id} news={news} />
                   ))}
                 </div>
@@ -287,7 +273,7 @@ const Home = () => {
               </div>
 
               <div className='pt-5'>
-                {data?.responseData.rows.slice(0, 5).map((news) => (
+                {allData?.responseData.rows.slice(0, 5).map((news) => (
                   <NewsContent key={news.id} news={news} />
                 ))}
               </div>
@@ -306,7 +292,7 @@ const Home = () => {
               </div>
 
               <div className='pt-5'>
-                {data?.responseData.rows.slice(0, 5).map((news) => (
+                {allData?.responseData.rows.slice(0, 5).map((news) => (
                   <NewsContent key={news.id} news={news} />
                 ))}
               </div>

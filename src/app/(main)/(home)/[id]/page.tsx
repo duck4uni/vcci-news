@@ -1,3 +1,5 @@
+'use client'
+
 //Core
 import dayjs from 'dayjs'
 
@@ -5,47 +7,36 @@ import dayjs from 'dayjs'
 import { Spinner } from '@/components/ui'
 import AppEditorContent from '@/components/shared/editor-content'
 import BASE_URLS from '@/links'
-// import { useGetNewsId } from '#/api/endpoints/news';
-import { NewsAdminItem } from '@/api/types/news';
+import { useGetNewsId } from '@/api/endpoints/news';
+import { GetNewsDetailResponseType } from './page.type';
 import { Link, CalendarFold, Book } from 'lucide-react';
+import { useEffect, useMemo } from 'react';
+import { useParams } from 'next/navigation'
 // import { t } from 'i18next'
 
 // Component
-const NewsDetailPage = (params: { id: string }) => {
+const NewsDetailPage = () => {
+  const { id } = useParams()
 
   // server
-  // const { data, isLoading, isError } = useGetNewsId<NewsAdminItem>(getIdFormUrl)
+  const { data, isLoading } = useGetNewsId<GetNewsDetailResponseType>(id as string)
 
   // const { t, i18n } = useTranslation('newsPage')
-  // const { routeParams, data } = usePageContext()
   // const { newsDetail, fallbackClient } = data as Data
   // const lang = i18n.language == 'vi' ? 'vi' : 'vi'
-
-  // const infoNews = useMemo(() => {
-  //   if (!fallbackClient) return newsDetail?.responseData
-  //   if (!getNewsIdQuery.data) return
-  //   return getNewsIdQuery.data.responseData
-  // }, [newsDetail?.responseData, fallbackClient, getNewsIdQuery.data])
-
-  // Effects
-  // useEffect(() => {
-  //   // Update document title
-  //   infoNews?.title && (document.title = infoNews.title)
-  // }, [infoNews])
-
-  const isLoading = false;
+  console.log('newsDetail', data);
 
   // Template
   return (
-    <div className='user-news-detail-page pb-10'>
+    <div className='pb-10'>
       {isLoading ? (
         <Spinner />
       ) : (
         <div>
           {/* Banner */}
-          <img src={`${BASE_URLS.imageEndpoint}${data?.responseData?.thumbnail}`} alt='Banner' />
+          <img className='w-full h-100' src={`${BASE_URLS.imageEndpoint}${data?.responseData?.thumbnail}`} alt='Banner' />
           {/* Breadcrumb  */}
-          <div className='app-container py-10'>
+          <div className='container py-10'>
             <div className='flex gap-4 items-stretch'>
               {/* <Breadcrumbs aria-label='breadcrumb'>
                 <Link
@@ -75,9 +66,9 @@ const NewsDetailPage = (params: { id: string }) => {
             </div>
           </div>
 
-          <div className='app-container bg-white rounded p-10 flex flex-col gap-10'>
+          <div className='container bg-gray-100 rounded p-10 flex flex-col gap-10'>
             {/* Heading */}
-            <div className='text-app-blue text-[32px] leading-normal font-medium text-center'>{data?.responseData?.title}</div>
+            <div className='text-blue-900 text-[32px] leading-normal font-medium text-center'>{data?.responseData?.title}</div>
 
             {/* body */}
             <div className='flex items-start gap-8 flex-col lg:flex-row'>
