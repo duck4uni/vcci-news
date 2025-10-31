@@ -58,7 +58,7 @@ function Header() {
 
       <div className="sticky top-0 z-50 bg-[#ededed] shadow-md">
         <div className="max-w-[1200px] m-auto">
-          <div className="w-full flex justify-between">
+          <div className="w-full flex justify-between items-center">
             {/* Logo */}
             <a href="/" className="flex items-center">
               <Image
@@ -170,7 +170,7 @@ function Header() {
             {/* Mobile Button */}
             <button
               onClick={() => setToggleMenu((prev) => !prev)}
-              className="lg:hidden p-2 bg-[#063e8e] text-white rounded-sm"
+              className="lg:hidden h-10 p-2 bg-[#063e8e] text-white rounded-sm mr-5"
             >
               {toggleMenu ? <X size={20} /> : <Menu size={20} />}
             </button>
