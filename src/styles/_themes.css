@@ -3,7 +3,7 @@
 @theme inline {
   /* Fonts */
   --font-reddit-sans: RedditSans, sans-serif;
-  --default-font-family: 'SF Pro Display', -apple-system;
+  --default-font-family: 'Roboto', sans-serif;
   /* Border Radius */
   --radius-lg: hsl(var(--radius));
   --radius-md: calc(var(--radius) - 2px);
