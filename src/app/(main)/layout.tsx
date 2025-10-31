@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import './styles.css'
-import{Providers} from './_providers'
-import React from 'react'
-
-
+import React from "react";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,13 +11,5 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
-  return (
-    <html lang="en">
-      <body
-      >
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+  return <main className="w-full">{children}</main>;
 }
