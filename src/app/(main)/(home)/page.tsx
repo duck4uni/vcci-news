@@ -24,29 +24,29 @@ const Home = () => {
   const swiperRef = useRef<SwiperType | null>(null)
 
   // server
-  const { data: categoryData } = useGetCategory<GetCategoryAdminResponseType>();
-  const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
-    pageSize: '999',
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
-  })
+  // const { data: categoryData } = useGetCategory<GetCategoryAdminResponseType>();
+  // const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
+  //   pageSize: '999',
+  //   filters: submitSearch ? `title @=${submitSearch}` : undefined,
+  // })
 
   //tab filter
-  let data
-  if (tab === 'all') {
-    data = allData
-  } else {
-    // fillter by category
-    const filteredRows = allData?.responseData?.rows?.filter(
-      (news) => news.category === tab
-    )
-    data = {
-      ...allData,
-      responseData: {
-        ...allData?.responseData,
-        rows: filteredRows ?? []
-      }
-    }
-  }
+  // let data
+  // if (tab === 'all') {
+  //   data = allData
+  // } else {
+  //   // fillter by category
+  //   const filteredRows = allData?.responseData?.rows?.filter(
+  //     (news) => news.category === tab
+  //   )
+  //   data = {
+  //     ...allData,
+  //     responseData: {
+  //       ...allData?.responseData,
+  //       rows: filteredRows ?? []
+  //     }
+  //   }
+  // }
 
   // update slidesPerView on resize to match the Swiper breakpoints
   useEffect(() => {
@@ -112,7 +112,7 @@ const Home = () => {
                   setCurrentIndex(typeof swiper.realIndex === 'number' ? swiper.realIndex : swiper.activeIndex)
                 }}
               >
-                {allData?.responseData.rows.map((news) => (
+                {/* {allData?.responseData.rows.map((news) => (
                   <SwiperSlide key={news.id}>
                     <a href={`/tin-tuc/${news.id}`} className='block bg-white shadow-md overflow-hidden relative'>
                       <AppImage
@@ -134,7 +134,7 @@ const Home = () => {
                       </div>
                     </a>
                   </SwiperSlide>
-                ))}
+                ))} */}
 
                 <SwiperSlide>
                   <a href={`#`} className='block bg-white shadow-md overflow-hidden relative'>
@@ -200,7 +200,7 @@ const Home = () => {
                   </div>
 
                   {/* News list */}
-                  <div className='pb-5 overflow-hidden'>
+                  {/* <div className='pb-5 overflow-hidden'>
                     {data?.responseData.rows.slice(0, 5).map((news) => (
                       <NewsContent key={news.id} news={news} />
                     ))}
@@ -215,7 +215,7 @@ const Home = () => {
                         }}
                       />
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             </div>
