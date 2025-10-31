@@ -26,7 +26,8 @@
       "@lib/*": ["./lib/*"],
       "@public/*": ["./public/*"],
       "@store/*": ["./src/store/*"],
-      "@links/*": ["./src/links/*"]
+      "@links/*": ["./src/links/*"],
+      "@app/*": ["./src/app/(main)/*"]
 
 
     }
