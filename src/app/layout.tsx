@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import './styles.css'
-import{Providers} from './_providers'
-import React from 'react'
-
-
+import { Geist, Geist_Mono } from "next/font/google";
+import "./styles.css";
+import { Providers } from "./_providers";
+import React from "react";
+import Header from "@/components/ui/layout/header";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,12 +15,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   return (
     <html lang="en">
       <body
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <Header />
+          {children}
+        </Providers>
       </body>
     </html>
   );
