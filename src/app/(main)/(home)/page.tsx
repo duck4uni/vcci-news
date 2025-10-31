@@ -81,6 +81,7 @@ const Home = () => {
         {/* Banner */}
         <Swiper
           modules={[Autoplay]}
+          // navigation
           autoplay={{ delay: 4000, disableOnInteraction: false }}
           loop
           slidesPerView={1}
@@ -123,7 +124,6 @@ const Home = () => {
               <Swiper
                 modules={[Autoplay]}
                 // navigation
-                // pagination={{ clickable: true }}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 loop
                 spaceBetween={30}
@@ -187,7 +187,7 @@ const Home = () => {
                   {/* category tabs */}
                   <div className='flex mb-5 flex-wrap justify-between'>
                     <button
-                      className={`w-22 cursor-pointer px-4 py-1 rounded-md border ${'all' === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                      className={`w-22 cursor-pointer hover:bg-border-blue-700 hover:bg-blue-50 px-4 py-1 rounded-md border ${'all' === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
                       onClick={() => setTab('all')}
                     >
                       Tất cả
@@ -195,7 +195,7 @@ const Home = () => {
                     {categoryData?.responseData.rows.slice(0, 3).map((category) => (
                       <button
                         key={category.id}
-                        className={`w-22 cursor-pointer px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                        className={`w-22 cursor-pointer hover:bg-border-blue-700 hover:bg-blue-50 px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
                         onClick={() => setTab(category.name)}
                       >
                         {category.name}
