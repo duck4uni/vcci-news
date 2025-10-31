@@ -27,13 +27,43 @@ AXIOS_INSTANCE.interceptors.response.use(
   (error) => Promise.reject(error)
 )
 
-const useCustomClient = <T>(config: AxiosRequestConfig, options?: AxiosRequestConfig): Promise<T> => {
+// Helper function to convert RequestInit headers to Axios format
+const convertHeaders = (headers?: HeadersInit): Record<string, string> | undefined => {
+  if (!headers) return undefined
+  
+  if (headers instanceof Headers) {
+    const result: Record<string, string> = {}
+    headers.forEach((value, key) => {
+      result[key] = value
+    })
+    return result
+  }
+  
+  if (Array.isArray(headers)) {
+    const result: Record<string, string> = {}
+    headers.forEach(([key, value]) => {
+      result[key] = value
+    })
+    return result
+  }
+  
+  return headers as Record<string, string>
+}
+
+const useCustomClient = <T>(url: string, options?: RequestInit): Promise<T> => {
   const source = Axios.CancelToken.source()
-  const promise = AXIOS_INSTANCE({
-    ...config,
-    ...options,
+  
+  // Convert RequestInit to AxiosRequestConfig
+  const axiosConfig: AxiosRequestConfig = {
+    url,
+    method: options?.method || 'GET',
+    headers: convertHeaders(options?.headers),
+    data: options?.body,
+    signal: options?.signal || undefined,
     cancelToken: source.token
-  }).then(({ data, status }) => {
+  }
+
+  const promise = AXIOS_INSTANCE(axiosConfig).then(({ data, status }) => {
     return data instanceof Blob ? data : { ...data, statusCode: status }
   })
 
