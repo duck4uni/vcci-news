@@ -9,9 +9,7 @@ import { Swiper as SwiperType } from 'swiper/types'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { id, is, th } from 'zod/v4/locales'
 import NewsContent from './components/news-content/NewsContent'
-import { extend } from 'dayjs'
 
 const Home = () => {
   // states
