@@ -6,17 +6,15 @@ import { Spinner } from '@/components/ui'
 import AppEditorContent from '@/components/shared/editor-content'
 import BASE_URLS from '@/links'
 // import { useGetNewsId } from '#/api/endpoints/news';
-import { GetNewsDetailResponseType } from './page.type.js';
+import { NewsAdminItem } from '@/api/types/news';
 import { Link, CalendarFold, Book } from 'lucide-react';
 // import { t } from 'i18next'
 
 // Component
-const NewsDetailPage = () => {
-  // get id form url
-  const getIdFormUrl = window.location.pathname.split('/tin-tuc/').pop() || ''
+const NewsDetailPage = (params: { id: string }) => {
 
   // server
-  // const { data, isLoading, isError } = useGetNewsId<GetNewsDetailResponseType>(getIdFormUrl)
+  // const { data, isLoading, isError } = useGetNewsId<NewsAdminItem>(getIdFormUrl)
 
   // const { t, i18n } = useTranslation('newsPage')
   // const { routeParams, data } = usePageContext()
