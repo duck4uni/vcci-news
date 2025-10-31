@@ -1,0 +1,93 @@
+@layer components {
+  /* Header */
+  .header-base {
+    @apply z-20;
+  }
+
+  .header-sticky {
+    @apply sticky top-0;
+  }
+
+  .header-fixed {
+    @apply fixed top-0 right-0 left-0;
+  }
+
+  /* Scrollbar */
+  .scrollbar {
+    @apply [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-400/60 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400 [&::-webkit-scrollbar-track]:bg-transparent;
+  }
+
+  .list-screen-filter-container {
+    @apply flex flex-col items-stretch justify-between gap-6 xl:flex-row xl:items-start;
+  }
+
+  /* Typography */
+  .typography-h1 {
+    @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+  }
+
+  .typography-h2 {
+    @apply scroll-m-20 border-b pb-2 text-3xl font-semibold tracking-tight first:mt-0;
+  }
+
+  .typography-h3 {
+    @apply scroll-m-20 text-2xl font-semibold tracking-tight;
+  }
+
+  .typography-h4 {
+    @apply scroll-m-20 text-xl font-semibold tracking-tight;
+  }
+
+  .typography-p {
+    @apply leading-7 [&:not(:first-child)]:mt-6;
+  }
+
+  .typography-table {
+    @apply my-6 w-full overflow-y-auto;
+
+    table {
+      @apply w-full;
+
+      tr {
+        @apply even:bg-muted m-0 border-t p-0;
+      }
+
+      th,
+      td {
+        @apply border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right;
+      }
+
+      th {
+        @apply font-bold;
+      }
+    }
+  }
+
+  .typography-blockquote {
+    @apply mt-6 border-l-2 pl-6 italic;
+  }
+
+  .typography-list {
+    @apply my-6 ml-6 list-disc [&>li]:mt-2;
+  }
+
+  .typography-inline-code {
+    @apply bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold;
+  }
+
+  .typography-lead {
+    @apply text-muted-foreground text-xl;
+  }
+
+  .typography-large {
+    @apply text-lg font-semibold;
+  }
+
+  .typography-small {
+    @apply text-sm leading-none font-medium;
+  }
+
+  .typography-muted {
+    @apply text-muted-foreground text-sm;
+  }
+}

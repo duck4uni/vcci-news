@@ -1,0 +1,15 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Configs */
+@import './_base.css';
+@import './_themes.css';
+@import './_components.css';
+@import './_utilities.css';
+
+/* Plugins */
+@plugin "tailwindcss-animate";
+
+/* Source */
+@source "../../modules/ui";

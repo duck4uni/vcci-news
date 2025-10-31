@@ -1,0 +1,67 @@
+@import 'tailwindcss/theme' layer(theme);
+
+@theme inline {
+  /* Fonts */
+  --font-reddit-sans: RedditSans, sans-serif;
+  --default-font-family: 'SF Pro Display', -apple-system;
+  /* Border Radius */
+  --radius-lg: hsl(var(--radius));
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Colors */
+  /* Containers */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  /* Cards */
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  /* Popovers */
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  /* Primaries */
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  /* Secondaries */
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  /* Muted */
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  /* Accent */
+  --color-accent: hsl(var(--accent));
+  --color-accent-secondary: hsl(var(--accent-secondary));
+  --color-accent-table-header: hsl(var(--accent-table-header));
+  --color-accent-table-header-foreground: hsl(var(--accent-table-header-foreground));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-information: hsl(var(--accent-information));
+  /* Destructive */
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  /* Success */
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  /* Border */
+  --color-border: hsl(var(--border));
+  /* Input */
+  --color-input: hsl(var(--input));
+  /* Ring */
+  --color-ring: hsl(var(--ring));
+  /* Chart */
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+  /* Sidebar */
+  --color-sidebar: hsl(var(--sidebar-background));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-side-bar-primary: hsl(var(--sidebar-primary));
+  --color-side-bar-primary-foreground: hslvar(--sidebar-primary-foreground);
+  --color-side-bar-accent: hsl(var(--sidebar-accent));
+  --color-side-bar-accent-foreground: hslvar(--sidebar-accent-foreground);
+  --color-side-bar-border: hsl(var(--sidebar-border));
+  --color-side-bar-ring: hsl(var(--sidebar-ring));
+  /* Header */
+  --color-header-primary: hsl(var(--header-primary));
+}
