@@ -9,7 +9,9 @@ import { Swiper as SwiperType } from 'swiper/types'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
-import { is } from 'zod/v4/locales'
+import { id, is, th } from 'zod/v4/locales'
+import NewsContent from './components/news-content/NewsContent'
+import { extend } from 'dayjs'
 
 const Home = () => {
   // states
@@ -63,8 +65,75 @@ const Home = () => {
     return () => window.removeEventListener('resize', update)
   }, [])
 
-  // demo
+  //demo
   const isLoading = false
+  const allData = {
+    responseData: {
+      rows: [
+        {
+          id: 1,
+          title: 'News Title 1',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
+        },
+        {
+          id: 2,
+          title: 'News Title 2',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
+        },
+        {
+          id: 3,
+          title: 'News Title 3',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
+        },
+        {
+          id: 4,
+          title: 'News Title 4',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
+        },
+        {
+          id: 5,
+          title: 'News Title 5',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
+        }
+      ]
+    }
+  }
+  const data = {
+    responseData: {
+      rows: [
+        {
+          id: '1',
+          title: 'News Title 1',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ=',
+          external_link: 'https://vcci-hcm.org.vn/asdfasdf',
+          description: 'Description for News Title 1',
+          release_at: '2023-10-01',
+          is_active: true,
+          created_at: '2023-09-01',
+          created_by: 'Admin',
+          updated_at: '2023-09-02',
+          updated_by: 'Admin',
+          mode: 'NOW',
+          category: 'General'
+        },
+        {
+          id: '2',
+          title: 'News Title 2',
+          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ=',
+          external_link: 'https://vcci-hcm.org.vn/asdfasdf',
+          description: 'Description for News Title 2',
+          release_at: '2023-10-01',
+          is_active: true,
+          created_at: '2023-09-01',
+          created_by: 'Admin',
+          updated_at: '2023-09-02',
+          updated_by: 'Admin',
+          mode: 'NOW',
+          category: 'General'
+        }
+      ]
+    }
+  }
 
   //template
   return (
@@ -80,7 +149,7 @@ const Home = () => {
           alt="Banner"
           className='w-full'
         />
-        <div className='app-container'>
+        <div className='container'>
           {/* Featured News */}
           <div className='pt-10'>
             <div className='flex justify-center items-center w-full text-center'>
@@ -112,11 +181,12 @@ const Home = () => {
                   setCurrentIndex(typeof swiper.realIndex === 'number' ? swiper.realIndex : swiper.activeIndex)
                 }}
               >
-                {/* {allData?.responseData.rows.map((news) => (
+                {allData?.responseData.rows.map((news) => (
                   <SwiperSlide key={news.id}>
                     <a href={`/tin-tuc/${news.id}`} className='block bg-white shadow-md overflow-hidden relative'>
-                      <AppImage
-                        src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
+                      <img
+                        // src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
+                        src={`${news.thumbnail}`}
                         alt={news.title}
                         className='w-full h-48 sm:h-56 md:h-64 object-cover'
                       />
@@ -134,29 +204,7 @@ const Home = () => {
                       </div>
                     </a>
                   </SwiperSlide>
-                ))} */}
-
-                <SwiperSlide>
-                  <a href={`#`} className='block bg-white shadow-md overflow-hidden relative'>
-                    <img
-                      src={`https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ=`}
-                      alt={'image'}
-                      className='w-full h-48 sm:h-56 md:h-64 object-cover'
-                    />
-                    <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white px-4 font-semibold text-base rounded-b-xl flex items-center justify-center text-center h-16 md:h-20'>
-                      <div
-                        className='w-full overflow-hidden'
-                        style={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical'
-                        }}
-                      >
-                        title
-                      </div>
-                    </div>
-                  </a>
-                </SwiperSlide>
+                ))}
               </Swiper>
             </div>
           </div>
@@ -200,12 +248,12 @@ const Home = () => {
                   </div>
 
                   {/* News list */}
-                  {/* <div className='pb-5 overflow-hidden'>
+                  <div className='pb-5 overflow-hidden'>
                     {data?.responseData.rows.slice(0, 5).map((news) => (
                       <NewsContent key={news.id} news={news} />
                     ))}
 
-                    <div className='w-full flex justify-center mt-4'>
+                    {/* <div className='w-full flex justify-center mt-4'>
                       <AppPagination
                         page={Math.floor(currentIndex / Math.max(slidesPerView, 1)) + 1}
                         count={Math.ceil((data?.responseData.rows?.length ?? 0) / Math.max(slidesPerView, 1))}
@@ -214,8 +262,8 @@ const Home = () => {
                           swiperRef.current?.slideTo(toIndex)
                         }}
                       />
-                    </div>
-                  </div> */}
+                    </div> */}
+                  </div>
                 </div>
               </div>
             </div>

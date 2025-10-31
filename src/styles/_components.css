@@ -1,4 +1,5 @@
 @layer components {
+
   /* Header */
   .header-base {
     @apply z-20;
