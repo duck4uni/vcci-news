@@ -4,24 +4,24 @@ import dayjs from 'dayjs';
 import AppEditorContent from '@/components/shared/editor-content';
 
 function NewsContent({ news }: { news: NewsAdminItem }) {
-
   return (
     <a
-      href={`/tin-tuc/${news.id}`}
-      className='flex flex-col sm:flex-row gap-4 mb-3 bg-white rounded-lg shadow-sm p-3'
+      href={`${news.id}`}
+      className='flex flex-col sm:flex-row gap-3 mb-3 bg-gray-100 rounded-md p-3'
     >
       <img
-        // src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
-        src={news.thumbnail}
+        src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
-        className='w-full sm:w-[120px] h-[80px] object-cover rounded-sm'
+        className='w-full sm:w-[120px] h-20 object-cover rounded-sm'
       />
       <div className='flex-1'>
-        <p className='text-[#0056b3] font-semibold text-base hover:underline line-clamp-2'>
+        <p className='text-[#0056b3] font-bold text-sm line-clamp-2'>
           {news.title}
         </p>
-        <div className='text-gray-500 text-sm my-1'>{dayjs(news.release_at).format('DD/MM/YYYY')}</div>
-        {/* <AppEditorContent className='line-clamp-4' value={news.description} />   */}
+        <p className='text-gray-500 text-sm my-1'>
+          {dayjs(news.release_at).format('DD/MM/YYYY')}
+        </p>
+        {/* <AppEditorContent className='line-clamp-2' value={news.description} /> */}
       </div>
     </a>
   );

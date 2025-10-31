@@ -35,6 +35,8 @@ const Home = () => {
     filters: submitSearch ? `title @=${submitSearch}` : undefined,
   })
 
+  console.log(BASE_URL.imageEndpoint, allData?.responseData.rows[0]?.thumbnail)
+
   // //tab filter
   let data
   if (tab === 'all') {
@@ -77,15 +79,38 @@ const Home = () => {
     ) : (
       <>
         {/* Banner */}
-        <img
-          src="https://vcci-hcm.org.vn/wp-content/uploads/2025/10/1.1.-Hero-Banner-CEO-2025-Bi-Sai-Nam-2025-Nhe-2560x720-Px.jpg"
-          alt="Banner"
-          className='w-full'
-        />
+        <Swiper
+          modules={[Autoplay]}
+          autoplay={{ delay: 4000, disableOnInteraction: false }}
+          loop
+          slidesPerView={1}
+          onSwiper={(swiper) => {
+            swiperRef.current = swiper
+          }}
+          onSlideChange={(swiper) => {
+            setCurrentIndex(typeof swiper.realIndex === 'number' ? swiper.realIndex : swiper.activeIndex)
+          }}
+        >
+          <SwiperSlide>
+            <img
+              src="https://vcci-hcm.org.vn/wp-content/uploads/2025/10/1.1.-Hero-Banner-CEO-2025-Bi-Sai-Nam-2025-Nhe-2560x720-Px.jpg"
+              alt="Banner"
+              className='w-full'
+            />
+          </SwiperSlide>
+          <SwiperSlide>
+            <img
+              src="https://vcci-hcm.org.vn/wp-content/uploads/2022/07/Landscape-HCM_3-01.png"
+              alt="Banner"
+              className='w-full'
+            />
+          </SwiperSlide>
+        </Swiper>
+
         <div className='container'>
           {/* Featured News */}
-          <div className='pt-10'>
-            <div className='flex justify-center items-center w-full text-center'>
+          <div>
+            <div className='flex py-10 justify-center items-center w-full text-center'>
               <hr className='border-blue-900 w-full' />
               <h1 className='text-app-blue text-[28px] leading-normal uppercase font-bold w-full text-blue-900'>
                 Tin Nổi Bật
@@ -94,14 +119,14 @@ const Home = () => {
             </div>
 
             {/* slider */}
-            <div className='py-10'>
+            <div>
               <Swiper
                 modules={[Autoplay]}
                 // navigation
                 // pagination={{ clickable: true }}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 loop
-                spaceBetween={20}
+                spaceBetween={30}
                 breakpoints={{
                   0: { slidesPerView: 1 },
                   640: { slidesPerView: 2 },
@@ -122,13 +147,13 @@ const Home = () => {
                         alt={news.title}
                         className='w-full h-48 sm:h-56 md:h-64 object-cover'
                       />
-                      <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white px-4 font-semibold text-base rounded-b-xl flex items-center justify-center text-center h-16 md:h-20'>
+                      <div className="absolute bottom-0 left-0 right-0 h-20 bg-linear-to-t from-black/90 to-transparent text-white px-4 font-semibold text-base flex items-center justify-center text-center md:h-24">
                         <div
-                          className='w-full overflow-hidden'
+                          className="w-full overflow-hidden"
                           style={{
                             display: '-webkit-box',
                             WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical'
+                            WebkitBoxOrient: 'vertical',
                           }}
                         >
                           {news.title}
@@ -142,8 +167,8 @@ const Home = () => {
           </div>
 
           {/* news and quick links section */}
-          <div className='flex flex-row gap-5'>
-            <div className='w-[67%]'>
+          <div className='flex flex-row gap-[30px] py-10'>
+            <div className='w-[71%]'>
               <div>
                 <div className='flex justify-between items-center'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Tin Tức</a>
@@ -152,18 +177,17 @@ const Home = () => {
                 <hr className=' border-blue-900' />
               </div>
 
-              <div className='flex flex-row justify-center gap-5 pt-5'>
+              <div className='flex flex-row justify-center gap-[30px] pt-5'>
                 {/* special news section */}
                 <div className='bg-gray-500 w-[50%] flex items-center justify-center rounded-lg'>
                   <p className='text-white'>khung tin tức vip</p>
                 </div>
 
-                {/* news list section */}
                 <div className='w-[50%]'>
                   {/* category tabs */}
-                  <div className='flex gap-2 mb-5 flex-wrap'>
+                  <div className='flex mb-5 flex-wrap justify-between'>
                     <button
-                      className={`px-4 py-1 rounded-md border ${'all' === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                      className={`w-22 cursor-pointer px-4 py-1 rounded-md border ${'all' === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
                       onClick={() => setTab('all')}
                     >
                       Tất cả
@@ -171,7 +195,7 @@ const Home = () => {
                     {categoryData?.responseData.rows.slice(0, 3).map((category) => (
                       <button
                         key={category.id}
-                        className={`px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                        className={`w-22 cursor-pointer px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
                         onClick={() => setTab(category.name)}
                       >
                         {category.name}
@@ -190,7 +214,7 @@ const Home = () => {
             </div>
 
             {/* quick links section */}
-            <div className='w-[33%]'>
+            <div>
               <div>
                 <div className='flex justify-between items-center'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Liên kết nhanh</a>
@@ -198,7 +222,6 @@ const Home = () => {
                 </div>
                 <hr className=' border-blue-900' />
               </div>
-
               <div className='pt-5'>
                 <p>🔗 Cẩm nang Hướng dẫn đầu tư kinh doanh tại Việt Nam</p>
                 <p>🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật</p>
@@ -206,9 +229,9 @@ const Home = () => {
             </div>
           </div>
 
-          {/* news and quick links section */}
-          <div className='flex flex-row gap-5'>
-            <div className='w-[67%]'>
+          {/* content 2 */}
+          <div className='flex flex-row gap-[30px] pb-10'>
+            <div className='w-[71%]'>
               <div>
                 <div className='flex justify-between items-center'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
@@ -219,26 +242,22 @@ const Home = () => {
                 <hr className=' border-blue-900' />
               </div>
 
-              <div className='flex flex-row justify-center gap-5 pt-5'>
+              <div className='flex flex-row justify-center gap-[30px] pt-5'>
                 {/* special news section */}
                 <div className='bg-gray-500 w-[50%] flex items-center justify-center rounded-lg'>
                   <p className='text-white'>khung tin tức vip</p>
                 </div>
-
-                {/* news list section */}
-                <div className='w-[50%]'>
-                  {/* News list */}
-                  <div className='pb-5 overflow-hidden'>
-                    {data?.responseData.rows.slice(0, 5).map((news) => (
-                      <NewsContent key={news.id} news={news} />
-                    ))}
-                  </div>
+                {/* News list */}
+                <div className='w-[50%] pb-5 overflow-hidden'>
+                  {data?.responseData.rows.slice(0, 5).map((news) => (
+                    <NewsContent key={news.id} news={news} />
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* quick links section */}
-            <div className='w-[33%]'>
+            {/* calendar */}
+            <div>
               <div>
                 <div className='flex justify-between items-center'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Lịch sự kiện</a>
@@ -246,7 +265,6 @@ const Home = () => {
                 </div>
                 <hr className=' border-blue-900' />
               </div>
-
               <div className='pt-5'>
                 <p>🔗 Cẩm nang Hướng dẫn đầu tư kinh doanh tại Việt Nam</p>
                 <p>🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật</p>
@@ -254,20 +272,21 @@ const Home = () => {
             </div>
           </div>
 
-          {/* news and quick links section */}
-          <div className='flex flex-row gap-5'>
+          {/* content 3 */}
+          <div className='flex flex-row gap-[30px] pb-10'>
             {/* Cơ hội kinh doanh */}
-            <div className='flex flex-col w-[33%]'>
-              <div className='flex flex-row gap-5'>
+            <div className='flex flex-col'>
+              <div>
                 <div className='flex justify-between items-center w-full'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
                     Cơ hội kinh doanh
                   </a>
                   <a href='#' className='text-blue-900'>{'>>'}</a>
                 </div>
+                <hr className=' border-blue-900' />
               </div>
-              <hr className=' border-blue-900' />
-              <div>
+
+              <div className='pt-5'>
                 {data?.responseData.rows.slice(0, 5).map((news) => (
                   <NewsContent key={news.id} news={news} />
                 ))}
@@ -275,24 +294,25 @@ const Home = () => {
             </div>
 
             {/* Chính sách & pháp luật */}
-            <div className='flex flex-col w-[33%]'>
-              <div className='flex flex-row gap-5'>
+            <div className='flex flex-col'>
+              <div>
                 <div className='flex justify-between items-center w-full'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
                     Chính sách & pháp luật
                   </a>
                   <a href='#' className='text-blue-900'>{'>>'}</a>
                 </div>
+                <hr className=' border-blue-900' />
               </div>
-              <hr className=' border-blue-900' />
-              <div>
+
+              <div className='pt-5'>
                 {data?.responseData.rows.slice(0, 5).map((news) => (
                   <NewsContent key={news.id} news={news} />
                 ))}
               </div>
             </div>
           </div>
-        </div>
+        </div >
       </>
     )
   )
