@@ -1,7 +1,6 @@
 'use client'
 
 import Image from 'next/image'
-import { Button, Card, Spinner } from '@/components/ui'
 import { useEffect, useRef, useState } from 'react'
 import { Autoplay } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -9,7 +8,13 @@ import { Swiper as SwiperType } from 'swiper/types'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
+import BASE_URL from '@/links/index'
 import NewsContent from './components/news-content/NewsContent'
+import { Spinner } from '@/components/ui'
+import { useGetCategory } from '@/api/endpoints/category'
+import { useGetNews } from '@/api/endpoints/news'
+import { GetCategoryAdminResponseType } from '@/api/types/category'
+import { GetNewsAdminResponseType } from '@/api/types/news'
 
 const Home = () => {
   // states
@@ -24,29 +29,29 @@ const Home = () => {
   const swiperRef = useRef<SwiperType | null>(null)
 
   // server
-  // const { data: categoryData } = useGetCategory<GetCategoryAdminResponseType>();
-  // const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
-  //   pageSize: '999',
-  //   filters: submitSearch ? `title @=${submitSearch}` : undefined,
-  // })
+  const { data: categoryData } = useGetCategory<GetCategoryAdminResponseType>();
+  const { data: allData, isLoading } = useGetNews<GetNewsAdminResponseType>({
+    pageSize: '999',
+    filters: submitSearch ? `title @=${submitSearch}` : undefined,
+  })
 
-  //tab filter
-  // let data
-  // if (tab === 'all') {
-  //   data = allData
-  // } else {
-  //   // fillter by category
-  //   const filteredRows = allData?.responseData?.rows?.filter(
-  //     (news) => news.category === tab
-  //   )
-  //   data = {
-  //     ...allData,
-  //     responseData: {
-  //       ...allData?.responseData,
-  //       rows: filteredRows ?? []
-  //     }
-  //   }
-  // }
+  // //tab filter
+  let data
+  if (tab === 'all') {
+    data = allData
+  } else {
+    // fillter by category
+    const filteredRows = allData?.responseData?.rows?.filter(
+      (news) => news.category === tab
+    )
+    data = {
+      ...allData,
+      responseData: {
+        ...allData?.responseData,
+        rows: filteredRows ?? []
+      }
+    }
+  }
 
   // update slidesPerView on resize to match the Swiper breakpoints
   useEffect(() => {
@@ -62,76 +67,6 @@ const Home = () => {
     window.addEventListener('resize', update)
     return () => window.removeEventListener('resize', update)
   }, [])
-
-  //demo
-  const isLoading = false
-  const allData = {
-    responseData: {
-      rows: [
-        {
-          id: 1,
-          title: 'News Title 1',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
-        },
-        {
-          id: 2,
-          title: 'News Title 2',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
-        },
-        {
-          id: 3,
-          title: 'News Title 3',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
-        },
-        {
-          id: 4,
-          title: 'News Title 4',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
-        },
-        {
-          id: 5,
-          title: 'News Title 5',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ='
-        }
-      ]
-    }
-  }
-  const data = {
-    responseData: {
-      rows: [
-        {
-          id: '1',
-          title: 'News Title 1',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ=',
-          external_link: 'https://vcci-hcm.org.vn/asdfasdf',
-          description: 'Description for News Title 1',
-          release_at: '2023-10-01',
-          is_active: true,
-          created_at: '2023-09-01',
-          created_by: 'Admin',
-          updated_at: '2023-09-02',
-          updated_by: 'Admin',
-          mode: 'NOW',
-          category: 'General'
-        },
-        {
-          id: '2',
-          title: 'News Title 2',
-          thumbnail: 'https://media.istockphoto.com/id/814423752/vi/anh/con-m%E1%BA%AFt-c%E1%BB%A7a-ng%C6%B0%E1%BB%9Di-m%E1%BA%ABu-v%E1%BB%9Bi-trang-%C4%91i%E1%BB%83m-ngh%E1%BB%87-thu%E1%BA%ADt-%C4%91%E1%BA%A7y-m%C3%A0u-s%E1%BA%AFc-c%E1%BA%ADn-c%E1%BA%A3nh.jpg?s=1024x1024&w=is&k=20&c=g9JektNW0igwf2u2mT9uqSLkhzR91ZYviuVLXuhy2JQ=',
-          external_link: 'https://vcci-hcm.org.vn/asdfasdf',
-          description: 'Description for News Title 2',
-          release_at: '2023-10-01',
-          is_active: true,
-          created_at: '2023-09-01',
-          created_by: 'Admin',
-          updated_at: '2023-09-02',
-          updated_by: 'Admin',
-          mode: 'NOW',
-          category: 'General'
-        }
-      ]
-    }
-  }
 
   //template
   return (
@@ -166,7 +101,7 @@ const Home = () => {
                 // pagination={{ clickable: true }}
                 autoplay={{ delay: 4000, disableOnInteraction: false }}
                 loop
-                spaceBetween={16}
+                spaceBetween={20}
                 breakpoints={{
                   0: { slidesPerView: 1 },
                   640: { slidesPerView: 2 },
@@ -183,8 +118,7 @@ const Home = () => {
                   <SwiperSlide key={news.id}>
                     <a href={`/tin-tuc/${news.id}`} className='block bg-white shadow-md overflow-hidden relative'>
                       <img
-                        // src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
-                        src={`${news.thumbnail}`}
+                        src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                         alt={news.title}
                         className='w-full h-48 sm:h-56 md:h-64 object-cover'
                       />
@@ -234,15 +168,15 @@ const Home = () => {
                     >
                       Tất cả
                     </button>
-                    {/* {categoryData?.responseData.rows.slice(0, 3).map((category) => (
-                    <button
-                      key={category.id}
-                      className={`px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
-                      onClick={() => setTab(category.name)}
-                    >
-                      {category.name}
-                    </button>
-                  ))} */}
+                    {categoryData?.responseData.rows.slice(0, 3).map((category) => (
+                      <button
+                        key={category.id}
+                        className={`px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                        onClick={() => setTab(category.name)}
+                      >
+                        {category.name}
+                      </button>
+                    ))}
                   </div>
 
                   {/* News list */}
@@ -250,17 +184,6 @@ const Home = () => {
                     {data?.responseData.rows.slice(0, 5).map((news) => (
                       <NewsContent key={news.id} news={news} />
                     ))}
-
-                    {/* <div className='w-full flex justify-center mt-4'>
-                      <AppPagination
-                        page={Math.floor(currentIndex / Math.max(slidesPerView, 1)) + 1}
-                        count={Math.ceil((data?.responseData.rows?.length ?? 0) / Math.max(slidesPerView, 1))}
-                        onChange={(_event, value) => {
-                          const toIndex = (value - 1) * Math.max(slidesPerView, 1)
-                          swiperRef.current?.slideTo(toIndex)
-                        }}
-                      />
-                    </div> */}
                   </div>
                 </div>
               </div>
@@ -283,33 +206,92 @@ const Home = () => {
             </div>
           </div>
 
-          {/* Sidebar */}
-          {/* <div className='lg:flex-1 w-full'>
-              <div className='bg-white rounded-lg p-4 mb-6 shadow-sm'>
-                <div className='font-semibold mb-2'>Tìm kiếm</div>
-                <input
-                  type='text'
-                  placeholder='Tên bài viết...'
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className='w-full p-2 border border-gray-300 rounded mb-2 focus:outline-none focus:ring-1 focus:ring-blue-500'
-                />
-                <div className='flex gap-2'>
-                  <button
-                    onClick={() => setSubmitSearch(search)}
-                    className='flex-1 bg-[#0056b3] text-white rounded p-2 font-semibold hover:bg-[#004999] transition'
-                  >
-                    Tìm kiếm
-                  </button>
-                  <button
-                    onClick={() => setSearch('')}
-                    className='flex-1 bg-gray-100 text-gray-700 rounded p-2 font-semibold hover:bg-gray-200 transition'
-                  >
-                    Bỏ tìm
-                  </button>
+          {/* news and quick links section */}
+          <div className='flex flex-row gap-5'>
+            <div className='w-[67%]'>
+              <div>
+                <div className='flex justify-between items-center'>
+                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
+                    Sự kiện sắp diễn ra
+                  </a>
+                  <a href='#' className='text-blue-900'>{'>>'}</a>
+                </div>
+                <hr className=' border-blue-900' />
+              </div>
+
+              <div className='flex flex-row justify-center gap-5 pt-5'>
+                {/* special news section */}
+                <div className='bg-gray-500 w-[50%] flex items-center justify-center rounded-lg'>
+                  <p className='text-white'>khung tin tức vip</p>
+                </div>
+
+                {/* news list section */}
+                <div className='w-[50%]'>
+                  {/* News list */}
+                  <div className='pb-5 overflow-hidden'>
+                    {data?.responseData.rows.slice(0, 5).map((news) => (
+                      <NewsContent key={news.id} news={news} />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div> */}
+            </div>
+
+            {/* quick links section */}
+            <div className='w-[33%]'>
+              <div>
+                <div className='flex justify-between items-center'>
+                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Lịch sự kiện</a>
+                  <a href='#' className='text-blue-900'>{'>>'}</a>
+                </div>
+                <hr className=' border-blue-900' />
+              </div>
+
+              <div className='pt-5'>
+                <p>🔗 Cẩm nang Hướng dẫn đầu tư kinh doanh tại Việt Nam</p>
+                <p>🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật</p>
+              </div>
+            </div>
+          </div>
+
+          {/* news and quick links section */}
+          <div className='flex flex-row gap-5'>
+            {/* Cơ hội kinh doanh */}
+            <div className='flex flex-col w-[33%]'>
+              <div className='flex flex-row gap-5'>
+                <div className='flex justify-between items-center w-full'>
+                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
+                    Cơ hội kinh doanh
+                  </a>
+                  <a href='#' className='text-blue-900'>{'>>'}</a>
+                </div>
+              </div>
+              <hr className=' border-blue-900' />
+              <div>
+                {data?.responseData.rows.slice(0, 5).map((news) => (
+                  <NewsContent key={news.id} news={news} />
+                ))}
+              </div>
+            </div>
+
+            {/* Chính sách & pháp luật */}
+            <div className='flex flex-col w-[33%]'>
+              <div className='flex flex-row gap-5'>
+                <div className='flex justify-between items-center w-full'>
+                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
+                    Chính sách & pháp luật
+                  </a>
+                  <a href='#' className='text-blue-900'>{'>>'}</a>
+                </div>
+              </div>
+              <hr className=' border-blue-900' />
+              <div>
+                {data?.responseData.rows.slice(0, 5).map((news) => (
+                  <NewsContent key={news.id} news={news} />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </>
     )
