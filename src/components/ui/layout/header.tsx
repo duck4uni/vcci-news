@@ -73,6 +73,7 @@ function Header() {
               {/* Dùng component MenuItem để gọn */}
               <MenuItem
                 title="Giới thiệu"
+                link="gioi-thieu"
                 items={[
                   "Về VCCI-HCM",
                   "Chức Năng Và Nhiệm Vụ",
@@ -82,6 +83,7 @@ function Header() {
               />
               <MenuItem
                 title="Hội viên"
+                link="hoi-vien"
                 items={[
                   "Lợi Ích Của Hội Viên VCCI",
                   "Đăng Ký Hội Viên",
@@ -92,6 +94,7 @@ function Header() {
               <MenuItem title="Hoạt động" items={["Sự Kiện", "Đào Tạo"]} />
               <MenuItem
                 title="Xuất Xứ Hàng Hóa"
+                link="xuat-xu-hang-hoa"
                 items={[
                   "Định Nghĩa Chung",
                   "Mục Đích Của C/O",
@@ -108,7 +111,7 @@ function Header() {
               <div className="group relative">
                 <a
                   className="px-3 py-5 text-[16px] font-[600] text-[#124588] hover:text-[#E8C518] transition block"
-                  href="#"
+                  href={`${"/dai-dien-gioi-chu"}`}
                 >
                   Đại Diện Giới Chủ
                 </a>
@@ -146,6 +149,7 @@ function Header() {
 
               <MenuItem
                 title="Xúc tiến thương mại"
+                link="xuc-tien-thuong-mai"
                 items={[
                   "Hồ Sơ Thị Trường",
                   "Môi Trường Kinh Doanh",
@@ -155,6 +159,7 @@ function Header() {
               />
               <MenuItem
                 title="Thông tin truyền thông"
+                link="thong-tin-truyen-thong"
                 items={[
                   "Tin VCCI",
                   "Tin Kinh Tế",
@@ -179,9 +184,8 @@ function Header() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden bg-white shadow-lg transition-all duration-300 overflow-hidden ${
-            toggleMenu ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`lg:hidden bg-white shadow-lg transition-all duration-300 overflow-hidden ${toggleMenu ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+            }`}
         >
           {[
             "Giới thiệu",
