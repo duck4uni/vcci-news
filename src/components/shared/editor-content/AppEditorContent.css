@@ -1,0 +1,13 @@
+.app-editor-container {
+  min-height: unset !important;
+  height: auto !important;
+  border: none !important;
+  border-radius: 0px !important;
+  background-color: transparent !important;
+  line-height: 1.5;
+
+  .jodit-wysiwyg {
+    padding: 0 !important;
+    overflow-x: visible !important;
+  }
+}
