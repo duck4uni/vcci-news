@@ -28,5 +28,5 @@ export interface GetNewsAdminResponseType {
   responseData: NewsAdminResponseData
   status: 'success' | 'error'
   timeStamp: string
-  violations: any | null
+  violations: string | null
 }

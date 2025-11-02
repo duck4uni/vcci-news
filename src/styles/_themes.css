@@ -3,7 +3,8 @@
 @theme inline {
   /* Fonts */
   --font-reddit-sans: RedditSans, sans-serif;
-  --default-font-family: 'Roboto', sans-serif;
+  /* Use Roboto as the default font. Ensure Roboto is loaded (e.g., via Google Fonts or local import). */
+  --default-font-family: 'Roboto', 'Helvetica Neue', Arial, system-ui, -apple-system, 'Segoe UI', 'Noto Sans', sans-serif;
   /* Border Radius */
   --radius-lg: hsl(var(--radius));
   --radius-md: calc(var(--radius) - 2px);

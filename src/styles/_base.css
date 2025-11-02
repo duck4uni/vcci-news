@@ -21,7 +21,7 @@
   /* COLOR */
   :root {
     /* Default background color of <body />...etc */
-    --background: 210 20% 98%;
+    --background: 0 0% 96%;
     --foreground: 0 0% 11%;
     --primary-orange: 36 100% 55%;
 
@@ -34,8 +34,8 @@
     --popover-foreground: 0 0% 15%;
 
     /* Primary colors for <Button /> */
-    --primary: 155 100% 12%;
-    --primary-foreground: 156 100% 99%;
+    --primary: 215 92% 29%;
+    --primary-foreground: 50 82% 50%;
     --primary-orange: 36 100% 55%;
 
     /* Secondary colors for <Button /> */
@@ -44,7 +44,7 @@
 
     /* Muted backgrounds such as <TabsList />, <Skeleton /> and <Switch /> */
     --muted: 0 0% 91%;
-    --muted-foreground: 156 2% 53%;
+    --muted-foreground: 50 82% 50%;
 
     /* Used for accents such as hover effects on <DropdownMenuItem>, <SelectItem>...etc */
     --accent: 175 32% 92%;
