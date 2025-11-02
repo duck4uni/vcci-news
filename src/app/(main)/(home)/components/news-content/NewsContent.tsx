@@ -7,7 +7,7 @@ function NewsContent({ news }: { news: NewsAdminItem }) {
   return (
     <a
       href={`${news.id}`}
-      className='flex flex-col sm:flex-row gap-3 mb-3 bg-gray-100 rounded-md p-3'
+      className='flex flex-col sm:flex-row gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3'
     >
       <img
         src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
