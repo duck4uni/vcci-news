@@ -15,6 +15,7 @@ import { useGetCategory } from '@/api/endpoints/category'
 import { useGetNews } from '@/api/endpoints/news'
 import { GetCategoryAdminResponseType } from '@/api/types/category'
 import { GetNewsAdminResponseType } from '@/api/types/news'
+import EventCalendar from './components/event-calendar'
 
 const Home = () => {
   // states
@@ -95,8 +96,8 @@ const Home = () => {
         </Swiper>
 
         <div className='container'>
-          {/* Featured News */}
-          <div>
+          {/* slider */}
+          <div className='pb-10'>
             <div className='flex py-10 justify-center items-center w-full text-center'>
               <hr className='border-blue-900 w-full' />
               <h1 className='text-app-blue text-[28px] leading-normal uppercase font-bold w-full text-blue-900'>
@@ -104,8 +105,6 @@ const Home = () => {
               </h1>
               <hr className='border-blue-900 w-full' />
             </div>
-
-            {/* slider */}
             <div>
               <Swiper
                 modules={[Autoplay]}
@@ -152,28 +151,27 @@ const Home = () => {
             </div>
           </div>
 
-          {/* news and quick links section */}
-          <div className='flex flex-row gap-[30px] py-10'>
-            <div className='w-[71%]'>
-              <div>
-                <div className='flex justify-between items-center'>
-                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Tin Tức</a>
-                  <a href='#' className='text-blue-900'>{'>>'}</a>
+          {/* content 1 */}
+          <div className='flex flex-row gap-[30px] pb-10'>
+            <div className='w-[68.5%]'>
+              <div className='pb-5'>
+                <div className="flex flex-row justify-between items-center">
+                  <a href="#" className="text-[20px] font-bold uppercase text-blue-900">
+                    Tin tức
+                  </a>
+                  <a href="#" className="text-blue-900">{'>>'}</a>
                 </div>
-                <hr className=' border-blue-900' />
+                <hr className="border-blue-900" />
               </div>
-
-              <div className='flex flex-row justify-center gap-[30px] pt-5'>
-                {/* special news section */}
-                <div className='bg-gray-500 w-[50%] flex items-center justify-center rounded-lg'>
-                  <p className='text-white'>khung tin tức vip</p>
+              <div className='flex flex-row gap-[30px]'>
+                <div className="w-full bg-gray-500 flex items-center justify-center rounded-md">
+                  <p className="text-white">khung tin tức vip</p>
                 </div>
-
-                <div className='w-[50%]'>
-                  {/* category tabs */}
-                  <div className='flex mb-5 flex-wrap justify-between'>
+                <div className="w-full overflow-hidden">
+                  <div className="flex mb-3 flex-wrap justify-between">
                     <button
-                      className={`w-22 cursor-pointer hover:bg-border-blue-700 hover:bg-blue-50 px-4 py-1 rounded-md border ${'all' === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                      className={`w-22 cursor-pointer hover:bg-border-blue-700 hover:bg-blue-50 px-4 py-1 rounded-md border ${'all' === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'
+                        }`}
                       onClick={() => setTab('all')}
                     >
                       Tất cả
@@ -181,34 +179,32 @@ const Home = () => {
                     {categoryData?.responseData.rows.slice(0, 3).map((category) => (
                       <button
                         key={category.id}
-                        className={`w-22 cursor-pointer hover:bg-border-blue-700 hover:bg-blue-50 px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'}`}
+                        className={`w-22 cursor-pointer hover:bg-border-blue-700 hover:bg-blue-50 px-4 py-1 rounded-md border ${category.name === tab ? 'border-blue-700 bg-blue-50' : 'border-gray-300 bg-white'
+                          }`}
                         onClick={() => setTab(category.name)}
                       >
                         {category.name}
                       </button>
                     ))}
                   </div>
-
-                  {/* News list */}
-                  <div className='pb-5 overflow-hidden'>
-                    {allData?.responseData.rows.slice(0, 5).map((news) => (
-                      <NewsContent key={news.id} news={news} />
-                    ))}
-                  </div>
+                  {allData?.responseData.rows.slice(0, 5).map((news) => (
+                    <NewsContent key={news.id} news={news} />
+                  ))}
                 </div>
               </div>
             </div>
 
-            {/* quick links section */}
-            <div>
-              <div>
-                <div className='flex justify-between items-center'>
-                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Liên kết nhanh</a>
-                  <a href='#' className='text-blue-900'>{'>>'}</a>
+            <div className='w-[33%]'>
+              <div className='pb-5'>
+                <div className="flex flex-row justify-between items-center">
+                  <a href="#" className="text-[20px] font-bold uppercase text-blue-900">
+                    Liên kết nhanh
+                  </a>
+                  <a href="#" className="text-blue-900">{'>>'}</a>
                 </div>
-                <hr className=' border-blue-900' />
+                <hr className="border-blue-900" />
               </div>
-              <div className='pt-5'>
+              <div>
                 <p>🔗 Cẩm nang Hướng dẫn đầu tư kinh doanh tại Việt Nam</p>
                 <p>🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật</p>
               </div>
@@ -217,24 +213,21 @@ const Home = () => {
 
           {/* content 2 */}
           <div className='flex flex-row gap-[30px] pb-10'>
-            <div className='w-[71%]'>
-              <div>
-                <div className='flex justify-between items-center'>
-                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
+            <div className='w-[68.5%]'>
+              <div className='pb-5'>
+                <div className="flex flex-row justify-between items-center">
+                  <a href="#" className="text-[20px] font-bold uppercase text-blue-900">
                     Sự kiện sắp diễn ra
                   </a>
-                  <a href='#' className='text-blue-900'>{'>>'}</a>
+                  <a href="#" className="text-blue-900">{'>>'}</a>
                 </div>
-                <hr className=' border-blue-900' />
+                <hr className="border-blue-900" />
               </div>
-
-              <div className='flex flex-row justify-center gap-[30px] pt-5'>
-                {/* special news section */}
-                <div className='bg-gray-500 w-[50%] flex items-center justify-center rounded-lg'>
-                  <p className='text-white'>khung tin tức vip</p>
+              <div className='flex flex-row gap-[30px]'>
+                <div className="w-full bg-gray-500 flex items-center justify-center rounded-md">
+                  <p className="text-white">khung tin tức vip</p>
                 </div>
-                {/* News list */}
-                <div className='w-[50%] pb-5 overflow-hidden'>
+                <div className="w-full overflow-hidden">
                   {allData?.responseData.rows.slice(0, 5).map((news) => (
                     <NewsContent key={news.id} news={news} />
                   ))}
@@ -242,26 +235,24 @@ const Home = () => {
               </div>
             </div>
 
-            {/* calendar */}
-            <div>
-              <div>
-                <div className='flex justify-between items-center'>
-                  <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>Lịch sự kiện</a>
-                  <a href='#' className='text-blue-900'>{'>>'}</a>
+            <div className='w-[33%]'>
+              <div className='pb-5'>
+                <div className="flex flex-row justify-between items-center">
+                  <a href="#" className="text-[20px] font-bold uppercase text-blue-900">
+                    Lịch sự kiện
+                  </a>
+                  <a href="#" className="text-blue-900">{'>>'}</a>
                 </div>
-                <hr className=' border-blue-900' />
+                <hr className="border-blue-900" />
               </div>
-              <div className='pt-5'>
-                <p>🔗 Cẩm nang Hướng dẫn đầu tư kinh doanh tại Việt Nam</p>
-                <p>🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật</p>
-              </div>
+              <EventCalendar />
             </div>
           </div>
 
           {/* content 3 */}
-          <div className='flex flex-row gap-[30px] pb-10'>
+          < div className='flex flex-row gap-[30px] pb-10' >
             {/* Cơ hội kinh doanh */}
-            <div className='flex flex-col'>
+            < div className='flex flex-col' >
               <div>
                 <div className='flex justify-between items-center w-full'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
@@ -277,10 +268,10 @@ const Home = () => {
                   <NewsContent key={news.id} news={news} />
                 ))}
               </div>
-            </div>
+            </div >
 
             {/* Chính sách & pháp luật */}
-            <div className='flex flex-col'>
+            < div className='flex flex-col' >
               <div>
                 <div className='flex justify-between items-center w-full'>
                   <a href='#' className='text-[20px] font-bold uppercase text-blue-900'>
@@ -296,8 +287,8 @@ const Home = () => {
                   <NewsContent key={news.id} news={news} />
                 ))}
               </div>
-            </div>
-          </div>
+            </div >
+          </div >
         </div >
       </>
     )
