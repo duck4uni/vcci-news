@@ -3,16 +3,16 @@ import BASE_URL from '@/links'
 import dayjs from 'dayjs';
 import AppEditorContent from '@/components/shared/editor-content';
 
-function NewsContent({ news }: { news: NewsAdminItem }) {
+function CardNews({ news }: { news: NewsAdminItem }) {
   return (
     <a
       href={`${news.id}`}
-      className='flex flex-col sm:flex-row gap-3 mb-3 bg-gray-100 rounded-md p-3'
+      className='flex flex-row gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3'
     >
       <img
         src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
-        className='w-full sm:w-[120px] h-20 object-cover rounded-sm'
+        className='w-[120px] h-20 object-cover rounded-sm'
       />
       <div className='flex-1'>
         <p className='text-[#0056b3] font-bold text-sm line-clamp-2'>
@@ -27,4 +27,4 @@ function NewsContent({ news }: { news: NewsAdminItem }) {
   );
 }
 
-export default NewsContent;
+export default CardNews;
