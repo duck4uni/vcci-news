@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import ListCategory from "./../components/list-category";
 import ListFilter from "./../components/list-filter";
-import NewsContent from "./../components/card-news";
+import CardNews from "./../components/card-news";
 import { Pagination } from '@components/base/pagination'
 import Image from "next/image";
 import { useGetNews } from '@api/endpoints/news'
@@ -27,7 +27,7 @@ export default function Page() {
 					<main className="lg:col-span-2 bg-background">
 						<div className='pb-5 overflow-hidden'>
 							{allData?.responseData.rows.map((news) => (
-								<NewsContent key={news.id} news={news} />
+								<CardNews key={news.id} news={news} />
 							))}
 
 							<div className='w-full flex justify-center mt-4'>

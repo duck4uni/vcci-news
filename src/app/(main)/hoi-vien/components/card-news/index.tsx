@@ -1,34 +1,34 @@
-
-import { NewsItem } from '@app/dai-dien-gioi-chu/lib/types/NewsPage.type';
-import Links from '@links/index'
+import { NewsAdminItem } from '@/api/types/news'
+import BASE_URL from '@/links'
 import dayjs from 'dayjs';
+import AppEditorContent from '@/components/shared/editor-content';
 import parse from 'html-react-parser'
-function NewsContent({ news }: { news: NewsItem }) {
 
+function CardNews({ news }: { news: NewsAdminItem }) {
   return (
     <a
-      href={`/tin-tuc/${news.id}`}
-      className="flex flex-col hover:no-underline sm:flex-row gap-2 mb-6 bg-white rounded-lg shadow-sm p-4 border items-start min-w-0"
+      href={`${news.id}`}
+      className="flex flex-col sm:flex-row gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3 hover:shadow-md transition"
     >
       <img
-        src={`${Links.imageEndpoint}${news.thumbnail}`}
+        src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
-        className="w-full sm:w-56 md:w-64 h-40 md:h-36 object-cover shrink-0"
+        className="w-full sm:w-40 h-40 sm:h-28 object-cover rounded-md"
       />
 
-      <div className="flex-1 min-w-0 pl-0 sm:pl-4">
-        <p className="text-primary font-semibold text-base md:text-lg hover:underline line-clamp-2 wrap-break-word hover:no-underline">
+      <div className="flex-1">
+        <p className="text-[#0056b3] font-bold text-sm sm:text-base line-clamp-2">
           {news.title}
         </p>
-
-        <div className="text-sm my-2 text-[#00AED5]">{dayjs(news.release_at).format('DD/MM/YYYY')}</div>
-
-        <div className="text-sm text-[#777] line-clamp-3">
-          <div className="text-sm prose tiptap">{parse(news.description)}</div>
+        <p className="text-gray-500 text-xs sm:text-sm my-1">
+          {dayjs(news.release_at).format('DD/MM/YYYY')}
+        </p>
+        <div className="text-xs sm:text-sm text-[#777] line-clamp-3 prose tiptap">
+          {parse(news.description)}
         </div>
       </div>
     </a>
-  )
+  );
 }
 
-export default NewsContent;
+export default CardNews;
