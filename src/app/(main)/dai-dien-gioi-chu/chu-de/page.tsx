@@ -1,7 +1,6 @@
 "use client";
 import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { PATHS } from '@constants/paths'
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination} from "@components/base/pagination";
@@ -21,13 +20,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-        <ListCategory
-          categories={[
-            { title: 'Tin liên quan', href: `${PATHS.ownerRepresentatives}/tin-lien-quan` },
-            { title: 'Sự kiện', href: `${PATHS.ownerRepresentatives}/su-kien` },
-            { title: 'Chủ đề', href: `${PATHS.ownerRepresentatives}/chu-de` },
-          ]}
-        />
+        <ListCategory />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}

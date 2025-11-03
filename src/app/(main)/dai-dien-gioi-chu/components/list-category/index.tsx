@@ -24,7 +24,7 @@ const CATEGORIES: Category[] = [
 
 ]
 
-const ListCategory: React.FC = () => {
+const ListCategory: React.FC<{ categories?: Category[] }> = ({ categories = CATEGORIES }) => {
     const pathname = usePathname() || ""
 
     const isActive = (href: string) => {
@@ -38,7 +38,7 @@ const ListCategory: React.FC = () => {
             <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="py-3">
                     <div className="flex flex-wrap gap-4 sm:gap-8 items-center max-w-full overflow-x-auto">
-                        {CATEGORIES.map((c) => {
+                        {categories.map((c) => {
                             const menu: Menu = { id: c.href, name: c.title, link: c.href }
                             const active = isActive(c.href)
                             return (
