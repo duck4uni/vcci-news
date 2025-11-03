@@ -11,16 +11,7 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'policy', title: 'Hỏi đáp về chính sách', count: 0 },
   { id: 'biz', title: 'Tin Doanh Nghiệp', count: 9 },
   { id: 'member', title: 'Tin Hội Viên', count: 17 },
-  { id: 'law1', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law2', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law3', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law4', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law5', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law6', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law7', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law8', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law9', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
-  { id: 'law51', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
+  { id: 'law', title: 'Văn bản Pháp luật sắp có hiệu lực', count: 30 },
 ]
 
 export const ListFilter: React.FC<{

@@ -21,11 +21,21 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-        <ListCategory
+         <ListCategory
           categories={[
-            { title: 'Tin liên quan', href: `${PATHS.ownerRepresentatives}/tin-lien-quan` },
-            { title: 'Sự kiện', href: `${PATHS.ownerRepresentatives}/su-kien` },
-            { title: 'Chủ đề', href: `${PATHS.ownerRepresentatives}/chu-de` },
+            {
+              title: "Chức năng Đại diện Người sử dụng lao động",
+              href: `${PATHS.ownerRepresentatives}`,
+            },
+            {
+              title: "Sự kiện – Tập huấn NSDLĐ",
+              href: `${PATHS.ownerRepresentatives}/tap-huan-nsdld`,
+            },
+            {
+              title: "Tin liên quan",
+              href: `${PATHS.ownerRepresentatives}/tin-lien-quan`,
+            },
+            { title: "Chủ đề", href: `${PATHS.ownerRepresentatives}/chu-de` },
           ]}
         />
 

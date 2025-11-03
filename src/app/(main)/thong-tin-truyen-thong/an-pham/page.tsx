@@ -1,10 +1,10 @@
 "use client";
 import React, { useState } from "react";
-import { PATHS } from "@constants/paths";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
+import { PATHS } from '@constants/paths'
+import EventFilter from "@app/dai-dien-gioi-chu/components/event-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
-import { Pagination } from "@components/base/pagination";
+import { Pagination} from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
@@ -21,21 +21,36 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-        <ListCategory
+         <ListCategory
           categories={[
             {
-              title: "Chức năng Đại diện Người sử dụng lao động",
-              href: `${PATHS.ownerRepresentatives}`,
+              title: "Tin VCCI",
+              href: `${PATHS.mediaInformation}/tin-vcci`,
             },
             {
-              title: "Sự kiện – Tập huấn NSDLĐ",
-              href: `${PATHS.ownerRepresentatives}/tap-huan-nsdld`,
+              title: "Tin kinh tế",
+              href: `${PATHS.mediaInformation}/tin-kinh-te`,
             },
-            {
-              title: "Tin liên quan",
-              href: `${PATHS.ownerRepresentatives}/tin-lien-quan`,
+                        {
+              title: "Tin doanh nghiệp",
+              href: `${PATHS.mediaInformation}/tin-doanh-nghiep`,
             },
-            { title: "Chủ đề", href: `${PATHS.ownerRepresentatives}/chu-de` },
+                        {
+              title: "Chuyên đề",
+              href: `${PATHS.mediaInformation}/chuyen-de`,
+            },
+                        {
+              title: "Thông tin chính sách và pháp luật",
+              href: `${PATHS.mediaInformation}/thong-tin-chinh-sach-va-phap-luat`,
+            },
+                        {
+              title: "Ấn phẩm",
+              href: `${PATHS.mediaInformation}/an-pham`,
+            },
+                          {
+              title: "Thư viện tài liệu",
+              href: `${PATHS.mediaInformation}/thu-vien-tai-lieu`,
+            },
           ]}
         />
 
@@ -53,14 +68,7 @@ export default function Page() {
                   page={Number(allData?.responseData.currentPage ?? page)}
                   onChangePage={(p) => setPage(p)}
                   onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-                  onGoToNextPage={() =>
-                    setPage(
-                      Math.min(
-                        Number(allData?.responseData.totalPages ?? 1),
-                        page + 1
-                      )
-                    )
-                  }
+                  onGoToNextPage={() => setPage(Math.min(Number(allData?.responseData.totalPages ?? 1), page + 1))}
                 />
               </div>
             </div>
@@ -68,7 +76,7 @@ export default function Page() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+            <EventFilter />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">

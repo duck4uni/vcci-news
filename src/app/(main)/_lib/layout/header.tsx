@@ -57,7 +57,7 @@ function Header() {
       </div>
 
       <div className="sticky top-0 z-50 bg-[#ededed] shadow-md">
-        <div className="max-w-[1200px] m-auto">
+        <div className="container m-auto">
           <div className="w-full flex justify-between items-center">
             {/* Logo */}
             <a href="/" className="flex items-center">

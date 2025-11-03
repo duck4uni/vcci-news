@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { PATHS } from "@constants/paths";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
+import { PATHS } from "@constants/paths";
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination } from "@components/base/pagination";

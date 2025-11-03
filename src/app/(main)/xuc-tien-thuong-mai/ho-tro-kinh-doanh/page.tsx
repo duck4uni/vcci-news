@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
-import { PATHS } from "@constants/paths";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
+import { PATHS } from "@constants/paths";
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination } from "@components/base/pagination";
@@ -21,21 +21,24 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-        <ListCategory
+          <ListCategory
           categories={[
             {
-              title: "Chức năng Đại diện Người sử dụng lao động",
-              href: `${PATHS.ownerRepresentatives}`,
+              title: "Hồ sơ thị trường",
+              href: `${PATHS.marketProfile}/`,
             },
             {
-              title: "Sự kiện – Tập huấn NSDLĐ",
-              href: `${PATHS.ownerRepresentatives}/tap-huan-nsdld`,
+              title: "Môi trường kinh doanh",
+              href: `${PATHS.tradePromotion}/moi-truong-kinh-doanh`,
             },
             {
-              title: "Tin liên quan",
-              href: `${PATHS.ownerRepresentatives}/tin-lien-quan`,
+              title: "Cơ hội kinh doanh",
+              href: `${PATHS.tradePromotion}/co-hoi-kinh-doanh`,
             },
-            { title: "Chủ đề", href: `${PATHS.ownerRepresentatives}/chu-de` },
+        {
+              title: "Hỗ trợ kinh doanh",
+              href: `${PATHS.tradePromotion}/ho-tro-kinh-doanh`,
+            },
           ]}
         />
 

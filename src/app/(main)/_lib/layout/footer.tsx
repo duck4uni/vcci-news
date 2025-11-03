@@ -35,7 +35,7 @@ function footer() {
   return (
     <div className="overflow-hidden">
       <div className="p-5 bg-[#e3e3e3]">
-        <div className="max-w-[1200px] w-full flex m-auto flex-wrap relative">
+        <div className="container w-full flex m-auto flex-wrap relative">
           <div className="z-10 w-full lg:w-1/3 flex flex-col gap-5 p-5">
             <h2 className="text-[#063E8E] text-[20px] font-[500]">
               ĐĂNG KÝ NHẬN THÔNG TIN VCCI

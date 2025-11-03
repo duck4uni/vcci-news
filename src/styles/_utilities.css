@@ -3,7 +3,7 @@
     @apply mr-auto ml-auto px-4;
 
     @media (width >= 80rem) {
-      @apply px-40;
+      @apply px-15;
     }
   }
 
