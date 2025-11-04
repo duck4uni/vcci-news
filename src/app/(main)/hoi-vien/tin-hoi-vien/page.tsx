@@ -31,13 +31,20 @@ export default function Page() {
 							))}
 
 							<div className='w-full flex justify-center mt-4'>
-					 <Pagination
-									  pageCount={Number(allData?.responseData.totalPages ?? 1)}
-									  page={Number(allData?.responseData.currentPage ?? page)}
-									  onChangePage={(p) => setPage(p)}
-									  onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-									  onGoToNextPage={() => setPage(Math.min(Number(allData?.responseData.totalPages ?? 1), page + 1))}
-									/>
+								<Pagination
+									pageCount={Number(allData?.responseData.totalPages ?? 1)}
+									page={Number(allData?.responseData.currentPage ?? page)}
+									onChangePage={(p) => setPage(p)}
+									onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
+									onGoToNextPage={() =>
+										setPage(
+											Math.min(
+												Number(allData?.responseData.totalPages ?? 1),
+												page + 1
+											)
+										)
+									}
+								/>
 							</div>
 						</div>
 					</main>
