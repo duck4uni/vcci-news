@@ -12,6 +12,9 @@ import { GetNewsDetailResponseType } from './page.type';
 import { Link, CalendarFold, Book } from 'lucide-react';
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation'
+import ListCategory from '@/components/base/list-category'
+import { MEDIA_INFORMATION_CATEGORIES } from '@/constants/categories'
+import EventCalendar from '@/components/base/event-calendar'
 // import { t } from 'i18next'
 
 // Component
@@ -33,82 +36,34 @@ const NewsDetailPage = () => {
         <Spinner />
       ) : (
         <div>
-          {/* Banner */}
-          <img className='w-full h-100' src={`${BASE_URLS.imageEndpoint}${data?.responseData?.thumbnail}`} alt='Banner' />
-          {/* Breadcrumb  */}
-          <div className='container py-10'>
-            <div className='flex gap-4 items-stretch'>
-              {/* <Breadcrumbs aria-label='breadcrumb'>
-                <Link
-                  underline='hover'
-                  color='inherit'
-                  href='/'
-                  className='!text-app-blue-secondary !text-sm !leading-normal'
-                >
-                  {t('breadcrumbHomePage')}
-                  <p>Trang chủ</p>
-                </Link>
-                <Link
-                  underline='hover'
-                  color='inherit'
-                  href='/tin-tuc'
-                  className='!text-app-blue-secondary !text-sm !leading-normal'
-                >
-                  {t('breadcrumbNewsPage')}
-                  <p>Tin tức</p>
-                </Link>
-
-                <Typography className='!text-sm !text-black !leading-normal'>
-                  {t('breadcrumbNewsDetailPage')}
-                  <p>Chi tiết</p>
-                </Typography>
-              </Breadcrumbs> */}
-            </div>
-          </div>
-
-          <div className='container bg-gray-100 rounded p-10 flex flex-col gap-10'>
-            {/* Heading */}
-            <div className='text-blue-900 text-[32px] leading-normal font-medium text-center'>{data?.responseData?.title}</div>
-
-            {/* body */}
-            <div className='flex items-start gap-8 flex-col lg:flex-row'>
-              {/* Info */}
-              <div className='lg:w-[332px] bg-white p-4 rounded shadow-app-quaternary flex flex-col gap-2'>
-                <div className='text-base text-app-grey font-semibold leading-normal text-center'>
-                  {/* {t('information')} */}
+          <div className='container flex flex-col gap-5'>
+            <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+              {/* Main content */}
+              <main className="lg:col-span-2 bg-white border rounded-md p-7">
+                <div className='pb-5 text-blue-900 text-2xl leading-normal font-medium'>
+                  {data?.responseData?.title}
                 </div>
-
-                {/* date */}
-                <div className='flex items-center gap-2 text-app-grey'>
+                <div className='flex items-center gap-2 text-sm mb-4'>
                   <CalendarFold />
-                  <span className='text-base'>{dayjs(data?.responseData?.created_at).format('DD/MM/YYYY')}</span>
+                  <span className='text-base text-blue-700'>{dayjs(data?.responseData?.created_at).format('DD/MM/YYYY')}</span>
                 </div>
-
-                {/* author */}
-                {/* <div className='flex items-center gap-2 text-app-grey'>
-                  <PersonIcon />
-                  <span className='text-base'>{data?.responseData?.created_by}</span>
-                </div> */}
-
-                {/* Category */}
-                <div className='flex items-center gap-2 text-app-grey'>
-                  <Book />
-                  <span className='text-base'>{data?.responseData?.category}</span>
+                <div className='py-5' >
+                  <hr />
                 </div>
-              </div>
-
-              {/* Content */}
-              <div className='flex-1 text-app-grey text-base overflow-hidden'>
-                <AppEditorContent value={data?.responseData?.description ?? ''} />
-              </div>
+                <div className='flex-1 text-app-grey text-base overflow-hidden'>
+                  <AppEditorContent value={data?.responseData?.description ?? ''} />
+                </div>
+              </main>
+              {/* Sidebar */}
+              <aside className="space-y-6">
+                <EventCalendar />
+              </aside>
             </div>
           </div>
-
-          {/* Related News */}
-          {/* <RelatedNews newsQuery={getRelatedNewsQuery} lang={lang} newsId={infoNews.id} /> */}
         </div>
       )}
-    </div>
+    </div >
   )
 }
 

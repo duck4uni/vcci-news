@@ -9,29 +9,32 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import BASE_URL from '@/links/index'
-import NewsContent from './components/card-news'
 import { Spinner } from '@/components/ui'
+import CardNews from './components/card-news'
+import CardEvent from './components/card-event'
+import EventCalendar from './components/event-calendar'
+import dayjs from 'dayjs'
+import AppEditorContent from '@/components/shared/editor-content'
+
+// server
+import { useGetEvents } from '@/api/endpoints/event'
 import { useGetCategory } from '@/api/endpoints/category'
 import { useGetNews } from '@/api/endpoints/news'
 import { GetCategoryAdminResponseType } from '@/api/types/category'
-import { GetNewsAdminResponseType } from '@/api/types/news'
-import EventCalendar from './components/event-calendar'
+import { GetNewsAdminResponseType, NewsAdminItem } from '@/api/types/news'
+import { EventApiResponse, EventItem } from '@/api/types/event'
 
 const Page = () => {
   const [tab, setTab] = useState('all')
-  const [search, setSearch] = useState('')
-  const [submitSearch, setSubmitSearch] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [slidesPerView, setSlidesPerView] = useState<number>(3)
   const swiperRef = useRef<SwiperType | null>(null)
 
-  const { data: categoryData } = useGetCategory<GetCategoryAdminResponseType>()
-  const { data: allData, isLoading } = useGetNews<GetNewsAdminResponseType>({
-    pageSize: '999',
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
-  })
+  const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>()
+  const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>()
+  const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>()
 
-  const rows = allData?.responseData?.rows ?? []
+  // filter category
+  const rows = newsData?.responseData?.rows ?? []
   const filteredRows = tab === 'all' ? rows : rows.filter((n) => n.category === tab)
 
   const images = [
@@ -64,19 +67,7 @@ const Page = () => {
     '/home/hoi-vien-tieu-bieu/UOB-logo_Vuong.jpeg.webp',
   ]
 
-  useEffect(() => {
-    const getSlides = (w: number) => {
-      if (w >= 1024) return 3
-      if (w >= 640) return 2
-      return 1
-    }
-    const update = () => setSlidesPerView(getSlides(window.innerWidth))
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  if (isLoading)
+  if (isLoadingNews || isLoadingCategory || isLoadingEvent)
     return (
       <div className="w-full h-[80vh] flex justify-center items-center">
         <Spinner />
@@ -136,13 +127,13 @@ const Page = () => {
             {rows.map((news) => (
               <SwiperSlide key={news.id}>
                 <a
-                  href={`/tin-tuc/${news.id}`}
+                  href={`/${news.id}`}
                   className="relative block bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                 >
                   <img
                     src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                     alt={news.title}
-                    className="w-full h-48 sm:h-56 md:h-64 object-cover"
+                    className="w-full aspect-3/2 sm:h-56 md:h-64 object-cover"
                   />
                   <div className="absolute bottom-0 left-0 right-0 h-20 md:h-24 bg-linear-to-t from-black/80 to-transparent flex items-center justify-center p-3">
                     <p className="text-white text-center font-semibold line-clamp-2 text-sm sm:text-base leading-snug">
@@ -166,19 +157,41 @@ const Page = () => {
           {/* Left */}
           <div className="flex-1">
             <div className="flex justify-between items-center">
-              <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
+              <a href="/thong-tin-truyen-thong/tin-vcci/" className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
                 Tin tức
-              </h2>
-              <a href="#" className="text-blue-900 hover:underline text-sm sm:text-base">
+              </a>
+              <a href="/thong-tin-truyen-thong/tin-vcci/" className="text-blue-900 text-sm sm:text-base">
                 {'>>'}
               </a>
             </div>
             <hr className="border-blue-900 mb-4" />
 
             <div className="flex flex-col md:flex-row gap-5">
-              <div className="w-full md:w-1/2 bg-gray-500 flex items-center justify-center rounded-lg p-4 min-h-[180px] sm:min-h-[220px]">
-                <p className="text-white text-center">Khung tin tức VIP</p>
-              </div>
+              {newsData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+                <a
+                  key={news.id}
+                  href={`${news.id}`}
+                  className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
+                >
+                  <div className="w-full aspect-3/2 overflow-hidden">
+                    <img
+                      src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
+                      alt={news.title}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-[#0056b3] font-bold text-xl line-clamp-2">
+                      {news.title}
+                    </p>
+                    <p className="text-gray-500 text-sm my-1">
+                      {dayjs(news.release_at).format('DD/MM/YYYY')}
+                    </p>
+                    <AppEditorContent className="line-clamp-4" value={news.description} />
+                  </div>
+                </a>
+              ))}
 
               <div className="w-full md:w-1/2">
                 <div className="flex flex-wrap gap-2 sm:gap-3 mb-3">
@@ -205,8 +218,8 @@ const Page = () => {
                   ))}
                 </div>
 
-                {filteredRows.slice(0, 5).map((news) => (
-                  <NewsContent key={news.id} news={news} />
+                {filteredRows.slice(0, 4).map((news) => (
+                  <CardNews key={news.id} news={news} />
                 ))}
               </div>
             </div>
@@ -257,12 +270,34 @@ const Page = () => {
             <hr className="border-[#e8c518] mb-4" />
 
             <div className="flex flex-col md:flex-row gap-5">
-              <div className="w-full md:w-1/2 bg-gray-500 flex items-center justify-center rounded-lg p-4 min-h-[180px] sm:min-h-[220px]">
-                <p className="text-white">Khung tin tức VIP</p>
-              </div>
+              {eventData?.responseData.rows.slice(0, 1).map((event: EventItem) => (
+                <a
+                  key={event.id}
+                  href={`${event.id}`}
+                  className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
+                >
+                  <div className="w-full aspect-3/2 overflow-hidden">
+                    <img
+                      src={`${BASE_URL.imageEndpoint}${event.image}`}
+                      alt={event.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  <div className="flex-1">
+                    <p className="text-[#0056b3] font-bold text-xl line-clamp-2">
+                      {event.name}
+                    </p>
+                    <p className="text-gray-500 text-sm my-1">
+                      {dayjs(event.start_time).format('DD/MM/YYYY')}
+                    </p>
+                    <AppEditorContent className="line-clamp-3" value={event.description} />
+                  </div>
+                </a>
+              ))}
               <div className="w-full md:w-1/2">
-                {rows.slice(0, 5).map((news) => (
-                  <NewsContent key={news.id} news={news} />
+                {eventData?.responseData.rows.slice(0, 4).map((event) => (
+                  <CardEvent key={event.id} event={event} />
                 ))}
               </div>
             </div>
@@ -294,33 +329,73 @@ const Page = () => {
             <section className="flex flex-col md:flex-row gap-5 pt-8">
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
+                  <a href="/xuc-tien-thuong-mai/co-hoi-kinh-doanh/" className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
                     Cơ hội kinh doanh
-                  </h2>
-                  <a href="#" className="text-blue-900 text-sm sm:text-base">
+                  </a>
+                  <a href="/xuc-tien-thuong-mai/co-hoi-kinh-doanh/" className="text-blue-900 text-sm sm:text-base">
                     {'>>'}
                   </a>
                 </div>
                 <hr className="border-blue-900 mb-4" />
-                <div className="pt-2 space-y-3">
-                  {rows.slice(0, 4).map((news) => (
-                    <NewsContent key={news.id} news={news} />
+                <div className="pt-2">
+                  {newsData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+                    <a
+                      key={news.id}
+                      href={`${news.id}`}
+                    >
+                      <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
+                        <img
+                          src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
+                          alt={news.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
+                          <p className="text-blue-900 font-semibold text-sm sm:text-base z-10 line-clamp-3">
+                            {news.title}
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+
+                  {rows.slice(0, 3).map((news) => (
+                    <CardNews key={news.id} news={news} />
                   ))}
                 </div>
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-center">
-                  <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
+                  <a href="/thong-tin-truyen-thong/thong-tin-chinh-sach-va-phap-luat" className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
                     Chính sách & pháp luật
-                  </h2>
-                  <a href="#" className="text-blue-900 text-sm sm:text-base">
+                  </a>
+                  <a href="/thong-tin-truyen-thong/thong-tin-chinh-sach-va-phap-luat" className="text-blue-900 text-sm sm:text-base">
                     {'>>'}
                   </a>
                 </div>
                 <hr className="border-blue-900 mb-4" />
-                <div className="pt-2 space-y-3">
-                  {rows.slice(0, 4).map((news) => (
-                    <NewsContent key={news.id} news={news} />
+                <div className="pt-2">
+                  {newsData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+                    <a
+                      key={news.id}
+                      href={`${news.id}`}
+                    >
+                      <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
+                        <img
+                          src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
+                          alt={news.title}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
+                          <p className="text-blue-900 font-semibold text-sm sm:text-base z-10 line-clamp-3">
+                            {news.title}
+                          </p>
+                        </div>
+                      </div>
+                    </a>
+                  ))}
+
+                  {rows.slice(0, 3).map((news) => (
+                    <CardNews key={news.id} news={news} />
                   ))}
                 </div>
               </div>
@@ -331,12 +406,12 @@ const Page = () => {
               <img src="/home/eCarAid_web_banner_600x400.webp" alt="banner" />
             </a>
           </div>
-        </div>
+        </div >
 
         {/* Hội viên tiêu biểu */}
-        <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
+        < section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0" >
           {/* left */}
-          <aside className="w-full lg:w-1/3 flex-1 bg-[#e8c518] p-5">
+          < aside className="w-full lg:w-1/3 flex-1 bg-[#e8c518] p-5" >
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-bold uppercase text-blue-900">Hội viên tiêu biểu</h2>
               <a
@@ -374,10 +449,10 @@ const Page = () => {
                 ))}
               </Swiper>
             </div>
-          </aside>
+          </aside >
 
           {/* right */}
-          <aside className="w-full lg:w-[30%] py-5">
+          < aside className="w-full lg:w-[30%] py-5" >
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-bold uppercase text-blue-900">Kết nối hội viên</h2>
               <a
@@ -415,13 +490,13 @@ const Page = () => {
                 ))}
               </Swiper>
             </div>
-          </aside>
-        </section>
+          </aside >
+        </section >
 
         {/* Video + đối tác */}
-        <section className="flex flex-col lg:flex-row gap-5 pb-10">
+        < section className="flex flex-col lg:flex-row gap-5 pb-10" >
           {/* left */}
-          <div className="flex flex-col flex-1">
+          < div className="flex flex-col flex-1" >
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-bold uppercase text-blue-900">Video</h2>
               <a
@@ -459,10 +534,10 @@ const Page = () => {
                 </div>
               ))}
             </div>
-          </div>
+          </div >
 
           {/* right */}
-          <aside className="w-full lg:w-[30%]">
+          < aside className="w-full lg:w-[30%]" >
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-bold uppercase text-blue-900">Đối tác</h2>
               <a
@@ -500,9 +575,9 @@ const Page = () => {
                 ))}
               </Swiper>
             </div>
-          </aside>
-        </section>
-      </div>
+          </aside >
+        </section >
+      </div >
     </>
   )
 }

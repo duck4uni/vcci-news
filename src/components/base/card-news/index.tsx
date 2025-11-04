@@ -3,7 +3,7 @@ import { NewsItem } from '@app/dai-dien-gioi-chu/lib/types/NewsPage.type';
 import Links from '@links/index'
 import dayjs from 'dayjs';
 import parse from 'html-react-parser'
-function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
+function NewsContent({ news, link }: { news: NewsItem, link: string }) {
 
   return (
     <a
@@ -14,14 +14,13 @@ function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
         src={`${Links.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
         className="w-full sm:w-56 md:w-64 h-40 md:h-36 object-cover shrink-0"
-     onError={(e) => {
-    e.currentTarget.src = "/img-error.png"
-  }}
-
+        onError={(e) => {
+          e.currentTarget.src = "/img-error.png"
+        }}
       />
 
       <div className="flex-1 min-w-0 pl-0 sm:pl-4">
-        <p className="text-primary font-semibold text-base md:text-lg hover:underline line-clamp-2 wrap-break-word hover:no-underline">
+        <p className="text-primary font-semibold text-base md:text-lg line-clamp-2 wrap-break-word hover:no-underline">
           {news.title}
         </p>
 
