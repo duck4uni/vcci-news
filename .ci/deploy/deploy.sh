@@ -1,5 +1,4 @@
 #!/bin/bash
-cd .ci
 jq -r 'keys[] as $k | "\($k)=\(.[$k])"' $environment_json_path > .env
 sed -i 's|PROJECT-NAME|'$project_name'|' docker-compose.yaml
 sed -i 's|ENVIRONMENT-NAME|'$environment_name'|' docker-compose.yaml
