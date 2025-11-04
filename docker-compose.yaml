@@ -3,7 +3,7 @@ services:
     container_name: ENVIRONMENT-NAME-PROJECT-NAME
     image: IMAGE-NAME:IMAGE-TAG
     ports:
-      - P-MAPPING:3000
+      - "P-MAPPING:3000"
     restart: unless-stopped
     pull_policy: always
     networks:
