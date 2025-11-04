@@ -17,7 +17,8 @@ export default function Page() {
   const { data: allData } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
+    // filters: submitSearch ? `title @=${submitSearch}` : undefined,
+    filters:'category@=Cơ hội kinh doanh'
   });
   return (
     <div className="min-h-screen container mx-auto p-4">

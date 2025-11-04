@@ -1,6 +1,6 @@
 export const SAMPLE_HTML = `
 <div class="document">
-  <h1  style="font-size:18px; font-weight:700; margin-bottom:8px;">Chức năng Đại diện Người sử dụng lao động</h1>
+  <h1 class="text-primary"  style="font-size:20px; font-weight:700; margin-bottom:12px;">Chức năng Đại diện Người sử dụng lao động</h1>
 
   <p>Chức năng Đại diện Người sử dụng lao động (NSDLĐ):</p>
 

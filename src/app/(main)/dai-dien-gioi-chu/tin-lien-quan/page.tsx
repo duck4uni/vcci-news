@@ -10,13 +10,14 @@ import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
 export default function Page() {
-  const [submitSearch] = useState("");
+  const [submitSearch,setsubmitSearch] = useState("");
   const [page, setPage] = useState(1);
+
   const pageSize = 5;
   const { data: allData } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
+    filters: submitSearch ? `title @=${submitSearch},category@=Tin liên quan` : 'category@=Tin liên quan',
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
@@ -45,7 +46,7 @@ export default function Page() {
 
           {/* Sidebar */}
           <aside className="space-y-6 order-first lg:order-last">
-            <ListFilter />
+            <ListFilter onSearch={setsubmitSearch}/>
 
             <div className="bg-white border rounded-md overflow-hidden hidden lg:block">
               <div className="w-full h-56 relative bg-gray-100">

@@ -41,7 +41,7 @@ const NewsDetailPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               {/* Main content */}
               <main className="lg:col-span-2 bg-white border rounded-md p-7">
-                <div className='pb-5 text-blue-900 text-2xl leading-normal font-medium'>
+                <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
                   {data?.responseData?.title}
                 </div>
                 <div className='flex items-center gap-2 text-sm mb-4'>
