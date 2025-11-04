@@ -1,4 +1,4 @@
-FROM $image_name:latest AS buildbase
+FROM registry.gitlab.com/meusolutions/vcci-news:base AS buildbase
 COPY . .
 
 RUN npm run generate:api
