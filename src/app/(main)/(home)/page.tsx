@@ -9,31 +9,32 @@ import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
 import BASE_URL from '@/links/index'
-import NewsContent from './components/card-news'
 import { Spinner } from '@/components/ui'
-import { useGetCategory } from '@/api/endpoints/category'
-import { useGetNews } from '@/api/endpoints/news'
-import { GetCategoryAdminResponseType } from '@/api/types/category'
-import { GetNewsAdminResponseType, NewsAdminItem } from '@/api/types/news'
+import CardNews from './components/card-news'
+import CardEvent from './components/card-event'
 import EventCalendar from './components/event-calendar'
 import dayjs from 'dayjs'
 import AppEditorContent from '@/components/shared/editor-content'
 
+// server
+import { useGetEvents } from '@/api/endpoints/event'
+import { useGetCategory } from '@/api/endpoints/category'
+import { useGetNews } from '@/api/endpoints/news'
+import { GetCategoryAdminResponseType } from '@/api/types/category'
+import { GetNewsAdminResponseType, NewsAdminItem } from '@/api/types/news'
+import { EventApiResponse, EventItem } from '@/api/types/event'
+
 const Page = () => {
   const [tab, setTab] = useState('all')
-  const [search, setSearch] = useState('')
-  const [submitSearch, setSubmitSearch] = useState('')
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [slidesPerView, setSlidesPerView] = useState<number>(3)
   const swiperRef = useRef<SwiperType | null>(null)
 
-  const { data: categoryData } = useGetCategory<GetCategoryAdminResponseType>()
-  const { data: allData, isLoading } = useGetNews<GetNewsAdminResponseType>({
-    pageSize: '999',
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
-  })
+  const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>()
+  const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>()
+  const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>()
 
-  const rows = allData?.responseData?.rows ?? []
+  // filter category
+  const rows = newsData?.responseData?.rows ?? []
   const filteredRows = tab === 'all' ? rows : rows.filter((n) => n.category === tab)
 
   const images = [
@@ -66,19 +67,7 @@ const Page = () => {
     '/home/hoi-vien-tieu-bieu/UOB-logo_Vuong.jpeg.webp',
   ]
 
-  useEffect(() => {
-    const getSlides = (w: number) => {
-      if (w >= 1024) return 3
-      if (w >= 640) return 2
-      return 1
-    }
-    const update = () => setSlidesPerView(getSlides(window.innerWidth))
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [])
-
-  if (isLoading)
+  if (isLoadingNews || isLoadingCategory || isLoadingEvent)
     return (
       <div className="w-full h-[80vh] flex justify-center items-center">
         <Spinner />
@@ -178,7 +167,7 @@ const Page = () => {
             <hr className="border-blue-900 mb-4" />
 
             <div className="flex flex-col md:flex-row gap-5">
-              {allData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+              {newsData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
                 <a
                   key={news.id}
                   href={`${news.id}`}
@@ -230,7 +219,7 @@ const Page = () => {
                 </div>
 
                 {filteredRows.slice(0, 4).map((news) => (
-                  <NewsContent key={news.id} news={news} />
+                  <CardNews key={news.id} news={news} />
                 ))}
               </div>
             </div>
@@ -281,34 +270,34 @@ const Page = () => {
             <hr className="border-[#e8c518] mb-4" />
 
             <div className="flex flex-col md:flex-row gap-5">
-              {allData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+              {eventData?.responseData.rows.slice(0, 1).map((event: EventItem) => (
                 <a
-                  key={news.id}
-                  href={`${news.id}`}
+                  key={event.id}
+                  href={`${event.id}`}
                   className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
                 >
                   <div className="w-full aspect-3/2 overflow-hidden">
                     <img
-                      src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
-                      alt={news.title}
+                      src={`${BASE_URL.imageEndpoint}${event.image}`}
+                      alt={event.name}
                       className="w-full h-full object-cover"
                     />
                   </div>
 
                   <div className="flex-1">
                     <p className="text-[#0056b3] font-bold text-xl line-clamp-2">
-                      {news.title}
+                      {event.name}
                     </p>
                     <p className="text-gray-500 text-sm my-1">
-                      {dayjs(news.release_at).format('DD/MM/YYYY')}
+                      {dayjs(event.start_time).format('DD/MM/YYYY')}
                     </p>
-                    <AppEditorContent className="line-clamp-3" value={news.description} />
+                    <AppEditorContent className="line-clamp-3" value={event.description} />
                   </div>
                 </a>
               ))}
               <div className="w-full md:w-1/2">
-                {rows.slice(0, 4).map((news) => (
-                  <NewsContent key={news.id} news={news} />
+                {eventData?.responseData.rows.slice(0, 4).map((event) => (
+                  <CardEvent key={event.id} event={event} />
                 ))}
               </div>
             </div>
@@ -349,7 +338,7 @@ const Page = () => {
                 </div>
                 <hr className="border-blue-900 mb-4" />
                 <div className="pt-2">
-                  {allData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+                  {newsData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
                     <a
                       key={news.id}
                       href={`${news.id}`}
@@ -370,7 +359,7 @@ const Page = () => {
                   ))}
 
                   {rows.slice(0, 3).map((news) => (
-                    <NewsContent key={news.id} news={news} />
+                    <CardNews key={news.id} news={news} />
                   ))}
                 </div>
               </div>
@@ -385,7 +374,7 @@ const Page = () => {
                 </div>
                 <hr className="border-blue-900 mb-4" />
                 <div className="pt-2">
-                  {allData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
+                  {newsData?.responseData.rows.slice(0, 1).map((news: NewsAdminItem) => (
                     <a
                       key={news.id}
                       href={`${news.id}`}
@@ -406,7 +395,7 @@ const Page = () => {
                   ))}
 
                   {rows.slice(0, 3).map((news) => (
-                    <NewsContent key={news.id} news={news} />
+                    <CardNews key={news.id} news={news} />
                   ))}
                 </div>
               </div>
