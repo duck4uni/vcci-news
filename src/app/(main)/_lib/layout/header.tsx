@@ -4,6 +4,7 @@ import { Menu, X, Facebook, Linkedin, Twitter, Youtube } from "lucide-react";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
 import Image from "next/image";
 import MenuItem from "./MenuItem";
+import Link from "next/link";
 
 function Header() {
   const [toggleMenu, setToggleMenu] = useState<boolean>(false);
@@ -154,20 +155,34 @@ function Header() {
                 </a>
                 <div className="absolute left-0 top-full hidden group-hover:block bg-[#124588]/98 text-white text-[14px] font-[500] min-w-[280px] shadow-lg">
                   <div className="flex flex-col">
-                    <div className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer">
+                    <Link
+                      href={
+                        "/dai-dien-gioi-chu/chuc-nang-dai-dien-nguoi-su-dung-lao-dong"
+                      }
+                      className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer"
+                    >
                       Chức Năng Đại Diện Người Sử Dụng Lao Động
-                    </div>
-                    <div className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer">
+                    </Link>
+                    <Link
+                      href={"/dai-dien-gioi-chu/tap-huan-nsdld"}
+                      className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer"
+                    >
                       Sự Kiện – Tập Huấn NSDLĐ
-                    </div>
-                    <div className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer">
+                    </Link>
+                    <Link
+                      href={"/dai-dien-gioi-chu/tin-lien-quan"}
+                      className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer"
+                    >
                       Tin Liên Quan
-                    </div>
+                    </Link>
 
                     <div className="relative group/submenu">
-                      <div className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer flex justify-between items-center">
+                      <Link
+                        href={"/dai-dien-gioi-chu/chu-de"}
+                        className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer flex justify-between items-center"
+                      >
                         Chủ Đề <span className="ml-2 text-xs">›</span>
-                      </div>
+                      </Link>
                       <div className="absolute left-full top-0 hidden group-hover/submenu:block bg-[#124588]/98 text-white text-[14px] font-[500] min-w-[220px] shadow-lg">
                         <div className="px-5 py-3 hover:bg-[#e8c518]/80 cursor-pointer">
                           Quan Hệ Lao Động
