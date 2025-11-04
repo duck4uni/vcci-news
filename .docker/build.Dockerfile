@@ -5,11 +5,6 @@ FROM registry.gitlab.com/meusolutions/vcci-news:base AS buildbase
 # Copy toàn bộ source code (bao gồm package.json mới)
 COPY . .
 
-# *** THÊM LỆNH NÀY ***
-# Chạy 'npm install' một lần nữa để đồng bộ node_modules
-# với file package.json mới và cài đặt devDependencies (như ts-node, orval)
-RUN npm install
-
 # Bây giờ các script build sẽ chạy được
 RUN npm run generate:api
 RUN npm run build
