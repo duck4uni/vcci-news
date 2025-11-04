@@ -18,6 +18,7 @@ export const PATHS = {
   students: '/sinh-vien',
   studentLife: '/cuoc-song-sinh-vien',
   search: '/tim-kiem',
+  originOfGoods: '/xuat-xu-hang-hoa',
 
   // With slugs
   post: '/bai-viet',
