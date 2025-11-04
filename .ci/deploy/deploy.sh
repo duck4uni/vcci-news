@@ -10,3 +10,4 @@ echo "$CI_REGISTRY_PW" | sudo docker login registry.gitlab.com -u "$CI_REGISTRY_
 sudo docker-compose pull
 sudo docker-compose down
 sudo docker-compose up -d
+sudo docker image prune -f
