@@ -14,6 +14,10 @@ function NewsContent({ news }: { news: NewsItem }) {
         src={`${Links.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
         className="w-full sm:w-56 md:w-64 h-40 md:h-36 object-cover shrink-0"
+     onError={(e) => {
+    e.currentTarget.src = "/img-error.png"
+  }}
+
       />
 
       <div className="flex-1 min-w-0 pl-0 sm:pl-4">

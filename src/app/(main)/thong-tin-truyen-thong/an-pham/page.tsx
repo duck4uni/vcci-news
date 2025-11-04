@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { PATHS } from '@constants/paths'
+import { MEDIA_INFORMATION_CATEGORIES } from "@constants/categories";
 import EventFilter from "@app/dai-dien-gioi-chu/components/event-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination} from "@components/base/pagination";
@@ -21,38 +21,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-         <ListCategory
-          categories={[
-            {
-              title: "Tin VCCI",
-              href: `${PATHS.mediaInformation}/tin-vcci`,
-            },
-            {
-              title: "Tin kinh tế",
-              href: `${PATHS.mediaInformation}/tin-kinh-te`,
-            },
-                        {
-              title: "Tin doanh nghiệp",
-              href: `${PATHS.mediaInformation}/tin-doanh-nghiep`,
-            },
-                        {
-              title: "Chuyên đề",
-              href: `${PATHS.mediaInformation}/chuyen-de`,
-            },
-                        {
-              title: "Thông tin chính sách và pháp luật",
-              href: `${PATHS.mediaInformation}/thong-tin-chinh-sach-va-phap-luat`,
-            },
-                        {
-              title: "Ấn phẩm",
-              href: `${PATHS.mediaInformation}/an-pham`,
-            },
-                          {
-              title: "Thư viện tài liệu",
-              href: `${PATHS.mediaInformation}/thu-vien-tai-lieu`,
-            },
-          ]}
-        />
+  <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}

@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { PATHS } from '@constants/paths'
+import { OWNER_REPRESENTATIVES_CATEGORIES } from "@constants/categories";
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination} from "@components/base/pagination";
@@ -21,23 +21,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-         <ListCategory
-          categories={[
-            {
-              title: "Chức năng Đại diện Người sử dụng lao động",
-              href: `${PATHS.ownerRepresentatives}`,
-            },
-            {
-              title: "Sự kiện – Tập huấn NSDLĐ",
-              href: `${PATHS.ownerRepresentatives}/tap-huan-nsdld`,
-            },
-            {
-              title: "Tin liên quan",
-              href: `${PATHS.ownerRepresentatives}/tin-lien-quan`,
-            },
-            { title: "Chủ đề", href: `${PATHS.ownerRepresentatives}/chu-de` },
-          ]}
-        />
+  <ListCategory categories={OWNER_REPRESENTATIVES_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
@@ -60,10 +44,10 @@ export default function Page() {
           </main>
 
           {/* Sidebar */}
-          <aside className="space-y-6">
+          <aside className="space-y-6 order-first lg:order-last">
             <ListFilter />
 
-            <div className="bg-white border rounded-md overflow-hidden">
+            <div className="bg-white border rounded-md overflow-hidden hidden lg:block">
               <div className="w-full h-56 relative bg-gray-100">
                 <Image
                   src="/banner.webp"

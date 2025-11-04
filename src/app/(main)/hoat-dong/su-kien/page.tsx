@@ -1,13 +1,15 @@
 "use client";
 import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { PATHS } from '@constants/paths'
+import { EVENT_CATEGORIES } from "@constants/categories";
 import EventFilter from "@app/dai-dien-gioi-chu/components/event-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
+// ...existing code...
 import { Pagination} from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
+
 export default function Page() {
   const [submitSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -21,18 +23,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-         <ListCategory
-          categories={[
-            {
-              title: "Sự kiện",
-              href: `${PATHS.event}/su-kien`,
-            },
-            {
-              title: "Đào tạo",
-              href: `${PATHS.event}/dao-tao`,
-            },
-          ]}
-        />
+  <ListCategory categories={EVENT_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
