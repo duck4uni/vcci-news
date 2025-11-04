@@ -9,6 +9,7 @@ import EventCalendar from "@app/dai-dien-gioi-chu/components/event-calendar";
 import { Pagination} from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
+import { PATHS } from "@constants/paths";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
 export default function Page() {
   const [submitSearch] = useState("");
@@ -30,7 +31,11 @@ export default function Page() {
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
               {allData?.responseData.rows.map((news) => (
-                <NewsContent key={news.id} news={news} />
+                <NewsContent
+                  key={news.id}
+                  news={news}
+                  link={`${PATHS.mediaInformation}/tin-vcci/${news.id}`}
+                />
               ))}
 
               <div className="w-full flex justify-center mt-4">

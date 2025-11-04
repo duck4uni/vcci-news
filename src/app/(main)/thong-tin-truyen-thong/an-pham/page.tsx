@@ -27,9 +27,9 @@ export default function Page() {
           {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.map((news) => (
+              {/* {allData?.responseData.rows.map((news) => (
                 <NewsContent key={news.id} news={news} />
-              ))}
+              ))} */}
 
               <div className="w-full flex justify-center mt-4">
                 <Pagination

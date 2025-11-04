@@ -2,7 +2,7 @@ const MenuItem = ({ title, items, link }: { title: string; items: string[]; link
   <div className="group relative">
     <a
       className="px-3 py-5 text-[16px] font-[600] text-[#124588] hover:text-[#E8C518] transition block"
-      href={`${link}`}
+      href={`/${link}`}
     >
       {title}
     </a>

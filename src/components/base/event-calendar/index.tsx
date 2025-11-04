@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 export default function EventCalendar() {
-  const mockCalendar = {
+      const mockCalendar = {
     month: 10,
     year: 2025,
     highlighted: [6, 9, 12],
