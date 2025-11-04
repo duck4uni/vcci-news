@@ -9,6 +9,7 @@ import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
+import { PATHS } from "@constants/paths";
 export default function Page() {
   const [submitSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -29,7 +30,11 @@ export default function Page() {
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
               {allData?.responseData.rows.map((news) => (
-                <NewsContent key={news.id} news={news} />
+                <NewsContent
+                  key={news.id}
+                  news={news}
+                  link={`${PATHS.mediaInformation}/thu-vien-tai-lieu/${news.id}`}
+                />
               ))}
 
               <div className="w-full flex justify-center mt-4">

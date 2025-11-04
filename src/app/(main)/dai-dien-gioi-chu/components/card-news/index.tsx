@@ -3,11 +3,11 @@ import { NewsItem } from '@app/dai-dien-gioi-chu/lib/types/NewsPage.type';
 import Links from '@links/index'
 import dayjs from 'dayjs';
 import parse from 'html-react-parser'
-function NewsContent({ news }: { news: NewsItem }) {
+function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
 
   return (
     <a
-      href={`/tin-tuc/${news.id}`}
+      href={`${link}`}
       className="flex flex-col hover:no-underline sm:flex-row gap-2 mb-6 bg-white rounded-lg shadow-sm p-4 border items-start min-w-0"
     >
       <img

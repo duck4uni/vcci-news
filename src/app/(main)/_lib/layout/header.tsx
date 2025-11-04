@@ -12,7 +12,7 @@ function Header() {
   return (
     <>
       <div className="sticky top-0 w-full h-[56px] hidden lg:flex items-center justify-center bg-[#063e8e]">
-        <div className="max-w-[1215px] w-full px-4 flex items-center justify-between">
+        <div className="container w-full px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-[130px] h-[36px] bg-[#e8c518] flex items-center justify-center border-4 rounded-sm border-[#647792]">
               <a
