@@ -59,6 +59,7 @@ deploy:
     - export tag=$tag
     - export root=$(pwd)
     - export cicd_path=$root/.ci
+    - source $cicd_path/env-param.sh
   script:
     - |
       if [ "$check" == "[tag]" ]; then
