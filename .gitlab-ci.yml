@@ -1,0 +1,70 @@
+stages:
+  - build-base
+  - build
+  - deploy
+
+build-base:
+  stage: build-base
+  before_script:
+    - tag=$(echo $CI_COMMIT_MESSAGE | sed -r 's/.*(\[tag\])//')
+    - check=$(echo $CI_COMMIT_MESSAGE | sed -r 's/^.*(\[tag\]).*/\1/')
+    - echo "To release new docker image, tagname should be 'staging', your tag is:$tag"
+    - export tag=$tag
+    - export root=$(pwd)
+    - export docker_path=$root/.docker
+    - export cicd_path=$root/.ci
+    - source $cicd_path/env-params.sh
+  script:
+    - |
+      if [ "$check" == "[tag]" ]; then
+          bash $cicd_path/build/base.sh
+      fi
+  only:
+    refs:
+      - release
+    changes:
+      - "package*"
+  tags:
+    - runner-builder
+
+build:
+  stage: build
+  before_script:
+    - tag=$(echo $CI_COMMIT_MESSAGE | sed -r 's/.*(\[tag\])//')
+    - check=$(echo $CI_COMMIT_MESSAGE | sed -r 's/^.*(\[tag\]).*/\1/')
+    - echo "To release new docker image, tagname should be 'staging', your tag is:$tag"
+    - export tag=$tag
+    - export root=$(pwd)
+    - export docker_path=$root/.docker
+    - export cicd_path=$root/.ci
+    - source $cicd_path/env-params.sh
+  script:
+    - |
+      if [ "$check" == "[tag]" ]; then
+          bash $cicd_path/build/build.sh
+      fi
+  only:
+    refs:
+      - release
+  tags:
+    - runner-builder
+
+
+
+deploy:
+  stage: deploy
+  before_script:
+    - check=$(echo $CI_COMMIT_MESSAGE | sed -r 's/^.*(\[tag\]).*/\1/')
+    - export tag=$tag
+    - export root=$(pwd)
+    - export cicd_path=$root/.ci
+  script:
+    - |
+      if [ "$check" == "[tag]" ]; then
+          bash $cicd_path/deploy/deploy.sh
+      fi
+  only:
+    refs:
+      - release
+  tags:
+    - runner-inet

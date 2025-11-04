@@ -1,0 +1,16 @@
+services:
+  app:
+    container_name: ENVIRONMENT-NAME-PROJECT-NAME
+    image: IMAGE-NAME:IMAGE-TAG
+    ports:
+      - P-MAPPING:3000
+    restart: unless-stopped
+    pull_policy: always
+    networks:
+      meu-solutions-product-alpha-net:
+        ipv4_address: 192.167.10.22
+
+networks:
+  meu-solutions-product-alpha-net:
+    external: true
+    name: meu-solutions-product-alpha-net
