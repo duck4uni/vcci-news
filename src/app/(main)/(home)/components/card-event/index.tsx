@@ -13,6 +13,10 @@ function CardEvent({ event }: { event: EventItem }) {
         src={`${BASE_URL.imageEndpoint}${event.image}`}
         alt={event.name}
         className='w-[100px] md:w-[130px] aspect-3/2 object-cover'
+        onError={(e) => {
+          e.currentTarget.onerror = null
+          e.currentTarget.src = "/fallback.png"
+        }}
       />
       <div className='flex-1'>
         <p className='text-[#0056b3] font-bold text-sm line-clamp-2'>
