@@ -1,9 +1,9 @@
 "use client";
 import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { PATHS } from "@constants/paths";
-import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
+import { TRADE_PROMOTION_CATEGORIES } from "@constants/categories";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
+import EventCalendar from "@app/dai-dien-gioi-chu/components/event-calendar";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
@@ -21,26 +21,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-          <ListCategory
-          categories={[
-            {
-              title: "Hồ sơ thị trường",
-              href: `${PATHS.marketProfile}/`,
-            },
-            {
-              title: "Môi trường kinh doanh",
-              href: `${PATHS.tradePromotion}/moi-truong-kinh-doanh`,
-            },
-            {
-              title: "Cơ hội kinh doanh",
-              href: `${PATHS.tradePromotion}/co-hoi-kinh-doanh`,
-            },
-        {
-              title: "Hỗ trợ kinh doanh",
-              href: `${PATHS.tradePromotion}/ho-tro-kinh-doanh`,
-            },
-          ]}
-        />
+  <ListCategory categories={TRADE_PROMOTION_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
@@ -71,7 +52,7 @@ export default function Page() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+            <EventCalendar />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">
