@@ -55,6 +55,7 @@ deploy:
   stage: deploy
   before_script:
     - check=$(echo $CI_COMMIT_MESSAGE | sed -r 's/^.*(\[tag\]).*/\1/')
+    - tag=$(echo $CI_COMMIT_MESSAGE | sed -r 's/.*(\[tag\])//')
     - export tag=$tag
     - export root=$(pwd)
     - export cicd_path=$root/.ci
