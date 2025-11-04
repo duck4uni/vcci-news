@@ -1,28 +1,21 @@
-# Stage 1: Build
-FROM registry.gitlab.com/meusolutions/vcci-news:base AS buildbase
-# 'base' image đã có sẵn node_modules từ job trước (dùng làm cache)
+FROM registry.gitlab.com/meusolutions/vcci-news:base AS builder
 
-# Copy toàn bộ source code (bao gồm package.json mới)
 COPY . .
 
-# Bây giờ các script build sẽ chạy được
 RUN npm run generate:api
 RUN npm run build
 
-
-# Stage 2: Production Image (Không đổi)
-FROM node:22-alpine AS build
-
+FROM node:22-alpine AS production
 WORKDIR /app
 
-COPY package*.json ./
+COPY --from=builder /app/package*.json ./
 
-# Chỉ cài đặt production dependencies cho image cuối cùng
-RUN npm install --production
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy các file đã build từ stage 'buildbase'
-COPY --from=buildbase /app/.next ./.next
-COPY --from=buildbase /app/public ./public
+RUN npm prune --production
+
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 
