@@ -29,13 +29,16 @@ export default function Page() {
           {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.map((news) => (
-                <NewsContent
-                  key={news.id}
-                  news={news}
-                  link={`${PATHS.mediaInformation}/thu-vien-tai-lieu/${news.id}`}
-                />
-              ))}
+              {allData?.responseData.rows.length === 0 ? (
+                <p className="text-center py-4">Không có dữ liệu</p>
+              ) : (
+                allData?.responseData.rows.map((news) => (
+                  <NewsContent
+                    key={news.id}
+                    news={news}
+                    link={`${PATHS.mediaInformation}/thu-vien-tai-lieu/${news.id}`}
+                  />
+                )))}
 
               <div className="w-full flex justify-center mt-4">
                 <Pagination
