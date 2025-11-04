@@ -13,7 +13,7 @@ build-base:
     - export root=$(pwd)
     - export docker_path=$root/.docker
     - export cicd_path=$root/.ci
-    - source $cicd_path/env-params.sh
+    - source $cicd_path/env-param.sh
   script:
     - |
       if [ "$check" == "[tag]" ]; then
@@ -37,7 +37,7 @@ build:
     - export root=$(pwd)
     - export docker_path=$root/.docker
     - export cicd_path=$root/.ci
-    - source $cicd_path/env-params.sh
+    - source $cicd_path/env-param.sh
   script:
     - |
       if [ "$check" == "[tag]" ]; then
