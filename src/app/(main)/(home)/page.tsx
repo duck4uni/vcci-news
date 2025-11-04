@@ -162,7 +162,7 @@ const Page = () => {
         </div>
 
         {/* Tin tức + Liên kết nhanh */}
-        <section className="flex flex-col lg:flex-row gap-10 pb-10 mb-0">
+        <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
           {/* Left */}
           <div className="flex-1">
             <div className="flex justify-between items-center">
@@ -175,7 +175,7 @@ const Page = () => {
             </div>
             <hr className="border-blue-900 mb-4" />
 
-            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row gap-5">
               <div className="w-full md:w-1/2 bg-gray-500 flex items-center justify-center rounded-lg p-4 min-h-[180px] sm:min-h-[220px]">
                 <p className="text-white text-center">Khung tin tức VIP</p>
               </div>
@@ -213,7 +213,7 @@ const Page = () => {
           </div>
 
           {/* Right */}
-          <aside className="w-full lg:w-1/3">
+          <aside className="w-full lg:w-[30%]">
             <div className="flex justify-between items-center">
               <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
                 Liên kết nhanh
@@ -244,7 +244,7 @@ const Page = () => {
         </section>
 
         {/* Sự kiện */}
-        <section className="flex flex-col lg:flex-row gap-10 pb-10 mb-0">
+        <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
           <div className="flex-1 bg-blue-900 p-5">
             <div className="flex justify-between items-center">
               <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-[#e8c518]">
@@ -256,7 +256,7 @@ const Page = () => {
             </div>
             <hr className="border-[#e8c518] mb-4" />
 
-            <div className="flex flex-col md:flex-row gap-4 md:gap-6">
+            <div className="flex flex-col md:flex-row gap-5">
               <div className="w-full md:w-1/2 bg-gray-500 flex items-center justify-center rounded-lg p-4 min-h-[180px] sm:min-h-[220px]">
                 <p className="text-white">Khung tin tức VIP</p>
               </div>
@@ -267,7 +267,7 @@ const Page = () => {
               </div>
             </div>
           </div>
-          <div className='bg-blue-900 w-full lg:w-1/3 p-5'>
+          <div className='bg-blue-900 w-full lg:w-[30%] p-5'>
             <aside>
               <div className="flex justify-between items-center">
                 <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-[#e8c518]">
@@ -284,14 +284,14 @@ const Page = () => {
         </section>
 
         {/* Cơ hội kinh doanh + Chính sách */}
-        <div className='flex flex-col lg:flex-row gap-10 pb-10 mb-0'>
+        <div className='flex flex-col lg:flex-row gap-5 pb-10 mb-0'>
           <div className='flex flex-col flex-1'>
             <div>
               <a href="https://vcci-hcm.org.vn/wp-content/uploads/2022/11/MEDIA-KIT_VCCI-HCM-2022-Final.pdf">
                 <img src="/home/Standard-Banner-1-2024.png.webp" alt="banner" />
               </a>
             </div>
-            <section className="flex flex-col md:flex-row gap-4 lg:gap-6 pt-8">
+            <section className="flex flex-col md:flex-row gap-5 pt-8">
               <div className="flex-1">
                 <div className="flex justify-between items-center">
                   <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-blue-900">
@@ -326,7 +326,7 @@ const Page = () => {
               </div>
             </section>
           </div>
-          <div className='w-full lg:w-1/3'>
+          <div className='w-full lg:w-[30%] justify-center items-start flex'>
             <a href="https://smartgara.ecaraid.com/">
               <img src="/home/eCarAid_web_banner_600x400.webp" alt="banner" />
             </a>
@@ -334,7 +334,7 @@ const Page = () => {
         </div>
 
         {/* Hội viên tiêu biểu */}
-        <section className="flex flex-col lg:flex-row gap-10 pb-10 mb-0">
+        <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
           {/* left */}
           <aside className="w-full lg:w-1/3 flex-1 bg-[#e8c518] p-5">
             <div className="flex justify-between items-center mb-3">
@@ -377,7 +377,7 @@ const Page = () => {
           </aside>
 
           {/* right */}
-          <aside className="w-full lg:w-1/3 py-5">
+          <aside className="w-full lg:w-[30%] py-5">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-bold uppercase text-blue-900">Kết nối hội viên</h2>
               <a
@@ -419,7 +419,7 @@ const Page = () => {
         </section>
 
         {/* Video + đối tác */}
-        <section className="flex flex-col lg:flex-row gap-10 pb-10">
+        <section className="flex flex-col lg:flex-row gap-5 pb-10">
           {/* left */}
           <div className="flex flex-col flex-1">
             <div className="flex justify-between items-center mb-3">
@@ -462,7 +462,7 @@ const Page = () => {
           </div>
 
           {/* right */}
-          <aside className="w-full lg:w-1/3">
+          <aside className="w-full lg:w-[30%]">
             <div className="flex justify-between items-center mb-3">
               <h2 className="text-xl font-bold uppercase text-blue-900">Đối tác</h2>
               <a
