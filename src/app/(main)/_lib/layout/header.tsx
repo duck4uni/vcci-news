@@ -91,7 +91,10 @@ function Header() {
                   "Tin Hội Viên",
                 ]}
               />
-              <MenuItem title="Hoạt động" items={["Sự Kiện", "Đào Tạo"]} />
+              <MenuItem
+                title="Hoạt động"
+                link="hoat-dong"
+                items={["Sự Kiện", "Đào Tạo"]} />
               <MenuItem
                 title="Xuất Xứ Hàng Hóa"
                 link="xuat-xu-hang-hoa"

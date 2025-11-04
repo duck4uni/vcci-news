@@ -5,7 +5,7 @@ import { MEDIA_INFORMATION_CATEGORIES } from "@constants/categories";
 // ...existing code...
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
-import { Pagination} from "@components/base/pagination";
+import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
@@ -18,12 +18,12 @@ export default function Page() {
   const { data: allData } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
+    filters: submitSearch ? `title @=${submitSearch}` : 'category @=Tin doanh nghiệp',
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-  <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
+        <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
