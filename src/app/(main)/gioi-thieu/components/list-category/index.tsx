@@ -11,7 +11,7 @@ type Category = {
 
 const CATEGORIES: Category[] = [
   { title: "Về VCCI-HCM", href: "/gioi-thieu" },
-  { title: "Chức năng và nhiệm vụ", href: "/gioi-thieu/chuc-nang-nhiem-vu" },
+  { title: "Chức năng và nhiệm vụ", href: "/gioi-thieu/chuc-nang-va-nhiem-vu" },
   { title: "Sơ đồ tổ chức", href: "/gioi-thieu/so-do-to-chuc" },
   { title: "Dịch vụ cung cấp", href: "/gioi-thieu/dich-vu-cung-cap" },
 ]

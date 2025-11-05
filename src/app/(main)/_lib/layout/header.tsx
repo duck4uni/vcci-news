@@ -85,7 +85,10 @@ function Header() {
                 title="Giới thiệu"
                 link="gioi-thieu"
                 items={[
-                  { title: "Về VCCI-HCM", link: "ve-vcci-hcm" },
+                  {
+                    title: "Về VCCI-HCM",
+                    link: ""
+                  },
                   {
                     title: "Chức Năng Và Nhiệm Vụ",
                     link: "chuc-nang-va-nhiem-vu",
@@ -251,9 +254,8 @@ function Header() {
 
         {/* Mobile Menu */}
         <div
-          className={`lg:hidden bg-white shadow-lg transition-all duration-300 overflow-hidden ${
-            toggleMenu ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
-          }`}
+          className={`lg:hidden bg-white shadow-lg transition-all duration-300 overflow-hidden ${toggleMenu ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+            }`}
         >
           {[
             "Giới thiệu",
