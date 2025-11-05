@@ -7,12 +7,7 @@ import { Button } from '@/components/ui/button'
 
 type Category = { id: string; title: string }
 
-const MOCK_CATEGORIES: Category[] = [
-  { id: 'topic', title: 'Chuyên đề' },
-  { id: 'training', title: 'Tập huấn NSDLĐ' },
-  { id: 'law', title: 'Xây dựng và Phổ biến pháp luật' },
-  { id: 'trade', title: 'Xúc tiến thương mại và Đầu tư' }
-]
+
 
 type FilterPayload = {
   upcoming: boolean
@@ -22,14 +17,20 @@ type FilterPayload = {
   fromDate: string
   toDate: string
 }
-
-export const EventFilter: React.FC<{ onFilter?: (payload: FilterPayload) => void; onReset?: () => void }> = ({ onFilter, onReset }) => {
+export const EventFilter: React.FC<{
+  categories?: Category[]
+  onFilter?: (payload: FilterPayload) => void
+  onReset?: () => void
+}> = ({ categories: categoriesProp, onFilter, onReset }) => {
   const [upcoming, setUpcoming] = useState(false)
   const [past, setPast] = useState(false)
   const [query, setQuery] = useState('')
+  // Use categories passed via props if available; otherwise use an empty array
+  const categoriesList = categoriesProp ?? []
+
   const [categories, setCategories] = useState<Record<string, boolean>>(() => {
     const map: Record<string, boolean> = {}
-    MOCK_CATEGORIES.forEach((c) => (map[c.id] = false))
+    categoriesList.forEach((c) => (map[c.id] = false))
     return map
   })
   const [fromDate, setFromDate] = useState('')
@@ -85,14 +86,16 @@ export const EventFilter: React.FC<{ onFilter?: (payload: FilterPayload) => void
         />
       </div>
 
-      <div className="mb-4">
-        {MOCK_CATEGORIES.map((c) => (
-          <label key={c.id} className="flex items-center gap-2 mb-2">
-            <Checkbox checked={!!categories[c.id]} onCheckedChange={() => toggleCategory(c.id)} />
-            <span className="text-sm">{c.title}</span>
-          </label>
-        ))}
-      </div>
+      {categoriesList && categoriesList.length > 0 && (
+        <div className="mb-4">
+          {categoriesList.map((c) => (
+            <label key={c.id} className="flex items-center gap-2 mb-2">
+              <Checkbox checked={!!categories[c.id]} onCheckedChange={() => toggleCategory(c.id)} />
+              <span className="text-sm">{c.title}</span>
+            </label>
+          ))}
+        </div>
+      )}
 
       <div className="mb-4">
   <Label className="block text-sm mb-1">Từ ngày:</Label>

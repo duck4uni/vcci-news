@@ -4,7 +4,6 @@ import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
 import { EVENT_CATEGORIES } from "@constants/categories";
 import EventFilter from "@app/dai-dien-gioi-chu/components/event-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
-// ...existing code...
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetEvents } from '@api/endpoints/event'
@@ -14,8 +13,8 @@ import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
 import { Spinner } from "@components/ui/spinner";
 export default function Page() {
-  const [submitSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [filtersString, setFiltersString] = useState<string | undefined>('')
 
   const pageSize = 5;
   const { data: allData, isLoading } = useGetEvents<EventApiResponse>({
@@ -23,7 +22,7 @@ export default function Page() {
     currentPage: String(page),
     sortField: 'start_time',
     sortOrder: 'ASC',
-    filters: submitSearch ? `title @=${submitSearch},start_time>${new Date()}` : `start_time>${new Date()}`,
+    filters: filtersString ?? undefined,
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
@@ -61,7 +60,37 @@ export default function Page() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <EventFilter />
+            <EventFilter
+              onFilter={(payload) => {
+                const parts: string[] = []
+                // query
+                if (payload.query) parts.push(`title @=${payload.query}`)
+
+                const nowIso = new Date().toISOString()
+                // upcoming / past
+                if (payload.upcoming && !payload.past) {
+                  parts.push(`start_time>${nowIso}`)
+                } else if (payload.past && !payload.upcoming) {
+                  parts.push(`start_time<=${nowIso}`)
+                }
+                if (payload.fromDate) {
+                  const fromIso = new Date(payload.fromDate).toISOString()
+                  parts.push(`created_at>=${fromIso}`)
+                }
+                if (payload.toDate) {
+                  const toIso = new Date(payload.toDate).toISOString()
+                  parts.push(`created_at<=${toIso}`)
+                }
+
+                const filters = parts.length > 0 ? parts.join(',') : undefined
+                setFiltersString(filters)
+                setPage(1)
+              }}
+              onReset={() => {
+                setFiltersString(undefined)
+                setPage(1)
+              }}
+            />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">
