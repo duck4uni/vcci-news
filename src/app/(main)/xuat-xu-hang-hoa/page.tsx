@@ -1,6 +1,6 @@
 import React from "react";
 import ListCategory from "./components/list-category";
-import Calendar from "./components/Calendar";
+import EventCalendar from "@/components/base/event-calendar";
 import Image from "next/image";
 
 export default function page() {
@@ -202,7 +202,7 @@ export default function page() {
             </div>
           </div>
           <div className="lg:w-[calc(35%-10px)] w-full ">
-            <Calendar />
+            <EventCalendar />
             <div className="relative w-full mt-4 h-[300px] aspect-video rounded-lg overflow-hidden">
               <Image
                 src="/banner.webp"

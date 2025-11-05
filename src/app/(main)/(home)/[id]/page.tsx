@@ -15,6 +15,7 @@ import { useParams } from 'next/navigation'
 import ListCategory from '@/components/base/list-category'
 import { MEDIA_INFORMATION_CATEGORIES } from '@/constants/categories'
 import EventCalendar from '@/components/base/event-calendar'
+import parse from "html-react-parser";
 // import { t } from 'i18next'
 
 // Component
@@ -52,7 +53,7 @@ const NewsDetailPage = () => {
                   <hr />
                 </div>
                 <div className='flex-1 text-app-grey text-base overflow-hidden'>
-                  <AppEditorContent value={data?.responseData?.description ?? ''} />
+                  <div className="p-7.5 prose tiptap overflow-hidden">{parse(data?.responseData?.description ?? '')}</div>
                 </div>
               </main>
               {/* Sidebar */}
