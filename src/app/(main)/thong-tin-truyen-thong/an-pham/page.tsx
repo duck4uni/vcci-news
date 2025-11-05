@@ -7,7 +7,7 @@ import PublicationList from "./components/publicationList";
 export default function Page() {
   return (
     <div className="bg-[#f6f6f6]">
-      <div className="max-w-[1200px] m-auto flex flex-col gap-5 mb-[50px]">
+      <div className="container m-auto flex flex-col gap-5 mb-[50px]">
         <div className="border-[#e5e7f2] border-[1px]">
           <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
         </div>
