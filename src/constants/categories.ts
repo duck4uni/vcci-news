@@ -3,7 +3,7 @@ import { PATHS } from "@constants/paths";
 export const TRADE_PROMOTION_CATEGORIES = [
   {
     title: "Hồ sơ thị trường",
-    href: `${PATHS.marketProfile}`,
+    href: `${PATHS.tradePromotion}/ho-so-thi-truong`,
   },
   {
     title: "Môi trường kinh doanh",

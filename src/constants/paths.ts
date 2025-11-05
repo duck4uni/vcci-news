@@ -3,10 +3,9 @@ export const PATHS = {
 
   general: '/gioi-thieu',
   ownerRepresentatives: '/dai-dien-gioi-chu',
-  event:'/hoat-dong',
-  marketProfile: '/ho-so-thi-truong',
+  event: '/hoat-dong',
   tradePromotion: '/xuc-tien-thuong-mai',
-  mediaInformation:'/thong-tin-truyen-thong',
+  mediaInformation: '/thong-tin-truyen-thong',
   search: '/tim-kiem',
   originOfGoods: '/xuat-xu-hang-hoa',
 
