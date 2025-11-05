@@ -170,7 +170,7 @@ function footer() {
         </div>
       </div>
       <div className="bg-[#032248] h-[80px] flex items-center justify-center">
-        <div className="max-w-[1200px] w-full p-5">
+        <div className="container w-full p-5">
           <p className="text-[14px] text-white">
             © Bản quyền VCCI-HCM | All rights reserved
           </p>

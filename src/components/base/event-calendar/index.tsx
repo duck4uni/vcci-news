@@ -1,9 +1,8 @@
-
 "use client";
 import React, { useState } from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 export default function EventCalendar() {
-      const mockCalendar = {
+  const mockCalendar = {
     month: 10,
     year: 2025,
     highlighted: [6, 9, 12],
@@ -66,49 +65,49 @@ export default function EventCalendar() {
             {d}
           </div>
         ))}
-        {
-          (() => {
-            const totalDays = new Date(year, month, 0).getDate()
-            const firstDayIndex = new Date(year, month - 1, 1).getDay() // 0 (Sun) - 6 (Sat)
-            // previous month total days
-            const prevMonthTotalDays = new Date(year, month - 1, 0).getDate()
-            const totalCells = firstDayIndex + totalDays
-            const trailingCount = (7 - (totalCells % 7)) % 7
+        {(() => {
+          const totalDays = new Date(year, month, 0).getDate();
+          const firstDayIndex = new Date(year, month - 1, 1).getDay(); // 0 (Sun) - 6 (Sat)
+          // previous month total days
+          const prevMonthTotalDays = new Date(year, month - 1, 0).getDate();
+          const totalCells = firstDayIndex + totalDays;
+          const trailingCount = (7 - (totalCells % 7)) % 7;
 
-            return (
-              <>
-                {Array.from({ length: firstDayIndex }).map((_, i) => {
-                  const dayNum = prevMonthTotalDays - (firstDayIndex - 1) + i
-                  return (
-                    <div key={`prev-${i}`} className="py-2 text-sm text-gray-300">
-                      {dayNum}
-                    </div>
-                  )
-                })}
-
-                {Array.from({ length: totalDays }, (_, i) => i + 1).map((day) => {
-                  const isHighlighted = mockCalendar.highlighted.includes(day)
-                  return (
-                    <div
-                      key={day}
-                      className={`py-2 rounded-full w-10 h-10 flex flex-col justify-center items-center text-sm ${
-                        isHighlighted ? 'bg-yellow-500 text-white' : 'text-gray-700'
-                      }`}
-                    >
-                      {day}
-                    </div>
-                  )
-                })}
-
-                {Array.from({ length: trailingCount }).map((_, i) => (
-                  <div key={`next-${i}`} className="py-2 text-sm text-gray-300">
-                    {i + 1}
+          return (
+            <>
+              {Array.from({ length: firstDayIndex }).map((_, i) => {
+                const dayNum = prevMonthTotalDays - (firstDayIndex - 1) + i;
+                return (
+                  <div key={`prev-${i}`} className="py-2 text-sm text-gray-300">
+                    {dayNum}
                   </div>
-                ))}
-              </>
-            )
-          })()
-        }
+                );
+              })}
+
+              {Array.from({ length: totalDays }, (_, i) => i + 1).map((day) => {
+                const isHighlighted = mockCalendar.highlighted.includes(day);
+                return (
+                  <div
+                    key={day}
+                    className={`py-2 rounded-full w-10 h-10 flex flex-col justify-center items-center text-sm ${
+                      isHighlighted
+                        ? "bg-yellow-500 text-white"
+                        : "text-gray-700"
+                    }`}
+                  >
+                    {day}
+                  </div>
+                );
+              })}
+
+              {Array.from({ length: trailingCount }).map((_, i) => (
+                <div key={`next-${i}`} className="py-2 text-sm text-gray-300">
+                  {i + 1}
+                </div>
+              ))}
+            </>
+          );
+        })()}
       </div>
     </div>
   );
