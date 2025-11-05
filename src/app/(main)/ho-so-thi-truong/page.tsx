@@ -11,7 +11,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-  <ListCategory categories={TRADE_PROMOTION_CATEGORIES} />
+   <ListCategory categories={TRADE_PROMOTION_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}

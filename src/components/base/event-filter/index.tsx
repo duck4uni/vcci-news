@@ -81,6 +81,7 @@ export const EventFilter: React.FC<{ onFilter?: (payload: FilterPayload) => void
           placeholder="Tên sự kiện ..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          className='text-black placeholder:text-gray-400 rounded-none py-2.5 px-2'
         />
       </div>
 
@@ -104,8 +105,8 @@ export const EventFilter: React.FC<{ onFilter?: (payload: FilterPayload) => void
       </div>
 
       <div className="flex items-center gap-3">
-        <Button onClick={handleFilter} className="flex-1">Lọc sự kiện</Button>
-        <Button variant="outline" onClick={handleReset} className="flex-1">Bỏ lọc</Button>
+        <Button onClick={handleFilter} className="flex-1 rounded-none font-medium text-lg text-white hover:bg-muted-foreground hover:outline-1 outline-primary hover:text-primary">Lọc sự kiện</Button>
+        <Button onClick={handleReset} className="flex-1 rounded-none font-medium text-lg text-white hover:bg-muted-foreground hover:outline-1 outline-primary hover:text-primary">Bỏ lọc</Button>
       </div>
     </aside>
   )

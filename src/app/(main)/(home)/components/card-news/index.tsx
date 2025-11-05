@@ -7,13 +7,18 @@ function CardNews({ news }: { news: NewsAdminItem }) {
   return (
     <a
       href={`${news.id}`}
-      className='flex flex-row gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3'
+      className='flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3 p-2 sm:p-3 border border-gray-200 bg-white rounded-md'
     >
       <img
         src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
-        className='w-[120px] h-20 object-cover rounded-sm'
+        className="w-[100px] md:w-[130px] aspect-3/2 object-cover"
+        onError={(e) => {
+          e.currentTarget.onerror = null
+          e.currentTarget.src = "/fallback.png"
+        }}
       />
+
       <div className='flex-1'>
         <p className='text-[#0056b3] font-bold text-sm line-clamp-2'>
           {news.title}

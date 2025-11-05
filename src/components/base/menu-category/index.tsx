@@ -1,5 +1,4 @@
 'use client'
-// Local simplified menu type instead of importing HeaderMenu
 type Menu = {
   id: string | number
   name: string
