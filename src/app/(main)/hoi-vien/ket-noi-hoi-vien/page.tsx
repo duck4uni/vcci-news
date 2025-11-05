@@ -7,6 +7,7 @@ import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
+import { Spinner } from "@components/ui/spinner";
 
 export default function Page() {
   const [submitSearch] = useState("");
@@ -26,26 +27,35 @@ export default function Page() {
           {/* Main content */}
           <main className="lg:col-span-2 bg-background">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.map((news) => (
-                <CardNews key={news.id} news={news} />
-              ))}
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Spinner className="size-8" />
+                  <span className="ml-2 text-gray-600">Đang tải dữ liệu kết nối hội viên...</span>
+                </div>
+              ) : (
+                <>
+                  {allData?.responseData.rows.map((news) => (
+                    <CardNews key={news.id} news={news} />
+                  ))}
 
-              <div className='w-full flex justify-center mt-4'>
-                <Pagination
-                  pageCount={Number(allData?.responseData.totalPages ?? 1)}
-                  page={Number(allData?.responseData.currentPage ?? page)}
-                  onChangePage={(p) => setPage(p)}
-                  onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-                  onGoToNextPage={() =>
-                    setPage(
-                      Math.min(
-                        Number(allData?.responseData.totalPages ?? 1),
-                        page + 1
-                      )
-                    )
-                  }
-                />
-              </div>
+                  <div className='w-full flex justify-center mt-4'>
+                    <Pagination
+                      pageCount={Number(allData?.responseData.totalPages ?? 1)}
+                      page={Number(allData?.responseData.currentPage ?? page)}
+                      onChangePage={(p) => setPage(p)}
+                      onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
+                      onGoToNextPage={() =>
+                        setPage(
+                          Math.min(
+                            Number(allData?.responseData.totalPages ?? 1),
+                            page + 1
+                          )
+                        )
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </main>
 

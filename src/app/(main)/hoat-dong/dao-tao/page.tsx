@@ -9,12 +9,13 @@ import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
+import { Spinner } from "@components/ui/spinner";
 export default function Page() {
   const [submitSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const pageSize = 5;
-  const { data: allData } = useGetNews<GetNewsResponseType>({
+  const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
     filters: submitSearch ? `title @=${submitSearch}` : 'category @=Đào tạo',
@@ -28,19 +29,28 @@ export default function Page() {
           {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.map((news) => (
-                <NewsContent key={news.id} news={news} link={`${PATHS.event}/dao-tao/${news.id}`} />
-              ))}
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Spinner className="size-8" />
+                  <span className="ml-2 text-gray-600">Đang tải khóa đào tạo...</span>
+                </div>
+              ) : (
+                <>
+                  {allData?.responseData.rows.map((news) => (
+                    <NewsContent key={news.id} news={news} link={`${PATHS.event}/dao-tao/${news.id}`} />
+                  ))}
 
-              <div className="w-full flex justify-center mt-4">
-                <Pagination
-                  pageCount={Number(allData?.responseData.totalPages ?? 1)}
-                  page={Number(allData?.responseData.currentPage ?? page)}
-                  onChangePage={(p) => setPage(p)}
-                  onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-                  onGoToNextPage={() => setPage(Math.min(Number(allData?.responseData.totalPages ?? 1), page + 1))}
-                />
-              </div>
+                  <div className="w-full flex justify-center mt-4">
+                    <Pagination
+                      pageCount={Number(allData?.responseData.totalPages ?? 1)}
+                      page={Number(allData?.responseData.currentPage ?? page)}
+                      onChangePage={(p) => setPage(p)}
+                      onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
+                      onGoToNextPage={() => setPage(Math.min(Number(allData?.responseData.totalPages ?? 1), page + 1))}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </main>
 

@@ -8,6 +8,7 @@ import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
+import { Spinner } from "@components/ui/spinner";
 import { PATHS } from "@constants/paths";
 import { useSearchParams } from 'next/navigation'
 
@@ -16,7 +17,7 @@ function SearchContent() {
   const searchParams = useSearchParams()
   const query = searchParams.get('q') //
   const pageSize = 5;
-  const { data: allData } = useGetNews<GetNewsResponseType>({
+  const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
     filters: query ? `title @=${query}` : undefined,
@@ -40,30 +41,39 @@ function SearchContent() {
           {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.map((news) => (
-                <NewsContent
-                  key={news.id}
-                  news={news}
-                  link={`${PATHS.mediaInformation}/tin-vcci/${news.id}`}
-                />
-              ))}
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Spinner className="size-8" />
+                  <span className="ml-2 text-gray-600">Đang tìm kiếm...</span>
+                </div>
+              ) : (
+                <>
+                  {allData?.responseData.rows.map((news) => (
+                    <NewsContent
+                      key={news.id}
+                      news={news}
+                      link={`${PATHS.mediaInformation}/tin-vcci/${news.id}`}
+                    />
+                  ))}
 
-              <div className="w-full flex justify-center mt-4">
-                <Pagination
-                  pageCount={Number(allData?.responseData.totalPages ?? 1)}
-                  page={Number(allData?.responseData.currentPage ?? page)}
-                  onChangePage={(p) => setPage(p)}
-                  onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-                  onGoToNextPage={() =>
-                    setPage(
-                      Math.min(
-                        Number(allData?.responseData.totalPages ?? 1),
-                        page + 1
-                      )
-                    )
-                  }
-                />
-              </div>
+                  <div className="w-full flex justify-center mt-4">
+                    <Pagination
+                      pageCount={Number(allData?.responseData.totalPages ?? 1)}
+                      page={Number(allData?.responseData.currentPage ?? page)}
+                      onChangePage={(p) => setPage(p)}
+                      onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
+                      onGoToNextPage={() =>
+                        setPage(
+                          Math.min(
+                            Number(allData?.responseData.totalPages ?? 1),
+                            page + 1
+                          )
+                        )
+                      }
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </main>
 

@@ -15,10 +15,10 @@ export default function Page() {
   const [page, setPage] = useState(1);
 
   const pageSize = 5;
-  const { data: allData } = useGetNews<GetNewsResponseType>({
+  const { data: allData,isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : 'category @=Thông tin chính sách và pháp luật',
+    filters: submitSearch ? `title @=${submitSearch},category @=Thông tin chính sách và pháp luật` : 'category @=Thông tin chính sách và pháp luật',
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
