@@ -5,7 +5,7 @@ import { TRADE_PROMOTION_CATEGORIES } from "@constants/categories";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
-import EventCalendar from "@app/dai-dien-gioi-chu/components/event-calendar";
+import EventCalendar from "@/components/base/event-calendar";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
@@ -19,7 +19,7 @@ export default function Page() {
     pageSize: String(pageSize),
     currentPage: String(page),
     // filters: submitSearch ? `title @=${submitSearch}` : undefined,
-    filters:'category@=Môi trường kinh doanh'
+    filters: 'category@=Môi trường kinh doanh'
   });
   return (
     <div className="min-h-screen container mx-auto p-4">

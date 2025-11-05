@@ -4,7 +4,7 @@ import { MEDIA_INFORMATION_CATEGORIES } from "@/constants/categories";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound, useParams } from "next/navigation";
-import Calendar from "../components/calendar";
+import EventCalendar from "@/components/base/event-calendar";
 
 const publications = [
   {
@@ -106,7 +106,7 @@ export default function PublicationDetail() {
           </div>
 
           <div className="lg:w-[calc(35%-10px)] w-full">
-            <Calendar />
+            <EventCalendar />
             <div className="relative w-full mt-4 h-[300px] aspect-video rounded-lg overflow-hidden">
               <Image
                 src="/banner.webp"

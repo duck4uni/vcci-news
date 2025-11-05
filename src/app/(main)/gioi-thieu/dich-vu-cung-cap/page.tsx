@@ -1,7 +1,7 @@
 'use client'
 import React from "react";
 import ListCategory from "../components/list-category";
-import EventCalendar from "../components/event-calendar";
+import EventCalendar from '@/components/base/event-calendar';
 
 const Page = () => {
   return (
