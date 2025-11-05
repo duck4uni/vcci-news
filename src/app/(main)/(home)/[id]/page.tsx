@@ -41,7 +41,7 @@ const NewsDetailPage = () => {
             <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
               {/* Main content */}
-              <main className="lg:col-span-2 bg-white border rounded-md p-7">
+              <main className="lg:col-span-2 bg-white border rounded-md p-8">
                 <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
                   {data?.responseData?.title}
                 </div>
@@ -53,7 +53,7 @@ const NewsDetailPage = () => {
                   <hr />
                 </div>
                 <div className='flex-1 text-app-grey text-base overflow-hidden'>
-                  <div className="p-7.5 prose tiptap overflow-hidden">{parse(data?.responseData?.description ?? '')}</div>
+                  <div className="prose tiptap overflow-hidden">{parse(data?.responseData?.description ?? '')}</div>
                 </div>
               </main>
               {/* Sidebar */}
