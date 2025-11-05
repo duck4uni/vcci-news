@@ -8,6 +8,7 @@ import { useGetNewsId } from '@/api/endpoints/news';
 import parse from "html-react-parser";
 import { useParams } from 'next/navigation'
 import { GetNewsDetailResponseType } from '@lib/types/news-detail-response-data';
+import { Spinner } from "@components/ui/spinner";
 // ...existing code...
 const Page: React.FC = () => {
     const { id } = useParams()
@@ -20,7 +21,22 @@ const Page: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
           <main className="lg:col-span-2 bg-white border rounded-md p-6">
-            <div className="p-7.5 prose tiptap overflow-hidden">{parse(data?.responseData?.description ?? '')}</div>
+            {isLoading ? (
+              <div className="flex justify-center items-center py-12">
+                <Spinner className="size-8" />
+                <span className="ml-2 text-gray-600">Đang tải chi tiết hỗ trợ kinh doanh...</span>
+              </div>
+            ) : data?.responseData ? (
+              <>
+                <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
+                  {data?.responseData?.title}
+                </div>
+                <hr className="py-2"/>
+                <div className="p-7.5 prose tiptap overflow-hidden">{parse(data?.responseData?.description ?? '')}</div>
+              </>
+            ) : (
+              <p className="text-center py-4">Không có dữ liệu</p>
+            )}
           </main>
 
           {/* Sidebar */}

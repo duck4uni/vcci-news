@@ -140,6 +140,7 @@ export * from './putEventsLinkParams';
 export * from './putEventsParams';
 export * from './putFooterParams';
 export * from './putMembershipFeeParams';
+export * from './putNewsPageConfigCategoryIdBody';
 export * from './putNotificationsMarkAsReadParams';
 export * from './putNotificationsParams';
 export * from './putOrderPaymentParams';

@@ -14,7 +14,7 @@ import {
 import Image from "next/image";
 import vietnamMap from "@/assets/vietnam-map-white.png.webp";
 
-function footer() {
+function Footer() {
   const emailRef = useRef<HTMLInputElement>(null);
   const checkBoxRef = useRef<HTMLInputElement>(null);
   const [emailError, setEmailError] = useState(false);
@@ -212,4 +212,4 @@ function footer() {
   );
 }
 
-export default footer;
+export default Footer;

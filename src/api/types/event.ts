@@ -1,3 +1,4 @@
+import { ResponseType } from '@lib/types/common'
 export type EventStatus = {
   id: string;
   name: string;
@@ -22,7 +23,68 @@ export type EventOrganization = {
   add_info: unknown | null;
   organization: unknown | null;
 };
-
+// useGetEventsId
+export type GetEventsIdQueryResponseType = ResponseType<{
+  accept_entries: boolean | null
+  counter_cost: number
+  counter_count: number
+  created_at: string
+  description: string
+  end_time: string
+  event_organizations: Array<{
+    add_info: string | null
+    created_at: string
+    guest_image: string | null
+    guest_name: string | null
+    id: string
+    org_counter_count: number | null
+    org_table_count: number | null
+    organization: {
+      address: string
+      avatar: string | null
+      club_link: string | null
+      club_name: string | null
+      id: string
+      name: string
+      org_categories: string[]
+      org_link: string | null
+      org_status_id: string | null
+      organization_products: Array<{
+        id: string
+        images: string[]
+      }>
+      province: string[]
+      tax_code: string
+      users: Array<{
+        id: string
+      }>
+      website: string
+    } | null
+    role: 'PARTAKER' | 'MAIN' | 'SUPPORT' | 'SUPPORT_1' | 'SUPPORT_2' | 'SUPPORT_3' | 'GUEST'
+    status: string | null
+  }>
+  host_club: string | null
+  id: string
+  image: string
+  introduction: string | null
+  location: string
+  name: string
+  org_support_titles: string[] | null
+  province: string
+  seo_text: string
+  seo_text_en: string | null
+  start_time: string
+  status: string
+  status_status: {
+    code: string
+    id: string
+    name: string
+    name_en: string
+  }
+  table_cost: number
+  table_count: number
+  updated_at: string | null
+}>
 export type EventItem = {
   id: string;
   name: string;
