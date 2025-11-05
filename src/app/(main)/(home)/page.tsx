@@ -12,7 +12,7 @@ import BASE_URL from '@/links/index'
 import { Spinner } from '@/components/ui'
 import CardNews from './components/card-news'
 import CardEvent from './components/card-event'
-import EventCalendar from './components/event-calendar'
+import EventCalendar from '@components/base/event-calendar'
 import dayjs from 'dayjs'
 import AppEditorContent from '@/components/shared/editor-content'
 

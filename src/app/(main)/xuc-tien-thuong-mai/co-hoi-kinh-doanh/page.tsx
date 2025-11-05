@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
 import { TRADE_PROMOTION_CATEGORIES } from "@constants/categories";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
-import EventCalendar from "@app/dai-dien-gioi-chu/components/event-calendar";
+import EventCalendar from "@/components/base/event-calendar";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
@@ -19,12 +19,12 @@ export default function Page() {
     pageSize: String(pageSize),
     currentPage: String(page),
     // filters: submitSearch ? `title @=${submitSearch}` : undefined,
-    filters:'category@=Cơ hội kinh doanh'
+    filters: 'category@=Cơ hội kinh doanh'
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-  <ListCategory categories={TRADE_PROMOTION_CATEGORIES} />
+        <ListCategory categories={TRADE_PROMOTION_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
