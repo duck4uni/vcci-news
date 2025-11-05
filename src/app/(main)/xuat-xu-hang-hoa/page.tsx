@@ -6,7 +6,7 @@ import Image from "next/image";
 export default function page() {
   return (
     <div className="bg-[#f6f6f6]">
-      <div className="max-w-[1200px] m-auto flex flex-col gap-5 mb-[50px]">
+      <div className="container m-auto flex flex-col gap-5 mb-[50px]">
         <div className="border-[#e5e7f2] border-[1px]">
           <ListCategory />
         </div>

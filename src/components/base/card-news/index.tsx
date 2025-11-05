@@ -2,8 +2,24 @@
 import { NewsItem } from '@app/dai-dien-gioi-chu/lib/types/NewsPage.type';
 import Links from '@links/index'
 import dayjs from 'dayjs';
-import parse from 'html-react-parser'
-function NewsContent({ news, link }: { news: NewsItem, link: string }) {
+
+// Helper: remove <img> tags and extract plain text from HTML
+const stripImagesAndHtml = (html?: string) => {
+  if (!html) return ''
+  // remove img tags first
+  const withoutImgs = html.replace(/<img[^>]*>/gi, '')
+  // use DOMParser on client for robust extraction
+  if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
+    try {
+      const doc = new DOMParser().parseFromString(withoutImgs, 'text/html')
+      return doc.body.textContent || ''
+    } catch {
+      // fallback to regex
+    }
+  }
+  return withoutImgs.replace(/<[^>]*>/g, '')
+}
+function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
 
   return (
     <a
@@ -14,20 +30,21 @@ function NewsContent({ news, link }: { news: NewsItem, link: string }) {
         src={`${Links.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
         className="w-full sm:w-56 md:w-64 h-40 md:h-36 object-cover shrink-0"
-        onError={(e) => {
-          e.currentTarget.src = "/img-error.png"
-        }}
+     onError={(e) => {
+    e.currentTarget.src = "/img-error.png"
+  }}
+
       />
 
       <div className="flex-1 min-w-0 pl-0 sm:pl-4">
-        <p className="text-primary font-semibold text-base md:text-lg line-clamp-2 wrap-break-word hover:no-underline">
+  <p className="text-primary font-semibold text-base md:text-lg hover:underline line-clamp-2 wrap-break-word">
           {news.title}
         </p>
 
         <div className="text-sm my-2 text-[#00AED5]">{dayjs(news.release_at).format('DD/MM/YYYY')}</div>
 
         <div className="text-sm text-[#777] line-clamp-3">
-          <div className="text-sm prose tiptap">{parse(news.description)}</div>
+          <div className="text-sm prose tiptap">{stripImagesAndHtml(news.description)}</div>
         </div>
       </div>
     </a>

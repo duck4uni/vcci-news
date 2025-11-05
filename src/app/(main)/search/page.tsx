@@ -1,30 +1,41 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, Suspense } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { TRADE_PROMOTION_CATEGORIES } from "@constants/categories";
+import { OWNER_REPRESENTATIVES_CATEGORIES } from "@constants/categories";
+import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
-import EventCalendar from "@app/dai-dien-gioi-chu/components/event-calendar";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
-import { PATHS } from "@constants/paths";
 import { Spinner } from "@components/ui/spinner";
-export default function Page() {
-  const [submitSearch] = useState("");
-  const [page, setPage] = useState(1);
+import { PATHS } from "@constants/paths";
+import { useSearchParams } from 'next/navigation'
 
+function SearchContent() {
+  const [page, setPage] = useState(1);
+  const searchParams = useSearchParams()
+  const query = searchParams.get('q') //
   const pageSize = 5;
   const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    // filters: submitSearch ? `title @=${submitSearch}` : undefined,
-    filters:'category@=Môi trường kinh doanh'
+    filters: query ? `title @=${query}` : undefined,
   });
+  
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-        <ListCategory categories={TRADE_PROMOTION_CATEGORIES} />
+        <div className="border-t border-gray-200 bg-white p-2.5">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="py-3">
+              <h1 className="text-md md:text-lg font-semibold leading-6 text-gray-900">
+                {" "}
+                Search Results for: {query}
+              </h1>
+            </div>
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
@@ -33,17 +44,15 @@ export default function Page() {
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
                   <Spinner className="size-8" />
-                  <span className="ml-2 text-gray-600">Đang tải môi trường kinh doanh...</span>
+                  <span className="ml-2 text-gray-600">Đang tìm kiếm...</span>
                 </div>
-              ) : allData?.responseData.rows.length === 0 ? (
-                <p className="text-center py-4">Không có dữ liệu</p>
               ) : (
                 <>
                   {allData?.responseData.rows.map((news) => (
                     <NewsContent
                       key={news.id}
                       news={news}
-                      link={`${PATHS.tradePromotion}/${news.id}`}
+                      link={`${PATHS.mediaInformation}/tin-vcci/${news.id}`}
                     />
                   ))}
 
@@ -69,11 +78,9 @@ export default function Page() {
           </main>
 
           {/* Sidebar */}
-          <aside className="space-y-6">
-            <EventCalendar />
-
-            <div className="bg-white border rounded-md overflow-hidden">
-              <div className="w-full h-56 relative bg-gray-100">
+          <aside className="space-y-6 order-first lg:order-last">
+            <div className="bg-white border rounded-md overflow-hidden hidden lg:block">
+              <div className="w-full h-62 relative bg-gray-100">
                 <Image
                   src="/banner.webp"
                   alt="Quảng cáo"
@@ -86,5 +93,20 @@ export default function Page() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen container mx-auto p-4 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#063e8e] mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading search results...</p>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }

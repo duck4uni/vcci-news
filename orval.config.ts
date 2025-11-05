@@ -79,7 +79,8 @@ const orvalConfig = async () => {
             'UserHistory',
             'Approvals',
             'News',
-            'Category'
+            'Category',
+            'NewsPageConfig',
           ]
         }
       }

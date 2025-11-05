@@ -20,6 +20,10 @@ const Page: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
           <main className="lg:col-span-2 bg-white border rounded-md p-6">
+                            <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
+                  {data?.responseData?.title}
+                </div>
+                <hr className="py-2"/>
             <div className="p-7.5 prose tiptap overflow-hidden">{parse(data?.responseData?.description ?? '')}</div>
           </main>
 
