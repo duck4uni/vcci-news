@@ -8,6 +8,7 @@ import { useGetNewsId } from '@/api/endpoints/news';
 import parse from "html-react-parser";
 import { useParams } from 'next/navigation'
 import { GetNewsDetailResponseType } from '@lib/types/news-detail-response-data';
+import EventCalendar from '@/components/base/event-calendar'
 import { Spinner } from "@components/ui/spinner";
 // ...existing code...
 const Page: React.FC = () => {
@@ -39,7 +40,7 @@ const Page: React.FC = () => {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+            <EventCalendar />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">

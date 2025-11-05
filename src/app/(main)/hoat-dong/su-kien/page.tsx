@@ -64,7 +64,7 @@ export default function Page() {
               onFilter={(payload) => {
                 const parts: string[] = []
                 // query
-                if (payload.query) parts.push(`title @=${payload.query}`)
+                if (payload.query) parts.push(`name @=${payload.query}`)
 
                 const nowIso = new Date().toISOString()
                 // upcoming / past

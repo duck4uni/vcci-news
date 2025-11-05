@@ -10,15 +10,16 @@ import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
+import { Spinner } from "@components/ui/spinner";
 export default function Page() {
-  const [submitSearch] = useState("");
+  const [submitSearch,setSubmitSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const pageSize = 5;
   const { data: allData,isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch},category @=Thông tin chính sách và pháp luật` : 'category @=Thông tin chính sách và pháp luật',
+    filters: submitSearch ? `title @=${submitSearch},category@=Thông tin chính sách và pháp luật` : 'category @=Thông tin chính sách và pháp luật',
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
@@ -29,32 +30,40 @@ export default function Page() {
           {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.length === 0 ? (
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Spinner className="size-8" />
+                  <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
+                </div>
+              ) : (!allData || (allData.responseData.rows || []).length === 0) ? (
                 <p className="text-center py-4">Không có dữ liệu</p>
               ) : (
-                allData?.responseData.rows.map((news) => (
-                  <NewsContent
-                    key={news.id}
-                    news={news}
-                    link={`${PATHS.mediaInformation}/thong-tin-chinh-sach-va-phap-luat/${news.id}`}
-                  />
-                )))}
+                <>
+                  {allData.responseData.rows.map((news) => (
+                    <NewsContent
+                      key={news.id}
+                      news={news}
+                      link={`${PATHS.mediaInformation}/thong-tin-chinh-sach-va-phap-luat/${news.id}`}
+                    />
+                  ))}
 
-              <div className="w-full flex justify-center mt-4">
-                <Pagination
-                  pageCount={Number(allData?.responseData.totalPages ?? 1)}
-                  page={Number(allData?.responseData.currentPage ?? page)}
-                  onChangePage={(p) => setPage(p)}
-                  onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-                  onGoToNextPage={() => setPage(Math.min(Number(allData?.responseData.totalPages ?? 1), page + 1))}
-                />
-              </div>
+                  <div className="w-full flex justify-center mt-4">
+                    <Pagination
+                      pageCount={Number(allData?.responseData.totalPages ?? 1)}
+                      page={Number(allData?.responseData.currentPage ?? page)}
+                      onChangePage={(p) => setPage(p)}
+                      onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
+                      onGoToNextPage={() => setPage(Math.min(Number(allData?.responseData.totalPages ?? 1), page + 1))}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </main>
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+           <ListFilter onSearch={setSubmitSearch} />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">

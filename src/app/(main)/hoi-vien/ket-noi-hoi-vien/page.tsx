@@ -10,14 +10,14 @@ import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { Spinner } from "@components/ui/spinner";
 
 export default function Page() {
-  const [submitSearch] = useState("");
+  const [submitSearch,setSubmitSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const pageSize = 5;
   const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : `category @=Kết nối hội viên`,
+    filters: submitSearch ? `title @=${submitSearch},category@=Kết nối hội viên` : `category@=Kết nối hội viên`,
   });
   return (
     <div className="min-h-screen container mx-auto pb-4">
@@ -32,9 +32,11 @@ export default function Page() {
                   <Spinner className="size-8" />
                   <span className="ml-2 text-gray-600">Đang tải dữ liệu kết nối hội viên...</span>
                 </div>
+              ) : (!allData || (allData.responseData.rows || []).length === 0) ? (
+                <div className="py-12 text-center text-gray-600">Không có dữ liệu</div>
               ) : (
                 <>
-                  {allData?.responseData.rows.map((news) => (
+                  {allData.responseData.rows.map((news) => (
                     <CardNews key={news.id} news={news} />
                   ))}
 
@@ -61,7 +63,7 @@ export default function Page() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+            <ListFilter onSearch={setSubmitSearch} />
           </aside>
         </div>
       </div>

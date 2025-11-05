@@ -12,7 +12,7 @@ import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
 import { Spinner } from "@components/ui/spinner";
 export default function Page() {
-  const [submitSearch] = useState("");
+  const [submitSearch,setSubmitSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const pageSize = 5;
@@ -63,7 +63,7 @@ export default function Page() {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+            <ListFilter onSearch={setSubmitSearch} />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">

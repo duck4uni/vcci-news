@@ -9,6 +9,7 @@ import parse from "html-react-parser";
 import { useParams } from 'next/navigation'
 import { GetNewsDetailResponseType } from '@lib/types/news-detail-response-data';
 import { Spinner } from "@components/ui/spinner";
+import EventCalendar from '@/components/base/event-calendar'
 // ...existing code...
 const Page: React.FC = () => {
     const { id } = useParams()
@@ -41,7 +42,7 @@ const Page: React.FC = () => {
 
           {/* Sidebar */}
           <aside className="space-y-6">
-            <ListFilter />
+            <EventCalendar />
 
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">

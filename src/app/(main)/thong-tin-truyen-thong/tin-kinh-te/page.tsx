@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
 import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
+import {ListFilter} from "@app/dai-dien-gioi-chu/components/list-filter";
 import { MEDIA_INFORMATION_CATEGORIES } from "@constants/categories";
-// ...existing code...
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
@@ -11,14 +11,14 @@ import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { PATHS } from "@constants/paths";
 import { Spinner } from "@components/ui/spinner";
 export default function Page() {
-  const [submitSearch] = useState("");
+  const [submitSearch,setSubmitSearch] = useState("");
   const [page, setPage] = useState(1);
 
   const pageSize = 5;
   const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch},category @=Tin kinh tế` : 'category @=Tin kinh tế',
+    filters: submitSearch ? `title @=${submitSearch},category@=Tin kinh tế` : 'category@=Tin kinh tế',
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
@@ -63,7 +63,7 @@ export default function Page() {
           {/* Sidebar */}
           <aside className="space-y-6">
             {/* <EventFilter /> */}
-
+            <ListFilter onSearch={setSubmitSearch} />
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full h-56 relative bg-gray-100">
                 <Image
