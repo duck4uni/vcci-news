@@ -82,7 +82,7 @@ const Page = () => {
   ];
 
   return (
-    (isLoadingNews || isLoadingBusinessOpportunities || isLoadingPolicyAndLegalInformation || isLoadingCategory || isLoadingEvent) ? (
+    (isLoadingBusinessOpportunities || isLoadingPolicyAndLegalInformation || isLoadingCategory || isLoadingEvent) ? (
       <div className="container w-full h-[80vh] flex justify-center items-center">
         <Spinner />
       </div>
