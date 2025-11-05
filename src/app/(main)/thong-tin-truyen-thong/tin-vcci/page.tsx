@@ -5,7 +5,7 @@ import { MEDIA_INFORMATION_CATEGORIES } from "@constants/categories";
 // ...existing code...
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
-import EventCalendar from "@app/dai-dien-gioi-chu/components/event-calendar";
+import EventCalendar from "@/components/base/event-calendar";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";

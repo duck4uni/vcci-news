@@ -1,7 +1,7 @@
-import { FC, JSX } from 'react';
-import htmlParse, { DOMNode, Element, Text } from 'html-react-parser';
-import { AppEditorContentProps } from './AppEditorContent.type';
-import './AppEditorContent.css';
+import { FC, JSX } from "react";
+import htmlParse, { DOMNode, Element, Text } from "html-react-parser";
+import { AppEditorContentProps } from "./AppEditorContent.type";
+import "./AppEditorContent.css";
 
 const AppEditorContent: FC<AppEditorContentProps> = ({ value = '', className = '' }) => {
   const transform = (node: DOMNode): JSX.Element | string | undefined | null => {
@@ -49,7 +49,9 @@ const AppEditorContent: FC<AppEditorContentProps> = ({ value = '', className = '
 
   return (
     <div className="jodit-container app-editor-container">
-      <div className={`jodit-wysiwyg ${className}`}>{htmlParse(value, { replace: transform })}</div>
+      <div className={`jodit-wysiwyg ${className}`}>
+        {htmlParse(value, { replace: transform })}
+      </div>
     </div>
   );
 };

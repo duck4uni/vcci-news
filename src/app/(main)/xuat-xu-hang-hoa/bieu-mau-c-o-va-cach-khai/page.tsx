@@ -1,12 +1,12 @@
 import React from "react";
 import Image from "next/image";
 import ListCategory from "../components/list-category";
-import Calendar from "../components/Calendar";
+import EventCalendar from "@/components/base/event-calendar";
 
 export default function page() {
   return (
     <div className="bg-[#f6f6f6]">
-      <div className="max-w-[1200px] m-auto flex flex-col gap-5 mb-[50px]">
+      <div className="container m-auto flex flex-col gap-5 mb-[50px]">
         <div className="border-[#e5e7f2] border-[1px]">
           <ListCategory />
         </div>
@@ -122,7 +122,7 @@ export default function page() {
             </div>
           </div>
           <div className="lg:w-[calc(35%-10px)] w-full ">
-            <Calendar />
+            <EventCalendar />
             <div className="relative w-full mt-4 h-[300px] aspect-video rounded-lg overflow-hidden">
               <Image
                 src="/banner.webp"
