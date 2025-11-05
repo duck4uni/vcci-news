@@ -15,7 +15,7 @@ export default function Page() {
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-  <ListCategory categories={EVENT_CATEGORIES} />
+        <ListCategory categories={EVENT_CATEGORIES} />
       </div>
     </div>
   );

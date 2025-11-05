@@ -5,7 +5,7 @@ import { MEDIA_INFORMATION_CATEGORIES } from "@constants/categories";
 // ...existing code...
 import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
 import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
-import { Pagination} from "@components/base/pagination";
+import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
@@ -17,24 +17,27 @@ export default function Page() {
   const { data: allData } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
+    filters: submitSearch ? `title @=${submitSearch}` : 'category @=Chuyên đề',
   });
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
-  <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
+        <ListCategory categories={MEDIA_INFORMATION_CATEGORIES} />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
-              {allData?.responseData.rows.map((news) => (
-                <NewsContent
-                  key={news.id}
-                  news={news}
-                  link={`${PATHS.mediaInformation}/chuyen-de/${news.id}`}
-                />
-              ))}
+              {allData?.responseData.rows.length === 0 ? (
+                <p className="text-center py-4">Không có dữ liệu</p>
+              ) : (
+                allData?.responseData.rows.map((news) => (
+                  <NewsContent
+                    key={news.id}
+                    news={news}
+                    link={`${PATHS.mediaInformation}/chuyen-de/${news.id}`}
+                  />
+                )))}
 
               <div className="w-full flex justify-center mt-4">
                 <Pagination

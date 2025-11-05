@@ -30,7 +30,9 @@ const Page = () => {
   const swiperRef = useRef<SwiperType | null>(null)
 
   const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>()
-  const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>()
+  const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>(
+    { pageSize: '999' },
+  )
   const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>()
 
   // filter category
@@ -176,6 +178,10 @@ const Page = () => {
                         src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                         alt={news.title}
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null
+                          e.currentTarget.src = "/fallback.png"
+                        }}
                       />
                     </div>
 
@@ -279,7 +285,10 @@ const Page = () => {
                         src={`${BASE_URL.imageEndpoint}${event.image}`}
                         alt={event.name}
                         className="w-full h-full object-cover"
-                      />
+                        onError={(e) => {
+                          e.currentTarget.onerror = null
+                          e.currentTarget.src = "/fallback.png"
+                        }} />
                     </div>
 
                     <div className="flex-1">

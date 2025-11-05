@@ -1,12 +1,14 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from 'next/navigation'
 import { Menu, X, Facebook, Linkedin, Twitter, Youtube } from "lucide-react";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
 import Image from "next/image";
 import MenuItem from "./MenuItem";
-
+import Link from "next/link";
 function Header() {
   const [toggleMenu, setToggleMenu] = useState<boolean>(false);
+  const router = useRouter()
 
   return (
     <>
@@ -25,7 +27,7 @@ function Header() {
               className="px-3 py-2 text-[14px] text-white hover:opacity-80"
               href="#"
             >
-              sitemap
+              Sitemap
             </a>
             <a
               className="px-3 py-2 text-[14px] text-white hover:opacity-80"
@@ -40,6 +42,13 @@ function Header() {
               className="bg-white h-12 rounded-sm outline-none px-4 w-64 placeholder:text-sm"
               type="text"
               placeholder="Tìm kiếm"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const value = (e.currentTarget as HTMLInputElement).value || ''
+                  const encoded = encodeURIComponent(value)
+                  router.push(`/search?q=${encoded}`)
+                }
+              }}
             />
             <div className="flex gap-2">
               {[Facebook, Twitter, Youtube, Linkedin].map((Icon, i) => (
@@ -56,17 +65,17 @@ function Header() {
         </div>
       </div>
 
-      <div className="sticky top-0 z-50 bg-[#ededed] shadow-md">
+      <div className="sticky top-0 z-50 bg-[#ededed] shadow-md py-4">
         <div className="container m-auto">
           <div className="w-full flex justify-between items-center">
             {/* Logo */}
-            <a href="/" className="flex items-center">
+            <Link href="/">
               <Image
-                className="w-[140px] object-contain lg:ml-0 ml-10"
+                className="w-[140px] object-contain"
                 src={logo}
                 alt="VCCI HCM"
               />
-            </a>
+            </Link>
 
             {/* Desktop Menu */}
             <nav className="hidden lg:flex items-center">
@@ -75,35 +84,74 @@ function Header() {
                 title="Giới thiệu"
                 link="gioi-thieu"
                 items={[
-                  "Về VCCI-HCM",
-                  "Chức Năng Và Nhiệm Vụ",
-                  "Sơ Đồ Tổ Chức",
-                  "Dịch Vụ Cung Cấp",
+                  { title: "Về VCCI-HCM", link: "ve-vcci-hcm" },
+                  {
+                    title: "Chức Năng Và Nhiệm Vụ",
+                    link: "chuc-nang-va-nhiem-vu",
+                  },
+                  { title: "Sơ Đồ Tổ Chức", link: "so-do-to-chuc" },
+                  { title: "Dịch Vụ Cung Cấp", link: "dich-vu-cung-cap" },
                 ]}
+
               />
               <MenuItem
                 title="Hội viên"
                 link="hoi-vien"
-                items={[
-                  "Lợi Ích Của Hội Viên VCCI",
-                  "Đăng Ký Hội Viên",
-                  "Kết Nối Hội Viên",
-                  "Tin Hội Viên",
+                 items={[
+                  {
+                    title: "Lợi Ích Của Hội Viên VCCI",
+                    link: "",
+                  },
+                  { title: "Đăng Ký Hội Viên", link: "dang-ky-hoi-vien" },
+                  { title: "Kết Nối Hội Viên", link: "ket-noi-hoi-vien" },
+                  { title: "Tin Hội Viên", link: "tin-hoi-vien" },
                 ]}
+
               />
-              <MenuItem title="Hoạt động" items={["Sự Kiện", "Đào Tạo"]} />
+              <MenuItem
+                title="Hoạt động"
+                link="hoat-dong"
+                                items={[
+                  { title: "Sự Kiện", link: "" },
+                  { title: "Đào Tạo", link: "dao-tao" },
+                ]}
+           />
               <MenuItem
                 title="Xuất Xứ Hàng Hóa"
                 link="xuat-xu-hang-hoa"
                 items={[
-                  "Định Nghĩa Chung",
-                  "Mục Đích Của C/O",
-                  "Luật Áp Dụng Về C/O",
-                  "Thủ Tục Cấp C/O",
-                  "Biểu Mẫu C/O Và Cách Khai",
-                  "Phí Và Lệ Phí Cấp C/O",
-                  "Điểm Cấp Và Thời Gian Cấp C/O",
-                  "Thông Tin Liên Hệ",
+                  {
+                    title: "Định Nghĩa Chung",
+                    link: "",
+                  },
+                  {
+                    title: "Mục Đích Của C/O",
+                    link: "muc-dich",
+                  },
+                  {
+                    title: "Luật Áp Dụng Về C/O",
+                    link: "luat-ap-dung",
+                  },
+                  {
+                    title: "Thủ Tục Cấp C/O",
+                    link: "thu-tuc-cap",
+                  },
+                  {
+                    title: "Biểu Mẫu C/O Và Cách Khai",
+                    link: "bieu-mau-c-o-va-cach-khai",
+                  },
+                  {
+                    title: "Phí Và Lệ Phí Cấp C/O",
+                    link: "phi-va-le-phi-cap",
+                  },
+                  {
+                    title: "Điểm Cấp Và Thời Gian Cấp C/O",
+                    link: "diem-cap-va-thoi-gian-cap",
+                  },
+                  {
+                    title: "Thông Tin Liên Hệ",
+                    link: "thong-tin-lien-he",
+                  },
                 ]}
               />
 
@@ -150,25 +198,33 @@ function Header() {
               <MenuItem
                 title="Xúc tiến thương mại"
                 link="xuc-tien-thuong-mai"
-                items={[
-                  "Hồ Sơ Thị Trường",
-                  "Môi Trường Kinh Doanh",
-                  "Cơ Hội Kinh Doanh",
-                  "Hỗ Trợ Kinh Doanh",
+ items={[
+                  { title: "Hồ Sơ Thị Trường", link: "ho-so-thi-truong" },
+                  {
+                    title: "Môi Trường Kinh Doanh",
+                    link: "moi-truong-kinh-doanh",
+                  },
+                  { title: "Cơ Hội Kinh Doanh", link: "co-hoi-kinh-doanh" },
+                  { title: "Hỗ Trợ Kinh Doanh", link: "ho-tro-kinh-doanh" },
                 ]}
+
               />
               <MenuItem
                 title="Thông tin truyền thông"
                 link="thong-tin-truyen-thong"
-                items={[
-                  "Tin VCCI",
-                  "Tin Kinh Tế",
-                  "Tin Doanh Nghiệp",
-                  "Chuyên Đề",
-                  "Thông Tin Chính Sách Và Pháp Luật",
-                  "Ấn Phẩm",
-                  "Thư Viện Tài Liệu",
+                 items={[
+                  { title: "Tin VCCI", link: "tin-vcci" },
+                  { title: "Tin Kinh Tế", link: "tin-kinh-te" },
+                  { title: "Tin Doanh Nghiệp", link: "tin-doanh-nghiep" },
+                  { title: "Chuyên Đề", link: "chuyen-de" },
+                  {
+                    title: "Thông Tin Chính Sách Và Pháp Luật",
+                    link: "thong-tin-chinh-sach-va-phap-luat",
+                  },
+                  { title: "Ấn Phẩm", link: "an-pham" },
+                  { title: "Thư Viện Tài Liệu", link: "thu-vien-tai-lieu" },
                 ]}
+
               />
             </nav>
 
