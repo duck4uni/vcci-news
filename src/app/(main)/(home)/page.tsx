@@ -32,14 +32,24 @@ const Page = () => {
 
   const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>();
   const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>(
-    { pageSize: '999' }
+    {
+      pageSize: '5',
+      filters: tab === "all" ? `` : `category @=${tab}`,
+    }
+  );
+  const { data: businessOpportunities, isLoading: isLoadingBusinessOpportunities } = useGetNews<GetNewsAdminResponseType>(
+    {
+      pageSize: '5',
+      filters: `category @=Cơ hội kinh doanh`,
+    }
+  );
+  const { data: policyAndLegalInformation, isLoading: isLoadingPolicyAndLegalInformation } = useGetNews<GetNewsAdminResponseType>(
+    {
+      pageSize: '5',
+      filters: `category @=Thông tin chính sách và pháp luật`,
+    }
   );
   const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>();
-
-  // filter category
-  const rows = newsData?.responseData?.rows ?? [];
-  const filteredRows =
-    tab === "all" ? rows : rows.filter((n) => n.category === tab);
 
   const images = [
     "/home/doi-tac/AMFORI-1.png.webp",
@@ -131,7 +141,7 @@ const Page = () => {
               }}
               className="pb-5"
             >
-              {rows.map((news) => (
+              {newsData?.responseData?.rows.map((news) => (
                 <SwiperSlide key={news.id}>
                   <a
                     href={`/${news.id}`}
@@ -196,11 +206,11 @@ const Page = () => {
                         />
                       </div>
 
-                      <div className="flex-1 p-5">
+                      <div className="flex-1 p-5 pt-0">
                         <p className="text-[#063E8E] font-bold text-xl line-clamp-2">
                           {news.title}
                         </p>
-                        <p className="text-gray-500 text-sm my-1">
+                        <p className="text-gray-500 text-sm">
                           {dayjs(news.release_at).format("DD/MM/YYYY")}
                         </p>
                         <AppEditorContent
@@ -238,7 +248,7 @@ const Page = () => {
                       ))}
                   </div>
 
-                  {filteredRows.slice(0, 4).map((news) => (
+                  {newsData?.responseData?.rows.slice(0, 4).map((news) => (
                     <CardNews key={news.id} news={news} />
                   ))}
                 </div>
@@ -388,7 +398,7 @@ const Page = () => {
                   </div>
                   <hr className="border-[#063e8e] mb-4" />
                   <div className="pt-2">
-                    {newsData?.responseData.rows
+                    {businessOpportunities?.responseData.rows
                       .slice(0, 1)
                       .map((news: NewsAdminItem) => (
                         <a key={news.id} href={`${news.id}`}>
@@ -407,7 +417,7 @@ const Page = () => {
                         </a>
                       ))}
 
-                    {rows.slice(0, 3).map((news) => (
+                    {businessOpportunities?.responseData.rows.slice(0, 3).map((news) => (
                       <CardNews key={news.id} news={news} />
                     ))}
                   </div>
@@ -429,7 +439,7 @@ const Page = () => {
                   </div>
                   <hr className="border-[#063e8e] mb-4" />
                   <div className="pt-2">
-                    {newsData?.responseData.rows
+                    {policyAndLegalInformation?.responseData.rows
                       .slice(0, 1)
                       .map((news: NewsAdminItem) => (
                         <a key={news.id} href={`${news.id}`}>
@@ -448,7 +458,7 @@ const Page = () => {
                         </a>
                       ))}
 
-                    {rows.slice(0, 3).map((news) => (
+                    {policyAndLegalInformation?.responseData.rows.slice(0, 3).map((news) => (
                       <CardNews key={news.id} news={news} />
                     ))}
                   </div>

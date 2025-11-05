@@ -20,7 +20,7 @@ export default function Page() {
   const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
-    filters: submitSearch ? `title @=${submitSearch}` : undefined,
+    filters: submitSearch ? `title @=${submitSearch}` : `category @=Tin VCCI`,
   });
   return (
     <div className="min-h-screen container mx-auto p-4">

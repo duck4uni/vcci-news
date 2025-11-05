@@ -29,7 +29,7 @@ const ListCategory: React.FC<{ categories?: Category[] }> = ({
   };
 
   return (
-    <div className="border-t border-gray-200 bg-white p-2.5">
+    <div className="border-t border-gray-200 bg-white py-2">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="py-3">
           <div className="flex flex-wrap items-center max-w-full overflow-x-auto">
