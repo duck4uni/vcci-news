@@ -37,6 +37,11 @@ const Page = () => {
       filters: tab === "all" ? `` : `category @=${tab}`,
     }
   );
+  const { data: newsSlider, isLoading: isLoadingNewsSlider } = useGetNews<GetNewsAdminResponseType>(
+    {
+      pageSize: '10',
+    }
+  );
   const { data: businessOpportunities, isLoading: isLoadingBusinessOpportunities } = useGetNews<GetNewsAdminResponseType>(
     {
       pageSize: '5',
@@ -141,7 +146,7 @@ const Page = () => {
               }}
               className="pb-5"
             >
-              {newsData?.responseData?.rows.map((news) => (
+              {newsSlider?.responseData?.rows.map((news) => (
                 <SwiperSlide key={news.id}>
                   <a
                     href={`/${news.id}`}
