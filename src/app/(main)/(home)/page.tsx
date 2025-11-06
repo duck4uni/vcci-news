@@ -30,6 +30,23 @@ const Page = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
 
+  // helpers
+  const stripImagesAndHtml = (html?: string) => {
+    if (!html) return ''
+    // remove img tags first
+    const withoutImgs = html.replace(/<img[^>]*>/gi, '')
+    // use DOMParser on client for robust extraction
+    if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
+      try {
+        const doc = new DOMParser().parseFromString(withoutImgs, 'text/html')
+        return doc.body.textContent || ''
+      } catch {
+        // fallback to regex
+      }
+    }
+    return withoutImgs.replace(/<[^>]*>/g, '')
+  }
+
   const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>();
   const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>(
     {
@@ -37,7 +54,7 @@ const Page = () => {
       filters: tab === "all" ? `` : `category @=${tab}`,
     }
   );
-  const { data: newsSlider, isLoading: isLoadingNewsSlider } = useGetNews<GetNewsAdminResponseType>(
+  const { data: newsAll, isLoading: isLoadingNewsAll } = useGetNews<GetNewsAdminResponseType>(
     {
       pageSize: '10',
     }
@@ -146,7 +163,7 @@ const Page = () => {
               }}
               className="pb-5"
             >
-              {newsSlider?.responseData?.rows.map((news) => (
+              {newsAll?.responseData?.rows.map((news) => (
                 <SwiperSlide key={news.id}>
                   <a
                     href={`/${news.id}`}
@@ -195,7 +212,7 @@ const Page = () => {
               <hr className="border-[#063e8e] mb-4" />
 
               <div className="flex flex-col md:flex-row gap-5">
-                {newsData?.responseData.rows
+                {newsAll?.responseData.rows
                   .slice(0, 1)
                   .map((news: NewsAdminItem) => (
                     <a
@@ -218,10 +235,7 @@ const Page = () => {
                         <p className="text-gray-500 text-sm">
                           {dayjs(news.release_at).format("DD/MM/YYYY")}
                         </p>
-                        <AppEditorContent
-                          className="line-clamp-4"
-                          value={news.description}
-                        />
+                        <p className="line-clamp-4">{stripImagesAndHtml(news.description)}</p>
                       </div>
                     </a>
                   ))}
@@ -326,7 +340,7 @@ const Page = () => {
                   .map((event: EventItem) => (
                     <a
                       key={event.id}
-                      href={`${event.id}`}
+                      href={`hoat-dong/su-kien/${event.id}`}
                       className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
                     >
                       <div className="w-full aspect-3/2 overflow-hidden">
@@ -348,10 +362,7 @@ const Page = () => {
                         <p className="text-gray-500 text-sm my-1">
                           {dayjs(event.start_time).format("DD/MM/YYYY")}
                         </p>
-                        <AppEditorContent
-                          className="line-clamp-3"
-                          value={event.description}
-                        />
+                        <p className="line-clamp-3">{stripImagesAndHtml(event.description)}</p>
                       </div>
                     </a>
                   ))}
