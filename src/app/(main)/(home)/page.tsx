@@ -314,7 +314,7 @@ const Page = () => {
                 <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-[#e8c518]">
                   Sự kiện sắp diễn ra
                 </h2>
-                <a href="#" className="text-[#e8c518] text-sm sm:text-base">
+                <a href="/hoat-dong/su-kien" className="text-[#e8c518] text-sm sm:text-base">
                   <ChevronsRight />
                 </a>
               </div>
@@ -369,7 +369,7 @@ const Page = () => {
                     Lịch sự kiện
                   </h2>
                   <a
-                    href="#"
+                    href="/hoat-dong/su-kien"
                     className="text-[#e8c518] hover:underline text-sm sm:text-base"
                   >
                     <ChevronsRight />
