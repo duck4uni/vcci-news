@@ -136,8 +136,12 @@ export default function DynamicPage() {
             <ListFilter onSearch={setSubmitSearch} />
             <EventCalendar />
             <div className="bg-white border rounded-md overflow-hidden">
-              <div className="w-full h-56 relative bg-gray-100">
-                <Image src="/banner.webp" alt="Quảng cáo" fill className="object-cover" />
+              <div className="w-full relative bg-gray-100">
+                <img
+                  src="/banner.webp"
+                  alt="Quảng cáo"
+                  className="object-cover"
+                />
               </div>
             </div>
           </aside>
