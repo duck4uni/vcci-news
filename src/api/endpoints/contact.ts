@@ -31,7 +31,7 @@ import type {
 
 import type {
   LookingFor,
-  Obj2Body,
+  Obj3Body,
   Response
 } from '../models';
 
@@ -268,7 +268,7 @@ export const getPutContactUrl = () => {
   return `/contact`
 }
 
-export const putContact = async (obj2Body: Obj2Body, options?: RequestInit): Promise<putContactResponse> => {
+export const putContact = async (obj3Body: Obj3Body, options?: RequestInit): Promise<putContactResponse> => {
   
   return useCustomClient<putContactResponse>(getPutContactUrl(),
   {      
@@ -276,7 +276,7 @@ export const putContact = async (obj2Body: Obj2Body, options?: RequestInit): Pro
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      obj2Body,)
+      obj3Body,)
   }
 );}
 
@@ -284,8 +284,8 @@ export const putContact = async (obj2Body: Obj2Body, options?: RequestInit): Pro
 
 
 export const getPutContactMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putContact>>, TError,{data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof putContact>>, TError,{data: BodyType<Obj2Body>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putContact>>, TError,{data: BodyType<Obj3Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putContact>>, TError,{data: BodyType<Obj3Body>}, TContext> => {
 
 const mutationKey = ['putContact'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -297,7 +297,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putContact>>, {data: BodyType<Obj2Body>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putContact>>, {data: BodyType<Obj3Body>}> = (props) => {
           const {data} = props ?? {};
 
           return  putContact(data,requestOptions)
@@ -309,15 +309,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PutContactMutationResult = NonNullable<Awaited<ReturnType<typeof putContact>>>
-    export type PutContactMutationBody = BodyType<Obj2Body>
+    export type PutContactMutationBody = BodyType<Obj3Body>
     export type PutContactMutationError = ErrorType<unknown>
 
     export const usePutContact = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putContact>>, TError,{data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putContact>>, TError,{data: BodyType<Obj3Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putContact>>,
         TError,
-        {data: BodyType<Obj2Body>},
+        {data: BodyType<Obj3Body>},
         TContext
       > => {
 

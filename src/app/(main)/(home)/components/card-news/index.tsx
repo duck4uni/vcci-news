@@ -1,12 +1,12 @@
-import { NewsAdminItem } from "@/api/types/news";
+import { NewsItem } from "@/api/types/news";
 import BASE_URL from "@/links";
 import dayjs from "dayjs";
 import AppEditorContent from "@/components/shared/editor-content";
 
-function CardNews({ news }: { news: NewsAdminItem }) {
+function CardNews({ news }: { news: NewsItem }) {
   return (
     <a
-      href={`${news.id}`}
+      href={`${news.page_config.static_link}/${news.id}`}
       className="flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3"
     >
       <img

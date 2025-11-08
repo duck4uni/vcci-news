@@ -30,6 +30,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  GetNewsPageConfigGetHierarchicalParams,
   PutNewsPageConfigCategoryIdBody,
   Response
 } from '../models';
@@ -719,6 +720,214 @@ export const prefetchGetNewsPageConfigGetAllLinksQuery = async <TData = Awaited<
   ): Promise<QueryClient> => {
 
   const queryOptions = getGetNewsPageConfigGetAllLinksQueryOptions(options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+/**
+ * Get hierarchical page config
+ */
+export type getNewsPageConfigGetHierarchicalResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type getNewsPageConfigGetHierarchicalResponseSuccess = (getNewsPageConfigGetHierarchicalResponse200) & {
+  headers: Headers;
+};
+;
+
+export type getNewsPageConfigGetHierarchicalResponse = (getNewsPageConfigGetHierarchicalResponseSuccess)
+
+export const getGetNewsPageConfigGetHierarchicalUrl = (params?: GetNewsPageConfigGetHierarchicalParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/NewsPageConfig/getHierarchical?${stringifiedParams}` : `/NewsPageConfig/getHierarchical`
+}
+
+export const getNewsPageConfigGetHierarchical = async (params?: GetNewsPageConfigGetHierarchicalParams, options?: RequestInit): Promise<getNewsPageConfigGetHierarchicalResponse> => {
+  
+  return useCustomClient<getNewsPageConfigGetHierarchicalResponse>(getGetNewsPageConfigGetHierarchicalUrl(params),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetNewsPageConfigGetHierarchicalInfiniteQueryKey = (params?: GetNewsPageConfigGetHierarchicalParams,) => {
+    return [
+    'infinite', `/NewsPageConfig/getHierarchical`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+export const getGetNewsPageConfigGetHierarchicalQueryKey = (params?: GetNewsPageConfigGetHierarchicalParams,) => {
+    return [
+    `/NewsPageConfig/getHierarchical`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+    
+export const getGetNewsPageConfigGetHierarchicalInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>, TError = ErrorType<unknown>>(params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNewsPageConfigGetHierarchicalInfiniteQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>> = ({ signal }) => getNewsPageConfigGetHierarchical(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNewsPageConfigGetHierarchicalInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>
+export type GetNewsPageConfigGetHierarchicalInfiniteQueryError = ErrorType<unknown>
+
+
+export function useGetNewsPageConfigGetHierarchicalInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetNewsPageConfigGetHierarchicalParams, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>,
+          TError,
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNewsPageConfigGetHierarchicalInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>, TError = ErrorType<unknown>>(
+ params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>,
+          TError,
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNewsPageConfigGetHierarchicalInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>, TError = ErrorType<unknown>>(
+ params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetNewsPageConfigGetHierarchicalInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>, TError = ErrorType<unknown>>(
+ params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNewsPageConfigGetHierarchicalInfiniteQueryOptions(params,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+export const prefetchGetNewsPageConfigGetHierarchicalInfiniteQuery = async <TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(
+ queryClient: QueryClient, params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetNewsPageConfigGetHierarchicalInfiniteQueryOptions(params,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetNewsPageConfigGetHierarchicalQueryOptions = <TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetNewsPageConfigGetHierarchicalQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>> = ({ signal }) => getNewsPageConfigGetHierarchical(params, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetNewsPageConfigGetHierarchicalQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>
+export type GetNewsPageConfigGetHierarchicalQueryError = ErrorType<unknown>
+
+
+export function useGetNewsPageConfigGetHierarchical<TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetNewsPageConfigGetHierarchicalParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>,
+          TError,
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNewsPageConfigGetHierarchical<TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(
+ params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>,
+          TError,
+          Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetNewsPageConfigGetHierarchical<TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(
+ params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useGetNewsPageConfigGetHierarchical<TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(
+ params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetNewsPageConfigGetHierarchicalQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+export const prefetchGetNewsPageConfigGetHierarchicalQuery = async <TData = Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError = ErrorType<unknown>>(
+ queryClient: QueryClient, params?: GetNewsPageConfigGetHierarchicalParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetNewsPageConfigGetHierarchicalQueryOptions(params,options)
 
   await queryClient.prefetchQuery(queryOptions);
 

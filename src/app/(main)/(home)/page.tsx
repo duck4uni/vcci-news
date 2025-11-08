@@ -14,21 +14,52 @@ import CardNews from "./components/card-news";
 import CardEvent from "./components/card-event";
 import EventCalendar from "@components/base/event-calendar";
 import dayjs from "dayjs";
-import AppEditorContent from "@/components/shared/editor-content";
 
 // server
 import { useGetEvents } from "@/api/endpoints/event";
 import { useGetCategory } from "@/api/endpoints/category";
 import { useGetNews } from "@/api/endpoints/news";
 import { GetCategoryAdminResponseType } from "@/api/types/category";
-import { GetNewsAdminResponseType, NewsAdminItem } from "@/api/types/news";
+import { GetNewsResponseType, NewsItem } from "@/api/types/news";
 import { EventApiResponse, EventItem } from "@/api/types/event";
 import { ChevronsRight, Link } from "lucide-react";
+import { useParams } from "next/navigation";
 
 const Page = () => {
+
+  // state
   const [tab, setTab] = useState("all");
   const [currentIndex, setCurrentIndex] = useState(0);
   const swiperRef = useRef<SwiperType | null>(null);
+
+  // query
+  const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>();
+  const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsResponseType>(
+    {
+      pageSize: '5',
+      filters: tab === "all" ? `` : `category @=${tab}`,
+    }
+  );
+
+  console.log(newsData);
+  const { data: newsAll, isLoading: isLoadingNewsAll } = useGetNews<GetNewsResponseType>(
+    {
+      pageSize: '10',
+    }
+  );
+  const { data: businessOpportunities, isLoading: isLoadingBusinessOpportunities } = useGetNews<GetNewsResponseType>(
+    {
+      pageSize: '5',
+      filters: `category @=Cơ hội kinh doanh`,
+    }
+  );
+  const { data: policyAndLegalInformation, isLoading: isLoadingPolicyAndLegalInformation } = useGetNews<GetNewsResponseType>(
+    {
+      pageSize: '5',
+      filters: `category @=Thông tin chính sách và pháp luật`,
+    }
+  );
+  const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>();
 
   // helpers
   const stripImagesAndHtml = (html?: string) => {
@@ -46,32 +77,6 @@ const Page = () => {
     }
     return withoutImgs.replace(/<[^>]*>/g, '')
   }
-
-  const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>();
-  const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsAdminResponseType>(
-    {
-      pageSize: '5',
-      filters: tab === "all" ? `` : `category @=${tab}`,
-    }
-  );
-  const { data: newsAll, isLoading: isLoadingNewsAll } = useGetNews<GetNewsAdminResponseType>(
-    {
-      pageSize: '10',
-    }
-  );
-  const { data: businessOpportunities, isLoading: isLoadingBusinessOpportunities } = useGetNews<GetNewsAdminResponseType>(
-    {
-      pageSize: '5',
-      filters: `category @=Cơ hội kinh doanh`,
-    }
-  );
-  const { data: policyAndLegalInformation, isLoading: isLoadingPolicyAndLegalInformation } = useGetNews<GetNewsAdminResponseType>(
-    {
-      pageSize: '5',
-      filters: `category @=Thông tin chính sách và pháp luật`,
-    }
-  );
-  const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>();
 
   const images = [
     "/home/doi-tac/AMFORI-1.png.webp",
@@ -166,13 +171,17 @@ const Page = () => {
               {newsAll?.responseData?.rows.map((news) => (
                 <SwiperSlide key={news.id}>
                   <a
-                    href={`/${news.id}`}
+                    href={`${news.page_config.static_link}/${news.id}`}
                     className="relative block bg-white shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                   >
                     <img
                       src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                       alt={news.title}
                       className="w-full aspect-3/2 sm:h-56 md:h-64 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.onerror = null
+                        e.currentTarget.src = "/fallback.png"
+                      }}
                     />
                     <div className="absolute bottom-0 left-0 right-0 h-20 md:h-24 bg-linear-to-t from-black/80 to-transparent flex items-center justify-center p-3">
                       <p className="text-white text-center font-semibold line-clamp-2 text-sm sm:text-base leading-snug">
@@ -214,10 +223,10 @@ const Page = () => {
               <div className="flex flex-col md:flex-row gap-5">
                 {newsAll?.responseData.rows
                   .slice(0, 1)
-                  .map((news: NewsAdminItem) => (
+                  .map((news: NewsItem) => (
                     <a
                       key={news.id}
-                      href={`${news.id}`}
+                      href={`${news.page_config.static_link}/${news.id}`}
                       className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 bg-white"
                     >
                       <div className="w-full aspect-3/2 overflow-hidden">
@@ -420,13 +429,17 @@ const Page = () => {
                   <div className="pt-2">
                     {businessOpportunities?.responseData.rows
                       .slice(0, 1)
-                      .map((news: NewsAdminItem) => (
-                        <a key={news.id} href={`${news.id}`}>
+                      .map((news: NewsItem) => (
+                        <a key={news.id} href={`${news.page_config.static_link}/${news.id}`}>
                           <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
                             <img
                               src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                               alt={news.title}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null
+                                e.currentTarget.src = "/fallback.png"
+                              }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
                               <p className="text-[#063e8e] font-semibold text-sm sm:text-base z-10 line-clamp-3">
@@ -461,13 +474,17 @@ const Page = () => {
                   <div className="pt-2">
                     {policyAndLegalInformation?.responseData.rows
                       .slice(0, 1)
-                      .map((news: NewsAdminItem) => (
-                        <a key={news.id} href={`${news.id}`}>
+                      .map((news: NewsItem) => (
+                        <a key={news.id} href={`${news.page_config.static_link}/${news.id}`}>
                           <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
                             <img
                               src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                               alt={news.title}
                               className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.onerror = null
+                                e.currentTarget.src = "/fallback.png"
+                              }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
                               <p className="text-[#063e8e] font-semibold text-sm sm:text-base z-10 line-clamp-3">
