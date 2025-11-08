@@ -6,7 +6,7 @@ import CardNews from "@/components/base/card-news";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
-import { GetNewsResponseType } from "@api/types/NewsPage.type";
+import { GetNewsResponseType } from "@api/types/news";
 import { Spinner } from "@components/ui/spinner";
 import { useSearchParams } from 'next/navigation'
 
@@ -50,7 +50,7 @@ function SearchContent() {
                     <CardNews
                       key={news.id}
                       news={news}
-                      link={`${news.category}/${news.id}`}
+                      link={`${news.page_config.static_link}/${news.id}`}
                     />
                   ))}
 
