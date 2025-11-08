@@ -233,6 +233,10 @@ const Page = () => {
                           src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
                           alt={news.title}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.onerror = null
+                            e.currentTarget.src = "/fallback.png"
+                          }}
                         />
                       </div>
 
