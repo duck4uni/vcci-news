@@ -78,11 +78,10 @@ function SearchContent() {
           {/* Sidebar */}
           <aside className="space-y-6 order-first lg:order-last">
             <div className="bg-white border rounded-md overflow-hidden hidden lg:block">
-              <div className="w-full h-62 relative bg-gray-100">
-                <Image
+              <div className="w-full relative bg-gray-100">
+                <img
                   src="/banner.webp"
                   alt="Quảng cáo"
-                  fill
                   className="object-cover"
                 />
               </div>
