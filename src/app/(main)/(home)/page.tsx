@@ -41,7 +41,6 @@ const Page = () => {
     }
   );
 
-  console.log(newsData);
   const { data: newsAll, isLoading: isLoadingNewsAll } = useGetNews<GetNewsResponseType>(
     {
       pageSize: '10',

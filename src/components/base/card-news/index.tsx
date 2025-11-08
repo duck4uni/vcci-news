@@ -1,5 +1,5 @@
 
-import { NewsItem } from '@app/dai-dien-gioi-chu/lib/types/NewsPage.type';
+import { NewsDetailItem } from './CardNews.type';
 import Links from '@links/index'
 import dayjs from 'dayjs';
 
@@ -19,8 +19,8 @@ const stripImagesAndHtml = (html?: string) => {
   }
   return withoutImgs.replace(/<[^>]*>/g, '')
 }
-function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
 
+const CardNews = ({ news, link }: { news: NewsDetailItem, link: string }) => {
   return (
     <a
       href={`${link}`}
@@ -30,14 +30,14 @@ function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
         src={`${Links.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
         className="w-full sm:w-56 md:w-64 h-40 md:h-36 object-cover shrink-0"
-     onError={(e) => {
-    e.currentTarget.src = "/img-error.png"
-  }}
+        onError={(e) => {
+          e.currentTarget.src = "/img-error.png"
+        }}
 
       />
 
       <div className="flex-1 min-w-0 pl-0 sm:pl-4">
-  <p className="text-primary font-semibold text-base md:text-lg hover:underline line-clamp-2 wrap-break-word">
+        <p className="text-primary font-semibold text-base md:text-lg hover:underline line-clamp-2 wrap-break-word">
           {news.title}
         </p>
 
@@ -51,4 +51,4 @@ function NewsContent({ news ,link}: { news: NewsItem ,link:string}) {
   )
 }
 
-export default NewsContent;
+export default CardNews;

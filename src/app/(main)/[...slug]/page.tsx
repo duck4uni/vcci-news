@@ -7,7 +7,7 @@ import { Pagination } from "@/components/base/pagination";
 import { ListFilter } from "@/components/base/list-filter";
 import EventCalendar from "@/components/base/event-calendar";
 import ListCategory from "@/components/base/list-category";
-import NewsContent from "@/components/base/card-news";
+import CardNews from "@/components/base/card-news";
 import Image from "next/image";
 import parse from "html-react-parser";
 import dayjs from "dayjs";
@@ -108,7 +108,7 @@ export default function DynamicPage() {
               ) : (
                 <>
                   {news?.responseData.rows.map((item) => (
-                    <NewsContent
+                    <CardNews
                       key={item.id}
                       news={item}
                       link={`/${url}/${item.id}`}

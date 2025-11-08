@@ -1,15 +1,13 @@
 "use client";
 import React, { useState, Suspense } from "react";
-import ListCategory from "@app/dai-dien-gioi-chu/components/list-category";
-import { OWNER_REPRESENTATIVES_CATEGORIES } from "@constants/categories";
-import ListFilter from "@app/dai-dien-gioi-chu/components/list-filter";
-import NewsContent from "@app/dai-dien-gioi-chu/components/card-news";
+import ListCategory from "@/components/base/list-category";
+import ListFilter from "@/components/base/list-filter";
+import CardNews from "@/components/base/card-news";
 import { Pagination } from "@components/base/pagination";
 import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/NewsPage.type";
 import { Spinner } from "@components/ui/spinner";
-import { PATHS } from "@constants/paths";
 import { useSearchParams } from 'next/navigation'
 
 function SearchContent() {
@@ -22,7 +20,7 @@ function SearchContent() {
     currentPage: String(page),
     filters: query ? `title @=${query}` : undefined,
   });
-  
+
   return (
     <div className="min-h-screen container mx-auto p-4">
       <div className="w-full flex flex-col gap-5">
@@ -49,10 +47,10 @@ function SearchContent() {
               ) : (
                 <>
                   {allData?.responseData.rows.map((news) => (
-                    <NewsContent
+                    <CardNews
                       key={news.id}
                       news={news}
-                      link={`${PATHS.mediaInformation}/tin-vcci/${news.id}`}
+                      link={`${news.category}/${news.id}`}
                     />
                   ))}
 
