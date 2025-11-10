@@ -7,5 +7,16 @@
  */
 
 export type ObjBody = {
-  email?: string;
+  /** Page name */
+  name?: string;
+  /** Page code */
+  code?: string;
+  /** Static link */
+  static_link?: string;
+  /** Static link English */
+  static_link_en?: string;
+  /** Parent page ID */
+  parent_id?: string;
+  /** Is article page */
+  is_article?: boolean;
 };

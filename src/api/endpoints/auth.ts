@@ -16,7 +16,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  ObjBody,
+  Obj2Body,
   PostAuthForgotPasswordBody,
   PutAuthAssignBusinessInterestBody,
   PutAuthUpdatePasswordBody,
@@ -699,7 +699,7 @@ export const getPostAuthRegisterUrl = () => {
   return `/auth/register`
 }
 
-export const postAuthRegister = async (objBody: ObjBody, options?: RequestInit): Promise<postAuthRegisterResponse> => {
+export const postAuthRegister = async (obj2Body: Obj2Body, options?: RequestInit): Promise<postAuthRegisterResponse> => {
   
   return useCustomClient<postAuthRegisterResponse>(getPostAuthRegisterUrl(),
   {      
@@ -707,7 +707,7 @@ export const postAuthRegister = async (objBody: ObjBody, options?: RequestInit):
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      objBody,)
+      obj2Body,)
   }
 );}
 
@@ -715,8 +715,8 @@ export const postAuthRegister = async (objBody: ObjBody, options?: RequestInit):
 
 
 export const getPostAuthRegisterMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: BodyType<ObjBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: BodyType<ObjBody>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: BodyType<Obj2Body>}, TContext> => {
 
 const mutationKey = ['postAuthRegister'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -728,7 +728,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRegister>>, {data: BodyType<ObjBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthRegister>>, {data: BodyType<Obj2Body>}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthRegister(data,requestOptions)
@@ -740,15 +740,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthRegisterMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthRegister>>>
-    export type PostAuthRegisterMutationBody = BodyType<ObjBody>
+    export type PostAuthRegisterMutationBody = BodyType<Obj2Body>
     export type PostAuthRegisterMutationError = ErrorType<unknown>
 
     export const usePostAuthRegister = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: BodyType<ObjBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthRegister>>, TError,{data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthRegister>>,
         TError,
-        {data: BodyType<ObjBody>},
+        {data: BodyType<Obj2Body>},
         TContext
       > => {
 
@@ -779,7 +779,7 @@ export const getPostAuthResendOTPUrl = () => {
   return `/auth/resendOTP`
 }
 
-export const postAuthResendOTP = async (objBody: ObjBody, options?: RequestInit): Promise<postAuthResendOTPResponse> => {
+export const postAuthResendOTP = async (obj2Body: Obj2Body, options?: RequestInit): Promise<postAuthResendOTPResponse> => {
   
   return useCustomClient<postAuthResendOTPResponse>(getPostAuthResendOTPUrl(),
   {      
@@ -787,7 +787,7 @@ export const postAuthResendOTP = async (objBody: ObjBody, options?: RequestInit)
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      objBody,)
+      obj2Body,)
   }
 );}
 
@@ -795,8 +795,8 @@ export const postAuthResendOTP = async (objBody: ObjBody, options?: RequestInit)
 
 
 export const getPostAuthResendOTPMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendOTP>>, TError,{data: BodyType<ObjBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof postAuthResendOTP>>, TError,{data: BodyType<ObjBody>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendOTP>>, TError,{data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthResendOTP>>, TError,{data: BodyType<Obj2Body>}, TContext> => {
 
 const mutationKey = ['postAuthResendOTP'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -808,7 +808,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthResendOTP>>, {data: BodyType<ObjBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthResendOTP>>, {data: BodyType<Obj2Body>}> = (props) => {
           const {data} = props ?? {};
 
           return  postAuthResendOTP(data,requestOptions)
@@ -820,15 +820,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostAuthResendOTPMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthResendOTP>>>
-    export type PostAuthResendOTPMutationBody = BodyType<ObjBody>
+    export type PostAuthResendOTPMutationBody = BodyType<Obj2Body>
     export type PostAuthResendOTPMutationError = ErrorType<unknown>
 
     export const usePostAuthResendOTP = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendOTP>>, TError,{data: BodyType<ObjBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthResendOTP>>, TError,{data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postAuthResendOTP>>,
         TError,
-        {data: BodyType<ObjBody>},
+        {data: BodyType<Obj2Body>},
         TContext
       > => {
 
