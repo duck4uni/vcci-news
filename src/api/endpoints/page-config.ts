@@ -30,7 +30,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  Obj2Body,
+  Obj3Body,
   Response
 } from '../models';
 
@@ -871,7 +871,7 @@ export const getPutPageConfigTabIdUrl = (id: string,) => {
 }
 
 export const putPageConfigTabId = async (id: string,
-    obj2Body: Obj2Body, options?: RequestInit): Promise<putPageConfigTabIdResponse> => {
+    obj3Body: Obj3Body, options?: RequestInit): Promise<putPageConfigTabIdResponse> => {
   
   return useCustomClient<putPageConfigTabIdResponse>(getPutPageConfigTabIdUrl(id),
   {      
@@ -879,7 +879,7 @@ export const putPageConfigTabId = async (id: string,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      obj2Body,)
+      obj3Body,)
   }
 );}
 
@@ -887,8 +887,8 @@ export const putPageConfigTabId = async (id: string,
 
 
 export const getPutPageConfigTabIdMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putPageConfigTabId>>, TError,{id: string;data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof putPageConfigTabId>>, TError,{id: string;data: BodyType<Obj2Body>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putPageConfigTabId>>, TError,{id: string;data: BodyType<Obj3Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putPageConfigTabId>>, TError,{id: string;data: BodyType<Obj3Body>}, TContext> => {
 
 const mutationKey = ['putPageConfigTabId'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -900,7 +900,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putPageConfigTabId>>, {id: string;data: BodyType<Obj2Body>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putPageConfigTabId>>, {id: string;data: BodyType<Obj3Body>}> = (props) => {
           const {id,data} = props ?? {};
 
           return  putPageConfigTabId(id,data,requestOptions)
@@ -912,15 +912,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PutPageConfigTabIdMutationResult = NonNullable<Awaited<ReturnType<typeof putPageConfigTabId>>>
-    export type PutPageConfigTabIdMutationBody = BodyType<Obj2Body>
+    export type PutPageConfigTabIdMutationBody = BodyType<Obj3Body>
     export type PutPageConfigTabIdMutationError = ErrorType<unknown>
 
     export const usePutPageConfigTabId = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putPageConfigTabId>>, TError,{id: string;data: BodyType<Obj2Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putPageConfigTabId>>, TError,{id: string;data: BodyType<Obj3Body>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putPageConfigTabId>>,
         TError,
-        {id: string;data: BodyType<Obj2Body>},
+        {id: string;data: BodyType<Obj3Body>},
         TContext
       > => {
 

@@ -6,6 +6,6 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export type Obj2Body = {
-  email?: string;
+export type Obj3Body = {
+  content?: string;
 };

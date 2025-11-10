@@ -14,7 +14,7 @@ import { cva } from 'class-variance-authority'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 
-export function MenuItem(props: { variant?: 'main' | 'secondary' ; menu: Menu; active?: boolean }) {
+export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; active?: boolean }) {
   const { menu, variant = 'main', active } = props
 
   const pathname = usePathname()

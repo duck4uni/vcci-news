@@ -6,7 +6,7 @@ import AppEditorContent from '@/components/shared/editor-content';
 function CardEvent({ event }: { event: EventItem }) {
   return (
     <a
-      href={`${event.id}`}
+      href={`hoat-dong/su-kien/${event.id}`}
       className='flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3 p-2 sm:p-3 border border-gray-200 bg-white rounded-md'
     >
       <img

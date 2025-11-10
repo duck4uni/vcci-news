@@ -1,5 +1,4 @@
-
-export interface NewsAdminItem {
+export interface NewsItem {
   id: string
   title: string
   thumbnail: string
@@ -13,19 +12,25 @@ export interface NewsAdminItem {
   updated_by: string | null
   mode: 'NOW' | string
   category: string
+  page_config: {
+    id: string
+    name: string
+    static_link: string
+    static_link_en: string
+  }
 }
 
-export interface NewsAdminResponseData {
+export interface NewsResponseData {
   count: number
-  rows: NewsAdminItem[]
+  rows: NewsItem[]
   totalPages: number
   currentPage: number
 }
 
-export interface GetNewsAdminResponseType {
+export interface GetNewsResponseType {
   message: string
   message_en: string
-  responseData: NewsAdminResponseData
+  responseData: NewsResponseData
   status: 'success' | 'error'
   timeStamp: string
   violations: string | null
