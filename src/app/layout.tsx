@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     siteName: 'Liên đoàn Thương mại và Công nghiệp Việt Nam, CN TP.HCM',
     images: [
       {
-        url: `${links.siteURL}/thumbnail.png`,
+        url: `/thumbnail.png`,
         width: 1200,
         height: 630,
         alt: 'VCCI HCM'
