@@ -31,7 +31,7 @@ export default function DynamicPage() {
 
   const { data: categoriesPage } =
     useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
-      static_link: `/${slugArray[0]}`,
+      code: `${slugArray[0]}`,
     });
 
   if (isUUID) {
