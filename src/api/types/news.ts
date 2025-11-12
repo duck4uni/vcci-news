@@ -17,6 +17,7 @@ export interface NewsItem {
     name: string
     static_link: string
     static_link_en: string
+    code: string
   }
 }
 

@@ -6,7 +6,7 @@ import AppEditorContent from "@/components/shared/editor-content";
 function CardNews({ news }: { news: NewsItem }) {
   return (
     <a
-      href={`${news.page_config.static_link}/${news.id}`}
+      href={`${news.external_link}`}
       className="flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3"
     >
       <img
