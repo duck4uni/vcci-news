@@ -33,11 +33,10 @@ const Page = () => {
   const swiperRef = useRef<SwiperType | null>(null);
 
   // query
-  const { data: categoryData, isLoading: isLoadingCategory } = useGetCategory<GetCategoryAdminResponseType>();
   const { data: newsData, isLoading: isLoadingNews } = useGetNews<GetNewsResponseType>(
     {
       pageSize: '5',
-      filters: tab === "all" ? `` : `category @=${tab}`,
+      filters: tab === "all" ? `` : `page_config.code @=${tab}`,
     }
   );
 
@@ -49,16 +48,24 @@ const Page = () => {
   const { data: businessOpportunities, isLoading: isLoadingBusinessOpportunities } = useGetNews<GetNewsResponseType>(
     {
       pageSize: '5',
-      filters: `category @=Cơ hội kinh doanh`,
+      filters: `page_config.code @=co-hoi-kinh-doanh`,
     }
   );
   const { data: policyAndLegalInformation, isLoading: isLoadingPolicyAndLegalInformation } = useGetNews<GetNewsResponseType>(
     {
       pageSize: '5',
-      filters: `category @=Thông tin chính sách và pháp luật`,
+      filters: `page_config.code @=phap-luat`,
     }
   );
+
   const { data: eventData, isLoading: isLoadingEvent } = useGetEvents<EventApiResponse>();
+
+  const now = new Date();
+
+  const eventDataFiltered = eventData?.responseData.rows.filter(event => {
+    const eventTime = new Date(event.start_time);
+    return eventTime > now;
+  });
 
   // helpers
   const stripImagesAndHtml = (html?: string) => {
@@ -108,7 +115,7 @@ const Page = () => {
   ];
 
   return (
-    (isLoadingBusinessOpportunities || isLoadingPolicyAndLegalInformation || isLoadingCategory || isLoadingEvent) ? (
+    (isLoadingBusinessOpportunities || isLoadingPolicyAndLegalInformation || isLoadingEvent) ? (
       <div className="container w-full h-[80vh] flex justify-center items-center">
         <Spinner />
       </div>
@@ -170,7 +177,7 @@ const Page = () => {
               {newsAll?.responseData?.rows.map((news) => (
                 <SwiperSlide key={news.id}>
                   <a
-                    href={`${news.page_config.static_link}/${news.id}`}
+                    href={`${news.external_link}`}
                     className="relative block bg-white shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
                   >
                     <img
@@ -225,7 +232,7 @@ const Page = () => {
                   .map((news: NewsItem) => (
                     <a
                       key={news.id}
-                      href={`${news.page_config.static_link}/${news.id}`}
+                      href={`${news.external_link}`}
                       className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 bg-white"
                     >
                       <div className="w-full aspect-3/2 overflow-hidden">
@@ -263,20 +270,33 @@ const Page = () => {
                     >
                       Tất cả
                     </button>
-                    {categoryData?.responseData.rows
-                      .slice(0, 3)
-                      .map((category) => (
-                        <button
-                          key={category.id}
-                          className={`flex-1 py-[3px] text-[14px] transition-colors cursor-pointer ${category.name === tab
-                            ? "bg-[#d3d3d3] text-[#063e8e] font-semibold"
-                            : "border-gray-300 text-[#363636] bg-[#e8e8e8] hover:bg-[#e8e8e8] hover:text-[#063e8e] font-semibold"
-                            }`}
-                          onClick={() => setTab(category.name)}
-                        >
-                          {category.name}
-                        </button>
-                      ))}
+                    <button
+                      className={`flex-1 py-[3px] text-[14px] transition-colors cursor-pointer ${`tin-vcci` === tab
+                        ? "bg-[#d3d3d3] text-[#063e8e] font-semibold"
+                        : "border-gray-300 text-[#363636] bg-[#e8e8e8] hover:bg-[#e8e8e8] hover:text-[#063e8e] font-semibold"
+                        }`}
+                      onClick={() => setTab(`tin-vcci`)}
+                    >
+                      Tin VCCI
+                    </button>
+                    <button
+                      className={`flex-1 py-[3px] text-[14px] transition-colors cursor-pointer ${`tin-kinh-te` === tab
+                        ? "bg-[#d3d3d3] text-[#063e8e] font-semibold"
+                        : "border-gray-300 text-[#363636] bg-[#e8e8e8] hover:bg-[#e8e8e8] hover:text-[#063e8e] font-semibold"
+                        }`}
+                      onClick={() => setTab(`tin-kinh-te`)}
+                    >
+                      Tin Kinh Tế
+                    </button>
+                    <button
+                      className={`flex-1 py-[3px] text-[14px] transition-colors cursor-pointer ${`chuyen-de` === tab
+                        ? "bg-[#d3d3d3] text-[#063e8e] font-semibold"
+                        : "border-gray-300 text-[#363636] bg-[#e8e8e8] hover:bg-[#e8e8e8] hover:text-[#063e8e] font-semibold"
+                        }`}
+                      onClick={() => setTab(`chuyen-de`)}
+                    >
+                      Chuyên Đề
+                    </button>
                   </div>
 
                   {newsData?.responseData?.rows.slice(0, 4).map((news) => (
@@ -347,39 +367,37 @@ const Page = () => {
               <hr className="border-[#e8c518] mb-4" />
 
               <div className="flex flex-col md:flex-row gap-5">
-                {eventData?.responseData.rows
-                  .slice(0, 1)
-                  .map((event: EventItem) => (
-                    <a
-                      key={event.id}
-                      href={`hoat-dong/su-kien/${event.id}`}
-                      className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
-                    >
-                      <div className="w-full aspect-3/2 overflow-hidden">
-                        <img
-                          src={`${BASE_URL.imageEndpoint}${event.image}`}
-                          alt={event.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src =
-                              "/img-error.png";
-                          }}
-                        />
-                      </div>
+                {eventDataFiltered?.slice(0, 1).map((event: EventItem) => (
+                  <a
+                    key={event.id}
+                    href={`hoat-dong/su-kien/${event.id}`}
+                    className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
+                  >
+                    <div className="w-full aspect-3/2 overflow-hidden">
+                      <img
+                        src={`${BASE_URL.imageEndpoint}${event.image}`}
+                        alt={event.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src =
+                            "/img-error.png";
+                        }}
+                      />
+                    </div>
 
-                      <div className="flex-1">
-                        <p className="text-[#0056b3] font-bold text-xl line-clamp-2">
-                          {event.name}
-                        </p>
-                        <p className="text-gray-500 text-sm my-1">
-                          {dayjs(event.start_time).format("DD/MM/YYYY")}
-                        </p>
-                        <p className="line-clamp-3">{stripImagesAndHtml(event.description)}</p>
-                      </div>
-                    </a>
-                  ))}
+                    <div className="flex-1">
+                      <p className="text-[#0056b3] font-bold text-xl line-clamp-2">
+                        {event.name}
+                      </p>
+                      <p className="text-gray-500 text-sm my-1">
+                        {dayjs(event.start_time).format("DD/MM/YYYY")}
+                      </p>
+                      <p className="line-clamp-3">{stripImagesAndHtml(event.description)}</p>
+                    </div>
+                  </a>
+                ))}
                 <div className="w-full md:w-1/2">
-                  {eventData?.responseData.rows.slice(0, 4).map((event) => (
+                  {eventDataFiltered?.slice(0, 4).map((event) => (
                     <CardEvent key={event.id} event={event} />
                   ))}
                 </div>
@@ -416,13 +434,13 @@ const Page = () => {
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <a
-                      href="/xuc-tien-thuong-mai/co-hoi-kinh-doanh/"
+                      href="/xuc-tien-thuong-mai/co-hoi/"
                       className="text-[18px] sm:text-[20px] font-bold uppercase text-[#063e8e]"
                     >
                       Cơ hội kinh doanh
                     </a>
                     <a
-                      href="/xuc-tien-thuong-mai/co-hoi-kinh-doanh/"
+                      href="/xuc-tien-thuong-mai/co-hoi/"
                       className="text-[#063e8e] text-sm sm:text-base"
                     >
                       <ChevronsRight />
@@ -433,7 +451,7 @@ const Page = () => {
                     {businessOpportunities?.responseData.rows
                       .slice(0, 1)
                       .map((news: NewsItem) => (
-                        <a key={news.id} href={`${news.page_config.static_link}/${news.id}`}>
+                        <a key={news.id} href={`${news.external_link}`}>
                           <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
                             <img
                               src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
@@ -461,13 +479,13 @@ const Page = () => {
                 <div className="flex-1">
                   <div className="flex justify-between items-center">
                     <a
-                      href="/thong-tin-truyen-thong/thong-tin-chinh-sach-va-phap-luat"
+                      href="/thong-tin-truyen-thong/phap-luat"
                       className="text-[18px] sm:text-[20px] font-bold uppercase text-[#063e8e]"
                     >
                       Chính sách & pháp luật
                     </a>
                     <a
-                      href="/thong-tin-truyen-thong/thong-tin-chinh-sach-va-phap-luat"
+                      href="/thong-tin-truyen-thong/phap-luat"
                       className="text-[#063e8e] text-sm sm:text-base"
                     >
                       <ChevronsRight />
@@ -478,7 +496,7 @@ const Page = () => {
                     {policyAndLegalInformation?.responseData.rows
                       .slice(0, 1)
                       .map((news: NewsItem) => (
-                        <a key={news.id} href={`${news.page_config.static_link}/${news.id}`}>
+                        <a key={news.id} href={`${news.external_link}`}>
                           <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
                             <img
                               src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
