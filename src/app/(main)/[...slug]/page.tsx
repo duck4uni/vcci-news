@@ -23,65 +23,21 @@ export default function DynamicPage() {
   const params = useParams();
   const slugArray = Array.isArray(params.slug) ? params.slug : [params.slug];
   const lastPart = slugArray[slugArray.length - 1];
-
-  //check id post
-  const isUUID = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
-    lastPart as string
-  );
-
-  const { data: categoriesPage } =
-    useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
-      static_link: `/${slugArray[0]}`,
-    });
-
-  if (isUUID) {
-    const id = lastPart;
-    const { data, isLoading } = useGetNewsId<GetNewsDetailResponseType>(
-      id as string
-    );
-
-    return (
-      <div className='container w-full flex justify-center items-center pb-10'>
-        {isLoading ? (
-          <Spinner />
-        ) : (
-          <div className='flex flex-col gap-5 w-full'>
-            <ListCategory categories={categoriesPage?.responseData?.children} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-              {/* Main content */}
-              <main className="lg:col-span-2 bg-white border rounded-md p-8">
-                <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
-                  {data?.responseData?.title}
-                </div>
-                <div className='flex items-center gap-2 text-sm mb-4'>
-                  <span className='text-base text-blue-700'>
-                    {dayjs(data?.responseData?.created_at).format('DD/MM/YYYY')}
-                  </span>
-                </div>
-                <hr className="my-5" />
-                <div className='flex-1 text-app-grey text-base overflow-hidden'>
-                  <div className="prose tiptap overflow-hidden">
-                    {parse(data?.responseData?.description ?? '')}
-                  </div>
-                </div>
-              </main>
-
-              {/* Sidebar */}
-              <aside className="space-y-6">
-                <EventCalendar />
-              </aside>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // nếu là trang danh sách tin tức
   const url = slugArray.join("/");
+
+  // states
   const [submitSearch, setSubmitSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 5;
+
+  // query
+  const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+    code: `${slugArray[0]}`,
+  });
+
+  const { data: newsDetail, isLoading: isLoadingDetail } = useGetNews<GetNewsResponseType>({
+    filters: `external_link@=${lastPart}`,
+  });
 
   const { data: news, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
@@ -89,13 +45,53 @@ export default function DynamicPage() {
     filters: `page_config.static_link==/${url}` + (submitSearch ? `,title@=${submitSearch}` : ""),
   });
 
+  if (isLoadingDetail) {
+    return (
+      <div className="flex justify-center py-12">
+        <Spinner />
+      </div>
+    );
+  }
+
+  // detail news page
+  const isDetailPage = newsDetail?.responseData?.rows?.length === 1;
+  if (isDetailPage) {
+    return (
+      <div className='container w-full flex justify-center items-center pb-10'>
+        <div className='flex flex-col gap-5 w-full'>
+          <ListCategory categories={categoriesPage?.responseData?.children} />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <main className="lg:col-span-2 bg-white border rounded-md p-8">
+              <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
+                {newsDetail?.responseData?.rows[0].title}
+              </div>
+              <div className='flex items-center gap-2 text-sm mb-4'>
+                <span className='text-base text-blue-700'>
+                  {dayjs(newsDetail?.responseData?.rows[0].created_at).format('DD/MM/YYYY')}
+                </span>
+              </div>
+              <hr className="my-5" />
+              <div className='flex-1 text-app-grey text-base overflow-hidden'>
+                <div className="prose tiptap overflow-hidden">
+                  {parse(newsDetail?.responseData?.rows[0].description ?? '')}
+                </div>
+              </div>
+            </main>
+            <aside className="space-y-6">
+              <EventCalendar />
+            </aside>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // list news page
   return (
     <div className="min-h-screen container mx-auto">
       <div className="w-full flex flex-col gap-5">
         <ListCategory categories={categoriesPage?.responseData?.children} />
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main content */}
           <main className="lg:col-span-2 bg-background">
             <div className="pb-5 overflow-hidden">
               {isLoading ? (
@@ -111,10 +107,9 @@ export default function DynamicPage() {
                     <CardNews
                       key={item.id}
                       news={item}
-                      link={`/${url}/${item.id}`}
+                      link={`${item.external_link}`}
                     />
                   ))}
-
                   <div className="w-full flex justify-center mt-4">
                     <Pagination
                       pageCount={Number(news?.responseData.totalPages ?? 1)}
@@ -130,18 +125,12 @@ export default function DynamicPage() {
               )}
             </div>
           </main>
-
-          {/* Sidebar */}
           <aside className="space-y-6">
             <ListFilter onSearch={setSubmitSearch} />
             <EventCalendar />
             <div className="bg-white border rounded-md overflow-hidden">
               <div className="w-full relative bg-gray-100">
-                <img
-                  src="/banner.webp"
-                  alt="Quảng cáo"
-                  className="object-cover"
-                />
+                <img src="/banner.webp" alt="Quảng cáo" className="object-cover" />
               </div>
             </div>
           </aside>
