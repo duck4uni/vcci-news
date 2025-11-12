@@ -45,6 +45,9 @@ export default function DynamicPage() {
   const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
     code: `${slugArray[0]}`,
   });
+  const { data: categoriesPageDefault } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+    code: `thong-tin-truyen-thong`,
+  });
 
   const { data: events, isLoading: isLoadingEvents } = useGetEvents<EventApiResponse>({
     pageSize: String(pageSize),
@@ -62,7 +65,7 @@ export default function DynamicPage() {
   });
 
   const { data: newsDetail, isLoading: isLoadingNewsDetail } = useGetNews<GetNewsResponseType>({
-    filters: `page_config.static_link==/${url}` + `,external_link@=${lastPart}`,
+    filters: `external_link@=${lastPart}`,
   });
 
   // event page
@@ -245,7 +248,11 @@ export default function DynamicPage() {
     return (
       <div className='container w-full flex justify-center items-center pb-10'>
         <div className='flex flex-col gap-5 w-full'>
-          <ListCategory categories={categoriesPage?.responseData?.children} />
+          {categoriesPage?.responseData?.children ? (
+            <ListCategory categories={categoriesPage?.responseData?.children} />
+          ) : (
+            <ListCategory categories={categoriesPageDefault?.responseData?.children} />
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <main className="lg:col-span-2 bg-white border rounded-md p-8">
               {isLoadingNewsDetail ? (
