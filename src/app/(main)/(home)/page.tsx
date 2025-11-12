@@ -380,7 +380,7 @@ const Page = () => {
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
-                            "/img-error.png";
+                            "/VCCI-Chung-300x200-1.png";
                         }}
                       />
                     </div>

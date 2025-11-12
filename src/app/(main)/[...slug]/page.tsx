@@ -65,7 +65,7 @@ export default function DynamicPage() {
   });
 
   const { data: newsDetail, isLoading: isLoadingNewsDetail } = useGetNews<GetNewsResponseType>({
-    filters: `external_link@=${lastPart}`,
+    filters: `external_link@=${url}`,
   });
 
   // event page
