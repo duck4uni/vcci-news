@@ -18,6 +18,7 @@ export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; ac
   const { menu, variant = 'main', active } = props
 
   const pathname = usePathname()
+  const isActive = pathname.startsWith(menu.link ?? '');
   const linkId = useMemo(() => `trigger_${menu.id}`, [menu.id])
   const hoverCardRef = useCallback(
     (element: HTMLDivElement) => {
@@ -31,7 +32,7 @@ export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; ac
     <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>
         <Link
-          aria-selected={active || pathname == menu.link}
+          aria-selected={active || isActive}
           id={linkId}
           target={(menu.link ?? '').startsWith('/') ? '_self' : '_blank'}
           href={menu.link ?? '/'}
