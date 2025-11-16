@@ -7,8 +7,8 @@ import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 
 // templates
 import InformationPage from "./templates/InformationPage";
-import NewsPage from "./templates/NewsPage";
-import NewsDetailPage from "./templates/NewsDetailPage";
+import ArticlePage from "./templates/ArticlePage";
+import ArticleDetailPage from "./templates/ArticleDetailPage";
 import EventPage from "./templates/EventPage";
 import EventDetailPage from "./templates/EventDetailPage";
 
@@ -46,10 +46,10 @@ export default function DynamicPage() {
   }
 
   if (slug.length === 2) {
-    return category?.responseData.is_article ? <NewsPage /> : <InformationPage />;
+    return category?.responseData.is_article ? <ArticlePage /> : <InformationPage />;
   }
 
   if (slug.length === 3) {
-    return <NewsDetailPage />;
+    return <ArticleDetailPage />;
   }
 }

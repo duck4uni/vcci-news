@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 import parse from "html-react-parser";
 import { Spinner } from "@/components/ui";
 
-export default function NewsDetailPage() {
+export default function ArticleDetailPage() {
   // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];

@@ -13,7 +13,7 @@ import EventCalendar from "@/components/base/event-calendar";
 import { useState } from "react";
 import { Spinner } from "@/components/ui";
 
-export default function NewsPage() {
+export default function ArticlePage() {
   // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
