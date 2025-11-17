@@ -186,7 +186,7 @@ const Page = () => {
                       className="w-full aspect-3/2 sm:h-56 md:h-64 object-cover"
                       onError={(e) => {
                         e.currentTarget.onerror = null
-                        e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                        e.currentTarget.src = "/img-error.png"
                       }}
                     />
                     <div className="absolute bottom-0 left-0 right-0 h-20 md:h-24 bg-linear-to-t from-black/80 to-transparent flex items-center justify-center p-3">
@@ -242,7 +242,7 @@ const Page = () => {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.onerror = null
-                            e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                            e.currentTarget.src = "/img-error.png"
                           }}
                         />
                       </div>
@@ -380,7 +380,7 @@ const Page = () => {
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
-                            "/VCCI-Chung-300x200-1.png";
+                            "/img-error.png";
                         }}
                       />
                     </div>
@@ -459,7 +459,7 @@ const Page = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.onerror = null
-                                e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                                e.currentTarget.src = "/img-error.png"
                               }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
@@ -504,7 +504,7 @@ const Page = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.onerror = null
-                                e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                                e.currentTarget.src = "/img-error.png"
                               }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
