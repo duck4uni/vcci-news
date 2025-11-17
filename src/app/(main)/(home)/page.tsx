@@ -155,11 +155,11 @@ const Page = () => {
           <section>
             <div className="flex items-center justify-center py-8 px-4">
               <div className="flex items-center w-full max-w-4xl">
-                <div className="flex-1 h-[1px] bg-gradient-to-r from-transparent via-gray-300 to-gray-400"></div>
+                <div className="flex-1 h-px bg-linear-to-r from-transparent via-gray-300 to-gray-400"></div>
                 <h1 className="px-6 text-[20px] sm:text-[24px] md:text-[28px] uppercase font-bold text-[#063e8e] whitespace-nowrap">
                   Tin Nổi Bật
                 </h1>
-                <div className="flex-1 h-[1px] bg-gradient-to-l from-transparent via-gray-300 to-gray-400"></div>
+                <div className="flex-1 h-px bg-linear-to-l from-transparent via-gray-300 to-gray-400"></div>
               </div>
             </div>
 
@@ -186,7 +186,7 @@ const Page = () => {
                       className="w-full aspect-3/2 sm:h-56 md:h-64 object-cover"
                       onError={(e) => {
                         e.currentTarget.onerror = null
-                        e.currentTarget.src = "/fallback.png"
+                        e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
                       }}
                     />
                     <div className="absolute bottom-0 left-0 right-0 h-20 md:h-24 bg-linear-to-t from-black/80 to-transparent flex items-center justify-center p-3">
@@ -242,7 +242,7 @@ const Page = () => {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.onerror = null
-                            e.currentTarget.src = "/fallback.png"
+                            e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
                           }}
                         />
                       </div>
@@ -459,7 +459,7 @@ const Page = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.onerror = null
-                                e.currentTarget.src = "/fallback.png"
+                                e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
                               }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
@@ -504,7 +504,7 @@ const Page = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.onerror = null
-                                e.currentTarget.src = "/fallback.png"
+                                e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
                               }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">

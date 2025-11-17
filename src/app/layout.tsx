@@ -5,6 +5,7 @@ import React from "react";
 import links from "@links/index";
 
 export const metadata: Metadata = {
+  icons: { icon: '/favicon.ico', shortcut: '/favicon.ico' },
   title: 'Chức năng Đại diện Người sử dụng lao động - Liên đoàn Thương mại và Công nghiệp Việt Nam, CN TP.HCM',
   description: 'Chức năng Đại diện Người sử dụng lao động (NSDLĐ):',
   metadataBase: new URL(links.siteURL),
