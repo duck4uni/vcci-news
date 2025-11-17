@@ -57,15 +57,30 @@ function Header() {
               }}
             />
             <div className="flex gap-2">
-              {[Facebook, Twitter, Youtube, Linkedin].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
-                >
-                  <Icon size={16} />
-                </a>
-              ))}
+              {[
+                Facebook,
+                Twitter,
+                Youtube,
+                Linkedin
+              ].map((Icon, i) => {
+                const hrefs = [
+                  "https://www.facebook.com/VCCIHCMC/",
+                  "https://twitter.com/VCCI_HCM",
+                  "https://www.youtube.com/user/VCCIHCMC",
+                  "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym",
+                ];
+                return (
+                  <a
+                    key={i}
+                    href={hrefs[i]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
+                  >
+                    <Icon size={16} />
+                  </a>
+                );
+              })}
             </div>
           </div>
         </div>
