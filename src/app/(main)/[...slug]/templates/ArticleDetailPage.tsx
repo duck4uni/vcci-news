@@ -22,7 +22,7 @@ export default function ArticleDetailPage() {
     code: slug[0],
   });
   const { data, isLoading } = useGetNews<GetNewsResponseType>({
-    filters: `external_link==${path}`,
+    filters: `external_link==/${path}`,
   });
 
   return (
@@ -37,17 +37,17 @@ export default function ArticleDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <main className="lg:col-span-2 bg-white border rounded-md p-8">
               <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
-                {data?.responseData?.rows[0].title}
+                {data?.responseData?.rows[0]?.title}
               </div>
               <div className='flex items-center gap-2 text-sm mb-4'>
                 <span className='text-base text-blue-700'>
-                  {dayjs(data?.responseData?.rows[0].created_at).format('DD/MM/YYYY')}
+                  {dayjs(data?.responseData?.rows[0]?.created_at).format('DD/MM/YYYY')}
                 </span>
               </div>
               <hr className="my-5" />
               <div className='flex-1 text-app-grey text-base overflow-hidden'>
                 <div className="prose tiptap overflow-hidden">
-                  {parse(data?.responseData?.rows[0].description ?? '')}
+                  {parse(data?.responseData?.rows[0]?.description ?? '')}
                 </div>
               </div>
             </main>
