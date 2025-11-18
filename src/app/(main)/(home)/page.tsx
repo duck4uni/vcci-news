@@ -312,9 +312,6 @@ const Page = () => {
                 <h2 className="text-[18px] sm:text-[20px] font-semibold uppercase text-[#063e8e]">
                   Liên kết nhanh
                 </h2>
-                <a href="#" className="text-[#063e8e] text-sm sm:text-base">
-                  <ChevronsRight />
-                </a>
               </div>
               <hr className="border-[#063e8e] mb-4" />
               <div className="space-y-2 text-[#063e8e] text-sm md:text-base pb-10">
@@ -539,7 +536,7 @@ const Page = () => {
                   Hội viên tiêu biểu
                 </h2>
                 <a
-                  href="#"
+                  href="/danh-ba-hoi-vien"
                   className="text-[#063e8e] hover:underline text-sm font-medium"
                 >
                   <ChevronsRight />
@@ -576,17 +573,11 @@ const Page = () => {
             </aside >
 
             {/* right */}
-            < aside className="w-full lg:w-[30%] py-5" >
+            <aside className="w-full lg:w-[30%] py-5" >
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-xl font-bold uppercase text-[#063e8e]">
                   Kết nối hội viên
                 </h2>
-                <a
-                  href="#"
-                  className="text-[#063e8e] hover:underline text-sm font-medium"
-                >
-                  <ChevronsRight />
-                </a>
               </div>
               <hr className="border-[#063e8e] mb-5" />
               <div className="pb-10">
@@ -628,7 +619,7 @@ const Page = () => {
                   Video
                 </h2>
                 <a
-                  href="#"
+                  href="/video"
                   className="text-[#063e8e] hover:underline text-sm font-medium"
                 >
                   <ChevronsRight />
@@ -672,12 +663,6 @@ const Page = () => {
                 <h2 className="text-xl font-bold uppercase text-[#063e8e]">
                   Đối tác
                 </h2>
-                <a
-                  href="#"
-                  className="text-[#063e8e] hover:underline text-sm font-medium"
-                >
-                  <ChevronsRight />
-                </a>
               </div>
               <hr className="border-[#063e8e] mb-5" />
               <div className="pb-10">
