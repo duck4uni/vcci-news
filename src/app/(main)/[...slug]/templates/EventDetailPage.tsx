@@ -45,7 +45,7 @@ export default function EventDetailPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <main className="lg:col-span-2 bg-white border rounded-md p-8">
               <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
-                {eventsDetail?.responseData?.rows[0].name}
+                {eventsDetail?.responseData?.rows[0]?.name}
               </div>
               <hr className="py-2" />
 
@@ -55,8 +55,8 @@ export default function EventDetailPage() {
                   {eventsDetail?.responseData?.rows[0].image ? (
                     <div className="w-full h-52 relative ">
                       <EventImage
-                        src={`${BASE_URL.imageEndpoint}${eventsDetail.responseData.rows[0].image}`}
-                        alt={eventsDetail.responseData.rows[0].name || "image"}
+                        src={`${BASE_URL.imageEndpoint}${eventsDetail?.responseData?.rows[0].image}`}
+                        alt={eventsDetail?.responseData?.rows[0]?.name || "image"}
                       />
                     </div>
                   ) : (
@@ -89,8 +89,8 @@ export default function EventDetailPage() {
                     <div className="text-sm text-gray-500 flex items-center gap-2">
                       <MapPin className="h-5 w-5 text-blue-600" />
                       <div className="text-sm font-medium text-gray-800">
-                        Địa điểm: {eventsDetail?.responseData?.rows[0].location ??
-                          eventsDetail?.responseData?.rows[0].province ??
+                        Địa điểm: {eventsDetail?.responseData?.rows[0]?.location ??
+                          eventsDetail?.responseData?.rows[0]?.province ??
                           "-"}
                       </div>
                     </div>
@@ -98,9 +98,9 @@ export default function EventDetailPage() {
                     <div className="text-sm text-gray-500 flex items-center gap-2">
                       <CreditCard className="h-5 w-5 text-yellow-400" />
                       <div className="text-sm font-medium text-gray-800">
-                        Phí tham dự: {eventsDetail?.responseData?.rows[0].table_cost
-                          ? `${eventsDetail.responseData.rows[0].table_count
-                          } Bàn : ${eventsDetail.responseData.rows[0].table_cost.toLocaleString()} đ`
+                        Phí tham dự: {eventsDetail?.responseData?.rows[0]?.table_cost
+                          ? `${eventsDetail?.responseData?.rows[0]?.table_count
+                          } Bàn : ${eventsDetail?.responseData?.rows[0]?.table_cost.toLocaleString()} đ`
                           : "Vui lòng xem chi tiết trong bài"}
                       </div>
                     </div>
@@ -110,7 +110,7 @@ export default function EventDetailPage() {
 
               {/* Full description */}
               <div className="p-7.5 prose tiptap overflow-hidden">
-                {parse(eventsDetail?.responseData?.rows[0].description ?? "")}
+                {parse(eventsDetail?.responseData?.rows[0]?.description ?? "")}
               </div>
             </main>
 
@@ -118,12 +118,12 @@ export default function EventDetailPage() {
             <aside className="space-y-6">
               <EventCalendar />
               <div className="bg-white border rounded-md overflow-hidden">
-                <div className="w-full h-56 relative bg-gray-100">
+                <div className="w-full h-75 relative bg-gray-100">
                   <Image
                     src="/banner.webp"
                     alt="Quảng cáo"
                     fill
-                    className="object-cover"
+                    className="object-contain"
                   />
                 </div>
               </div>
@@ -152,7 +152,7 @@ function EventImage({ src, alt }: EventImageProps) {
       className="object-cover"
       onError={() => {
         // swap to local fallback file when Next/Image fails to load the provided URL
-        if (imgSrc !== "/VCCI-Chung-300x200-1.png") setImgSrc("/VCCI-Chung-300x200-1.png");
+        if (imgSrc !== "/img-error.png") setImgSrc("/img-error.png");
       }}
     />
   );

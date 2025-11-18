@@ -1,5 +1,5 @@
 
-import { NewsDetailItem } from './CardNews.type';
+import { NewsItem } from '@/api/types/news';
 import Links from '@links/index'
 import dayjs from 'dayjs';
 
@@ -20,7 +20,7 @@ const stripImagesAndHtml = (html?: string) => {
   return withoutImgs.replace(/<[^>]*>/g, '')
 }
 
-const CardNews = ({ news, link }: { news: NewsDetailItem, link: string }) => {
+const CardNews = ({ news, link }: { news: NewsItem, link: string }) => {
   return (
     <a
       href={`${link}`}

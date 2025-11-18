@@ -57,15 +57,34 @@ function Header() {
               }}
             />
             <div className="flex gap-2">
-              {[Facebook, Twitter, Youtube, Linkedin].map((Icon, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
-                >
-                  <Icon size={16} />
-                </a>
-              ))}
+              <a
+                href="https://www.facebook.com/VCCIHCMC/"
+                target="_blank"
+                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
+              >
+                <Facebook size={16} />
+              </a>
+              <a
+                href="https://twitter.com/VCCI_HCM"
+                target="_blank"
+                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
+              >
+                <Twitter size={16} />
+              </a>
+              <a
+                href="https://www.youtube.com/user/VCCIHCMC"
+                target="_blank"
+                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
+              >
+                <Youtube size={16} />
+              </a>
+              <a
+                href="https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym"
+                target="_blank"
+                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
+              >
+                <Linkedin size={16} />
+              </a>
             </div>
           </div>
         </div>

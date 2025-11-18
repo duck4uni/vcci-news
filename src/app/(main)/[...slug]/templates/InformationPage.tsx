@@ -37,7 +37,7 @@ export default function InformationPage() {
           <ListCategory categories={category?.responseData?.children} />
           <main className=" bg-white border rounded-md py-10 px-30">
             <div className='text-primary text-2xl leading-normal font-bold'>
-              {data?.responseData?.rows[0].title}
+              {data?.responseData?.rows[0]?.title}
             </div>
             {/* <div className='flex items-center gap-2 text-sm mb-4'>
             <span className='text-base text-blue-700'>
@@ -47,7 +47,7 @@ export default function InformationPage() {
             <hr className="my-5" />
             <div className='flex-1 text-app-grey text-base overflow-hidden'>
               <div className="prose tiptap overflow-hidden">
-                {parse(data?.responseData?.rows[0].description ?? '')}
+                {parse(data?.responseData?.rows[0]?.description ?? '')}
               </div>
             </div>
           </main>
