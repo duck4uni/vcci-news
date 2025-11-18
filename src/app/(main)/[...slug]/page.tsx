@@ -46,7 +46,7 @@ export default function DynamicPage() {
   }
 
   if (slug.length === 2) {
-    return category?.responseData.is_article ? <ArticlePage /> : <InformationPage />;
+    return category?.responseData?.is_article ? <ArticlePage /> : <InformationPage />;
   }
 
   if (slug.length === 3) {

@@ -50,7 +50,7 @@ export default function EventPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <main className="lg:col-span-2 bg-background">
                 <div className="pb-5 overflow-hidden">
-                  {events?.responseData.rows.map((item) => (
+                  {events?.responseData?.rows?.map((item) => (
                     <CardEvents
                       key={item.id}
                       event={item}
@@ -59,12 +59,12 @@ export default function EventPage() {
                   ))}
                   <div className="w-full flex justify-center mt-4">
                     <Pagination
-                      pageCount={Number(events?.responseData.totalPages ?? 1)}
-                      page={Number(events?.responseData.currentPage ?? page)}
+                      pageCount={Number(events?.responseData?.totalPages ?? 1)}
+                      page={Number(events?.responseData?.currentPage ?? page)}
                       onChangePage={setPage}
                       onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
                       onGoToNextPage={() =>
-                        setPage(Math.min(Number(events?.responseData.totalPages ?? 1), page + 1))
+                        setPage(Math.min(Number(events?.responseData?.totalPages ?? 1), page + 1))
                       }
                     />
                   </div>

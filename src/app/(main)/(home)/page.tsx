@@ -186,7 +186,7 @@ const Page = () => {
                       className="w-full aspect-3/2 sm:h-56 md:h-64 object-cover"
                       onError={(e) => {
                         e.currentTarget.onerror = null
-                        e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                        e.currentTarget.src = "/img-error.png"
                       }}
                     />
                     <div className="absolute bottom-0 left-0 right-0 h-20 md:h-24 bg-linear-to-t from-black/80 to-transparent flex items-center justify-center p-3">
@@ -242,7 +242,7 @@ const Page = () => {
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             e.currentTarget.onerror = null
-                            e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                            e.currentTarget.src = "/img-error.png"
                           }}
                         />
                       </div>
@@ -312,9 +312,6 @@ const Page = () => {
                 <h2 className="text-[18px] sm:text-[20px] font-semibold uppercase text-[#063e8e]">
                   Liên kết nhanh
                 </h2>
-                <a href="#" className="text-[#063e8e] text-sm sm:text-base">
-                  <ChevronsRight />
-                </a>
               </div>
               <hr className="border-[#063e8e] mb-4" />
               <div className="space-y-2 text-[#063e8e] text-sm md:text-base pb-10">
@@ -380,7 +377,7 @@ const Page = () => {
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src =
-                            "/VCCI-Chung-300x200-1.png";
+                            "/img-error.png";
                         }}
                       />
                     </div>
@@ -459,7 +456,7 @@ const Page = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.onerror = null
-                                e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                                e.currentTarget.src = "/img-error.png"
                               }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
@@ -504,7 +501,7 @@ const Page = () => {
                               className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.onerror = null
-                                e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+                                e.currentTarget.src = "/img-error.png"
                               }}
                             />
                             <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
@@ -539,7 +536,7 @@ const Page = () => {
                   Hội viên tiêu biểu
                 </h2>
                 <a
-                  href="#"
+                  href="/danh-ba-hoi-vien"
                   className="text-[#063e8e] hover:underline text-sm font-medium"
                 >
                   <ChevronsRight />
@@ -576,17 +573,11 @@ const Page = () => {
             </aside >
 
             {/* right */}
-            < aside className="w-full lg:w-[30%] py-5" >
+            <aside className="w-full lg:w-[30%] py-5" >
               <div className="flex justify-between items-center mb-3">
                 <h2 className="text-xl font-bold uppercase text-[#063e8e]">
                   Kết nối hội viên
                 </h2>
-                <a
-                  href="#"
-                  className="text-[#063e8e] hover:underline text-sm font-medium"
-                >
-                  <ChevronsRight />
-                </a>
               </div>
               <hr className="border-[#063e8e] mb-5" />
               <div className="pb-10">
@@ -628,7 +619,7 @@ const Page = () => {
                   Video
                 </h2>
                 <a
-                  href="#"
+                  href="/video"
                   className="text-[#063e8e] hover:underline text-sm font-medium"
                 >
                   <ChevronsRight />
@@ -672,12 +663,6 @@ const Page = () => {
                 <h2 className="text-xl font-bold uppercase text-[#063e8e]">
                   Đối tác
                 </h2>
-                <a
-                  href="#"
-                  className="text-[#063e8e] hover:underline text-sm font-medium"
-                >
-                  <ChevronsRight />
-                </a>
               </div>
               <hr className="border-[#063e8e] mb-5" />
               <div className="pb-10">

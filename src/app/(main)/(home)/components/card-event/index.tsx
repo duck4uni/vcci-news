@@ -15,7 +15,7 @@ function CardEvent({ event }: { event: EventItem }) {
         className='w-[100px] md:w-[130px] aspect-3/2 object-cover'
         onError={(e) => {
           e.currentTarget.onerror = null
-          e.currentTarget.src = "/VCCI-Chung-300x200-1.png"
+          e.currentTarget.src = "/img-error.png"
         }}
       />
       <div className='flex-1'>

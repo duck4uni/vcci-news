@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, Suspense } from "react";
 import ListCategory from "@/components/base/list-category";
 import ListFilter from "@/components/base/list-filter";
@@ -13,7 +14,7 @@ import { useSearchParams } from 'next/navigation'
 function SearchContent() {
   const [page, setPage] = useState(1);
   const searchParams = useSearchParams()
-  const query = searchParams.get('q') //
+  const query = searchParams.get('q') || '';
   const pageSize = 5;
   const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
@@ -50,7 +51,7 @@ function SearchContent() {
                     <CardNews
                       key={news.id}
                       news={news}
-                      link={`${news.page_config.static_link}/${news.id}`}
+                      link={news.external_link}
                     />
                   ))}
 
