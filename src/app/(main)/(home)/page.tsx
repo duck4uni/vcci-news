@@ -247,14 +247,11 @@ const Page = () => {
                         />
                       </div>
 
-                      <div className="flex-1 p-5 pt-0">
-                        <p className="text-[#063E8E] font-bold text-xl line-clamp-2">
+                      <div className="flex-1 p-5 pt-1">
+                        <p className="text-[#063E8E] font-bold pb-2 text-xl line-clamp-2">
                           {news.title}
                         </p>
-                        <p className="text-gray-500 text-sm">
-                          {dayjs(news.release_at).format("DD/MM/YYYY")}
-                        </p>
-                        <p className="line-clamp-4">{stripImagesAndHtml(news.description)}</p>
+                        <p className="line-clamp-4 text-justify">{stripImagesAndHtml(news.description)}</p>
                       </div>
                     </a>
                   ))}
@@ -389,7 +386,7 @@ const Page = () => {
                       <p className="text-gray-500 text-sm my-1">
                         {dayjs(event.start_time).format("DD/MM/YYYY")}
                       </p>
-                      <p className="line-clamp-3">{stripImagesAndHtml(event.description)}</p>
+                      <p className="line-clamp-3 text-justify">{stripImagesAndHtml(event.description)}</p>
                     </div>
                   </a>
                 ))}
