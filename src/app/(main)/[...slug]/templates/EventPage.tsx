@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -20,10 +20,26 @@ export default function EventPage() {
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   // states
+  const initialPage = Number(searchParams.get("page") ?? "1");
   const [submitSearch, setSubmitSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const pageSize = 5;
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) {
+      params.set("page", String(page));
+    } else {
+      params.delete("page");
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [page]);
 
   // query
   const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
