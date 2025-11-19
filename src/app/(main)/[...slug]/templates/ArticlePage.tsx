@@ -3,14 +3,14 @@
 import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
 import ListCategory from "@/components/base/list-category";
-import { useParams } from "next/dist/client/components/navigation";
+import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useGetNews } from "@/api/endpoints/news";
 import { GetNewsResponseType } from "@/api/types/news";
 import CardNews from "@/components/base/card-news";
 import { Pagination } from "@/components/base/pagination";
 import ListFilter from "@/components/base/list-filter";
 import EventCalendar from "@/components/base/event-calendar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui";
 
 export default function ArticlePage() {
@@ -19,10 +19,26 @@ export default function ArticlePage() {
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
   const path = slug.join("/");
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+
   // states
+  const initialPage = Number(searchParams.get("page") ?? "1");
   const [submitSearch, setSubmitSearch] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(initialPage);
   const pageSize = 5;
+
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (page > 1) {
+      params.set("page", String(page));
+    } else {
+      params.delete("page");
+    }
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [page]);
 
   // query
   const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({

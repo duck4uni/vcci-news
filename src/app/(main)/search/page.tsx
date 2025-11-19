@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, Suspense, useEffect } from "react";
 import ListCategory from "@/components/base/list-category";
 import ListFilter from "@/components/base/list-filter";
 import CardNews from "@/components/base/card-news";
@@ -9,18 +9,35 @@ import Image from "next/image";
 import { useGetNews } from "@api/endpoints/news";
 import { GetNewsResponseType } from "@api/types/news";
 import { Spinner } from "@components/ui/spinner";
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 
 function SearchContent() {
-  const [page, setPage] = useState(1);
-  const searchParams = useSearchParams()
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const query = searchParams.get('q') || '';
+  const pageFromUrl = searchParams.get('page');
+  const [page, setPage] = useState(pageFromUrl ? parseInt(pageFromUrl) : 1);
+
   const pageSize = 5;
   const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
     pageSize: String(pageSize),
     currentPage: String(page),
     filters: query ? `title @=${query}` : undefined,
   });
+
+  // Update URL when page changes
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(page));
+    router.push(`/search?${params.toString()}`, { scroll: false });
+  }, [page]);
+
+  // Sync state with URL on mount/change
+  useEffect(() => {
+    if (pageFromUrl) {
+      setPage(parseInt(pageFromUrl));
+    }
+  }, [pageFromUrl]);
 
   return (
     <div className="min-h-screen container mx-auto p-4">
@@ -29,7 +46,6 @@ function SearchContent() {
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="py-3">
               <h1 className="text-md md:text-lg font-semibold leading-6 text-gray-900">
-                {" "}
                 Search Results for: {query}
               </h1>
             </div>
@@ -37,7 +53,6 @@ function SearchContent() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main content */}
           <main className="lg:col-span-2 bg-background ">
             <div className="pb-5 overflow-hidden">
               {isLoading ? (
@@ -76,7 +91,6 @@ function SearchContent() {
             </div>
           </main>
 
-          {/* Sidebar */}
           <aside className="space-y-6 order-first lg:order-last">
             <div className="bg-white border rounded-md overflow-hidden hidden lg:block">
               <div className="w-full relative bg-gray-100">

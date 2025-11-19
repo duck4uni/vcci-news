@@ -52,7 +52,7 @@ function Header() {
                   const value =
                     (e.currentTarget as HTMLInputElement).value || "";
                   const encoded = encodeURIComponent(value);
-                  router.push(`/search?q=${encoded}`);
+                  router.push(`/search?q=${encoded}&page=1`);
                 }
               }}
             />
