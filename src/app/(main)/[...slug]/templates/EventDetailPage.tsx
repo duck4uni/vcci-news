@@ -43,14 +43,14 @@ export default function EventDetailPage() {
         <div className='flex flex-col gap-5 w-full'>
           <ListCategory categories={categoriesPage?.responseData?.children} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <main className="lg:col-span-2 bg-white border rounded-md p-8">
+            <main className="lg:col-span-2 bg-white border rounded-md py-10 px-5 md:px-20">
               <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
                 {eventsDetail?.responseData?.rows[0]?.name}
               </div>
               <hr className="py-2" />
 
               {/* Top summary with image + details */}
-              <div className="flex flex-col lg:flex-row gap-6 my-6">
+              <div className="flex flex-col md:flex-row gap-6 my-6">
                 <div className="w-full lg:w-1/2 bg-gray-50 rounded-md overflow-hidden">
                   {eventsDetail?.responseData?.rows[0].image ? (
                     <div className="w-full h-52 relative ">
@@ -64,7 +64,7 @@ export default function EventDetailPage() {
                   )}
                 </div>
 
-                <div className="w-full lg:w-1/2 bg-white border rounded-md p-6">
+                <div className="w-full lg:w-1/2 bg-white border rounded-md p-3 md:p-6">
                   <div className="flex flex-col gap-3">
                     <div className="text-sm text-gray-500 flex flex-row items-center gap-2">
                       <Clock className="h-5 w-5 text-yellow-500" />
@@ -109,7 +109,7 @@ export default function EventDetailPage() {
               </div>
 
               {/* Full description */}
-              <div className="p-7.5 prose tiptap overflow-hidden">
+              <div className="prose tiptap overflow-hidden">
                 {parse(eventsDetail?.responseData?.rows[0]?.description ?? "")}
               </div>
             </main>
