@@ -35,7 +35,7 @@ export default function InformationPage() {
       ) : (
         <div className='flex flex-col gap-5 w-full'>
           <ListCategory categories={category?.responseData?.children} />
-          <main className=" bg-white border rounded-md py-10 px-30">
+          <main className=" bg-white border rounded-md py-10 px-5 md:px-20 lg:px-20">
             <div className='text-primary text-2xl leading-normal font-bold'>
               {data?.responseData?.rows[0]?.title}
             </div>
