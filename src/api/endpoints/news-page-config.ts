@@ -110,7 +110,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigCategoryIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigCategoryId>>>
@@ -185,7 +185,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigCategoryIdQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigCategoryId>>>
@@ -392,7 +392,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigCategoryInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigCategory>>>
@@ -467,7 +467,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigCategoryQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigCategory>>>
@@ -593,7 +593,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetAllLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetAllLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigGetAllLinksInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigGetAllLinks>>>
@@ -668,7 +668,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetAllLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetAllLinks>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigGetAllLinksQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigGetAllLinks>>>
@@ -755,7 +755,7 @@ export const getGetNewsPageConfigGetHierarchicalUrl = (params?: GetNewsPageConfi
 
   const stringifiedParams = normalizedParams.toString();
 
-  return stringifiedParams.length > 0 ? `/NewsPageConfig/getHierarchical?${stringifiedParams}` : `/NewsPageConfig/getHierarchical`
+  return stringifiedParams.length > 0 ? `/newsPageConfig/getHierarchical?${stringifiedParams}` : `/newsPageConfig/getHierarchical`
 }
 
 export const getNewsPageConfigGetHierarchical = async (params?: GetNewsPageConfigGetHierarchicalParams, options?: RequestInit): Promise<getNewsPageConfigGetHierarchicalResponse> => {
@@ -775,13 +775,13 @@ export const getNewsPageConfigGetHierarchical = async (params?: GetNewsPageConfi
 
 export const getGetNewsPageConfigGetHierarchicalInfiniteQueryKey = (params?: GetNewsPageConfigGetHierarchicalParams,) => {
     return [
-    'infinite', `/NewsPageConfig/getHierarchical`, ...(params ? [params]: [])
+    'infinite', `/newsPageConfig/getHierarchical`, ...(params ? [params]: [])
     ] as const;
     }
 
 export const getGetNewsPageConfigGetHierarchicalQueryKey = (params?: GetNewsPageConfigGetHierarchicalParams,) => {
     return [
-    `/NewsPageConfig/getHierarchical`, ...(params ? [params]: [])
+    `/newsPageConfig/getHierarchical`, ...(params ? [params]: [])
     ] as const;
     }
 
@@ -801,7 +801,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigGetHierarchicalInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>
@@ -876,7 +876,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigGetHierarchicalQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfigGetHierarchical>>>
@@ -1002,7 +1002,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getNewsPageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfig>>>
@@ -1077,7 +1077,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getNewsPageConfig>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetNewsPageConfigQueryResult = NonNullable<Awaited<ReturnType<typeof getNewsPageConfig>>>

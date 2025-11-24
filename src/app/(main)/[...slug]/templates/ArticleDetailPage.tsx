@@ -26,7 +26,8 @@ export default function ArticleDetailPage() {
     filters: `external_link==/${path}`,
   });
 
-  if (data?.responseData?.rows.length === 0 && !isLoading) {
+  // template
+  if (!isLoading && (!data?.responseData?.rows || data.responseData.rows.length === 0)) {
     return notFound();
   }
   return (

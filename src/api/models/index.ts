@@ -6,6 +6,7 @@
  * OpenAPI spec version: 1.0.0
  */
 
+export * from './approvalRequest';
 export * from './approvals';
 export * from './category';
 export * from './categoryOrganization';
@@ -129,8 +130,14 @@ export * from './postCategoryBody';
 export * from './postEventsIdExportJoinedOrgsMode';
 export * from './postEventsIdExportJoinedOrgsParams';
 export * from './postFilesBody';
+export * from './postMembershipFeeCreateAccountsAndFeesBody';
+export * from './postMembershipFeeCreateAccountsAndFeesBodyOrganizationsItem';
+export * from './postOrganizationsAddMembershipFeesBody';
+export * from './postOrganizationsAddMembershipFeesBodyFeesItem';
+export * from './postOrganizationsCheckAccountsBody';
 export * from './postOrganizationsExportOrgsWithInfoMode';
 export * from './postOrganizationsExportOrgsWithInfoParams';
+export * from './postUsersAdminCreateByTaxCodeBody';
 export * from './postUsersAdminParams';
 export * from './postUsersFavoriteAddBody';
 export * from './postUsersFavoriteAddParams';

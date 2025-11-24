@@ -33,10 +33,10 @@ export default function EventDetailPage() {
     filters: `id==${lastpath}`,
   });
 
-  if (eventsDetail?.responseData?.rows.length === 0 && !isLoading) {
+  // template
+  if (!isLoading && (!eventsDetail?.responseData?.rows || eventsDetail.responseData.rows.length === 0)) {
     return notFound();
   }
-
   return (
     <div className='container w-full flex justify-center items-center pb-10'>
       {isLoading ? (
