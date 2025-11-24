@@ -52,6 +52,4 @@ export default function DynamicPage() {
   if (slug.length === 3) {
     return <ArticleDetailPage />;
   }
-
-  return notFound();
 }
