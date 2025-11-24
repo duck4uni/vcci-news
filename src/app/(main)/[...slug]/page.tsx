@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
 import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 
@@ -52,4 +52,6 @@ export default function DynamicPage() {
   if (slug.length === 3) {
     return <ArticleDetailPage />;
   }
+
+  return notFound();
 }

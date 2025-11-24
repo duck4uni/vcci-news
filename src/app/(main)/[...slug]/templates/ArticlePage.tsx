@@ -3,7 +3,7 @@
 import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
 import ListCategory from "@/components/base/list-category";
-import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useParams, useSearchParams, useRouter, usePathname, notFound } from "next/navigation";
 import { useGetNews } from "@/api/endpoints/news";
 import { GetNewsResponseType } from "@/api/types/news";
 import CardNews from "@/components/base/card-news";
@@ -51,6 +51,9 @@ export default function ArticlePage() {
     currentPage: String(page),
   });
 
+  if (data?.responseData?.rows.length === 0 && !isLoading) {
+    return notFound();
+  }
   return (
     <div className="min-h-screen container mx-auto">
       {isLoading ? (

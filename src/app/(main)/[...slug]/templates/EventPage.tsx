@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { notFound, useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -51,6 +51,10 @@ export default function EventPage() {
     pageSize: String(pageSize),
     currentPage: String(page),
   });
+
+  if (events?.responseData?.rows.length === 0 && !isLoading) {
+    return notFound();
+  }
 
   //template
   return (

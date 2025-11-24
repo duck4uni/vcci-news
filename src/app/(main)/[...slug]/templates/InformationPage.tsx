@@ -9,6 +9,7 @@ import { GetNewsResponseType } from "@/api/types/news";
 import { useGetNews } from "@/api/endpoints/news";
 import dayjs from "dayjs";
 import parse from "html-react-parser";
+import { notFound } from "next/navigation";
 
 export default function InformationPage() {
   // get url
@@ -24,6 +25,10 @@ export default function InformationPage() {
   const { data, isLoading } = useGetNews<GetNewsResponseType>({
     filters: `page_config.static_link==/${path}`,
   });
+
+  if (data?.responseData?.rows.length === 0 && !isLoading) {
+    return notFound();
+  }
 
   //template
   return (
