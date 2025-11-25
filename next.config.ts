@@ -2,13 +2,19 @@ import type { NextConfig } from "next";
 import links from "./src/links/index";
 const nextConfig: NextConfig = {
   /* config options here */
-   images: {
+  images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: links.backendHost,
         port: "",
         pathname: "/vcci/images/**",
+      },
+      {
+        protocol: "https",
+        hostname: "vcci-hcm.org.vn", // WordPress / media host
+        port: "",
+        pathname: "/wp-content/uploads/**",
       },
     ],
   },
