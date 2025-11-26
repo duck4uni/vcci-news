@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { notFound, useParams } from "next/navigation";
 
 import dayjs from "dayjs";
 import parse from "html-react-parser";
@@ -33,6 +33,10 @@ export default function EventDetailPage() {
     filters: `id==${lastpath}`,
   });
 
+  // template
+  if (!isLoading && (!eventsDetail?.responseData?.rows || eventsDetail.responseData.rows.length === 0)) {
+    return notFound();
+  }
   return (
     <div className='container w-full flex justify-center items-center pb-10'>
       {isLoading ? (

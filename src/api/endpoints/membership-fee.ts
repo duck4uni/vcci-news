@@ -35,6 +35,7 @@ import type {
   GetMembershipFeePrintParams,
   MembershipFee,
   MembershipFeeBody,
+  PostMembershipFeeCreateAccountsAndFeesBody,
   PutMembershipFeeParams,
   Response
 } from '../models';
@@ -114,7 +115,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFeeId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFeeId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeeIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFeeId>>>
@@ -189,7 +190,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFeeId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFeeId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeeIdQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFeeId>>>
@@ -475,7 +476,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(organizationId), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFeeCheckFeeOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(organizationId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFeeCheckFeeOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeeCheckFeeOrganizationIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFeeCheckFeeOrganizationId>>>
@@ -550,7 +551,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(organizationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFeeCheckFeeOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(organizationId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFeeCheckFeeOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeeCheckFeeOrganizationIdQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFeeCheckFeeOrganizationId>>>
@@ -611,6 +612,86 @@ export const prefetchGetMembershipFeeCheckFeeOrganizationIdQuery = async <TData 
 
 
 /**
+ * Create user accounts and membership fees for organizations without accounts
+ */
+export type postMembershipFeeCreateAccountsAndFeesResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type postMembershipFeeCreateAccountsAndFeesResponseSuccess = (postMembershipFeeCreateAccountsAndFeesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postMembershipFeeCreateAccountsAndFeesResponse = (postMembershipFeeCreateAccountsAndFeesResponseSuccess)
+
+export const getPostMembershipFeeCreateAccountsAndFeesUrl = () => {
+
+
+  
+
+  return `/membershipFee/create-accounts-and-fees`
+}
+
+export const postMembershipFeeCreateAccountsAndFees = async (postMembershipFeeCreateAccountsAndFeesBody: PostMembershipFeeCreateAccountsAndFeesBody, options?: RequestInit): Promise<postMembershipFeeCreateAccountsAndFeesResponse> => {
+  
+  return useCustomClient<postMembershipFeeCreateAccountsAndFeesResponse>(getPostMembershipFeeCreateAccountsAndFeesUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postMembershipFeeCreateAccountsAndFeesBody,)
+  }
+);}
+
+
+
+
+export const getPostMembershipFeeCreateAccountsAndFeesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMembershipFeeCreateAccountsAndFees>>, TError,{data: BodyType<PostMembershipFeeCreateAccountsAndFeesBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postMembershipFeeCreateAccountsAndFees>>, TError,{data: BodyType<PostMembershipFeeCreateAccountsAndFeesBody>}, TContext> => {
+
+const mutationKey = ['postMembershipFeeCreateAccountsAndFees'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postMembershipFeeCreateAccountsAndFees>>, {data: BodyType<PostMembershipFeeCreateAccountsAndFeesBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postMembershipFeeCreateAccountsAndFees(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostMembershipFeeCreateAccountsAndFeesMutationResult = NonNullable<Awaited<ReturnType<typeof postMembershipFeeCreateAccountsAndFees>>>
+    export type PostMembershipFeeCreateAccountsAndFeesMutationBody = BodyType<PostMembershipFeeCreateAccountsAndFeesBody>
+    export type PostMembershipFeeCreateAccountsAndFeesMutationError = ErrorType<unknown>
+
+    export const usePostMembershipFeeCreateAccountsAndFees = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMembershipFeeCreateAccountsAndFees>>, TError,{data: BodyType<PostMembershipFeeCreateAccountsAndFeesBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postMembershipFeeCreateAccountsAndFees>>,
+        TError,
+        {data: BodyType<PostMembershipFeeCreateAccountsAndFeesBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostMembershipFeeCreateAccountsAndFeesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Get
  */
 export type getMembershipFeeResponse200 = {
@@ -683,7 +764,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFee>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFee>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeeInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFee>>>
@@ -758,7 +839,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFee>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFee>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeeQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFee>>>
@@ -1145,7 +1226,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFeePrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getMembershipFeePrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeePrintInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFeePrint>>>
@@ -1220,7 +1301,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFeePrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getMembershipFeePrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetMembershipFeePrintQueryResult = NonNullable<Awaited<ReturnType<typeof getMembershipFeePrint>>>

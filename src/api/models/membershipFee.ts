@@ -16,6 +16,8 @@ export interface MembershipFee {
   image_evidence?: string;
   created_at?: string;
   is_approved?: boolean;
+  invoice_number?: string;
+  invoice_date?: string;
   updated_at?: string;
   updated_by?: string;
 }

@@ -18,6 +18,7 @@ export interface News {
   is_active?: boolean;
   mode?: string;
   category?: string;
+  page_config_id?: string;
   created_at?: string;
   updated_at?: string;
 }

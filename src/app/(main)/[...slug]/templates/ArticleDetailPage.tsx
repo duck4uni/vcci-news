@@ -10,6 +10,7 @@ import EventCalendar from "@/components/base/event-calendar";
 import dayjs from "dayjs";
 import parse from "html-react-parser";
 import { Spinner } from "@/components/ui";
+import { notFound } from "next/navigation";
 
 export default function ArticleDetailPage() {
   // get url
@@ -25,6 +26,10 @@ export default function ArticleDetailPage() {
     filters: `external_link==/${path}`,
   });
 
+  // template
+  if (!isLoading && (!data?.responseData?.rows || data.responseData.rows.length === 0)) {
+    return notFound();
+  }
   return (
     <div className='container w-full flex justify-center items-center pb-10'>
       {isLoading ? (

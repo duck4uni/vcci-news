@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter } from "next/navigation";
 import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
 import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 
@@ -11,6 +11,7 @@ import ArticlePage from "./templates/ArticlePage";
 import ArticleDetailPage from "./templates/ArticleDetailPage";
 import EventPage from "./templates/EventPage";
 import EventDetailPage from "./templates/EventDetailPage";
+import { Spinner } from "@/components/ui";
 
 export default function DynamicPage() {
   const params = useParams();
@@ -19,7 +20,7 @@ export default function DynamicPage() {
   const path = slug.join("/");
 
   // query
-  const { data: category } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+  const { data: category, isLoading, isError } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
     static_link: `/${path}`,
   });
 
@@ -41,15 +42,28 @@ export default function DynamicPage() {
   }
 
   if (slug[0] === "hoat-dong" && slug[1] === "su-kien") {
-    if (slug.length === 2) return <EventPage />;
+    if (slug.length === 2) return <EventPage isError={isError} isLoading={isLoading} />;
     if (slug.length === 3) return <EventDetailPage />;
   }
 
   if (slug.length === 2) {
-    return category?.responseData?.is_article ? <ArticlePage /> : <InformationPage />;
+    return category?.responseData?.is_article ? <ArticlePage isError={isError} isLoading={isLoading} /> : <InformationPage isError={isError} isLoading={isLoading} />;
   }
 
   if (slug.length === 3) {
     return <ArticleDetailPage />;
+  }
+
+  // not found page
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center w-full h-64">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return notFound();
   }
 }

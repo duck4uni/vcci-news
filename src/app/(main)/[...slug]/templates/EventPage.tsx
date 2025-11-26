@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { notFound, useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -15,7 +15,7 @@ import { Pagination } from "@/components/base/pagination";
 import ListFilter from "@/components/base/list-filter";
 import EventCalendar from "@/components/base/event-calendar";
 
-export default function EventPage() {
+export default function EventPage({ isError, isLoading }: { isError: boolean, isLoading: boolean }) {
   // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
@@ -46,17 +46,24 @@ export default function EventPage() {
     code: `${slug[0]}`,
   });
 
-  const { data: events, isLoading } = useGetEvents<EventApiResponse>({
+  const { data: events, isLoading: eventsLoading } = useGetEvents<EventApiResponse>({
     filters: `name@=${submitSearch ? `title@=${submitSearch}` : ""}`,
     pageSize: String(pageSize),
     currentPage: String(page),
   });
 
   //template
+  if (isLoading) return (
+    <div className="flex justify-center items-center w-full h-64">
+      <Spinner />
+    </div>
+  );
+  if (isError) return notFound();
+
   return (
     <>
       <div className="min-h-screen container mx-auto">
-        {isLoading ? (
+        {eventsLoading ? (
           <div className="flex justify-center items-center w-full h-64">
             <Spinner />
           </div>

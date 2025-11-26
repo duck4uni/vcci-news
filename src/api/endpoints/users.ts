@@ -40,6 +40,7 @@ import type {
   GetUsersPrintParams,
   GetUsersValidationParams,
   GetUsersWithoutMembershipFeeByYearParams,
+  PostUsersAdminCreateByTaxCodeBody,
   PostUsersAdminParams,
   PostUsersFavoriteAddBody,
   PostUsersFavoriteAddParams,
@@ -125,7 +126,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersId>>>
@@ -200,7 +201,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersIdQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersId>>>
@@ -421,6 +422,86 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     /**
+ * Create user by tax code (Admin only)
+ */
+export type postUsersAdminCreateByTaxCodeResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type postUsersAdminCreateByTaxCodeResponseSuccess = (postUsersAdminCreateByTaxCodeResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postUsersAdminCreateByTaxCodeResponse = (postUsersAdminCreateByTaxCodeResponseSuccess)
+
+export const getPostUsersAdminCreateByTaxCodeUrl = () => {
+
+
+  
+
+  return `/users/admin/create-by-tax-code`
+}
+
+export const postUsersAdminCreateByTaxCode = async (postUsersAdminCreateByTaxCodeBody: PostUsersAdminCreateByTaxCodeBody, options?: RequestInit): Promise<postUsersAdminCreateByTaxCodeResponse> => {
+  
+  return useCustomClient<postUsersAdminCreateByTaxCodeResponse>(getPostUsersAdminCreateByTaxCodeUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postUsersAdminCreateByTaxCodeBody,)
+  }
+);}
+
+
+
+
+export const getPostUsersAdminCreateByTaxCodeMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postUsersAdminCreateByTaxCode>>, TError,{data: BodyType<PostUsersAdminCreateByTaxCodeBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postUsersAdminCreateByTaxCode>>, TError,{data: BodyType<PostUsersAdminCreateByTaxCodeBody>}, TContext> => {
+
+const mutationKey = ['postUsersAdminCreateByTaxCode'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postUsersAdminCreateByTaxCode>>, {data: BodyType<PostUsersAdminCreateByTaxCodeBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postUsersAdminCreateByTaxCode(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostUsersAdminCreateByTaxCodeMutationResult = NonNullable<Awaited<ReturnType<typeof postUsersAdminCreateByTaxCode>>>
+    export type PostUsersAdminCreateByTaxCodeMutationBody = BodyType<PostUsersAdminCreateByTaxCodeBody>
+    export type PostUsersAdminCreateByTaxCodeMutationError = ErrorType<unknown>
+
+    export const usePostUsersAdminCreateByTaxCode = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postUsersAdminCreateByTaxCode>>, TError,{data: BodyType<PostUsersAdminCreateByTaxCodeBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postUsersAdminCreateByTaxCode>>,
+        TError,
+        {data: BodyType<PostUsersAdminCreateByTaxCodeBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostUsersAdminCreateByTaxCodeMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Get
  */
 export type getUsersAdminResponse200 = {
@@ -493,7 +574,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersAdmin>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersAdmin>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersAdminInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersAdmin>>>
@@ -568,7 +649,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersAdmin>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersAdmin>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersAdminQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersAdmin>>>
@@ -870,7 +951,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersClubInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersClub>>>
@@ -945,7 +1026,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersClubQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersClub>>>
@@ -1334,7 +1415,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersFavoriteOrgInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersFavoriteOrg>>>
@@ -1409,7 +1490,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersFavoriteOrgQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersFavoriteOrg>>>
@@ -1542,7 +1623,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteProducts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteProducts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersFavoriteProductsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersFavoriteProducts>>>
@@ -1617,7 +1698,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteProducts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersFavoriteProducts>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersFavoriteProductsQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersFavoriteProducts>>>
@@ -1743,7 +1824,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersGetMyInfo>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersGetMyInfo>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersGetMyInfoInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersGetMyInfo>>>
@@ -1818,7 +1899,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersGetMyInfo>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersGetMyInfo>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersGetMyInfoQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersGetMyInfo>>>
@@ -1951,7 +2032,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsers>>>
@@ -2026,7 +2107,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getUsers>>>
@@ -2238,7 +2319,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersPartaker>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersPartaker>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersPartakerInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersPartaker>>>
@@ -2313,7 +2394,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersPartaker>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersPartaker>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersPartakerQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersPartaker>>>
@@ -2446,7 +2527,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersPrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersPrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersPrintInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersPrint>>>
@@ -2521,7 +2602,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersPrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersPrint>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersPrintQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersPrint>>>
@@ -2647,7 +2728,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(userId), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersValidationUserId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(userId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersValidationUserId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersValidationUserIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersValidationUserId>>>
@@ -2722,7 +2803,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(userId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersValidationUserId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(userId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersValidationUserId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersValidationUserIdQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersValidationUserId>>>
@@ -2855,7 +2936,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersValidationInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersValidation>>>
@@ -2930,7 +3011,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersValidationQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersValidation>>>
@@ -3143,7 +3224,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersWithoutMembershipFeeByYear>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getUsersWithoutMembershipFeeByYear>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersWithoutMembershipFeeByYearInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersWithoutMembershipFeeByYear>>>
@@ -3218,7 +3299,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersWithoutMembershipFeeByYear>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsersWithoutMembershipFeeByYear>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetUsersWithoutMembershipFeeByYearQueryResult = NonNullable<Awaited<ReturnType<typeof getUsersWithoutMembershipFeeByYear>>>

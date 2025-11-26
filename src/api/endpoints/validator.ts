@@ -269,7 +269,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(email), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getValidatorEmailExistsEmail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(email),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getValidatorEmailExistsEmail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetValidatorEmailExistsEmailInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getValidatorEmailExistsEmail>>>
@@ -344,7 +344,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(email), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getValidatorEmailExistsEmail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(email),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getValidatorEmailExistsEmail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetValidatorEmailExistsEmailQueryResult = NonNullable<Awaited<ReturnType<typeof getValidatorEmailExistsEmail>>>
