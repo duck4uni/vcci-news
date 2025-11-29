@@ -75,7 +75,7 @@ const Members = () => {
           slidesPerView={3}
           spaceBetween={16}
           breakpoints={{
-            0: { slidesPerView: 2, spaceBetween: 10 },
+            0: { slidesPerView: 3, spaceBetween: 10, grid: { rows: 1 } },
             640: { slidesPerView: 3, spaceBetween: 16 },
             1024: { slidesPerView: 3, spaceBetween: 24 },
           }}
@@ -87,8 +87,8 @@ const Members = () => {
                 <ImageNext
                   src={src}
                   alt={`partner-${i}`}
-                  width={100}
-                  height={100}
+                  width={120}
+                  height={120}
                   className="object-contain w-full h-full"
                 />
               </div>
