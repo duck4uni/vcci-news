@@ -12,7 +12,7 @@ import {
   Youtube,
 } from "lucide-react";
 import Image from "next/image";
-import vietnamMap from "@/assets/vietnam-map-white.png.webp";
+import vietnamMap from "@/assets/vietnam-map-white.png";
 
 function Footer() {
   const emailRef = useRef<HTMLInputElement>(null);
