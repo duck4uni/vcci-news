@@ -12,7 +12,7 @@ import {
   Youtube,
 } from "lucide-react";
 import Image from "next/image";
-import vietnamMap from "@/assets/vietnam-map-white.png.webp";
+import vietnamMap from "@/assets/vietnam-map-white.png";
 
 function Footer() {
   const emailRef = useRef<HTMLInputElement>(null);
@@ -42,13 +42,13 @@ function Footer() {
               <div className="flex gap-2 items-center w-full">
                 <input
                   ref={emailRef}
-                  className="h-12 flex-1 px-3 outline-hidden bg-white rounded-md text-[14px] w-full"
+                  className="h-12 flex-1 px-3 outline-hidden bg-white rounded-sm text-[14px] w-full"
                   type="email"
                   placeholder="Nhập email của bạn"
                 />
                 <button
                   onClick={handleSubmit}
-                  className="group w-14 h-12 flex items-center justify-center cursor-pointer bg-white rounded-md text-[#063e8e]"
+                  className="group w-14 h-12 flex items-center justify-center cursor-pointer bg-white rounded-sm text-[#063e8e]"
                 >
                   <Mail size={20} className="group-hover:hidden" />
                   <MailCheck size={20} className="group-hover:block hidden" />
