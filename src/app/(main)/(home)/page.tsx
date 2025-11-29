@@ -13,7 +13,7 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 import BASE_URL from "@/links/index";
 import dayjs from "dayjs";
-import ImageNext from '@/components/base/image';
+import ImageNext from '@/components/shared/image-next';
 import { Spinner } from "@/components/ui";
 import CardNews from "./components/card-news";
 import CardEvent from "./components/card-event";
