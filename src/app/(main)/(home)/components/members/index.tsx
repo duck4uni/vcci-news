@@ -83,7 +83,7 @@ const Members = () => {
         >
           {partnerImages.map((src, i) => (
             <SwiperSlide key={i}>
-              <div className="flex justify-center items-center bg-white rounded-lg shadow p-3 w-[100px] h-[100px]">
+              <div className="flex justify-center items-center bg-white rounded-lg shadow p-3 w-[120px] h-[120px]">
                 <ImageNext
                   src={src}
                   alt={`partner-${i}`}
