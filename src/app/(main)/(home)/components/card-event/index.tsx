@@ -3,7 +3,7 @@ import BASE_URL from '@/links'
 import dayjs from 'dayjs';
 import AppEditorContent from '@/components/shared/editor-content';
 import Link from "next/link";
-import ImageNext from "@/components/base/image";
+import ImageNext from "@/components/shared/image-next";
 
 function CardEvent({ event }: { event: EventItem }) {
   return (
