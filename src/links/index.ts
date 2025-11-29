@@ -7,7 +7,7 @@ const links = {
   // imageEndpoint: 'https://utc2.erp.meu-solutions.com',
   imageEndpoint: `https://${backendHost}/vcci`,
   backendHost,
-  siteURL: 'https://news.vccihcm.vn/',
+  siteURL: 'https://hiea.meu-solutions.com/',
 }
 
 export default links

@@ -34,7 +34,7 @@ function Footer() {
         <div className="container w-full flex flex-col lg:flex-row m-auto lg:flex-nowrap flex-wrap relative gap-10">
           <div className="z-10 w-full lg:w-1/3 flex flex-col gap-5 p-3 sm:p-5">
             <h2 className="text-[#063E8E] text-[20px] font-bold text-left">
-              ĐĂNG KÝ NHẬN THÔNG TIN VCCI
+              ĐĂNG KÝ NHẬN THÔNG TIN HIEA
             </h2>
             <div className="h-0.5 w-14 bg-[#063e8e] mx-0"></div>
 
@@ -42,13 +42,13 @@ function Footer() {
               <div className="flex gap-2 items-center w-full">
                 <input
                   ref={emailRef}
-                  className="h-12 flex-1 px-3 outline-hidden bg-white rounded-md text-[14px] w-full"
+                  className="h-12 flex-1 px-3 outline-hidden bg-white rounded-sm text-[14px] w-full"
                   type="email"
                   placeholder="Nhập email của bạn"
                 />
                 <button
                   onClick={handleSubmit}
-                  className="group w-14 h-12 flex items-center justify-center cursor-pointer bg-white rounded-md text-[#063e8e]"
+                  className="group w-14 h-12 flex items-center justify-center cursor-pointer bg-white rounded-sm text-[#063e8e]"
                 >
                   <Mail size={20} className="group-hover:hidden" />
                   <MailCheck size={20} className="group-hover:block hidden" />
@@ -80,26 +80,26 @@ function Footer() {
             <div className="h-0.5 w-14 bg-[#063e8e] mx-0"></div>
 
             <p className="text-[14px] font-semibold text-justify text-[#363636]">
-              LIÊN ĐOÀN THƯƠNG MẠI & CÔNG NGHIỆP VIỆT NAM - CHI NHÁNH KHU VỰC THÀNH PHỐ HỒ CHÍ MINH
+              HIỆP HỘI XUẤT NHẬP KHẨU THÀNH PHỐ HỒ CHÍ MINH
             </p>
 
             <div className="flex flex-col items-start gap-3">
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
+              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-medium">
                 <MapPin size={16} className="text-[#124588]" />
-                <span>171 Võ Thị Sáu, Phường Xuân Hoà, TP. HCM</span>
+                <span>Số 324, DT 743A, Phường Đông Hoà, TP. Hồ Chí Minh</span>
               </div>
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
+              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-medium">
                 <Phone size={16} className="text-[#124588]" />
-                <span>+84 28 3932 6598</span>
+                <span>027 4399 0618</span>
               </div>
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
+              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-medium">
                 <Printer size={16} className="text-[#124588]" />
-                <span>+84 28 3932 5472</span>
+                <span>027 4399 0618</span>
               </div>
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
+              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-medium">
                 <Mail size={16} className="text-[#124588]" />
                 <a href="mailto:info@vcci-hcm.org.vn">
-                  info@vcci-hcm.org.vn
+                  hiephoixnktphcm.vn
                 </a>
               </div>
             </div>
@@ -109,7 +109,7 @@ function Footer() {
             <h2 className="text-[#063E8E] text-[20px] font-bold text-left">
               KẾT NỐI
             </h2>
-            <div className="h-[2px] w-14 bg-[#063e8e] mx-0"></div>
+            <div className="h-0.5 w-14 bg-[#063e8e] mx-0"></div>
             <div className="w-full overflow-hidden rounded-md">
               <iframe
                 className="w-full sm:h-[140px]"
@@ -153,12 +153,12 @@ function Footer() {
       <div className="bg-[#032248] h-20 flex items-center justify-center">
         <div className="container w-full p-5 text-left">
           <p className="text-[14px] text-white text-center lg:text-left">
-            © Bản quyền VCCI-HCM | All rights reserved
+            © Bản quyền HIEA-HCM | All rights reserved
           </p>
         </div>
       </div>
 
-      <style jsx>{`
+      {/* <style jsx>{`
         @keyframes newpulse {
           0% {
             transform: scale(1);
@@ -187,7 +187,7 @@ function Footer() {
           animation: newpulse 2s infinite ease-in-out;
           z-index: -1;
         }
-      `}</style>
+      `}</style> */}
     </div>
   );
 }
