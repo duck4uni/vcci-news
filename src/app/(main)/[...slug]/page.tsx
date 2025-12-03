@@ -11,6 +11,8 @@ import ArticlePage from "./templates/ArticlePage";
 import { Spinner } from "@/components/ui";
 import { useGetNews } from "@/api/endpoints/news";
 import ArticleDetailPage from "./templates/ArticleDetailPage";
+import EventPage from "./templates/EventPage";
+import EventDetailPage from "./templates/EventDetailPage";
 
 export default function DynamicPage() {
   const params = useParams();
@@ -38,6 +40,11 @@ export default function DynamicPage() {
   // }, [slug, category, children, router]);
 
   //template
+  if (slug[0] === "hoat-dong" && slug[1] === "su-kien") {
+    if (slug.length === 2) return <EventPage />;
+    if (slug.length === 3) return <EventDetailPage />;
+  }
+
   if (news?.responseData?.count == 0 && categoryLoading) {
     return (
       <div className="flex justify-center items-center w-full h-64">

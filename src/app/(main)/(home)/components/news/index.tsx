@@ -28,12 +28,12 @@ const News = () => {
         >
           Tin tức
         </Link>
-        <Link
+        {/* <Link
           href="/thong-tin-truyen-thong/tin-vcci/"
           className="text-[#063e8e] text-sm sm:text-base"
         >
           <ChevronsRight />
-        </Link>
+        </Link> */}
       </div>
       <hr className="border-[#063e8e] mb-4" />
 

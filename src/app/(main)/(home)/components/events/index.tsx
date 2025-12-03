@@ -18,7 +18,7 @@ function Events() {
         <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-[#e8c518]">
           Sự kiện sắp diễn ra
         </h2>
-        <Link href="#" className="text-[#e8c518] text-sm sm:text-base">
+        <Link href="/hoat-dong/su-kien" className="text-[#e8c518] text-sm sm:text-base">
           <ChevronsRight />
         </Link>
       </div>
@@ -34,7 +34,7 @@ function Events() {
             {data?.responseData.rows.slice(0, 1).map((event: EventItem) => (
               <Link
                 key={event.id}
-                href={`#`}
+                href={`/hoat-dong/su-kien/${event.id}`}
                 className="flex flex-col w-full md:w-1/2 min-h-[180px] sm:min-h-[220px] gap-3 mb-3 border border-gray-200 bg-white rounded-md p-3"
               >
                 <div className="w-full aspect-3/2 overflow-hidden">

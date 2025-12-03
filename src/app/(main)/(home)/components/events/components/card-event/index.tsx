@@ -8,8 +8,7 @@ import ImageNext from "@/components/shared/image-next";
 function CardEvent({ event }: { event: EventItem }) {
   return (
     <Link
-      // href={`hoat-dong/su-kien/${event.id}`}
-      href={`#`}
+      href={`/hoat-dong/su-kien/${event.id}`}
       className='flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3 p-2 sm:p-3 border border-gray-200 bg-white rounded-md'
     >
       <ImageNext
