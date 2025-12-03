@@ -29,12 +29,12 @@ const VideoAndPartners = () => {
         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
           {[
             {
-              src: "https://www.youtube.com/embed/J0Iz0iGuAXY",
-              title: "VCCI-HCM 2024 IN REVIEW (ENGLISH VERSION)",
+              src: "https://www.youtube.com/embed/U35yP_yH1dA",
+              title: "Chào mừng đến với MeU Solutions – Biến giấc mơ chuyển đổi số của Daonh nghiệp bạn thành hiện thực 🚀",
             },
             {
-              src: "https://www.youtube.com/embed/_OnnGWv2ehM",
-              title: "Hội nghị Hội viên VCCI - Gala Mừng Xuân Ất Tỵ 2025",
+              src: "https://www.youtube.com/embed/yQaLiPMemcg",
+              title: "MEU SOLUTIONS - 9 Năm Đồng Hành Cùng Công Nghệ Việt",
             },
           ].map((video, i) => (
             <div key={i} className="w-full md:w-1/2">
@@ -76,9 +76,9 @@ const VideoAndPartners = () => {
             slidesPerView={3}
             spaceBetween={16}
             breakpoints={{
-              0: { slidesPerView: 3, spaceBetween: 10, grid: { rows: 1 } },
-              640: { slidesPerView: 3, spaceBetween: 16 },
-              1024: { slidesPerView: 3, spaceBetween: 24 },
+              0: { slidesPerView: 3, spaceBetween: 10, grid: { rows: 2 } },
+              640: { slidesPerView: 3, spaceBetween: 16, grid: { rows: 2 } },
+              1024: { slidesPerView: 3, spaceBetween: 24, grid: { rows: 2 } },
             }}
             className="partner-swiper"
           >

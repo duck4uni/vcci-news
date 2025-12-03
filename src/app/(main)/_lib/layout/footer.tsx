@@ -111,23 +111,22 @@ function Footer() {
             </h2>
             <div className="h-0.5 w-14 bg-[#063e8e] mx-0"></div>
             <div className="w-full overflow-hidden rounded-md">
-              <iframe
-                className="w-full sm:h-[140px]"
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FVCCIHCMC%3Fref%3Dembed_page&tabs=&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false"
-                style={{ border: "none", overflow: "hidden" }}
-                scrolling="no"
-                frameBorder="0"
+              <iframe src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fmeusolutions&tabs&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=true&appId"
+                width="340"
+                height="130"
+                className="border:none;overflow:hidden"
+                scrolling="no" frameBorder="0"
                 allowFullScreen={true}
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-              ></iframe>
+                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share">
+              </iframe>
             </div>
 
             <div className="flex gap-3 justify-start">
               {[
-                { icon: <Facebook size={20} />, link: "https://www.facebook.com/VCCIHCMC/" },
-                { icon: <Twitter size={20} />, link: "https://twitter.com/VCCI_HCM" },
-                { icon: <Youtube size={20} />, link: "https://www.youtube.com/user/VCCIHCMC" },
-                { icon: <Linkedin size={20} />, link: "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym" },
+                { icon: <Facebook size={20} />, link: "#" },
+                { icon: <Twitter size={20} />, link: "#" },
+                { icon: <Youtube size={20} />, link: "#" },
+                { icon: <Linkedin size={20} />, link: "#" },
               ].map((s, i) => (
                 <a
                   key={i}

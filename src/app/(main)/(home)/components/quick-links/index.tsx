@@ -14,7 +14,7 @@ function QuickLinks() {
         <div>
           <Link
             className="text-[#363636]"
-            href="https://vcci-hcm.org.vn/lien-ket-nhanh/cam-nang-huong-dan-dau-tu-kinh-doanh-tai-viet-nam-2023/"
+            href="#"
           >
             🔗 Cẩm nang hướng dẫn đầu tư kinh doanh tại Việt Nam
           </Link>
@@ -22,7 +22,7 @@ function QuickLinks() {
         <div>
           <Link
             className="text-[#363636]"
-            href="https://vcci-hcm.org.vn/lien-ket-nhanh/doanh-nghiep-kien-nghi-ve-chinh-sach-va-phap-luat/"
+            href="#"
           >
             🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật
           </Link>

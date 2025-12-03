@@ -44,8 +44,8 @@ const orvalConfig = async () => {
             usePrefetch: true,
             // useSuspenseQuery: true,
             options: {
-              retry: 3,
-              retryDelay: 1000,
+              retry: 2,
+              retryDelay: 500,
             }
           },
           mutator: {

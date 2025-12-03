@@ -11,7 +11,7 @@ const EventsCalendar = () => {
             Lịch sự kiện
           </h2>
           <Link
-            href="/hoat-dong/su-kien"
+            href="#"
             className="text-[#e8c518] hover:underline text-sm sm:text-base"
           >
             <ChevronsRight />
