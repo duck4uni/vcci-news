@@ -8,6 +8,5 @@ sed -i 's|P-MAPPING|'$port_mapping'|' docker-compose.yaml
 #sed -i 's|MOUNT-DATA-FOLDER|'$mount_data_folder'|' docker-compose.yaml
 echo "$CI_REGISTRY_PW" | sudo docker login registry.gitlab.com -u "$CI_REGISTRY_USER" --password-stdin
 sudo docker-compose pull
-sudo docker-compose down
 sudo docker-compose up -d
 sudo docker image prune -f
