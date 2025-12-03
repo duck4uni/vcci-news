@@ -7,10 +7,8 @@ import { useParams } from "next/dist/client/components/navigation";
 import { Spinner } from "@/components/ui/spinner";
 import { GetNewsResponseType } from "@/api/types/news";
 import { useGetNews } from "@/api/endpoints/news";
-import dayjs from "dayjs";
 import parse from "html-react-parser";
 import { notFound } from "next/navigation";
-import { is } from "date-fns/locale";
 
 export default function InformationPage({ isError, isLoading }: { isError: boolean, isLoading: boolean }) {
   // get url

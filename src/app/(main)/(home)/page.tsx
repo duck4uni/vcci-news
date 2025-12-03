@@ -42,7 +42,7 @@ const Page = () => {
           <EventsCalendar />
         </section >
 
-        <div className="flex flex-col lg:flex-row gap-5 pb-10 mb-0" >
+        {/* <div className="flex flex-col lg:flex-row gap-5 pb-10 mb-0" >
           <div className="flex flex-col flex-1">
             <div>
               <Link href="https://vcci-hcm.org.vn/wp-content/uploads/2022/11/MEDIA-KIT_VCCI-HCM-2022-Final.pdf">
@@ -71,12 +71,12 @@ const Page = () => {
               />
             </Link>
           </div>
-        </div >
+        </div> */}
 
         <Members />
         <VideoAndPartners />
       </div>
-    </div>
+    </div >
   );
 };
 

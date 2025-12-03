@@ -67,7 +67,7 @@ const News = () => {
           ))}
 
         <div className="w-full md:w-1/2">
-          <div className="flex flex-wrap gap-2 sm:gap-3 mb-5">
+          {/* <div className="flex flex-wrap gap-2 sm:gap-3 mb-5">
             <button
               className={`flex-1 py-[3px] text-sm transition-colors cursor-pointer ${tab === "all"
                 ? " bg-[#d3d3d3] text-[#063e8e] font-semibold"
@@ -103,9 +103,9 @@ const News = () => {
             >
               Chuyên Đề
             </button>
-          </div>
+          </div> */}
 
-          {newsFilters?.responseData?.rows.slice(0, 4).map((news) => (
+          {newsFilters?.responseData?.rows.slice(0, 5).map((news) => (
             <CardNews key={news.id} news={news} />
           ))}
         </div>

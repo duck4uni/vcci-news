@@ -33,7 +33,6 @@ const CardNews = ({ news, link }: { news: NewsItem, link: string }) => {
         onError={(e) => {
           e.currentTarget.src = "/img-error.png"
         }}
-
       />
 
       <div className="flex-1 min-w-0 pl-0 sm:pl-4">

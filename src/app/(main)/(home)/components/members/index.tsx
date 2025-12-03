@@ -17,10 +17,11 @@ const Members = () => {
       filters: `page_config.code @=ket-noi-hoi-vien`,
     }
   );
+
   return (
     <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
       {/* LEFT: HỘI VIÊN TIÊU BIỂU */}
-      <aside className="w-full lg:w-1/3 flex-1 bg-[#e8c518] p-5">
+      <aside className="w-full flex-1 bg-[#e8c518] p-5">
         <div className="flex justify-between items-center mb-3">
           <h2 className="text-xl font-bold uppercase text-[#063e8e]">
             Hội viên tiêu biểu
@@ -39,7 +40,7 @@ const Members = () => {
           modules={[Autoplay]}
           autoplay={{ delay: 4000, disableOnInteraction: false }}
           loop
-          slidesPerView={3}
+          slidesPerView={6}
           spaceBetween={16}
           breakpoints={{
             0: { slidesPerView: 2, spaceBetween: 10 },
@@ -66,7 +67,7 @@ const Members = () => {
       </aside>
 
       {/* RIGHT: KẾT NỐI HỘI VIÊN */}
-      {isLoading ? (
+      {/*   {isLoading ? (
         <div className="flex justify-center items-center w-full h-64">
           <Spinner />
         </div>
@@ -107,7 +108,7 @@ const Members = () => {
             ))}
           </Swiper>
         </aside>
-      )}
+      )} */}
     </section>
   );
 };
