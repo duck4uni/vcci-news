@@ -27,7 +27,7 @@ const Members = () => {
             Hội viên tiêu biểu
           </h2>
           <Link
-            href="/danh-ba-hoi-vien"
+            href="#"
             className="text-[#063e8e] hover:underline text-sm font-medium"
           >
             <ChevronsRight />
@@ -43,9 +43,9 @@ const Members = () => {
           slidesPerView={6}
           spaceBetween={16}
           breakpoints={{
-            0: { slidesPerView: 2, spaceBetween: 10 },
-            640: { slidesPerView: 3, spaceBetween: 16 },
-            1024: { slidesPerView: 3, spaceBetween: 24 },
+            0: { slidesPerView: 3, spaceBetween: 10 },
+            640: { slidesPerView: 4, spaceBetween: 16 },
+            1024: { slidesPerView: 6, spaceBetween: 24 },
           }}
           className="partner-swiper"
         >

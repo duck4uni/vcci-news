@@ -10,12 +10,12 @@ const EventsCalendar = () => {
           <h2 className="text-[18px] sm:text-[20px] font-bold uppercase text-[#e8c518]">
             Lịch sự kiện
           </h2>
-          <Link
-            href="/hoat-dong/su-kien"
+          {/* <Link
+            href="#"
             className="text-[#e8c518] hover:underline text-sm sm:text-base"
           >
             <ChevronsRight />
-          </Link>
+          </Link> */}
         </div>
         <hr className="border-[#e8c518] mb-4" />
         <EventCalendar />

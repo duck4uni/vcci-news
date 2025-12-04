@@ -21,7 +21,7 @@ const Page = () => {
       {/* contents */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-10 space-y-12">
         <FeaturedNews />
-        <div>
+        {/* <div>
           <Link href="https://hardwaretools.com.vn/">
             <ImageNext
               src="/home/Standard-Banner-1-2024.png.webp"
@@ -30,7 +30,7 @@ const Page = () => {
               height={720}
             />
           </Link>
-        </div>
+        </div> */}
 
         <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
           <News />

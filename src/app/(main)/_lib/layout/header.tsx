@@ -30,13 +30,13 @@ function Header() {
             </div>
             <Link
               className="px-3 py-2 text-[14px] text-white hover:opacity-80"
-              href="/site-map"
+              href="#"
             >
               Sitemap
             </Link>
             <Link
               className="px-3 py-2 text-[14px] text-white hover:opacity-80"
-              href="https://vccihcm.vn/lien-he"
+              href="/lien-he"
             >
               Liên hệ
             </Link>
@@ -58,28 +58,28 @@ function Header() {
             />
             <div className="flex gap-2">
               <a
-                href="https://www.facebook.com/VCCIHCMC/"
+                href="#"
                 target="_blank"
                 className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
               >
                 <Facebook size={16} />
               </a>
               <a
-                href="https://twitter.com/VCCI_HCM"
+                href="#"
                 target="_blank"
                 className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
               >
                 <Twitter size={16} />
               </a>
               <a
-                href="https://www.youtube.com/user/VCCIHCMC"
+                href="#"
                 target="_blank"
                 className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
               >
                 <Youtube size={16} />
               </a>
               <a
-                href="https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym"
+                href="#"
                 target="_blank"
                 className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
               >

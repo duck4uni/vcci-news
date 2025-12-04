@@ -15,6 +15,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/wp-content/uploads/**",
       },
+      {
+        protocol: "http",
+        hostname: "103.72.98.149",
+        port: "7041",
+        pathname: "/images/**",
+      },
     ],
   },
 };

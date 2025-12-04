@@ -8,16 +8,15 @@ import { Spinner } from "@/components/ui/spinner";
 import { GetNewsResponseType } from "@/api/types/news";
 import { useGetNews } from "@/api/endpoints/news";
 import parse from "html-react-parser";
-import { notFound } from "next/navigation";
 
-export default function InformationPage({ isError, isLoading }: { isError: boolean, isLoading: boolean }) {
+export default function InformationPage() {
   // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
   const path = slug.join("/");
 
   // query
-  const { data: categoryPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+  const { data: category } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
     static_link: `/${slug[0]}`,
   });
 
@@ -25,14 +24,8 @@ export default function InformationPage({ isError, isLoading }: { isError: boole
     filters: `page_config.static_link==/${path}`,
   });
 
+  const children = category?.responseData?.children ?? [];
   //template
-  if (isLoading) return (
-    <div className="flex justify-center items-center w-full h-64">
-      <Spinner />
-    </div>
-  );
-  if (isError) return notFound();
-
   return (
     <div className='container w-full flex justify-center items-center pb-10'>
       {informationLoading ? (
@@ -41,7 +34,11 @@ export default function InformationPage({ isError, isLoading }: { isError: boole
         </div>
       ) : (
         <div className='flex flex-col gap-5 w-full'>
-          <ListCategory categories={categoryPage?.responseData?.children} />
+          {children.length !== 0 ? (
+            <ListCategory categories={children} />
+          ) : (
+            <br />
+          )}
           <main className=" bg-white border rounded-md py-10 px-5 md:px-20 lg:px-20">
             <div className='text-primary text-2xl leading-normal font-bold'>
               {information?.responseData?.rows[0]?.title}
