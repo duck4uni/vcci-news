@@ -1,17 +1,39 @@
+"use client";
+
 import Image from "next/image";
 import { useState } from "react";
 
-const ImageNext = ({ src, alt, width, height, className, onError }: any) => {
+const ImageNext = ({
+  src,
+  alt,
+  width,
+  height,
+  className,
+  onErrorFallback
+}: {
+  src: string;
+  alt?: string;
+  width: number;
+  height: number;
+  className?: string;
+  onErrorFallback?: string
+}) => {
+  const fallbackSrc = onErrorFallback || "/img-error.png";
   const [imgSrc, setImgSrc] = useState(src);
 
   return (
     <Image
-      src={imgSrc}
-      alt={alt}
+      src={imgSrc || fallbackSrc}
+      alt={alt || ""}
       width={width}
       height={height}
       className={className}
-      onError={() => setImgSrc(onError || "/img-error.png")}
+      unoptimized
+      onError={() => {
+        if (imgSrc !== fallbackSrc) {
+          setImgSrc(fallbackSrc);
+        }
+      }}
     />
   );
 };
