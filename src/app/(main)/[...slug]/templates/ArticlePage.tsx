@@ -3,7 +3,7 @@
 import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
 import ListCategory from "@/components/base/list-category";
-import { useParams, useSearchParams, useRouter, usePathname, notFound } from "next/navigation";
+import { useParams, useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useGetNews } from "@/api/endpoints/news";
 import { GetNewsResponseType } from "@/api/types/news";
 import CardNews from "@/components/base/card-news";
@@ -13,7 +13,7 @@ import EventCalendar from "@/components/base/event-calendar";
 import { useState, useEffect } from "react";
 import { Spinner } from "@/components/ui";
 
-export default function ArticlePage({ isError, isLoading }: { isError: boolean, isLoading: boolean }) {
+export default function ArticlePage() {
   // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
@@ -41,7 +41,7 @@ export default function ArticlePage({ isError, isLoading }: { isError: boolean, 
   }, [page]);
 
   // query
-  const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+  const { data: category } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
     code: slug[0],
   });
 
@@ -51,14 +51,8 @@ export default function ArticlePage({ isError, isLoading }: { isError: boolean, 
     currentPage: String(page),
   });
 
+  const children = category?.responseData?.children ?? [];
   //template
-  if (isLoading) return (
-    <div className="flex justify-center items-center w-full h-64">
-      <Spinner />
-    </div>
-  );
-  if (isError) return notFound();
-
   return (
     <div className="min-h-screen container mx-auto">
       {articlesLoading ? (
@@ -67,7 +61,11 @@ export default function ArticlePage({ isError, isLoading }: { isError: boolean, 
         </div>
       ) : (
         <div className="w-full flex flex-col gap-5">
-          <ListCategory categories={categoriesPage?.responseData?.children} />
+          {children.length !== 0 ? (
+            <ListCategory categories={children} />
+          ) : (
+            <br />
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <main className="lg:col-span-2 bg-background">
               <div className="pb-5 overflow-hidden">

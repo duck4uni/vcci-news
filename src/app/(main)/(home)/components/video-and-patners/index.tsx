@@ -76,9 +76,9 @@ const VideoAndPartners = () => {
             slidesPerView={3}
             spaceBetween={16}
             breakpoints={{
-              0: { slidesPerView: 3, spaceBetween: 10, grid: { rows: 1 } },
-              640: { slidesPerView: 3, spaceBetween: 16 },
-              1024: { slidesPerView: 3, spaceBetween: 24 },
+              0: { slidesPerView: 3, spaceBetween: 10, grid: { rows: 2 } },
+              640: { slidesPerView: 3, spaceBetween: 16, grid: { rows: 2 } },
+              1024: { slidesPerView: 3, spaceBetween: 24, grid: { rows: 2 } },
             }}
             className="partner-swiper"
           >

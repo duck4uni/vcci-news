@@ -15,7 +15,7 @@ import { Pagination } from "@/components/base/pagination";
 import ListFilter from "@/components/base/list-filter";
 import EventCalendar from "@/components/base/event-calendar";
 
-export default function EventPage({ isError, isLoading }: { isError: boolean, isLoading: boolean }) {
+export default function EventPage() {
   // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
@@ -53,13 +53,6 @@ export default function EventPage({ isError, isLoading }: { isError: boolean, is
   });
 
   //template
-  if (isLoading) return (
-    <div className="flex justify-center items-center w-full h-64">
-      <Spinner />
-    </div>
-  );
-  if (isError) return notFound();
-
   return (
     <>
       <div className="min-h-screen container mx-auto">

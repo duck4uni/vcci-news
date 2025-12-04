@@ -19,13 +19,12 @@ import EventCalendar from "@/components/base/event-calendar";
 import { CreditCard, MapPin, Clock } from "lucide-react";
 
 export default function EventDetailPage() {
-  // get url
   const params = useParams();
   const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
   const lastpath = slug[slug.length - 1];
 
   // query
-  const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+  const { data: category } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
     code: `${slug[0]}`,
   });
 
@@ -45,7 +44,7 @@ export default function EventDetailPage() {
         </div>
       ) : (
         <div className='flex flex-col gap-5 w-full'>
-          <ListCategory categories={categoriesPage?.responseData?.children} />
+          <ListCategory categories={category?.responseData?.children} />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             <main className="lg:col-span-2 bg-white border rounded-md py-10 px-5 md:px-20">
               <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
