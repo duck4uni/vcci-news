@@ -23,7 +23,7 @@ function Header() {
             <div className="w-35 h-9 bg-[#e8c518] flex items-center justify-center border-3 rounded-sm border-[#647792]">
               <Link
                 className="font-bold text-[14px] text-primary hover:text-white transition"
-                href="https://vccihcm.vn/dang-ky"
+                href="https://hiea.meu-solutions.com/dang-ky"
               >
                 Đăng Ký Hội Viên
               </Link>
