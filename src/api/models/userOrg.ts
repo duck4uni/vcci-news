@@ -41,6 +41,7 @@ export interface UserOrg {
   previous_revenue?: number;
   social_media_info?: string;
   question?: string;
+  assigned_user_id?: string;
   province?: string[];
   description?: string;
   type?: string;

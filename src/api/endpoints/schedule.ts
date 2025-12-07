@@ -280,7 +280,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getScheduleGetMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getScheduleGetMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetScheduleGetMyScheduleInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getScheduleGetMySchedule>>>
@@ -355,7 +355,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScheduleGetMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScheduleGetMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetScheduleGetMyScheduleQueryResult = NonNullable<Awaited<ReturnType<typeof getScheduleGetMySchedule>>>
@@ -493,7 +493,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(eventId), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getScheduleGetScheduledTimeByEventEventId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(eventId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getScheduleGetScheduledTimeByEventEventId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetScheduleGetScheduledTimeByEventEventIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getScheduleGetScheduledTimeByEventEventId>>>
@@ -574,7 +574,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(eventId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScheduleGetScheduledTimeByEventEventId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(eventId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScheduleGetScheduledTimeByEventEventId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetScheduleGetScheduledTimeByEventEventIdQueryResult = NonNullable<Awaited<ReturnType<typeof getScheduleGetScheduledTimeByEventEventId>>>
@@ -878,7 +878,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getScheduleManageMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getScheduleManageMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetScheduleManageMyScheduleInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getScheduleManageMySchedule>>>
@@ -953,7 +953,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScheduleManageMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getScheduleManageMySchedule>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetScheduleManageMyScheduleQueryResult = NonNullable<Awaited<ReturnType<typeof getScheduleManageMySchedule>>>

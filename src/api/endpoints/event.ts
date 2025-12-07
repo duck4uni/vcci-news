@@ -210,7 +210,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsId>>>
@@ -285,7 +285,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsId>>>
@@ -578,7 +578,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsGroupByMonth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsGroupByMonth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsGroupByMonthInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsGroupByMonth>>>
@@ -653,7 +653,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsGroupByMonth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsGroupByMonth>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsGroupByMonthQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsGroupByMonth>>>
@@ -786,7 +786,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEvents>>>
@@ -861,7 +861,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getEvents>>>
@@ -1241,7 +1241,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsLinkId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsLinkId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsLinkIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsLinkId>>>
@@ -1316,7 +1316,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsLinkId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsLinkId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsLinkIdQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsLinkId>>>
@@ -1609,7 +1609,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsLinkInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsLink>>>
@@ -1684,7 +1684,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsLink>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsLinkQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsLink>>>
@@ -2071,7 +2071,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsMyEventsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsMyEvents>>>
@@ -2146,7 +2146,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsMyEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsMyEvents>>>
@@ -2284,7 +2284,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(slug),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsSlugSlugInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsSlugSlug>>>
@@ -2365,7 +2365,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(slug),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsSlugSlugQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsSlugSlug>>>
@@ -2496,7 +2496,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getEventsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsSlugGetAllSlugInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsSlugGetAllSlug>>>
@@ -2571,7 +2571,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEventsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetEventsSlugGetAllSlugQueryResult = NonNullable<Awaited<ReturnType<typeof getEventsSlugGetAllSlug>>>

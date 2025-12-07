@@ -44,6 +44,8 @@ import type {
   OrganizationBody,
   OrganizationClub,
   OrganizationValidationBody,
+  PostOrganizationsAddMembershipFeesBody,
+  PostOrganizationsCheckAccountsBody,
   PostOrganizationsExportOrgsWithInfoParams,
   PutOrganizationsMyOrgBody,
   PutOrganizationsParams,
@@ -126,7 +128,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsId>>>
@@ -201,7 +203,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsIdQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsId>>>
@@ -487,7 +489,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsIdJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsIdJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsIdJoinedClubsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsIdJoinedClubs>>>
@@ -562,7 +564,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsIdJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsIdJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsIdJoinedClubsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsIdJoinedClubs>>>
@@ -623,6 +625,166 @@ export const prefetchGetOrganizationsIdJoinedClubsQuery = async <TData = Awaited
 
 
 /**
+ * Add membership fees for existing organizations by tax codes
+ */
+export type postOrganizationsAddMembershipFeesResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type postOrganizationsAddMembershipFeesResponseSuccess = (postOrganizationsAddMembershipFeesResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postOrganizationsAddMembershipFeesResponse = (postOrganizationsAddMembershipFeesResponseSuccess)
+
+export const getPostOrganizationsAddMembershipFeesUrl = () => {
+
+
+  
+
+  return `/organizations/add-membership-fees`
+}
+
+export const postOrganizationsAddMembershipFees = async (postOrganizationsAddMembershipFeesBody: PostOrganizationsAddMembershipFeesBody, options?: RequestInit): Promise<postOrganizationsAddMembershipFeesResponse> => {
+  
+  return useCustomClient<postOrganizationsAddMembershipFeesResponse>(getPostOrganizationsAddMembershipFeesUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postOrganizationsAddMembershipFeesBody,)
+  }
+);}
+
+
+
+
+export const getPostOrganizationsAddMembershipFeesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postOrganizationsAddMembershipFees>>, TError,{data: BodyType<PostOrganizationsAddMembershipFeesBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postOrganizationsAddMembershipFees>>, TError,{data: BodyType<PostOrganizationsAddMembershipFeesBody>}, TContext> => {
+
+const mutationKey = ['postOrganizationsAddMembershipFees'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postOrganizationsAddMembershipFees>>, {data: BodyType<PostOrganizationsAddMembershipFeesBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postOrganizationsAddMembershipFees(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostOrganizationsAddMembershipFeesMutationResult = NonNullable<Awaited<ReturnType<typeof postOrganizationsAddMembershipFees>>>
+    export type PostOrganizationsAddMembershipFeesMutationBody = BodyType<PostOrganizationsAddMembershipFeesBody>
+    export type PostOrganizationsAddMembershipFeesMutationError = ErrorType<unknown>
+
+    export const usePostOrganizationsAddMembershipFees = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postOrganizationsAddMembershipFees>>, TError,{data: BodyType<PostOrganizationsAddMembershipFeesBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postOrganizationsAddMembershipFees>>,
+        TError,
+        {data: BodyType<PostOrganizationsAddMembershipFeesBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostOrganizationsAddMembershipFeesMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Check if organizations have user accounts by tax codes
+ */
+export type postOrganizationsCheckAccountsResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type postOrganizationsCheckAccountsResponseSuccess = (postOrganizationsCheckAccountsResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postOrganizationsCheckAccountsResponse = (postOrganizationsCheckAccountsResponseSuccess)
+
+export const getPostOrganizationsCheckAccountsUrl = () => {
+
+
+  
+
+  return `/organizations/check-accounts`
+}
+
+export const postOrganizationsCheckAccounts = async (postOrganizationsCheckAccountsBody: PostOrganizationsCheckAccountsBody, options?: RequestInit): Promise<postOrganizationsCheckAccountsResponse> => {
+  
+  return useCustomClient<postOrganizationsCheckAccountsResponse>(getPostOrganizationsCheckAccountsUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postOrganizationsCheckAccountsBody,)
+  }
+);}
+
+
+
+
+export const getPostOrganizationsCheckAccountsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postOrganizationsCheckAccounts>>, TError,{data: BodyType<PostOrganizationsCheckAccountsBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postOrganizationsCheckAccounts>>, TError,{data: BodyType<PostOrganizationsCheckAccountsBody>}, TContext> => {
+
+const mutationKey = ['postOrganizationsCheckAccounts'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postOrganizationsCheckAccounts>>, {data: BodyType<PostOrganizationsCheckAccountsBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postOrganizationsCheckAccounts(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostOrganizationsCheckAccountsMutationResult = NonNullable<Awaited<ReturnType<typeof postOrganizationsCheckAccounts>>>
+    export type PostOrganizationsCheckAccountsMutationBody = BodyType<PostOrganizationsCheckAccountsBody>
+    export type PostOrganizationsCheckAccountsMutationError = ErrorType<unknown>
+
+    export const usePostOrganizationsCheckAccounts = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postOrganizationsCheckAccounts>>, TError,{data: BodyType<PostOrganizationsCheckAccountsBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postOrganizationsCheckAccounts>>,
+        TError,
+        {data: BodyType<PostOrganizationsCheckAccountsBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostOrganizationsCheckAccountsMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Get
  */
 export type getOrganizationsClubEventsResponse200 = {
@@ -695,7 +857,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubEventsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubEvents>>>
@@ -770,7 +932,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubEvents>>>
@@ -1056,7 +1218,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(clubId), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembersClubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(clubId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembersClubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMembersClubIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMembersClubId>>>
@@ -1131,7 +1293,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(clubId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembersClubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(clubId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembersClubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMembersClubIdQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMembersClubId>>>
@@ -1257,7 +1419,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMembersInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMembers>>>
@@ -1332,7 +1494,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMembers>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMembersQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMembers>>>
@@ -1458,7 +1620,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMyClubInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMyClub>>>
@@ -1533,7 +1695,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyClub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMyClubQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMyClub>>>
@@ -1746,7 +1908,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMyEventsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMyEvents>>>
@@ -1821,7 +1983,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyEvents>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMyEventsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMyEvents>>>
@@ -1954,7 +2116,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMyJoinedClubsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMyJoinedClubs>>>
@@ -2029,7 +2191,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubMyJoinedClubs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubMyJoinedClubsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubMyJoinedClubs>>>
@@ -2328,7 +2490,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubValidationInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubValidation>>>
@@ -2403,7 +2565,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsClubValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsClubValidationQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsClubValidation>>>
@@ -2702,7 +2864,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsGetAllOrgFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsGetAllOrgFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsGetAllOrgFavoritesInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsGetAllOrgFavorites>>>
@@ -2777,7 +2939,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsGetAllOrgFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsGetAllOrgFavorites>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsGetAllOrgFavoritesQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsGetAllOrgFavorites>>>
@@ -2910,7 +3072,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizations>>>
@@ -2985,7 +3147,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizations>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizations>>>
@@ -3365,7 +3527,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsMyOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsMyOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsMyOrgInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsMyOrg>>>
@@ -3440,7 +3602,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsMyOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsMyOrg>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsMyOrgQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsMyOrg>>>
@@ -3646,7 +3808,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(slug),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsSlugSlugInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsSlugSlug>>>
@@ -3721,7 +3883,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(slug), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(slug),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsSlugSlugQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsSlugSlug>>>
@@ -3847,7 +4009,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsSlugGetAllSlugInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsSlugGetAllSlug>>>
@@ -3922,7 +4084,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsSlugGetAllSlug>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsSlugGetAllSlugQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsSlugGetAllSlug>>>
@@ -4048,7 +4210,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(organizationId), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidationOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(organizationId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidationOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsValidationOrganizationIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsValidationOrganizationId>>>
@@ -4123,7 +4285,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(organizationId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidationOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(organizationId),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidationOrganizationId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsValidationOrganizationIdQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsValidationOrganizationId>>>
@@ -4256,7 +4418,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsValidationInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsValidation>>>
@@ -4331,7 +4493,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationsValidation>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationsValidationQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationsValidation>>>

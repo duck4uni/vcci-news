@@ -2,21 +2,21 @@ import { NewsItem } from "@/api/types/news";
 import BASE_URL from "@/links";
 import dayjs from "dayjs";
 import AppEditorContent from "@/components/shared/editor-content";
+import Link from "next/link";
+import ImageNext from "@/components/shared/image-next";
 
 function CardNews({ news }: { news: NewsItem }) {
   return (
-    <a
+    <Link
       href={`${news.external_link}`}
       className="flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3"
     >
-      <img
+      <ImageNext
         src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
         alt={news.title}
-        className="w-[100px] md:w-[130px] aspect-3/2 object-cover"
-        onError={(e) => {
-          e.currentTarget.onerror = null
-          e.currentTarget.src = "/img-error.png"
-        }}
+        className="aspect-3/2 object-cover"
+        width={130}
+        height={86}
       />
       <div className="flex-1">
         <p className="text-[#363636] font-bold text-sm line-clamp-2">
@@ -27,7 +27,7 @@ function CardNews({ news }: { news: NewsItem }) {
         </p>
         {/* <AppEditorContent className='line-clamp-2' value={news.description} /> */}
       </div>
-    </a>
+    </Link>
   );
 }
 

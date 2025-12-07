@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { notFound, useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -46,7 +46,7 @@ export default function EventPage() {
     code: `${slug[0]}`,
   });
 
-  const { data: events, isLoading } = useGetEvents<EventApiResponse>({
+  const { data: events, isLoading: eventsLoading } = useGetEvents<EventApiResponse>({
     filters: `name@=${submitSearch ? `title@=${submitSearch}` : ""}`,
     pageSize: String(pageSize),
     currentPage: String(page),
@@ -56,7 +56,7 @@ export default function EventPage() {
   return (
     <>
       <div className="min-h-screen container mx-auto">
-        {isLoading ? (
+        {eventsLoading ? (
           <div className="flex justify-center items-center w-full h-64">
             <Spinner />
           </div>

@@ -119,7 +119,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategoryIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategoryId>>>
@@ -194,7 +194,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategoryIdQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategoryId>>>
@@ -487,7 +487,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategoryInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategory>>>
@@ -562,7 +562,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategoryQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategory>>>
@@ -949,7 +949,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryOrgs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryOrgs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategoryOrgsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategoryOrgs>>>
@@ -1024,7 +1024,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryOrgs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategoryOrgs>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategoryOrgsQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategoryOrgs>>>
@@ -1150,7 +1150,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategorySubIdInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategorySubId>>>
@@ -1225,7 +1225,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, enabled: !!(id), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySubId>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategorySubIdQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategorySubId>>>
@@ -1518,7 +1518,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategorySubInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategorySub>>>
@@ -1593,7 +1593,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
       
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOrganizationCategorySub>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
 }
 
 export type GetOrganizationCategorySubQueryResult = NonNullable<Awaited<ReturnType<typeof getOrganizationCategorySub>>>

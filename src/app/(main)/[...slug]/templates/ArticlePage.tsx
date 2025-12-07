@@ -41,29 +41,35 @@ export default function ArticlePage() {
   }, [page]);
 
   // query
-  const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
+  const { data: category } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
     code: slug[0],
   });
 
-  const { data, isLoading } = useGetNews<GetNewsResponseType>({
+  const { data: articles, isLoading: articlesLoading } = useGetNews<GetNewsResponseType>({
     filters: `page_config.static_link==/${path}` + (submitSearch ? `,title@=${submitSearch}` : ""),
     pageSize: String(pageSize),
     currentPage: String(page),
   });
 
+  const children = category?.responseData?.children ?? [];
+  //template
   return (
     <div className="min-h-screen container mx-auto">
-      {isLoading ? (
+      {articlesLoading ? (
         <div className="flex justify-center items-center w-full h-64">
           <Spinner />
         </div>
       ) : (
         <div className="w-full flex flex-col gap-5">
-          <ListCategory categories={categoriesPage?.responseData?.children} />
+          {children.length !== 0 ? (
+            <ListCategory categories={children} />
+          ) : (
+            <br />
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <main className="lg:col-span-2 bg-background">
               <div className="pb-5 overflow-hidden">
-                {data?.responseData?.rows.map((item) => (
+                {articles?.responseData?.rows.map((item) => (
                   <CardNews
                     key={item.id}
                     news={item}
@@ -72,12 +78,12 @@ export default function ArticlePage() {
                 ))}
                 <div className="w-full flex justify-center mt-4">
                   <Pagination
-                    pageCount={Number(data?.responseData?.totalPages ?? 1)}
-                    page={Number(data?.responseData?.currentPage ?? page)}
+                    pageCount={Number(articles?.responseData?.totalPages ?? 1)}
+                    page={Number(articles?.responseData?.currentPage ?? page)}
                     onChangePage={setPage}
                     onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
                     onGoToNextPage={() =>
-                      setPage(Math.min(Number(data?.responseData?.totalPages ?? 1), page + 1))
+                      setPage(Math.min(Number(articles?.responseData?.totalPages ?? 1), page + 1))
                     }
                   />
                 </div>

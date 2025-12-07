@@ -41,8 +41,12 @@ const orvalConfig = async () => {
           query: {
             useQuery: true,
             useInfinite: true,
-            usePrefetch: true
-            // useSuspenseQuery: true
+            usePrefetch: true,
+            // useSuspenseQuery: true,
+            options: {
+              retry: 3,
+              retryDelay: 1000,
+            }
           },
           mutator: {
             path: './src/api/mutator/custom-client.ts',

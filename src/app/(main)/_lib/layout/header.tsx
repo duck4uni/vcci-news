@@ -20,9 +20,9 @@ function Header() {
       <div className="sticky top-0 w-full h-14 hidden lg:flex items-center justify-center bg-[#063e8e]">
         <div className="container w-full px-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-[130px] h-9 bg-[#e8c518] flex items-center justify-center border-4 rounded-sm border-[#647792]">
+            <div className="w-35 h-9 bg-[#e8c518] flex items-center justify-center border-3 rounded-sm border-[#647792]">
               <Link
-                className="font-semibold text-[14px] text-primary hover:text-white transition"
+                className="font-bold text-[14px] text-primary hover:text-white transition"
                 href="https://vccihcm.vn/dang-ky"
               >
                 Đăng Ký Hội Viên
@@ -44,7 +44,7 @@ function Header() {
 
           <div className="flex items-center gap-8">
             <input
-              className="bg-white h-12 rounded-sm outline-none px-4 w-64 placeholder:text-sm"
+              className="bg-white h-10 rounded-sm outline-none px-4 w-64 placeholder:text-sm"
               type="text"
               placeholder="Tìm kiếm"
               onKeyDown={(e) => {
@@ -90,7 +90,7 @@ function Header() {
         </div>
       </div>
 
-      <div className="sticky top-0 z-50 bg-[#ededed] shadow-md py-4">
+      <div className="sticky top-0 z-50 bg-[#ededed] shadow-md py-2">
         <div className="container m-auto">
           <div className="w-full flex justify-between items-center">
             {/* Logo */}
@@ -98,7 +98,7 @@ function Header() {
               <Image
                 className="w-[140px] object-contain"
                 src={logo}
-                alt="VCCI HCM"
+                alt="VCCI-HCM"
               />
             </Link>
 
