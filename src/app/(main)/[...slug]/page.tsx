@@ -42,6 +42,19 @@ export default function DynamicPage() {
   }, [slug, category, children, router]);
 
   //template
+  if (slug[0] === "hoat-dong" && slug[1] === "su-kien") {
+    if (slug.length === 2) return <EventPage />;
+    if (slug.length === 3) return <EventDetailPage />;
+  }
+
+  if (news?.responseData?.count == 0 && isLoading) {
+    return (
+      <div className="flex justify-center items-center w-full h-64">
+        <Spinner />
+      </div>
+    );
+  }
+
   if (news && news?.responseData.rows.length !== 0) {
     return <ArticleDetailPage data={news} />;
   }

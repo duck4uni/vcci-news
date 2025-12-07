@@ -17,7 +17,6 @@ const Page = () => {
   return (
     <div>
       <Banner />
-
       {/* contents */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-10 space-y-12">
         <FeaturedNews />
