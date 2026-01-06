@@ -1,39 +1,22 @@
-"use client";
-
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const ImageNext = ({
-  src,
-  alt,
-  width,
-  height,
-  className,
-  onErrorFallback
-}: {
-  src: string;
-  alt?: string;
-  width: number;
-  height: number;
-  className?: string;
-  onErrorFallback?: string
-}) => {
-  const fallbackSrc = onErrorFallback || "/img-error.png";
+const ImageNext = ({ src, alt, width, height, className, fallback = "/img-error.png" }: any) => {
   const [imgSrc, setImgSrc] = useState(src);
+
+  useEffect(() => {
+    setImgSrc(src);
+  }, [src]);
 
   return (
     <Image
-      src={imgSrc || fallbackSrc}
-      alt={alt || ""}
+      src={imgSrc}
+      alt={alt}
       width={width}
       height={height}
       className={className}
+      onError={() => setImgSrc(fallback)}
       unoptimized
-      onError={() => {
-        if (imgSrc !== fallbackSrc) {
-          setImgSrc(fallbackSrc);
-        }
-      }}
     />
   );
 };
