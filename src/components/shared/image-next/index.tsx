@@ -12,6 +12,7 @@ const ImageNext = ({ src, alt, width, height, className, onError }: any) => {
       height={height}
       className={className}
       onError={() => setImgSrc(onError || "/img-error.png")}
+      unoptimized
     />
   );
 };
