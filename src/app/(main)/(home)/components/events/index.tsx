@@ -26,7 +26,7 @@ function Events() {
 
       <div className="flex flex-col md:flex-row gap-5">
         {isLoading ? (
-          <div className="container w-full h-[80vh] flex justify-center items-center">
+          <div className="flex flex-col justify-center items-center w-full min-h-[180px] sm:min-h-[220px] p-3">
             <Spinner />
           </div>
         ) : (
