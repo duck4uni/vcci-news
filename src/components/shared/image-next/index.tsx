@@ -1,8 +1,12 @@
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const ImageNext = ({ src, alt, width, height, className, onError }: any) => {
+const ImageNext = ({ src, alt, width, height, className, fallback = "/img-error.png" }: any) => {
   const [imgSrc, setImgSrc] = useState(src);
+
+  useEffect(() => {
+    setImgSrc(src);
+  }, [src]);
 
   return (
     <Image
@@ -11,7 +15,7 @@ const ImageNext = ({ src, alt, width, height, className, onError }: any) => {
       width={width}
       height={height}
       className={className}
-      onError={() => setImgSrc(onError || "/img-error.png")}
+      onError={() => setImgSrc(fallback)}
       unoptimized
     />
   );
