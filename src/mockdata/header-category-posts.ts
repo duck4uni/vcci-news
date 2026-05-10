@@ -19,6 +19,88 @@ export interface HeaderCategoryPostItem {
 export const HEADER_CATEGORY_POSTS_STORAGE_KEY =
   "vcci-news.header-category-posts.data.v1";
 
+function normalizeVietnameseText(value: string) {
+  return value
+    .replace(/Ä‘/g, "đ")
+    .replace(/Ä/g, "Đ")
+    .replace(/Ã /g, "à")
+    .replace(/Ã¡/g, "á")
+    .replace(/áº£/g, "ả")
+    .replace(/Ã£/g, "ã")
+    .replace(/áº¡/g, "ạ")
+    .replace(/Äƒ/g, "ă")
+    .replace(/Ã¢/g, "â")
+    .replace(/Ã¨/g, "è")
+    .replace(/Ã©/g, "é")
+    .replace(/áº»/g, "ẻ")
+    .replace(/áº½/g, "ẽ")
+    .replace(/áº¹/g, "ẹ")
+    .replace(/Ãª/g, "ê")
+    .replace(/Ã¬/g, "ì")
+    .replace(/Ã­/g, "í")
+    .replace(/Ä©/g, "ĩ")
+    .replace(/Ã²/g, "ò")
+    .replace(/Ã³/g, "ó")
+    .replace(/Ãµ/g, "õ")
+    .replace(/Ã´/g, "ô")
+    .replace(/Æ¡/g, "ơ")
+    .replace(/Ã¹/g, "ù")
+    .replace(/Ãº/g, "ú")
+    .replace(/Å©/g, "ũ")
+    .replace(/Æ°/g, "ư")
+    .replace(/á»/g, "ề")
+    .replace(/áº¿/g, "ế")
+    .replace(/á»ƒ/g, "ể")
+    .replace(/á»…/g, "ễ")
+    .replace(/á»‡/g, "ệ")
+    .replace(/á»/g, "ờ")
+    .replace(/á»›/g, "ớ")
+    .replace(/á»Ÿ/g, "ở")
+    .replace(/á»¡/g, "ỡ")
+    .replace(/á»£/g, "ợ")
+    .replace(/á»«/g, "ừ")
+    .replace(/á»©/g, "ứ")
+    .replace(/á»­/g, "ử")
+    .replace(/á»¯/g, "ữ")
+    .replace(/á»±/g, "ự")
+    .replace(/á»³/g, "ỳ")
+    .replace(/Ã½/g, "ý")
+    .replace(/á»·/g, "ỷ")
+    .replace(/á»¹/g, "ỹ")
+    .replace(/á»µ/g, "ỵ")
+    .replace(/á»•/g, "ổ")
+    .replace(/á»‘/g, "ố")
+    .replace(/á»“/g, "ồ")
+    .replace(/á»—/g, "ỗ")
+    .replace(/á»™/g, "ộ")
+    .replace(/áº§/g, "ầ")
+    .replace(/áº¥/g, "ấ")
+    .replace(/áº©/g, "ẩ")
+    .replace(/áº«/g, "ẫ")
+    .replace(/áº­/g, "ậ")
+    .replace(/áº±/g, "ằ")
+    .replace(/áº¯/g, "ắ")
+    .replace(/áº³/g, "ẳ")
+    .replace(/áºµ/g, "ẵ")
+    .replace(/áº·/g, "ặ")
+    .replace(/á»/g, "ỏ")
+    .replace(/á»/g, "ọ")
+    .replace(/á»§/g, "ủ")
+    .replace(/á»¥/g, "ụ")
+    .replace(/á»‰/g, "ỉ")
+    .replace(/á»‹/g, "ị")
+    .replace(/á»i/g, "ời");
+}
+
+function normalizePostItem(item: HeaderCategoryPostItem): HeaderCategoryPostItem {
+  return {
+    ...item,
+    title: normalizeVietnameseText(item.title),
+    excerpt: normalizeVietnameseText(item.excerpt),
+    content: normalizeVietnameseText(item.content),
+  };
+}
+
 export const headerCategoryPostSeed: HeaderCategoryPostItem[] = [
   {
     id: "header-post-intro-about",
@@ -124,12 +206,14 @@ export const EMPTY_HEADER_CATEGORY_POST_FORM: HeaderCategoryPostFormValues = {
 };
 
 export function normalizeHeaderCategoryPosts(items: HeaderCategoryPostItem[]) {
-  return [...items].sort((left, right) => {
-    const leftTime = new Date(left.published_at || left.updated_at).getTime();
-    const rightTime = new Date(right.published_at || right.updated_at).getTime();
+  return [...items]
+    .map((item) => normalizePostItem(item))
+    .sort((left, right) => {
+      const leftTime = new Date(left.published_at || left.updated_at).getTime();
+      const rightTime = new Date(right.published_at || right.updated_at).getTime();
 
-    return rightTime - leftTime || right.updated_at.localeCompare(left.updated_at);
-  });
+      return rightTime - leftTime || right.updated_at.localeCompare(left.updated_at);
+    });
 }
 
 export function createHeaderCategoryPostId() {

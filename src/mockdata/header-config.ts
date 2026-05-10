@@ -157,8 +157,122 @@ export const headerArticleCategoryOptions: HeaderArticleCategoryOption[] = [
   { id: "cat-gallery", name: "Ảnh nổi bật" },
 ];
 
-export function toSlug(value: string) {
+function normalizeVietnameseText(value: string) {
   return value
+    .replace(/TÃ¬m/g, "Tìm")
+    .replace(/TÃªn/g, "Tên")
+    .replace(/Tá»•ng/g, "Tổng")
+    .replace(/Thá»ƒ/g, "Thể")
+    .replace(/Thá»©/g, "Thứ")
+    .replace(/LiÃªn/g, "Liên")
+    .replace(/KhÃ´ng/g, "Không")
+    .replace(/Danh má»¥c/g, "Danh mục")
+    .replace(/danh má»¥c/g, "danh mục")
+    .replace(/BÃ i viáº¿t/g, "Bài viết")
+    .replace(/Tin tá»©c/g, "Tin tức")
+    .replace(/áº¢nh/g, "Ảnh")
+    .replace(/Giá»›i thiá»‡u/g, "Giới thiệu")
+    .replace(/Vá»/g, "Về")
+    .replace(/CÆ¡ cáº¥u tá»• chá»©c/g, "Cơ cấu tổ chức")
+    .replace(/Hoáº¡t Ä‘á»™ng/g, "Hoạt động")
+    .replace(/Sá»± kiá»‡n/g, "Sự kiện")
+    .replace(/ThÆ° viá»‡n áº£nh/g, "Thư viện ảnh")
+    .replace(/ná»•i báº­t/g, "nổi bật")
+    .replace(/NhÃ³m/g, "Nhóm")
+    .replace(/ná»™i dung/g, "nội dung")
+    .replace(/thÃ´ng tin/g, "thông tin")
+    .replace(/tá»•ng há»£p/g, "tổng hợp")
+    .replace(/ChÃ­nh sÃ¡ch/g, "Chính sách")
+    .replace(/Ä‘/g, "đ")
+    .replace(/Ä/g, "Đ")
+    .replace(/Ã /g, "à")
+    .replace(/Ã¡/g, "á")
+    .replace(/áº£/g, "ả")
+    .replace(/Ã£/g, "ã")
+    .replace(/áº¡/g, "ạ")
+    .replace(/Äƒ/g, "ă")
+    .replace(/áº±/g, "ằ")
+    .replace(/áº¯/g, "ắ")
+    .replace(/áº³/g, "ẳ")
+    .replace(/áºµ/g, "ẵ")
+    .replace(/áº·/g, "ặ")
+    .replace(/Ã¢/g, "â")
+    .replace(/áº§/g, "ầ")
+    .replace(/áº¥/g, "ấ")
+    .replace(/áº©/g, "ẩ")
+    .replace(/áº«/g, "ẫ")
+    .replace(/áº­/g, "ậ")
+    .replace(/Ã¨/g, "è")
+    .replace(/Ã©/g, "é")
+    .replace(/áº»/g, "ẻ")
+    .replace(/áº½/g, "ẽ")
+    .replace(/áº¹/g, "ẹ")
+    .replace(/Ãª/g, "ê")
+    .replace(/á»/g, "ề")
+    .replace(/áº¿/g, "ế")
+    .replace(/á»ƒ/g, "ể")
+    .replace(/á»…/g, "ễ")
+    .replace(/á»‡/g, "ệ")
+    .replace(/Ã¬/g, "ì")
+    .replace(/Ã­/g, "í")
+    .replace(/á»‰/g, "ỉ")
+    .replace(/Ä©/g, "ĩ")
+    .replace(/á»‹/g, "ị")
+    .replace(/Ã²/g, "ò")
+    .replace(/Ã³/g, "ó")
+    .replace(/á»/g, "ỏ")
+    .replace(/Ãµ/g, "õ")
+    .replace(/á»/g, "ọ")
+    .replace(/Ã´/g, "ô")
+    .replace(/á»“/g, "ồ")
+    .replace(/á»‘/g, "ố")
+    .replace(/á»•/g, "ổ")
+    .replace(/á»—/g, "ỗ")
+    .replace(/á»™/g, "ộ")
+    .replace(/Æ¡/g, "ơ")
+    .replace(/á»/g, "ờ")
+    .replace(/á»›/g, "ớ")
+    .replace(/á»Ÿ/g, "ở")
+    .replace(/á»¡/g, "ỡ")
+    .replace(/á»£/g, "ợ")
+    .replace(/Ã¹/g, "ù")
+    .replace(/Ãº/g, "ú")
+    .replace(/á»§/g, "ủ")
+    .replace(/Å©/g, "ũ")
+    .replace(/á»¥/g, "ụ")
+    .replace(/Æ°/g, "ư")
+    .replace(/á»«/g, "ừ")
+    .replace(/á»©/g, "ứ")
+    .replace(/á»­/g, "ử")
+    .replace(/á»¯/g, "ữ")
+    .replace(/á»±/g, "ự")
+    .replace(/á»³/g, "ỳ")
+    .replace(/Ã½/g, "ý")
+    .replace(/á»·/g, "ỷ")
+    .replace(/á»¹/g, "ỹ")
+    .replace(/á»µ/g, "ỵ");
+}
+
+function normalizeHeaderCategoryText<T extends HeaderCategoryItem | HeaderArticleCategoryOption>(
+  item: T,
+): T {
+  const normalized = {
+    ...item,
+    name: normalizeVietnameseText(item.name),
+  } as T;
+
+  if ("description" in item && typeof item.description === "string") {
+    return {
+      ...normalized,
+      description: normalizeVietnameseText(item.description),
+    };
+  }
+
+  return normalized;
+}
+
+export function toSlug(value: string) {
+  return normalizeVietnameseText(value)
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/đ/g, "d")
@@ -206,11 +320,14 @@ function assignLevel(item: HeaderCategoryItem, items: HeaderCategoryItem[]) {
 }
 
 export function normalizeHeaderCategories(items: HeaderCategoryItem[]) {
+  const sanitizedItems = items.map((item) => normalizeHeaderCategoryText(item));
   const parentIds = new Set(
-    items.filter((item) => item.parent_id).map((item) => item.parent_id as string),
+    sanitizedItems
+      .filter((item) => item.parent_id)
+      .map((item) => item.parent_id as string),
   );
 
-  return items.map((item) => {
+  return sanitizedItems.map((item) => {
     const next = { ...item };
 
     if (parentIds.has(next.id)) {
@@ -218,8 +335,8 @@ export function normalizeHeaderCategories(items: HeaderCategoryItem[]) {
       next.category_ids = [];
     }
 
-    next.level = assignLevel(next, items);
-    next.static_link = next.slug === "" && !next.parent_id ? "/" : buildStaticLink(next, items);
+    next.level = assignLevel(next, sanitizedItems);
+    next.static_link = next.slug === "" && !next.parent_id ? "/" : buildStaticLink(next, sanitizedItems);
     next.is_article = next.type === "news";
 
     if (next.type !== "news") {

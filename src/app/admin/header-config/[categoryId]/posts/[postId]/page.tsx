@@ -15,15 +15,14 @@ import {
   HEADER_CONFIG_STORAGE_KEY,
   HeaderCategoryItem,
   normalizeHeaderCategories,
+  toSlug,
 } from '@/mockdata/header-config';
 import {
-  createHeaderCategoryPostId,
   EMPTY_HEADER_CATEGORY_POST_FORM,
   getHeaderCategoryPostSeed,
   HEADER_CATEGORY_POSTS_STORAGE_KEY,
   HeaderCategoryPostFormValues,
   HeaderCategoryPostItem,
-  makeHeaderCategoryPostSlug,
   normalizeHeaderCategoryPosts,
 } from '@/mockdata/header-category-posts';
 import { ArrowLeft, Save } from 'lucide-react';
@@ -97,14 +96,6 @@ function persistHeaderCategoryPosts(items: HeaderCategoryPostItem[]) {
   );
 }
 
-function upsertPost(items: HeaderCategoryPostItem[], post: HeaderCategoryPostItem) {
-  const exists = items.some((item) => item.id === post.id);
-
-  return normalizeHeaderCategoryPosts(
-    exists ? items.map((item) => (item.id === post.id ? post : item)) : [...items, post],
-  );
-}
-
 function useHeaderCategoryPostsModule() {
   const [items, setItems] = React.useState<HeaderCategoryPostItem[]>([]);
   const [isReady, setIsReady] = React.useState(false);
@@ -134,10 +125,10 @@ function useHeaderCategoryPostsModule() {
       const now = new Date().toISOString();
 
       const nextPost: HeaderCategoryPostItem = {
-        id: createHeaderCategoryPostId(),
+        id: `header-post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         category_id: categoryId,
         title: values.title.trim(),
-        slug: values.slug.trim() || makeHeaderCategoryPostSlug(values.title),
+        slug: values.slug.trim() || toSlug(values.title),
         excerpt: values.excerpt.trim(),
         content: values.content.trim(),
         thumbnail: values.thumbnail.trim(),
@@ -147,35 +138,32 @@ function useHeaderCategoryPostsModule() {
         updated_at: now,
       };
 
-      setItems((current) => upsertPost(current, nextPost));
+      setItems((current) => normalizeHeaderCategoryPosts([...current, nextPost]));
       return nextPost;
     },
     [],
   );
 
   const updatePost = React.useCallback((postId: string, values: HeaderCategoryPostFormValues) => {
-    let updatedPost: HeaderCategoryPostItem | null = null;
-
-    setItems((current) => {
-      const existing = current.find((item) => item.id === postId);
-      if (!existing) return current;
-
-      updatedPost = {
-        ...existing,
-        title: values.title.trim(),
-        slug: values.slug.trim() || makeHeaderCategoryPostSlug(values.title),
-        excerpt: values.excerpt.trim(),
-        content: values.content.trim(),
-        thumbnail: values.thumbnail.trim(),
-        published_at: values.published_at || existing.published_at,
-        is_active: values.is_active,
-        updated_at: new Date().toISOString(),
-      };
-
-      return upsertPost(current, updatedPost);
-    });
-
-    return updatedPost;
+    setItems((current) =>
+      normalizeHeaderCategoryPosts(
+        current.map((item) =>
+          item.id === postId
+            ? {
+                ...item,
+                title: values.title.trim(),
+                slug: values.slug.trim() || toSlug(values.title),
+                excerpt: values.excerpt.trim(),
+                content: values.content.trim(),
+                thumbnail: values.thumbnail.trim(),
+                published_at: values.published_at || item.published_at,
+                is_active: values.is_active,
+                updated_at: new Date().toISOString(),
+              }
+            : item,
+        ),
+      ),
+    );
   }, []);
 
   const toFormValues = React.useCallback(
@@ -313,17 +301,7 @@ export default function HeaderCategoryPostFormPage() {
     setForm((previous) => ({
       ...previous,
       title: value,
-      slug:
-        value
-          .normalize('NFD')
-          .replace(/[\u0300-\u036f]/g, '')
-          .replace(/đ/g, 'd')
-          .replace(/Đ/g, 'D')
-          .toLowerCase()
-          .trim()
-          .replace(/[^a-z0-9\\s-]/g, '')
-          .replace(/\\s+/g, '-')
-          .replace(/-+/g, '-') || previous.slug,
+      slug: toSlug(value) || previous.slug,
     }));
   };
 

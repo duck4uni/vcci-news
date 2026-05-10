@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface AdminStatsGridItem {
   label: string;
@@ -15,20 +14,31 @@ interface AdminStatsGridProps {
 }
 
 export function AdminStatsGrid({ items, className }: AdminStatsGridProps) {
+  const gridClassName =
+    className ??
+    (items.length === 3
+      ? "grid grid-cols-1 gap-4 md:grid-cols-3"
+      : "grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4");
+
   return (
-    <div className={className ?? "grid grid-cols-2 gap-4 lg:grid-cols-4"}>
+    <div className={gridClassName}>
       {items.map((item) => (
-        <Card key={item.label} className="border-slate-200 shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">
-              {item.label}
-            </CardTitle>
-            {item.icon ?? null}
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-black">{item.value}</div>
-          </CardContent>
-        </Card>
+        <div
+          key={item.label}
+          className="rounded-2xl border border-[#063e8e]/15 bg-white px-5 py-4 shadow-sm"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-gray-700">{item.label}</p>
+              <div className="text-3xl font-semibold leading-none text-black">{item.value}</div>
+            </div>
+            {item.icon ? (
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#063e8e]/10">
+                {item.icon}
+              </div>
+            ) : null}
+          </div>
+        </div>
       ))}
     </div>
   );

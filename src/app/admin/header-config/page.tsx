@@ -1,7 +1,6 @@
 'use client';
 
 import React from 'react';
-import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   HeaderCategoryDeleteDialog,
@@ -12,7 +11,6 @@ import {
   HeaderCategoryStats,
   HeaderCategoryTable,
 } from './components';
-import { Button } from '@/components/ui/button';
 import {
   buildHeaderCategoryTree,
   createHeaderCategoryId,
@@ -252,11 +250,6 @@ export default function HeaderConfigPage() {
     [tree],
   );
 
-  const groupedCount = React.useMemo(
-    () => flatRows.filter((item) => item.children.length > 0).length,
-    [flatRows],
-  );
-
   const editingItem = React.useMemo(
     () => flatRows.find((item) => item.id === formValues.id) ?? null,
     [flatRows, formValues.id],
@@ -347,7 +340,6 @@ export default function HeaderConfigPage() {
         total={flatRows.length}
         root={flatRows.filter((item) => !item.parentId).length}
         nested={flatRows.filter((item) => item.parentId).length}
-        grouped={groupedCount}
       />
 
       <HeaderCategoryTable
@@ -355,19 +347,11 @@ export default function HeaderConfigPage() {
         expanded={expanded}
         isLoading={!isReady}
         searchValue={search}
-        action={
-          <Button
-            className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-            onClick={openCreateRoot}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Thêm danh mục
-          </Button>
-        }
         onSearchChange={setSearch}
         onToggle={(id) =>
           setExpanded((previous) => ({ ...previous, [id]: !(previous[id] ?? true) }))
         }
+        onCreateRoot={openCreateRoot}
         onCreateChild={openCreateChild}
         onEdit={openEdit}
         onDelete={setDeleteTarget}

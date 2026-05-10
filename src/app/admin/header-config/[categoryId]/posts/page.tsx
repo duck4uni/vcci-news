@@ -35,12 +35,9 @@ import {
   normalizeHeaderCategories,
 } from '@/mockdata/header-config';
 import {
-  createHeaderCategoryPostId,
   getHeaderCategoryPostSeed,
   HEADER_CATEGORY_POSTS_STORAGE_KEY,
-  HeaderCategoryPostFormValues,
   HeaderCategoryPostItem,
-  makeHeaderCategoryPostSlug,
   normalizeHeaderCategoryPosts,
 } from '@/mockdata/header-category-posts';
 import {
@@ -120,14 +117,6 @@ function persistHeaderCategoryPosts(items: HeaderCategoryPostItem[]) {
   );
 }
 
-function upsertPost(items: HeaderCategoryPostItem[], post: HeaderCategoryPostItem) {
-  const exists = items.some((item) => item.id === post.id);
-
-  return normalizeHeaderCategoryPosts(
-    exists ? items.map((item) => (item.id === post.id ? post : item)) : [...items, post],
-  );
-}
-
 function useHeaderCategoryPostsModule() {
   const [items, setItems] = React.useState<HeaderCategoryPostItem[]>([]);
   const [isReady, setIsReady] = React.useState(false);
@@ -147,60 +136,6 @@ function useHeaderCategoryPostsModule() {
     [items],
   );
 
-  const getPostById = React.useCallback(
-    (postId: string) => items.find((item) => item.id === postId) ?? null,
-    [items],
-  );
-
-  const createPost = React.useCallback(
-    (categoryId: string, values: HeaderCategoryPostFormValues) => {
-      const now = new Date().toISOString();
-
-      const nextPost: HeaderCategoryPostItem = {
-        id: createHeaderCategoryPostId(),
-        category_id: categoryId,
-        title: values.title.trim(),
-        slug: values.slug.trim() || makeHeaderCategoryPostSlug(values.title),
-        excerpt: values.excerpt.trim(),
-        content: values.content.trim(),
-        thumbnail: values.thumbnail.trim(),
-        published_at: values.published_at || now.slice(0, 10),
-        is_active: values.is_active,
-        created_at: now,
-        updated_at: now,
-      };
-
-      setItems((current) => upsertPost(current, nextPost));
-      return nextPost;
-    },
-    [],
-  );
-
-  const updatePost = React.useCallback((postId: string, values: HeaderCategoryPostFormValues) => {
-    let updatedPost: HeaderCategoryPostItem | null = null;
-
-    setItems((current) => {
-      const existing = current.find((item) => item.id === postId);
-      if (!existing) return current;
-
-      updatedPost = {
-        ...existing,
-        title: values.title.trim(),
-        slug: values.slug.trim() || makeHeaderCategoryPostSlug(values.title),
-        excerpt: values.excerpt.trim(),
-        content: values.content.trim(),
-        thumbnail: values.thumbnail.trim(),
-        published_at: values.published_at || existing.published_at,
-        is_active: values.is_active,
-        updated_at: new Date().toISOString(),
-      };
-
-      return upsertPost(current, updatedPost);
-    });
-
-    return updatedPost;
-  }, []);
-
   const removePost = React.useCallback((postId: string) => {
     setItems((current) => current.filter((item) => item.id !== postId));
   }, []);
@@ -208,9 +143,6 @@ function useHeaderCategoryPostsModule() {
   return {
     isReady,
     getPostsByCategory,
-    getPostById,
-    createPost,
-    updatePost,
     removePost,
   };
 }
@@ -417,13 +349,13 @@ export default function HeaderCategoryPostsPage() {
                       </div>
                       <div className="min-w-0 space-y-1">
                         <p className="truncate font-medium text-black">{post.title}</p>
-                        <p className="line-clamp-2 text-sm text-gray-700">{post.excerpt || '—'}</p>
+                        <p className="line-clamp-2 text-sm text-gray-700">{post.excerpt || '-'}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="text-center text-sm text-gray-700">{post.slug}</TableCell>
                   <TableCell className="text-center text-sm text-gray-700">
-                    {post.published_at ? dayjs(post.published_at).format('DD/MM/YYYY') : '—'}
+                    {post.published_at ? dayjs(post.published_at).format('DD/MM/YYYY') : '-'}
                   </TableCell>
                   <TableCell className="text-center">
                     {post.is_active ? (
