@@ -2,20 +2,27 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Menu } from 'lucide-react';
+import { Menu, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
 
 const routeLabels: Record<string, string> = {
-  '/admin/dashboard': 'Dashboard',
-  '/admin/header-config': 'Cấu hình Danh mục',
+  '/admin/base-config': 'Cấu hình chung',
+  '/admin/header-config': 'Cấu hình danh mục',
   '/admin/news': 'Quản lý bài viết',
+  '/admin/media': 'Quản lý ảnh',
   '/admin/videos': 'Quản lý video',
+  '/admin/contact-management': 'Quản lý liên hệ',
+  '/admin/contact-management/newsletter-emails': 'Quản lý Email đăng ký nhận thông tin',
+  '/admin/contact-management/contact-requests': 'Quản lý Đơn liên hệ',
+  '/admin/contact-management/membership-applications': 'Quản lý Đơn đăng ký hội viên',
   '/admin/members': 'Quản lý Hội viên',
   '/admin/partners': 'Quản lý Đối tác',
   '/admin/emails': 'Email nhận thông tin',
   '/admin/website-config': 'Thông tin website',
 };
+
+const currentUserRoleLabel = 'Quản trị viên';
 
 function getTitle(pathname: string): string {
   if (routeLabels[pathname]) return routeLabels[pathname];
@@ -48,8 +55,9 @@ export function AdminHeader() {
           <h1 className="text-xl font-bold text-[#063e8e]">{title}</h1>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          Cập nhật: {new Date().toLocaleDateString('vi-VN')}
+        <div className="flex items-center gap-2 rounded-full border border-[#063e8e]/10 bg-[#f8fbff] px-3 py-1.5 text-sm font-medium text-[#163b73]">
+          <ShieldCheck className="h-4 w-4 text-[#063e8e]" />
+          <span>{currentUserRoleLabel}</span>
         </div>
       </div>
     </header>

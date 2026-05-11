@@ -254,7 +254,7 @@ export default function HeaderCategoryPostsPage() {
           </div>
         }
       >
-        <div className="overflow-x-auto">
+        <div className="scrollbar overflow-x-auto">
           <Table className="min-w-[980px] table-fixed">
             <TableHeader>
               <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">

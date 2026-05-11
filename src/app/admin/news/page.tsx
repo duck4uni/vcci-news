@@ -57,7 +57,7 @@ import {
 } from "@/mockdata/header-config";
 
 const selectTriggerClassName =
-  "w-full border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[180px]";
+  "w-full rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[180px]";
 
 const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
@@ -268,7 +268,7 @@ export default function AdminNewsPage() {
           </div>
         }
       >
-        <div className="overflow-x-auto">
+        <div className="scrollbar overflow-x-auto">
           <Table className="min-w-[1250px] table-fixed">
             <TableHeader>
               <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">

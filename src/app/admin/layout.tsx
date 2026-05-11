@@ -15,7 +15,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div
         className={cn(
           'transition-all duration-300',
-          isOpen ? 'pl-56' : 'pl-20',
+          isOpen ? 'pl-72' : 'pl-24',
         )}
       >
         <AdminHeader />
