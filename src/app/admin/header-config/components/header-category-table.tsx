@@ -7,7 +7,6 @@ import {
   ChevronRight,
   Edit,
   ExternalLink,
-  FileImage,
   FileText,
   FolderTree,
   MoreHorizontal,
@@ -33,7 +32,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { HeaderCategoryTreeItem, getHeaderCategoryTypeLabel } from "@/mockdata/header-config";
+import {
+  type HeaderCategoryTreeItem,
+  getHeaderCategoryTypeLabel,
+} from "@/mockdata/header-config";
 
 export type HeaderCategoryFlatRow = HeaderCategoryTreeItem & {
   depth: number;
@@ -69,9 +71,8 @@ function getDisplaySortOrder(item: HeaderCategoryFlatRow, rows: HeaderCategoryFl
 function getTypeIcon(type: HeaderCategoryTreeItem["type"]) {
   switch (type) {
     case "news":
+    case "page":
       return <FileText className="h-4 w-4 text-[#063e8e]" />;
-    case "image":
-      return <FileImage className="h-4 w-4 text-[#063e8e]" />;
     default:
       return <FolderTree className="h-4 w-4 text-[#063e8e]" />;
   }
@@ -160,9 +161,7 @@ export function HeaderCategoryTable({
               const hasChildren = rows.some((entry) => entry.parentId === item.id);
               const isExpanded = expanded[item.id] ?? true;
               const canCreateChild = !item.parent_id && item.type === "category";
-              const canManagePosts =
-                item.type === "page" || item.type === "news" || item.type === "image";
-              const createContentLabel = item.type === "image" ? "Thêm ảnh" : "Thêm bài viết";
+              const canManagePosts = item.type === "page" || item.type === "news";
 
               return (
                 <TableRow
@@ -191,11 +190,13 @@ export function HeaderCategoryTable({
                       <div className="truncate font-medium text-black">{item.name}</div>
                     </div>
                   </TableCell>
+
                   <TableCell className="w-[180px] text-center">
                     <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
                       {getHeaderCategoryTypeLabel(item.type)}
                     </Badge>
                   </TableCell>
+
                   <TableCell className="w-[140px] text-center font-medium text-black">
                     <span
                       className={
@@ -207,6 +208,7 @@ export function HeaderCategoryTable({
                       {getDisplaySortOrder(item, rows)}
                     </span>
                   </TableCell>
+
                   <TableCell className="w-[280px] text-sm text-gray-700">
                     <div className="mx-auto flex max-w-[220px] items-center justify-center gap-2">
                       <span className="block max-w-[180px] truncate">
@@ -217,6 +219,7 @@ export function HeaderCategoryTable({
                       ) : null}
                     </div>
                   </TableCell>
+
                   <TableCell className="w-[120px] text-center">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -241,9 +244,9 @@ export function HeaderCategoryTable({
                             asChild
                             className="text-gray-700 focus:text-[#063e8e]"
                           >
-                            <Link href={`/admin/header-config/${item.id}/posts/new`}>
-                              <Plus className="mr-2 h-4 w-4" />
-                              {createContentLabel}
+                            <Link href={`/admin/header-config/${item.id}/posts`}>
+                              <FileText className="mr-2 h-4 w-4" />
+                              Quản lý bài viết
                             </Link>
                           </DropdownMenuItem>
                         ) : null}

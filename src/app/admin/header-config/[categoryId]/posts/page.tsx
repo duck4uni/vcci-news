@@ -1,23 +1,33 @@
 'use client';
 
 import React from 'react';
+import dayjs from 'dayjs';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import dayjs from 'dayjs';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+  ArrowLeft,
+  Edit,
+  EyeOff,
+  FileText,
+  MoreHorizontal,
+  Plus,
+  Star,
+  Trash2,
+} from 'lucide-react';
+import { AdminDeleteDialog } from '@/components/admin/admin-delete-dialog';
+import { AdminStatsGrid } from '@/components/admin/admin-stats-grid';
+import { AdminTableLayout } from '@/components/admin/admin-table-layout';
+import { SafeNextImage } from '@/components/admin/safe-next-image';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Table,
   TableBody,
@@ -27,31 +37,20 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  ADMIN_NEWS_TYPE_LABELS,
+  type AdminNewsItem,
+  persistAdminNewsItems,
+  readAdminNewsItems,
+} from '@/mockdata/admin-news';
+import {
   buildHeaderCategoryTree,
   getHeaderCategorySeed,
   HEADER_CONFIG_STORAGE_KEY,
-  HeaderCategoryItem,
-  HeaderCategoryType,
+  type HeaderCategoryItem,
   normalizeHeaderCategories,
 } from '@/mockdata/header-config';
-import {
-  getHeaderCategoryPostSeed,
-  HEADER_CATEGORY_POSTS_STORAGE_KEY,
-  HeaderCategoryPostItem,
-  normalizeHeaderCategoryPosts,
-} from '@/mockdata/header-category-posts';
-import {
-  ArrowLeft,
-  Eye,
-  EyeOff,
-  Image as ImageIcon,
-  Pencil,
-  Plus,
-  Search,
-  Trash2,
-} from 'lucide-react';
 
-function getInitialHeaderConfig() {
+function readHeaderConfig() {
   if (typeof window === 'undefined') {
     return getHeaderCategorySeed();
   }
@@ -71,157 +70,139 @@ function getInitialHeaderConfig() {
   }
 }
 
-function useHeaderConfigModule() {
-  const [items, setItems] = React.useState<HeaderCategoryItem[]>([]);
-  const [isReady, setIsReady] = React.useState(false);
+function formatDateTime(value: string) {
+  return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—';
+}
 
-  React.useEffect(() => {
-    setItems(getInitialHeaderConfig());
-    setIsReady(true);
-  }, []);
+function flattenTree(items: ReturnType<typeof buildHeaderCategoryTree>) {
+  const rows: ReturnType<typeof buildHeaderCategoryTree> = [];
 
-  const tree = React.useMemo(() => buildHeaderCategoryTree(items), [items]);
-
-  return {
-    tree,
-    isReady,
+  const walk = (nodes: ReturnType<typeof buildHeaderCategoryTree>) => {
+    nodes.forEach((item) => {
+      rows.push(item);
+      if (item.children.length > 0) {
+        walk(item.children);
+      }
+    });
   };
+
+  walk(items);
+  return rows;
 }
 
-function getInitialHeaderCategoryPosts() {
-  if (typeof window === 'undefined') {
-    return getHeaderCategoryPostSeed();
-  }
-
-  const raw = window.localStorage.getItem(HEADER_CATEGORY_POSTS_STORAGE_KEY);
-  if (!raw) return getHeaderCategoryPostSeed();
-
-  try {
-    const parsed = JSON.parse(raw) as HeaderCategoryPostItem[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return getHeaderCategoryPostSeed();
-    }
-
-    return normalizeHeaderCategoryPosts(parsed);
-  } catch {
-    return getHeaderCategoryPostSeed();
-  }
-}
-
-function persistHeaderCategoryPosts(items: HeaderCategoryPostItem[]) {
-  if (typeof window === 'undefined') return;
-
-  window.localStorage.setItem(
-    HEADER_CATEGORY_POSTS_STORAGE_KEY,
-    JSON.stringify(normalizeHeaderCategoryPosts(items)),
-  );
-}
-
-function useHeaderCategoryPostsModule() {
-  const [items, setItems] = React.useState<HeaderCategoryPostItem[]>([]);
-  const [isReady, setIsReady] = React.useState(false);
-
-  React.useEffect(() => {
-    setItems(getInitialHeaderCategoryPosts());
-    setIsReady(true);
-  }, []);
-
-  React.useEffect(() => {
-    if (!isReady) return;
-    persistHeaderCategoryPosts(items);
-  }, [isReady, items]);
-
-  const getPostsByCategory = React.useCallback(
-    (categoryId: string) => items.filter((item) => item.category_id === categoryId),
-    [items],
-  );
-
-  const removePost = React.useCallback((postId: string) => {
-    setItems((current) => current.filter((item) => item.id !== postId));
-  }, []);
-
-  return {
-    isReady,
-    getPostsByCategory,
-    removePost,
-  };
-}
-
-function getTypeLabel(type: HeaderCategoryType) {
-  switch (type) {
-    case 'page':
-      return 'Bài viết trang';
-    case 'news':
-      return 'Tin tức';
-    case 'image':
-      return 'Ảnh';
-    case 'category':
-      return 'Danh mục';
-    default:
-      return type;
-  }
+function HeaderCategoryPostsLoading() {
+  return Array.from({ length: 3 }).map((_, index) => (
+    <TableRow
+      key={`loading-${index}`}
+      className={index % 2 === 0 ? 'bg-white' : 'bg-[#063e8e]/[0.03]'}
+    >
+      <TableCell colSpan={7} className="px-4 py-4">
+        <div className="h-20 animate-pulse rounded-2xl bg-[#063e8e]/10" />
+      </TableCell>
+    </TableRow>
+  ));
 }
 
 export default function HeaderCategoryPostsPage() {
   const params = useParams();
   const router = useRouter();
   const categoryId = String(params.categoryId ?? '');
-
-  const { tree, isReady: categoryReady } = useHeaderConfigModule();
-  const { isReady: postsReady, getPostsByCategory, removePost } = useHeaderCategoryPostsModule();
-
+  const [items, setItems] = React.useState<AdminNewsItem[]>([]);
+  const [headerItems, setHeaderItems] = React.useState<HeaderCategoryItem[]>([]);
   const [search, setSearch] = React.useState('');
-  const [deleteId, setDeleteId] = React.useState<string | null>(null);
+  const [ready, setReady] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = React.useState<AdminNewsItem | null>(null);
+
+  React.useEffect(() => {
+    setItems(readAdminNewsItems());
+    setHeaderItems(readHeaderConfig());
+    setReady(true);
+  }, []);
 
   const flatCategories = React.useMemo(() => {
-    const rows: typeof tree = [];
-
-    const walk = (items: typeof tree) => {
-      items.forEach((item) => {
-        rows.push(item);
-        if (item.children.length > 0) {
-          walk(item.children);
-        }
-      });
-    };
-
-    walk(tree);
-    return rows;
-  }, [tree]);
+    return flattenTree(buildHeaderCategoryTree(headerItems));
+  }, [headerItems]);
 
   const category = React.useMemo(
     () => flatCategories.find((item) => item.id === categoryId) ?? null,
     [categoryId, flatCategories],
   );
 
-  const posts = React.useMemo(() => getPostsByCategory(categoryId), [categoryId, getPostsByCategory]);
+  const canManagePosts = Boolean(
+    category && (category.type === 'page' || category.type === 'news'),
+  );
+
+  const categoryPosts = React.useMemo(() => {
+    return items
+      .filter((item) => item.header_category_id === categoryId)
+      .sort((left, right) => {
+        const leftFeatured = left.type === 'tintuc' && left.is_featured ? 1 : 0;
+        const rightFeatured = right.type === 'tintuc' && right.is_featured ? 1 : 0;
+
+        if (leftFeatured !== rightFeatured) {
+          return rightFeatured - leftFeatured;
+        }
+
+        const leftTime = new Date(left.published_at || left.created_at).getTime();
+        const rightTime = new Date(right.published_at || right.created_at).getTime();
+
+        return rightTime - leftTime;
+      });
+  }, [categoryId, items]);
 
   const filteredPosts = React.useMemo(() => {
     const keyword = search.trim().toLowerCase();
-    if (!keyword) return posts;
+    if (!keyword) return categoryPosts;
 
-    return posts.filter(
-      (post) =>
-        post.title.toLowerCase().includes(keyword) ||
-        post.slug.toLowerCase().includes(keyword) ||
-        post.excerpt.toLowerCase().includes(keyword),
-    );
-  }, [posts, search]);
+    return categoryPosts.filter((item) => {
+      return (
+        item.title.toLowerCase().includes(keyword) ||
+        item.slug.toLowerCase().includes(keyword)
+      );
+    });
+  }, [categoryPosts, search]);
 
   const isSinglePostCategory = category?.type === 'page';
-  const canCreatePost = Boolean(
-    category && (category.type === 'page' || category.type === 'news' || category.type === 'image'),
-  );
-  const createLabel = category?.type === 'image' ? 'Thêm ảnh' : 'Thêm bài viết';
+  const createHref = `/admin/header-config/${categoryId}/posts/new`;
 
   React.useEffect(() => {
-    if (!categoryReady || !postsReady) return;
-    if (!category || !canCreatePost) {
+    if (!ready) return;
+    if (!category || !canManagePosts) {
       router.replace('/admin/header-config');
     }
-  }, [canCreatePost, category, categoryReady, postsReady, router]);
+  }, [canManagePosts, category, ready, router]);
 
-  if (!categoryReady || !postsReady || !category || !canCreatePost) {
+  const stats = React.useMemo(() => {
+    return [
+      {
+        label: 'Tổng bài viết',
+        value: categoryPosts.length,
+        icon: <FileText className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: 'Đang hiển thị',
+        value: categoryPosts.filter((item) => !item.is_hidden).length,
+        icon: <FileText className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: 'Tin nổi bật',
+        value: categoryPosts.filter((item) => item.type === 'tintuc' && item.is_featured).length,
+        icon: <Star className="h-4 w-4 text-[#063e8e]" />,
+      },
+    ];
+  }, [categoryPosts]);
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+
+    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
+    setItems(nextItems);
+    persistAdminNewsItems(nextItems);
+    toast.success('Đã xóa bài viết');
+    setDeleteTarget(null);
+  };
+
+  if (!ready || !category || !canManagePosts) {
     return (
       <div className="rounded-2xl border border-[#063e8e]/15 bg-white p-8 text-center text-sm text-gray-700 shadow-sm">
         Đang tải dữ liệu danh mục...
@@ -230,201 +211,205 @@ export default function HeaderCategoryPostsPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-2xl border border-[#063e8e]/15 bg-white p-6 shadow-sm lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-3">
-          <Button
-            variant="ghost"
-            asChild
-            className="h-9 w-fit px-3 text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-          >
-            <Link href="/admin/header-config">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Quay lại cấu hình danh mục
-            </Link>
-          </Button>
+    <div className="space-y-8">
+      <div className="flex items-center gap-3">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          asChild
+          className="border-[#063e8e]/15 bg-white text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
+        >
+          <Link href="/admin/header-config">
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+        </Button>
 
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="text-2xl font-semibold text-[#063e8e]">{category.name}</h2>
-              <Badge variant="outline" className="border-[#063e8e]/20 text-[#063e8e]">
-                {getTypeLabel(category.type)}
-              </Badge>
-            </div>
-            <p className="max-w-3xl text-sm text-gray-700">
-              {isSinglePostCategory
-                ? 'Danh mục dạng bài viết trang chỉ cho phép gắn đúng 1 bài viết. Nếu cần thay nội dung, hãy chỉnh sửa bài hiện có hoặc xóa rồi tạo lại.'
-                : category.type === 'image'
-                  ? 'Danh mục dạng ảnh cho phép thêm nhiều nội dung và quản lý tập trung theo đúng cấu trúc header.'
-                  : 'Danh mục dạng tin tức cho phép thêm nhiều bài viết và quản lý tập trung theo đúng cấu trúc header.'}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/5 px-4 py-3 text-sm text-gray-700">
-            <span className="font-semibold text-[#063e8e]">{posts.length}</span> bài viết
-          </div>
-          {canCreatePost && (!isSinglePostCategory || posts.length < 1) ? (
-            <Button asChild className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90">
-              <Link href={`/admin/header-config/${category.id}/posts/new`}>
-                <Plus className="mr-2 h-4 w-4" />
-                {createLabel}
-              </Link>
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              disabled
-              className="bg-[#063e8e]/30 text-white hover:bg-[#063e8e]/30"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              {createLabel}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-700" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Tìm kiếm bài viết..."
-            className="border-[#063e8e]/15 bg-white pl-9 text-gray-700 placeholder:text-gray-700"
-          />
-        </div>
-
-        {isSinglePostCategory ? (
-          <p className="text-sm text-gray-700">Loại danh mục này chỉ giữ 1 bài viết hiển thị.</p>
-        ) : (
+        <div>
+          <h1 className="text-xl font-semibold text-[#063e8e]">
+            Quản lý bài viết: {category.name}
+          </h1>
           <p className="text-sm text-gray-700">
-            {category.type === 'image'
-              ? 'Bạn có thể thêm nhiều mục nội dung ảnh cho danh mục này.'
-              : 'Bạn có thể thêm nhiều bài viết cho danh mục này.'}
+            {isSinglePostCategory
+              ? 'Danh mục bài viết trang chỉ quản lý một bài viết duy nhất thuộc danh mục hiển thị này.'
+              : 'Quản lý toàn bộ bài viết thuộc danh mục hiển thị tương ứng trong quản lý bài viết.'}
           </p>
-        )}
+        </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-[#063e8e]/15 bg-white shadow-sm">
-        <Table>
-          <TableHeader>
-            <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
-              <TableHead className="py-4 text-center text-white">Tiêu đề</TableHead>
-              <TableHead className="w-[180px] py-4 text-center text-white">Slug</TableHead>
-              <TableHead className="w-[160px] py-4 text-center text-white">Ngày đăng</TableHead>
-              <TableHead className="w-[130px] py-4 text-center text-white">Hiển thị</TableHead>
-              <TableHead className="w-[160px] py-4 text-center text-white">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPosts.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-12 text-center text-sm text-gray-700">
-                  {posts.length === 0
-                    ? 'Danh mục này chưa có bài viết nào.'
-                    : 'Không tìm thấy bài viết phù hợp.'}
-                </TableCell>
+      {category.type === 'news' ? <AdminStatsGrid items={stats} /> : null}
+
+      <AdminTableLayout
+        searchValue={search}
+        searchPlaceholder="Tìm kiếm bài viết thuộc danh mục..."
+        actionLabel={isSinglePostCategory ? 'Thêm bài viết trang' : 'Thêm bài viết'}
+        actionIcon={<Plus className="mr-2 h-4 w-4" />}
+        actionDisabled={isSinglePostCategory && categoryPosts.length >= 1}
+        onSearchChange={setSearch}
+        onActionClick={() => router.push(createHref)}
+        filters={
+          <div className="rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.03] px-4 py-2 text-sm text-gray-700">
+            <span className="font-semibold text-[#063e8e]">{categoryPosts.length}</span>{' '}
+            bài viết thuộc danh mục này
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <Table className="min-w-[980px] table-fixed">
+            <TableHeader>
+              <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
+                <TableHead className="w-[300px] py-4 text-center text-white">
+                  Tiêu đề
+                </TableHead>
+                <TableHead className="w-[150px] py-4 text-center text-white">
+                  Hình ảnh đại diện
+                </TableHead>
+                <TableHead className="w-[160px] py-4 text-center text-white">
+                  Loại bài viết
+                </TableHead>
+                <TableHead className="w-[170px] py-4 text-center text-white">
+                  Ngày xuất bản
+                </TableHead>
+                <TableHead className="w-[170px] py-4 text-center text-white">
+                  Ngày hết hạn
+                </TableHead>
+                <TableHead className="w-[120px] py-4 text-center text-white">
+                  Hiển thị
+                </TableHead>
+                <TableHead className="w-[100px] py-4 text-center text-white">
+                  Thao tác
+                </TableHead>
               </TableRow>
-            ) : (
-              filteredPosts.map((post, index) => (
-                <TableRow
-                  key={post.id}
-                  className={index % 2 === 0 ? 'bg-white' : 'bg-[#063e8e]/[0.03]'}
-                >
-                  <TableCell className="py-4">
-                    <div className="flex items-start gap-4">
-                      <div className="flex h-14 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-[#063e8e]/10 bg-[#063e8e]/5">
-                        {post.thumbnail ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={post.thumbnail}
-                            alt={post.title}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <ImageIcon className="h-5 w-5 text-[#063e8e]" />
-                        )}
-                      </div>
-                      <div className="min-w-0 space-y-1">
-                        <p className="truncate font-medium text-black">{post.title}</p>
-                        <p className="line-clamp-2 text-sm text-gray-700">{post.excerpt || '-'}</p>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-center text-sm text-gray-700">{post.slug}</TableCell>
-                  <TableCell className="text-center text-sm text-gray-700">
-                    {post.published_at ? dayjs(post.published_at).format('DD/MM/YYYY') : '-'}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {post.is_active ? (
-                      <span className="inline-flex items-center gap-2 text-sm font-medium text-[#063e8e]">
-                        <Eye className="h-4 w-4" />
-                        Hiển thị
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
-                        <EyeOff className="h-4 w-4" />
-                        Ẩn
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        asChild
-                        className="text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-                      >
-                        <Link href={`/admin/header-config/${category.id}/posts/${post.id}`}>
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-gray-700 hover:bg-red-50 hover:text-red-600"
-                        onClick={() => setDeleteId(post.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+            </TableHeader>
+            <TableBody>
+              {!ready ? (
+                <HeaderCategoryPostsLoading />
+              ) : filteredPosts.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12 text-center text-sm text-gray-700">
+                    {categoryPosts.length === 0
+                      ? 'Danh mục này chưa có bài viết nào.'
+                      : 'Không có bài viết nào phù hợp.'}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ) : (
+                filteredPosts.map((item, index) => (
+                  <TableRow
+                    key={item.id}
+                    className={index % 2 === 0 ? 'bg-white' : 'bg-[#063e8e]/[0.03]'}
+                  >
+                    <TableCell className="py-4">
+                      <div className="space-y-2">
+                        <p className="line-clamp-2 text-sm font-semibold text-black">
+                          {item.title}
+                        </p>
+                        {item.type === 'tintuc' && item.is_featured ? (
+                          <span className="inline-flex items-center rounded-full border border-[#063e8e]/20 bg-[#063e8e]/10 px-2.5 py-1 text-xs font-medium text-[#063e8e]">
+                            <Star className="mr-1.5 h-3.5 w-3.5 fill-current" />
+                            Tin nổi bật
+                          </span>
+                        ) : null}
+                      </div>
+                    </TableCell>
 
-      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <AlertDialogContent className="border-[#063e8e]/15 bg-white">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-[#063e8e]">Xóa bài viết</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-700">
-              Bài viết này sẽ bị xóa khỏi danh mục hiện tại.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="border-[#063e8e]/15 bg-white text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]">
-              Hủy
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 text-white hover:bg-red-700"
-              onClick={() => {
-                if (!deleteId) return;
-                removePost(deleteId);
-                toast.success('Đã xóa bài viết');
-                setDeleteId(null);
-              }}
-            >
-              Xóa
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+                    <TableCell className="text-center">
+                      <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.03]">
+                        {item.thumbnail ? (
+                          <SafeNextImage
+                            src={item.thumbnail.url}
+                            alt={item.thumbnail.alt || item.thumbnail.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full items-center justify-center text-xs text-gray-700">
+                            Không có ảnh
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
+                        {ADMIN_NEWS_TYPE_LABELS[item.type]}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell className="text-center text-sm text-gray-700">
+                      {formatDateTime(item.published_at)}
+                    </TableCell>
+
+                    <TableCell className="text-center text-sm text-gray-700">
+                      {formatDateTime(item.expired_at)}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      {item.is_hidden ? (
+                        <span className="inline-flex items-center rounded-full border border-gray-300 px-2.5 py-1 text-sm text-gray-700">
+                          <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                          Ẩn
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center rounded-full border border-[#063e8e]/20 bg-[#063e8e]/10 px-2.5 py-1 text-sm text-[#063e8e]">
+                          Hiển thị
+                        </span>
+                      )}
+                    </TableCell>
+
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            asChild
+                            className="text-gray-700 focus:text-[#063e8e]"
+                          >
+                            <Link href={`/admin/header-config/${categoryId}/posts/${item.id}`}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Chỉnh sửa
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-gray-700 focus:text-[#063e8e]"
+                            onClick={() => setDeleteTarget(item)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </AdminTableLayout>
+
+      <AdminDeleteDialog
+        open={!!deleteTarget}
+        title="Xóa bài viết"
+        description={
+          deleteTarget ? (
+            <>
+              Bài viết <strong>{deleteTarget.title}</strong> sẽ bị xóa khỏi dữ liệu quản trị.
+            </>
+          ) : null
+        }
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

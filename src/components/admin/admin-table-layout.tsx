@@ -12,6 +12,7 @@ interface AdminTableLayoutProps {
   actionIcon?: React.ReactNode;
   actionDisabled?: boolean;
   children: React.ReactNode;
+  filters?: React.ReactNode;
   onSearchChange: (value: string) => void;
   onActionClick?: () => void;
 }
@@ -23,18 +24,22 @@ export function AdminTableLayout({
   actionIcon,
   actionDisabled = false,
   children,
+  filters,
   onSearchChange,
   onActionClick,
 }: AdminTableLayoutProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Input
-          value={searchValue}
-          placeholder={searchPlaceholder}
-          onChange={(event) => onSearchChange(event.target.value)}
-          className="max-w-sm border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700"
-        />
+        <div className="flex flex-1 flex-col gap-3 lg:flex-row lg:items-center">
+          <Input
+            value={searchValue}
+            placeholder={searchPlaceholder}
+            onChange={(event) => onSearchChange(event.target.value)}
+            className="max-w-sm border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700"
+          />
+          {filters}
+        </div>
 
         {actionLabel ? (
           <Button

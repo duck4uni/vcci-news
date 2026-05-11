@@ -1,14 +1,39 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import * as React from "react";
+import dayjs from "dayjs";
 import {
-  useGetNewsAdmin,
-  useDeleteNewsId,
-  getGetNewsAdminQueryKey,
-} from '@/api/endpoints/news';
-import { GetNewsResponseType } from '@/api/types/news';
-import { useQueryClient } from '@tanstack/react-query';
+  Edit,
+  EyeOff,
+  MoreHorizontal,
+  Plus,
+  Star,
+  Tag,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
+import { AdminTableLayout } from "@/components/admin/admin-table-layout";
+import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -16,177 +41,399 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+} from "@/components/ui/table";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Eye, EyeOff, Pencil, Plus, Search, Trash2 } from 'lucide-react';
-import dayjs from 'dayjs';
-import { Spinner } from '@/components/ui';
+  ADMIN_NEWS_TYPE_LABELS,
+  ADMIN_NEWS_TYPE_OPTIONS,
+  type AdminNewsItem,
+  persistAdminNewsItems,
+  readAdminNewsItems,
+} from "@/mockdata/admin-news";
+import {
+  type HeaderCategoryItem,
+  getHeaderCategorySeed,
+  HEADER_CONFIG_STORAGE_KEY,
+  normalizeHeaderCategories,
+} from "@/mockdata/header-config";
 
-function DeleteConfirm({ item, onClose }: { item: { id: string; title: string }; onClose: () => void }) {
-  const qc = useQueryClient();
-  const { mutate: del, isPending } = useDeleteNewsId({
-    mutation: {
-      onSuccess: () => {
-        qc.invalidateQueries({ queryKey: getGetNewsAdminQueryKey() });
-        onClose();
-      },
-    },
-  });
+const selectTriggerClassName =
+  "w-full border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[180px]";
 
-  return (
-    <AlertDialog open onOpenChange={() => onClose()}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Xoá bài viết?</AlertDialogTitle>
-          <AlertDialogDescription>
-            Bài viết <strong>"{item.title}"</strong> sẽ bị xoá vĩnh viễn.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Huỷ</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-red-600 hover:bg-red-700"
-            onClick={() => del({ id: String(item.id) })}
-            disabled={isPending}
-          >
-            {isPending ? 'Đang xoá...' : 'Xoá'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
+const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
+
+const selectItemClassName =
+  "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
+
+function readHeaderConfig() {
+  if (typeof window === "undefined") {
+    return getHeaderCategorySeed();
+  }
+
+  const raw = window.localStorage.getItem(HEADER_CONFIG_STORAGE_KEY);
+  if (!raw) return getHeaderCategorySeed();
+
+  try {
+    const parsed = JSON.parse(raw) as HeaderCategoryItem[];
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      return getHeaderCategorySeed();
+    }
+
+    return normalizeHeaderCategories(parsed);
+  } catch {
+    return getHeaderCategorySeed();
+  }
 }
 
-export default function NewsPage() {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const [deleteItem, setDeleteItem] = useState<{ id: string; title: string } | null>(null);
-  const pageSize = 20;
+function formatDateTime(value: string) {
+  return value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "—";
+}
 
-  const { data, isLoading } = useGetNewsAdmin<GetNewsResponseType>({
-    currentPage: String(page),
-    pageSize: String(pageSize),
-    filters: search ? `title@=${search}` : undefined,
-  });
+function stripHtml(html: string) {
+  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+}
 
-  const rows = data?.responseData?.rows ?? [];
-  const totalPages = data?.responseData?.totalPages ?? 1;
+function AdminNewsTableLoading() {
+  return Array.from({ length: 3 }).map((_, index) => (
+    <TableRow
+      key={`loading-${index}`}
+      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/[0.03]"}
+    >
+      <TableCell colSpan={8} className="px-4 py-4">
+        <div className="h-20 animate-pulse rounded-2xl bg-[#063e8e]/10" />
+      </TableCell>
+    </TableRow>
+  ));
+}
+
+export default function AdminNewsPage() {
+  const router = useRouter();
+  const [items, setItems] = React.useState<AdminNewsItem[]>([]);
+  const [headerItems, setHeaderItems] = React.useState<HeaderCategoryItem[]>([]);
+  const [search, setSearch] = React.useState("");
+  const [typeFilter, setTypeFilter] = React.useState("all");
+  const [categoryFilter, setCategoryFilter] = React.useState("all");
+  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [deleteTarget, setDeleteTarget] = React.useState<AdminNewsItem | null>(null);
+  const [ready, setReady] = React.useState(false);
+
+  React.useEffect(() => {
+    setItems(readAdminNewsItems());
+    setHeaderItems(readHeaderConfig());
+    setReady(true);
+  }, []);
+
+  const categoryOptions = React.useMemo(() => {
+    return headerItems.filter((item) => item.type === "news" || item.type === "page");
+  }, [headerItems]);
+
+  const filteredItems = React.useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return items
+      .filter((item) => {
+        const categoryName =
+          headerItems.find((category) => category.id === item.header_category_id)?.name ?? "";
+
+        const matchesKeyword =
+          !keyword ||
+          item.title.toLowerCase().includes(keyword) ||
+          item.slug.toLowerCase().includes(keyword) ||
+          stripHtml(item.summary).toLowerCase().includes(keyword) ||
+          categoryName.toLowerCase().includes(keyword);
+
+        const matchesType = typeFilter === "all" || item.type === typeFilter;
+        const matchesCategory =
+          categoryFilter === "all" || item.header_category_id === categoryFilter;
+        const matchesStatus =
+          statusFilter === "all" ||
+          (statusFilter === "visible" && !item.is_hidden) ||
+          (statusFilter === "hidden" && item.is_hidden);
+
+        return matchesKeyword && matchesType && matchesCategory && matchesStatus;
+      })
+      .sort((left, right) => {
+        const leftFeatured = left.type === "tintuc" && left.is_featured ? 1 : 0;
+        const rightFeatured = right.type === "tintuc" && right.is_featured ? 1 : 0;
+
+        if (leftFeatured !== rightFeatured) {
+          return rightFeatured - leftFeatured;
+        }
+
+        const leftTime = new Date(left.published_at || left.created_at).getTime();
+        const rightTime = new Date(right.published_at || right.created_at).getTime();
+
+        return rightTime - leftTime;
+      });
+  }, [categoryFilter, headerItems, items, search, statusFilter, typeFilter]);
+
+  const stats = React.useMemo(() => {
+    return [
+      {
+        label: "Tổng bài viết",
+        value: items.length,
+        icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: "Đang hiển thị",
+        value: items.filter((item) => !item.is_hidden).length,
+        icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: "Tin nổi bật",
+        value: items.filter((item) => item.type === "tintuc" && item.is_featured).length,
+        icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
+      },
+    ];
+  }, [items]);
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+
+    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
+    setItems(nextItems);
+    persistAdminNewsItems(nextItems);
+    toast.success("Đã xóa bài viết");
+    setDeleteTarget(null);
+  };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Danh sách bài viết</h2>
-          <p className="text-sm text-gray-500 mt-1">Tất cả bài viết trong hệ thống.</p>
-        </div>
-        <Button asChild>
-          <Link href="/admin/news/new">
-            <Plus size={16} className="mr-1" /> Thêm bài viết
-          </Link>
-        </Button>
-      </div>
+    <div className="space-y-8">
+      <AdminStatsGrid items={stats} />
 
-      <div className="relative w-72 mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <Input
-          className="pl-9"
-          placeholder="Tìm kiếm tiêu đề..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-        />
-      </div>
+      <AdminTableLayout
+        searchValue={search}
+        searchPlaceholder="Tìm kiếm bài viết..."
+        actionLabel="Thêm bài viết"
+        actionIcon={<Plus className="mr-2 h-4 w-4" />}
+        onSearchChange={setSearch}
+        onActionClick={() => router.push("/admin/news/new")}
+        filters={
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className={selectTriggerClassName}>
+                <SelectValue placeholder="Loại bài viết" />
+              </SelectTrigger>
+              <SelectContent className={selectContentClassName}>
+                <SelectItem value="all" className={selectItemClassName}>
+                  Tất cả loại bài viết
+                </SelectItem>
+                {ADMIN_NEWS_TYPE_OPTIONS.map((option) => (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    className={selectItemClassName}
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">#</TableHead>
-              <TableHead>Tiêu đề</TableHead>
-              <TableHead>Thể loại</TableHead>
-              <TableHead>Danh mục</TableHead>
-              <TableHead className="w-16 text-center">Hiển thị</TableHead>
-              <TableHead>Ngày đăng</TableHead>
-              <TableHead className="w-24 text-right">Thao tác</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center py-10"><Spinner /></TableCell>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className={selectTriggerClassName}>
+                <SelectValue placeholder="Danh mục hiển thị" />
+              </SelectTrigger>
+              <SelectContent className={selectContentClassName}>
+                <SelectItem value="all" className={selectItemClassName}>
+                  Tất cả danh mục
+                </SelectItem>
+                {categoryOptions.map((category) => (
+                  <SelectItem
+                    key={category.id}
+                    value={category.id}
+                    className={selectItemClassName}
+                  >
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className={selectTriggerClassName}>
+                <SelectValue placeholder="Trạng thái" />
+              </SelectTrigger>
+              <SelectContent className={selectContentClassName}>
+                <SelectItem value="all" className={selectItemClassName}>
+                  Tất cả trạng thái
+                </SelectItem>
+                <SelectItem value="visible" className={selectItemClassName}>
+                  Đang hiển thị
+                </SelectItem>
+                <SelectItem value="hidden" className={selectItemClassName}>
+                  Đang ẩn
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <Table className="min-w-[1250px] table-fixed">
+            <TableHeader>
+              <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
+                <TableHead className="w-[260px] py-4 text-center text-white">
+                  Tiêu đề
+                </TableHead>
+                <TableHead className="w-[140px] py-4 text-center text-white">
+                  Hình ảnh đại diện
+                </TableHead>
+                <TableHead className="w-40 py-4 text-center text-white">
+                  Loại bài viết
+                </TableHead>
+                <TableHead className="w-[190px] py-4 text-center text-white">
+                  Danh mục hiển thị
+                </TableHead>
+                <TableHead className="w-[170px] py-4 text-center text-white">
+                  Ngày xuất bản
+                </TableHead>
+                <TableHead className="w-[170px] py-4 text-center text-white">
+                  Ngày hết hạn
+                </TableHead>
+                <TableHead className="w-[120px] py-4 text-center text-white">
+                  Hiển thị
+                </TableHead>
+                <TableHead className="w-[100px] py-4 text-center text-white">
+                  Thao tác
+                </TableHead>
               </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-gray-400 py-10 text-sm">Chưa có bài viết nào.</TableCell>
-              </TableRow>
-            ) : rows.map((news: Record<string, any>, idx: number) => (
-              <TableRow key={news.id}>
-                <TableCell className="text-gray-400 text-sm">{(page - 1) * pageSize + idx + 1}</TableCell>
-                <TableCell className="max-w-xs">
-                  <p className="font-medium text-sm truncate">{news.title}</p>
-                  {news.external_link && (
-                    <p className="text-xs text-blue-400 truncate">{news.external_link}</p>
-                  )}
-                </TableCell>
-                <TableCell>
-                  {news.category?.name ? (
-                    <Badge variant="secondary" className="text-xs">{news.category.name}</Badge>
-                  ) : <span className="text-gray-300 text-xs">—</span>}
-                </TableCell>
-                <TableCell className="text-sm text-gray-500 max-w-[120px] truncate">
-                  {news.pageConfig?.name || '—'}
-                </TableCell>
-                <TableCell className="text-center">
-                  {news.is_active ? (
-                    <Eye size={16} className="inline text-green-500" />
-                  ) : (
-                    <EyeOff size={16} className="inline text-gray-300" />
-                  )}
-                </TableCell>
-                <TableCell className="text-gray-400 text-sm">
-                  {news.release_at ? dayjs(news.release_at).format('DD/MM/YYYY') : '—'}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-1">
-                    <Button size="icon" variant="ghost" asChild>
-                      <Link href={`/admin/news/${news.id}`}><Pencil size={15} /></Link>
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="text-red-500 hover:text-red-600"
-                      onClick={() => setDeleteItem({ id: String(news.id), title: String(news.title) })}
+            </TableHeader>
+
+            <TableBody>
+              {!ready ? (
+                <AdminNewsTableLoading />
+              ) : filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={8} className="py-12 text-center text-sm text-gray-700">
+                    Không có bài viết nào phù hợp.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredItems.map((item, index) => {
+                  const category = headerItems.find((entry) => entry.id === item.header_category_id);
+
+                  return (
+                    <TableRow
+                      key={item.id}
+                      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
                     >
-                      <Trash2 size={15} />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+                      <TableCell className="py-4">
+                        <div className="space-y-2">
+                          <p className="line-clamp-2 text-sm font-semibold text-black">
+                            {item.title}
+                          </p>
+                          {item.type === "tintuc" && item.is_featured ? (
+                            <span className="inline-flex items-center rounded-full border border-[#063e8e]/20 bg-[#063e8e]/10 px-2.5 py-1 text-xs font-medium text-[#063e8e]">
+                              <Star className="mr-1.5 h-3.5 w-3.5 fill-current" />
+                              Tin nổi bật
+                            </span>
+                          ) : null}
+                        </div>
+                      </TableCell>
 
-      {totalPages > 1 && (
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</Button>
-          <span className="text-sm text-gray-500 self-center">{page} / {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Sau</Button>
+                      <TableCell className="text-center">
+                        <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/3">
+                          {item.thumbnail ? (
+                            <SafeNextImage
+                              src={item.thumbnail.url}
+                              alt={item.thumbnail.alt || item.thumbnail.name}
+                              fill
+                              className="object-cover"
+                            />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-xs text-gray-700">
+                              Không có ảnh
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
+                          {ADMIN_NEWS_TYPE_LABELS[item.type]}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="text-center text-sm text-gray-700">
+                        {category?.name || "—"}
+                      </TableCell>
+
+                      <TableCell className="text-center text-sm text-gray-700">
+                        {formatDateTime(item.published_at)}
+                      </TableCell>
+
+                      <TableCell className="text-center text-sm text-gray-700">
+                        {formatDateTime(item.expired_at)}
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        {item.is_hidden ? (
+                          <span className="inline-flex items-center rounded-full border border-gray-300 px-2.5 py-1 text-sm text-gray-700">
+                            <EyeOff className="mr-1.5 h-3.5 w-3.5" />
+                            Ẩn
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full border border-[#063e8e]/20 bg-[#063e8e]/10 px-2.5 py-1 text-sm text-[#063e8e]">
+                            Hiển thị
+                          </span>
+                        )}
+                      </TableCell>
+
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              asChild
+                              className="text-gray-700 focus:text-[#063e8e]"
+                            >
+                              <Link href={`/admin/news/${item.id}`}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Chỉnh sửa
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-gray-700 focus:text-[#063e8e]"
+                              onClick={() => setDeleteTarget(item)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Xóa
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
+            </TableBody>
+          </Table>
         </div>
-      )}
+      </AdminTableLayout>
 
-      {deleteItem && <DeleteConfirm item={deleteItem} onClose={() => setDeleteItem(null)} />}
+      <AdminDeleteDialog
+        open={!!deleteTarget}
+        title="Xóa bài viết"
+        description={
+          deleteTarget ? (
+            <>
+              Bài viết <strong>{deleteTarget.title}</strong> sẽ bị xóa khỏi dữ liệu quản trị.
+            </>
+          ) : null
+        }
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

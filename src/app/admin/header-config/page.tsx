@@ -29,7 +29,7 @@ const EMPTY_HEADER_CATEGORY_FORM: HeaderCategoryFormValues = {
   parent_id: '',
   type: 'page',
   description: '',
-  category_ids: [],
+  tagsearch: '',
 };
 
 function toFormValues(item?: HeaderCategoryItem | null): HeaderCategoryFormValues {
@@ -43,8 +43,24 @@ function toFormValues(item?: HeaderCategoryItem | null): HeaderCategoryFormValue
     parent_id: item.parent_id ?? '',
     type: item.type,
     description: item.description ?? '',
-    category_ids: item.category_ids ?? [],
+    tagsearch: (item.tagsearch_values ?? []).join(', '),
   };
+}
+
+function parseTagsearch(value: string) {
+  const seen = new Set<string>();
+
+  return value
+    .split(',')
+    .map((item) => item.trim())
+    .filter((item) => {
+      if (!item) return false;
+
+      const key = item.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 function getInitialHeaderConfig() {
@@ -126,7 +142,8 @@ function useHeaderConfigModule() {
       is_article: values.type === 'news',
       parent_id: values.parent_id || null,
       level: 1,
-      category_ids: values.type === 'news' ? values.category_ids : [],
+      category_ids: [],
+      tagsearch_values: values.type === 'news' ? parseTagsearch(values.tagsearch) : [],
       description: values.description.trim(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -150,7 +167,8 @@ function useHeaderConfigModule() {
         type: values.type,
         is_article: values.type === 'news',
         parent_id: values.parent_id || null,
-        category_ids: values.type === 'news' ? values.category_ids : [],
+        category_ids: [],
+        tagsearch_values: values.type === 'news' ? parseTagsearch(values.tagsearch) : [],
         description: values.description.trim(),
         updated_at: new Date().toISOString(),
       });

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,9 +21,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  headerArticleCategoryOptions,
-  HeaderCategoryTreeItem,
-  HeaderCategoryType,
+  type HeaderCategoryTreeItem,
+  type HeaderCategoryType,
   toSlug,
 } from "@/mockdata/header-config";
 
@@ -38,7 +36,7 @@ export interface HeaderCategoryFormValues {
   parent_id: string;
   type: HeaderCategoryType;
   description: string;
-  category_ids: string[];
+  tagsearch: string;
 }
 
 interface HeaderCategoryFormDialogProps {
@@ -56,7 +54,6 @@ const TYPE_OPTIONS: Array<{ value: HeaderCategoryType; label: string }> = [
   { value: "category", label: "Danh mục" },
   { value: "page", label: "Bài viết trang" },
   { value: "news", label: "Tin tức" },
-  { value: "image", label: "Ảnh" },
 ];
 
 const fieldClassName =
@@ -67,7 +64,8 @@ const selectTriggerClassName =
 
 const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
-const selectItemClassName = "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
+const selectItemClassName =
+  "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
 
 export function HeaderCategoryFormDialog({
   mode,
@@ -99,6 +97,11 @@ export function HeaderCategoryFormDialog({
     }));
   };
 
+  const searchTags = values.tagsearch
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-[#063e8e]/15 bg-white text-gray-700 shadow-xl">
@@ -111,7 +114,7 @@ export function HeaderCategoryFormDialog({
 
         <div className="grid grid-cols-1 gap-4 py-2 md:grid-cols-2">
           <div>
-            <Label className="mb-1.5 block text-gray-700">Tên danh mục *</Label>
+            <Label className="mb-1.5 block text-gray-700">Tên danh mục <span className="text-red-600">*</span></Label>
             <Input
               value={values.name}
               onChange={(event) => handleNameChange(event.target.value)}
@@ -121,7 +124,7 @@ export function HeaderCategoryFormDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-gray-700">Thể loại *</Label>
+            <Label className="mb-1.5 block text-gray-700">Thể loại <span className="text-red-600">*</span></Label>
             <Select
               value={values.type}
               onValueChange={(value) =>
@@ -182,7 +185,7 @@ export function HeaderCategoryFormDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-gray-700">Thứ tự</Label>
+            <Label className="mb-1.5 block text-gray-700">Thứ tự <span className="text-red-600">*</span></Label>
             <Input
               type="number"
               min="0"
@@ -194,7 +197,7 @@ export function HeaderCategoryFormDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-gray-700">Slug</Label>
+            <Label className="mb-1.5 block text-gray-700">Slug <span className="text-red-600">*</span></Label>
             <Input
               value={values.slug}
               onChange={(event) => setField("slug", event.target.value)}
@@ -214,33 +217,28 @@ export function HeaderCategoryFormDialog({
             />
           </div>
 
-          {values.type === "news" ? (
+          {mode === "edit" && values.type === "news" ? (
             <div className="md:col-span-2">
-              <Label className="mb-1.5 block text-gray-700">Thể loại bài viết</Label>
-              <div className="grid grid-cols-1 gap-2 rounded-lg border border-[#063e8e]/15 p-4 md:grid-cols-2">
-                {headerArticleCategoryOptions.map((category) => (
-                  <label
-                    key={category.id}
-                    className="flex items-center gap-3 rounded-md border border-[#063e8e]/10 px-3 py-2"
-                  >
-                    <Checkbox
-                      checked={values.category_ids.includes(category.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setField("category_ids", [...values.category_ids, category.id]);
-                          return;
-                        }
-
-                        setField(
-                          "category_ids",
-                          values.category_ids.filter((id) => id !== category.id),
-                        );
-                      }}
-                    />
-                    <span className="text-sm text-gray-700">{category.name}</span>
-                  </label>
-                ))}
-              </div>
+              <Label className="mb-1.5 block text-gray-700">Tag tìm kiếm</Label>
+              <Textarea
+                rows={3}
+                value={values.tagsearch}
+                onChange={(event) => setField("tagsearch", event.target.value)}
+                placeholder="Nhập tag tìm kiếm, ngăn cách bằng dấu phẩy"
+                className={fieldClassName}
+              />
+              {searchTags.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {searchTags.map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center rounded-full border border-[#063e8e]/15 bg-[#063e8e]/[0.04] px-3 py-1 text-sm text-gray-700"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
@@ -253,7 +251,10 @@ export function HeaderCategoryFormDialog({
           >
             Hủy
           </Button>
-          <Button className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90" onClick={onSubmit}>
+          <Button
+            className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
+            onClick={onSubmit}
+          >
             {mode === "create" ? "Lưu danh mục" : "Cập nhật danh mục"}
           </Button>
         </DialogFooter>

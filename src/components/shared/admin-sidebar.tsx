@@ -28,17 +28,17 @@ type NavItem = {
 };
 
 const navigation: NavItem[] = [
-  { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart3 },
+  // { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart3 },
   { name: 'Cấu hình danh mục', href: '/admin/header-config', icon: Layers },
   { name: 'Quản lý bài viết', href: '/admin/news', icon: Newspaper },
-  { name: 'Quản lý hội viên', href: '/admin/members', icon: Users },
-  { name: 'Quản lý đối tác', href: '/admin/partners', icon: Building2 },
-  { name: 'Email thông tin', href: '/admin/emails', icon: Mail },
-  {
-    name: 'Thiết lập',
-    icon: Settings,
-    children: [{ name: 'Thông tin website', href: '/admin/website-config' }],
-  },
+  // { name: 'Quản lý hội viên', href: '/admin/members', icon: Users },
+  // { name: 'Quản lý đối tác', href: '/admin/partners', icon: Building2 },
+  // { name: 'Email thông tin', href: '/admin/emails', icon: Mail },
+  // {
+  //   name: 'Thiết lập',
+  //   icon: Settings,
+  //   children: [{ name: 'Thông tin website', href: '/admin/website-config' }],
+  // },
 ];
 
 export function AdminSidebar() {
