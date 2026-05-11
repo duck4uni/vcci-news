@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { useMemo, useRef } from "react";
 import type { JoditEditorProps } from "jodit-react";
 
-const JoditEditor = dynamic(() => import("jodit-react"), {
+const JoditEditor = dynamic(() => import("jodit-react").then((mod) => mod.default), {
   ssr: false,
   loading: () => (
     <div className="flex min-h-[260px] items-center justify-center rounded-2xl border border-[#063e8e]/15 bg-white text-sm text-gray-500">

@@ -158,7 +158,7 @@ export function HeaderCategoryTable({
             </TableRow>
           ) : (
             rows.map((item, index) => {
-              const hasChildren = rows.some((entry) => entry.parentId === item.id);
+              const hasChildren = item.children.length > 0;
               const isExpanded = expanded[item.id] ?? true;
               const canCreateChild = !item.parent_id && item.type === "category";
               const canManagePosts = item.type === "page" || item.type === "news";

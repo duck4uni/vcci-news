@@ -1,11 +1,29 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import * as React from "react";
+import { Edit, MoreHorizontal, Plus, Trash2, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
+import { AdminTableLayout } from "@/components/admin/admin-table-layout";
+import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
-  useGetOrganizations,
-  getGetOrganizationsQueryKey,
-} from '@/api/endpoints/organizations';
-import { useQueryClient } from '@tanstack/react-query';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -13,134 +31,283 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Search, ExternalLink } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import dayjs from 'dayjs';
+} from "@/components/ui/table";
+import {
+  type MemberField,
+  type MemberItem,
+  type MemberRegion,
+  persistMembers,
+  readMemberFields,
+  readMemberRegions,
+  readMembers,
+} from "@/mockdata/members";
 
-export default function MembersPage() {
-  const [search, setSearch] = useState('');
-  const [page, setPage] = useState(1);
-  const pageSize = 20;
+const selectTriggerClassName =
+  "w-full border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[200px]";
 
-  const { data, isLoading } = useGetOrganizations({
-    currentPage: String(page),
-    pageSize: String(pageSize),
-    filters: search ? `name@=${search}` : undefined,
-  });
+const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
-  const rows = (data as any)?.responseData?.rows ?? (data as any)?.data?.rows ?? [];
-  const total = (data as any)?.responseData?.count ?? (data as any)?.data?.count ?? 0;
-  const totalPages = Math.ceil(total / pageSize);
+const selectItemClassName = "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
+
+function MemberTableLoading() {
+  return Array.from({ length: 3 }).map((_, index) => (
+    <TableRow
+      key={`loading-${index}`}
+      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
+    >
+      <TableCell colSpan={7} className="px-4 py-4">
+        <div className="h-16 animate-pulse rounded-2xl bg-[#063e8e]/10" />
+      </TableCell>
+    </TableRow>
+  ));
+}
+
+export default function AdminMembersPage() {
+  const router = useRouter();
+  const [items, setItems] = React.useState<MemberItem[]>([]);
+  const [fields, setFields] = React.useState<MemberField[]>([]);
+  const [regions, setRegions] = React.useState<MemberRegion[]>([]);
+  const [search, setSearch] = React.useState("");
+  const [fieldFilter, setFieldFilter] = React.useState("all");
+  const [regionFilter, setRegionFilter] = React.useState("all");
+  const [deleteTarget, setDeleteTarget] = React.useState<MemberItem | null>(null);
+  const [ready, setReady] = React.useState(false);
+
+  React.useEffect(() => {
+    setItems(readMembers());
+    setFields(readMemberFields());
+    setRegions(readMemberRegions());
+    setReady(true);
+  }, []);
+
+  const filtered = React.useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+
+    return items.filter((item) => {
+      const matchesKeyword =
+        !keyword ||
+        item.name.toLowerCase().includes(keyword) ||
+        item.email.toLowerCase().includes(keyword) ||
+        item.address.toLowerCase().includes(keyword);
+
+      const matchesField = fieldFilter === "all" || item.field_id === fieldFilter;
+      const matchesRegion = regionFilter === "all" || item.region_id === regionFilter;
+
+      return matchesKeyword && matchesField && matchesRegion;
+    });
+  }, [items, search, fieldFilter, regionFilter]);
+
+  const stats = React.useMemo(
+    () => [
+      {
+        label: "Tổng hội viên",
+        value: items.length,
+        icon: <Users className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: "Số lĩnh vực",
+        value: fields.length,
+        icon: <Users className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: "Số khu vực",
+        value: regions.length,
+        icon: <Users className="h-4 w-4 text-[#063e8e]" />,
+      },
+    ],
+    [items, fields, regions],
+  );
+
+  const fieldMap = React.useMemo(
+    () => Object.fromEntries(fields.map((f) => [f.id, f.name])),
+    [fields],
+  );
+
+  const regionMap = React.useMemo(
+    () => Object.fromEntries(regions.map((r) => [r.id, r.name])),
+    [regions],
+  );
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const next = items.filter((m) => m.id !== deleteTarget.id);
+    setItems(next);
+    persistMembers(next);
+    toast.success("Đã xóa hội viên");
+    setDeleteTarget(null);
+  };
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-bold text-gray-800">Quản lý Hội viên</h2>
-          <p className="text-sm text-gray-500 mt-1">
-            Danh sách tất cả tổ chức / doanh nghiệp hội viên.
-          </p>
-        </div>
-        <Badge variant="outline" className="border-[#063e8e]/30 text-[#063e8e] text-sm px-3 py-1">
-          {total} hội viên
-        </Badge>
-      </div>
+    <div className="space-y-8">
+      <AdminStatsGrid items={stats} />
 
-      <div className="relative w-72 mb-4">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        <Input
-          className="pl-9"
-          placeholder="Tìm theo tên..."
-          value={search}
-          onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-        />
-      </div>
+      <AdminTableLayout
+        searchValue={search}
+        searchPlaceholder="Tìm kiếm hội viên..."
+        actionLabel="Thêm hội viên"
+        actionIcon={<Plus className="mr-2 h-4 w-4" />}
+        onSearchChange={setSearch}
+        onActionClick={() => router.push("/admin/members/new")}
+        filters={
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <Select value={fieldFilter} onValueChange={setFieldFilter}>
+              <SelectTrigger className={selectTriggerClassName}>
+                <SelectValue placeholder="Lĩnh vực" />
+              </SelectTrigger>
+              <SelectContent className={selectContentClassName}>
+                <SelectItem value="all" className={selectItemClassName}>
+                  Tất cả lĩnh vực
+                </SelectItem>
+                {fields.map((f) => (
+                  <SelectItem key={f.id} value={f.id} className={selectItemClassName}>
+                    {f.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-      <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-8">#</TableHead>
-              <TableHead>Tên tổ chức</TableHead>
-              <TableHead>Mã số thuế</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Địa chỉ</TableHead>
-              <TableHead className="w-24">Trạng thái</TableHead>
-              <TableHead>Ngày tạo</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <TableRow key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => (
-                    <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>
-                  ))}
+            <Select value={regionFilter} onValueChange={setRegionFilter}>
+              <SelectTrigger className={selectTriggerClassName}>
+                <SelectValue placeholder="Khu vực" />
+              </SelectTrigger>
+              <SelectContent className={selectContentClassName}>
+                <SelectItem value="all" className={selectItemClassName}>
+                  Tất cả khu vực
+                </SelectItem>
+                {regions.map((r) => (
+                  <SelectItem key={r.id} value={r.id} className={selectItemClassName}>
+                    {r.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        }
+      >
+        <div className="overflow-x-auto">
+          <Table className="min-w-[900px] table-fixed">
+            <TableHeader>
+              <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
+                <TableHead className="w-[200px] py-4 text-center text-white">Tên hội viên</TableHead>
+                <TableHead className="w-[120px] py-4 text-center text-white">Ảnh</TableHead>
+                <TableHead className="w-40 py-4 text-center text-white">Khu vực</TableHead>
+                <TableHead className="w-40 py-4 text-center text-white">Lĩnh vực</TableHead>
+                <TableHead className="w-[200px] py-4 text-center text-white">Liên hệ</TableHead>
+                <TableHead className="w-[180px] py-4 text-center text-white">Địa chỉ</TableHead>
+                <TableHead className="w-[100px] py-4 text-center text-white">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {!ready ? (
+                <MemberTableLoading />
+              ) : filtered.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-16 text-center text-gray-400">
+                    Không có hội viên nào
+                  </TableCell>
                 </TableRow>
-              ))
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-gray-400 py-10 text-sm">
-                  Chưa có hội viên nào.
-                </TableCell>
-              </TableRow>
-            ) : rows.map((org: any, idx: number) => (
-              <TableRow key={org.id ?? idx}>
-                <TableCell className="text-gray-400 text-sm">{(page - 1) * pageSize + idx + 1}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-                    <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarImage src={org.avatar} alt={org.name} />
-                      <AvatarFallback className="bg-[#063e8e]/10 text-[#063e8e] text-xs font-bold">
-                        {org.name?.slice(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate max-w-[200px]">{org.name}</p>
-                      {org.website && (
-                        <a
-                          href={org.website}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1 text-xs text-blue-500 hover:underline"
-                        >
-                          <ExternalLink size={10} />{org.website.replace(/^https?:\/\//, '')}
-                        </a>
+              ) : (
+                filtered.map((item, index) => (
+                  <TableRow
+                    key={item.id}
+                    className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
+                  >
+                    <TableCell className="px-4 py-3 text-sm font-medium text-gray-800">
+                      <div className="space-y-1">
+                        <div>{item.name}</div>
+                        {item.is_featured ? (
+                          <Badge
+                            variant="outline"
+                            className="border-[#063e8e]/25 bg-[#063e8e]/[0.04] text-[#063e8e]"
+                          >
+                            Hội viên tiêu biểu
+                          </Badge>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center">
+                      {item.image ? (
+                        <div className="mx-auto h-12 w-16 overflow-hidden rounded-lg border border-[#063e8e]/15">
+                          <SafeNextImage
+                            src={item.image.url}
+                            alt={item.image.alt || item.name}
+                            width={64}
+                            height={48}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                      ) : (
+                        <div className="mx-auto flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-[#063e8e]/20 bg-[#063e8e]/5 text-xs text-gray-400">
+                          Chưa có
+                        </div>
                       )}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm text-gray-600">{org.tax_code || '—'}</TableCell>
-                <TableCell className="text-sm text-gray-600">{org.org_email || '—'}</TableCell>
-                <TableCell className="text-sm text-gray-500 max-w-40 truncate">{org.address || '—'}</TableCell>
-                <TableCell>
-                  {org.is_premium ? (
-                    <Badge className="bg-amber-500/10 text-amber-600 border-amber-200 text-xs">Premium</Badge>
-                  ) : (
-                    <Badge variant="outline" className="text-gray-500 text-xs">Thường</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="text-gray-400 text-sm">
-                  {org.created_at ? dayjs(org.created_at).format('DD/MM/YYYY') : '—'}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-end gap-2 mt-4">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>Trước</Button>
-          <span className="text-sm text-gray-500 self-center">{page} / {totalPages}</span>
-          <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>Sau</Button>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
+                      {regionMap[item.region_id] ?? "—"}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
+                      {fieldMap[item.field_id] ?? "—"}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
+                      {item.phone && <div>{item.phone}</div>}
+                      {item.email && (
+                        <div className="truncate text-xs text-[#063e8e]">{item.email}</div>
+                      )}
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
+                      <span className="line-clamp-2">{item.address || "—"}</span>
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 hover:bg-[#063e8e]/10"
+                          >
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="border-[#063e8e]/15">
+                          <DropdownMenuItem
+                            className="cursor-pointer text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]"
+                            onClick={() => router.push(`/admin/members/${item.id}`)}
+                          >
+                            <Edit className="mr-2 h-4 w-4" />
+                            Chỉnh sửa
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                            onClick={() => setDeleteTarget(item)}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Xóa
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-      )}
+      </AdminTableLayout>
+
+      <AdminDeleteDialog
+        open={!!deleteTarget}
+        title="Xóa hội viên"
+        description={
+          <>
+            Bạn có chắc muốn xóa hội viên{" "}
+            <span className="font-semibold">{deleteTarget?.name}</span>? Hành động này không thể
+            hoàn tác.
+          </>
+        }
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

@@ -2,14 +2,15 @@
 
 import React from 'react';
 import { usePathname } from 'next/navigation';
+import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
-import { Menu } from 'lucide-react';
 
 const routeLabels: Record<string, string> = {
   '/admin/dashboard': 'Dashboard',
   '/admin/header-config': 'Cấu hình Danh mục',
   '/admin/news': 'Quản lý bài viết',
+  '/admin/videos': 'Quản lý video',
   '/admin/members': 'Quản lý Hội viên',
   '/admin/partners': 'Quản lý Đối tác',
   '/admin/emails': 'Email nhận thông tin',
@@ -20,7 +21,7 @@ function getTitle(pathname: string): string {
   if (routeLabels[pathname]) return routeLabels[pathname];
 
   for (const [prefix, label] of Object.entries(routeLabels)) {
-    if (pathname.startsWith(prefix + '/')) return label;
+    if (pathname.startsWith(`${prefix}/`)) return label;
   }
 
   return 'Quản trị';
