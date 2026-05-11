@@ -10,6 +10,7 @@ interface AdminTableLayoutProps {
   searchPlaceholder?: string;
   actionLabel?: string;
   actionIcon?: React.ReactNode;
+  actionMeta?: React.ReactNode;
   actionDisabled?: boolean;
   children: React.ReactNode;
   filters?: React.ReactNode;
@@ -22,6 +23,7 @@ export function AdminTableLayout({
   searchPlaceholder = "Tìm kiếm...",
   actionLabel,
   actionIcon,
+  actionMeta,
   actionDisabled = false,
   children,
   filters,
@@ -41,20 +43,25 @@ export function AdminTableLayout({
           {filters}
         </div>
 
-        {actionLabel ? (
-          <Button
-            type="button"
-            disabled={actionDisabled}
-            onClick={onActionClick}
-            className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-          >
-            {actionIcon ?? <Plus className="mr-2 h-4 w-4" />}
-            {actionLabel}
-          </Button>
+        {actionLabel || actionMeta ? (
+          <div className="flex items-center gap-3 self-start sm:self-auto">
+            {actionMeta}
+            {actionLabel ? (
+              <Button
+                type="button"
+                disabled={actionDisabled}
+                onClick={onActionClick}
+                className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
+              >
+                {actionIcon ?? <Plus className="mr-2 h-4 w-4" />}
+                {actionLabel}
+              </Button>
+            ) : null}
+          </div>
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-[#063e8e]/15 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-[#063e8e]/20 bg-white shadow-sm [&_tbody_td:not(:last-child)]:border-r [&_tbody_td:not(:last-child)]:border-[#063e8e]/20 [&_thead_th:not(:last-child)]:border-r [&_thead_th:not(:last-child)]:border-white/15">
         {children}
       </div>
     </div>

@@ -5,15 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  BarChart3,
-  Building2,
   ChevronDown,
   Globe,
   Layers,
-  Mail,
   Newspaper,
-  Settings,
   Users,
+  Video,
 } from 'lucide-react';
 import logo from '@/assets/VCCI-HCM-logo-VN-2025.png';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
@@ -28,27 +25,43 @@ type NavItem = {
 };
 
 const navigation: NavItem[] = [
-  // { name: 'Dashboard', href: '/admin/dashboard', icon: BarChart3 },
   { name: 'Cấu hình danh mục', href: '/admin/header-config', icon: Layers },
   { name: 'Quản lý bài viết', href: '/admin/news', icon: Newspaper },
-  // { name: 'Quản lý hội viên', href: '/admin/members', icon: Users },
-  // { name: 'Quản lý đối tác', href: '/admin/partners', icon: Building2 },
-  // { name: 'Email thông tin', href: '/admin/emails', icon: Mail },
-  // {
-  //   name: 'Thiết lập',
-  //   icon: Settings,
-  //   children: [{ name: 'Thông tin website', href: '/admin/website-config' }],
-  // },
+  { name: 'Quản lý video', href: '/admin/videos', icon: Video },
+  {
+    name: 'Quản lý hội viên',
+    icon: Users,
+    children: [
+      { name: 'Danh sách hội viên', href: '/admin/members' },
+      { name: 'Quản lý lĩnh vực', href: '/admin/members/fields' },
+      { name: 'Quản lý khu vực', href: '/admin/members/regions' },
+    ],
+  },
 ];
+
+const membersReservedSegments = new Set(['fields', 'regions']);
 
 export function AdminSidebar() {
   const pathname = usePathname();
   const { isOpen } = useSidebarStore();
   const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({
-    'Thiết lập': true,
+    'Quản lý hội viên': true,
   });
 
-  const isItemActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isItemActive = React.useCallback(
+    (href: string) => {
+      if (href === '/admin/members') {
+        if (pathname === href) return true;
+        if (!pathname.startsWith(`${href}/`)) return false;
+
+        const nextSegment = pathname.slice(`${href}/`.length).split('/')[0];
+        return Boolean(nextSegment) && !membersReservedSegments.has(nextSegment);
+      }
+
+      return pathname === href || pathname.startsWith(`${href}/`);
+    },
+    [pathname],
+  );
 
   const isGroupActive = (children: NavChild[]) => children.some((child) => isItemActive(child.href));
 
