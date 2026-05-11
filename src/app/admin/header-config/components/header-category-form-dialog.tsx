@@ -57,10 +57,10 @@ const TYPE_OPTIONS: Array<{ value: HeaderCategoryType; label: string }> = [
 ];
 
 const fieldClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 const selectTriggerClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30";
 
 const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
@@ -104,7 +104,7 @@ export function HeaderCategoryFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto border-[#063e8e]/15 bg-white text-gray-700 shadow-xl">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-3xl border-[#063e8e]/15 bg-white text-gray-700 shadow-xl">
         <DialogHeader>
           <DialogTitle className="text-[#063e8e]">{title}</DialogTitle>
           <DialogDescription className="text-gray-700">

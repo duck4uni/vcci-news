@@ -440,7 +440,7 @@ export function readAdminMediaItems() {
 
   try {
     const parsed = JSON.parse(raw) as AdminMediaItem[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
+    if (!Array.isArray(parsed)) {
       return getAdminMediaSeed();
     }
 

@@ -38,7 +38,7 @@ export function AdminTableLayout({
             value={searchValue}
             placeholder={searchPlaceholder}
             onChange={(event) => onSearchChange(event.target.value)}
-            className="max-w-sm border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700"
+            className="max-w-sm rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700"
           />
           {filters}
         </div>

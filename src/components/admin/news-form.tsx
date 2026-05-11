@@ -53,13 +53,13 @@ interface AdminNewsFormProps {
 }
 
 const fieldClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 const readOnlyFieldClassName =
-  "border-[#063e8e]/10 bg-[#063e8e]/[0.03] text-gray-700 placeholder:text-gray-700";
+  "rounded-xl border-[#063e8e]/10 bg-[#063e8e]/[0.03] text-gray-700 placeholder:text-gray-700";
 
 const selectTriggerClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30";
 
 const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 

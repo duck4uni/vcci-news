@@ -29,6 +29,7 @@ import {
   type MemberImageRef,
   type MemberItem,
   type MemberRegion,
+  type MemberSocialItem,
   EMPTY_MEMBER_FORM,
   cloneMemberFormValues,
   createMemberId,
@@ -43,10 +44,10 @@ interface AdminMemberFormProps {
 }
 
 const fieldClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 const selectTriggerClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30";
 
 const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
@@ -98,6 +99,13 @@ export function AdminMemberForm({ memberId }: AdminMemberFormProps) {
     set("introduction", sections);
   };
 
+  const handleSocialChange = (socialId: string, value: string) => {
+    set(
+      "socials",
+      form.socials.map((item) => (item.id === socialId ? { ...item, url: value } : item)),
+    );
+  };
+
   const handleSave = () => {
     if (!form.name.trim()) {
       toast.error("Vui lòng nhập tên hội viên");
@@ -123,6 +131,7 @@ export function AdminMemberForm({ memberId }: AdminMemberFormProps) {
           fax: form.fax,
           email: form.email,
           website: form.website,
+          socials: form.socials,
           introduction: form.introduction,
           created_at: now,
           updated_at: now,
@@ -141,12 +150,13 @@ export function AdminMemberForm({ memberId }: AdminMemberFormProps) {
             field_id: form.field_id,
             address: form.address,
             phone: form.phone,
-            fax: form.fax,
-            email: form.email,
-            website: form.website,
-            introduction: form.introduction,
-            updated_at: now,
-          } satisfies MemberItem;
+             fax: form.fax,
+             email: form.email,
+             website: form.website,
+             socials: form.socials,
+             introduction: form.introduction,
+             updated_at: now,
+           } satisfies MemberItem;
         });
         persistMembers(nextAll);
         toast.success("Đã lưu thay đổi");
@@ -292,6 +302,29 @@ export function AdminMemberForm({ memberId }: AdminMemberFormProps) {
                     placeholder="https://..."
                     className={fieldClassName}
                   />
+                </div>
+              </div>
+
+              <div className="space-y-3 rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.02] p-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">Mạng xã hội</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Nhập link mạng xã hội cho hội viên nếu có.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  {form.socials.map((social: MemberSocialItem) => (
+                    <div key={social.id} className="space-y-1.5">
+                      <Label className="text-gray-700">{social.label}</Label>
+                      <Input
+                        value={social.url}
+                        onChange={(e) => handleSocialChange(social.id, e.target.value)}
+                        placeholder={`Nhập link ${social.label}...`}
+                        className={fieldClassName}
+                      />
+                    </div>
+                  ))}
                 </div>
               </div>
 

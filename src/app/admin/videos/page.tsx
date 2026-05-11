@@ -33,7 +33,7 @@ import {
 } from "@/mockdata/videos";
 
 const fieldClassName =
-  "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
+  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 interface VideoFormDialogProps {
   open: boolean;
@@ -83,7 +83,7 @@ function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border-[#063e8e]/15 bg-white">
+      <DialogContent className="max-w-lg rounded-3xl border-[#063e8e]/15 bg-white">
         <DialogHeader>
           <DialogTitle className="text-[#063e8e]">
             {initial ? "Chỉnh sửa video" : "Thêm video mới"}

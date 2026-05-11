@@ -7,8 +7,12 @@ import { usePathname } from 'next/navigation';
 import {
   ChevronDown,
   Globe,
+  ImagePlus,
   Layers,
+  Mail,
   Newspaper,
+  Settings,
+  Sparkles,
   Users,
   Video,
 } from 'lucide-react';
@@ -25,6 +29,7 @@ type NavItem = {
 };
 
 const navigation: NavItem[] = [
+  { name: 'Cấu hình chung', href: '/admin/base-config', icon: Settings },
   { name: 'Cấu hình danh mục', href: '/admin/header-config', icon: Layers },
   { name: 'Quản lý bài viết', href: '/admin/news', icon: Newspaper },
   { name: 'Quản lý video', href: '/admin/videos', icon: Video },
@@ -37,6 +42,25 @@ const navigation: NavItem[] = [
       { name: 'Quản lý khu vực', href: '/admin/members/regions' },
     ],
   },
+  {
+    name: 'Quản lý liên hệ',
+    icon: Mail,
+    children: [
+      {
+        name: 'Quản lý Email đăng ký nhận thông tin',
+        href: '/admin/contact-management/newsletter-emails',
+      },
+      {
+        name: 'Quản lý Đơn liên hệ',
+        href: '/admin/contact-management/contact-requests',
+      },
+      {
+        name: 'Quản lý Đơn đăng ký hội viên',
+        href: '/admin/contact-management/membership-applications',
+      },
+    ],
+  },
+  { name: 'Quản lý ảnh', href: '/admin/media', icon: ImagePlus },
 ];
 
 const membersReservedSegments = new Set(['fields', 'regions']);
@@ -44,9 +68,7 @@ const membersReservedSegments = new Set(['fields', 'regions']);
 export function AdminSidebar() {
   const pathname = usePathname();
   const { isOpen } = useSidebarStore();
-  const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({
-    'Quản lý hội viên': true,
-  });
+  const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({});
 
   const isItemActive = React.useCallback(
     (href: string) => {
@@ -71,79 +93,92 @@ export function AdminSidebar() {
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen border-r border-[#063e8e]/15 bg-[#063e8e]/20 shadow-[0_10px_30px_rgba(6,62,142,0.08)] transition-all duration-300',
-        isOpen ? 'w-56' : 'w-20',
+        'fixed left-0 top-0 z-40 h-screen border-r border-[#063e8e]/10 bg-gradient-to-b from-[#f6f9ff] via-[#edf4ff] to-[#f8fbff] shadow-[0_18px_45px_rgba(6,62,142,0.08)] transition-all duration-300',
+        isOpen ? 'w-72' : 'w-24',
       )}
     >
       <div className="flex h-full flex-col">
-        <div
-          className={cn(
-            'flex h-16 items-center border-b border-[#063e8e]/12 bg-white/80 px-4 backdrop-blur-sm',
-            !isOpen && 'justify-center px-2.5',
-          )}
-        >
+        <div className={cn('px-4 pb-4 pt-5', !isOpen && 'px-3')}>
           <Link
-            href="/admin/dashboard"
-            className={cn('flex min-w-0 items-center gap-3', isOpen && 'justify-start')}
+            href="/admin/base-config"
+            className={cn(
+              'flex items-center backdrop-blur-sm',
+              isOpen
+                ? 'gap-4 rounded-[28px] border border-white/80 bg-white/95 px-4 py-4 shadow-[0_14px_32px_rgba(6,62,142,0.08)]'
+                : 'justify-center px-0 py-4',
+            )}
           >
-            <div
-              className={cn(
-                'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#063e8e]/12 bg-white p-1.5 shadow-sm',
-                !isOpen && 'h-10 w-10',
-              )}
-            >
-              <Image
-                src={logo}
-                alt="VCCI HCM"
-                className="h-full w-full object-contain"
-                priority
-              />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff] shadow-sm">
+              <Image src={logo} alt="VCCI HCM" className="h-10 w-10 object-contain" priority />
             </div>
+
             {isOpen ? (
-              <div className="min-w-0 leading-tight">
-                <div className="truncate text-sm font-semibold uppercase tracking-[0.18em] text-[#063e8e]">
+              <div className="min-w-0">
+                <div className="truncate text-[13px] font-bold uppercase tracking-[0.22em] text-[#063e8e]">
                   VCCI News
                 </div>
-                <div className="mt-1 truncate text-[11px] text-gray-700">
-                  Trang quản trị website
-                </div>
+                <div className="mt-1 text-sm leading-5 text-slate-600">Trang quản trị website</div>
               </div>
             ) : null}
           </Link>
         </div>
 
-        <nav className={cn('flex-1 space-y-2 overflow-y-auto px-3 py-4', !isOpen && 'px-2')}>
+        <div className="px-4 pb-2">
+          {isOpen ? (
+            <div className="flex items-center gap-2 px-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              <Sparkles className="h-3.5 w-3.5 text-[#063e8e]" />
+              Điều hướng quản trị
+            </div>
+          ) : null}
+        </div>
+
+        <nav
+          className={cn(
+            'scrollbar flex-1 space-y-3 overflow-y-auto px-4 pb-5 pt-2',
+            !isOpen && 'px-3',
+          )}
+        >
           {navigation.map((item) => {
             if (item.children) {
               const active = isGroupActive(item.children);
-              const expanded = expandedGroups[item.name] ?? active;
+              const expanded = expandedGroups[item.name] ?? false;
 
               return (
-                <div key={item.name} className="space-y-2">
+                <div
+                  key={item.name}
+                  className={cn(
+                    'rounded-[26px] border border-transparent transition-all duration-200',
+                    isOpen && expanded && 'border-[#063e8e]/10 bg-white/70 p-2 shadow-sm',
+                  )}
+                >
                   <button
                     type="button"
                     onClick={() => isOpen && toggleGroup(item.name)}
+                    title={!isOpen ? item.name : undefined}
                     className={cn(
-                      'group flex w-full items-center rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                      'flex w-full items-center rounded-2xl text-sm font-medium transition-all duration-200',
                       active
-                        ? 'bg-[#063e8e] text-white shadow-[0_12px_24px_rgba(6,62,142,0.16)]'
-                        : 'text-gray-700 hover:bg-[#063e8e]/8 hover:text-[#063e8e]',
-                      !isOpen && 'justify-center px-0',
+                        ? 'bg-[#063e8e] text-white shadow-[0_12px_24px_rgba(6,62,142,0.18)]'
+                        : 'text-slate-700 hover:bg-white/85 hover:text-[#063e8e]',
+                      isOpen ? 'gap-3 px-4 py-3.5' : 'mx-auto h-14 w-14 justify-center p-0',
                     )}
                   >
                     <item.icon className="h-5 w-5 shrink-0" />
                     {isOpen ? (
                       <>
-                        <span className="ml-3 truncate text-left">{item.name}</span>
+                        <span className="min-w-0 flex-1 text-left">{item.name}</span>
                         <ChevronDown
-                          className={cn('ml-auto h-4 w-4 transition-transform', expanded && 'rotate-180')}
+                          className={cn(
+                            'h-4 w-4 shrink-0 transition-transform',
+                            expanded && 'rotate-180',
+                          )}
                         />
                       </>
                     ) : null}
                   </button>
 
                   {isOpen && expanded ? (
-                    <div className="ml-4 space-y-1.5 border-l border-[#063e8e]/12 pl-4">
+                    <div className="mt-2 space-y-1.5 border-l border-[#d5e1f7] pl-4">
                       {item.children.map((child) => {
                         const childActive = isItemActive(child.href);
 
@@ -152,13 +187,13 @@ export function AdminSidebar() {
                             key={child.name}
                             href={child.href}
                             className={cn(
-                              'block rounded-xl px-3 py-2.5 text-sm transition-colors',
+                              'group relative flex rounded-2xl px-4 py-3 text-sm leading-6 transition-all',
                               childActive
-                                ? 'bg-[#063e8e]/10 font-semibold text-[#063e8e]'
-                                : 'text-gray-700 hover:bg-[#063e8e]/6 hover:text-[#063e8e]',
+                                ? 'bg-[#dbe8ff] font-semibold text-[#063e8e]'
+                                : 'text-slate-600 hover:bg-[#eef4ff] hover:text-[#063e8e]',
                             )}
                           >
-                            {child.name}
+                            <span className="block">{child.name}</span>
                           </Link>
                         );
                       })}
@@ -176,39 +211,46 @@ export function AdminSidebar() {
                 href={item.href || '#'}
                 title={!isOpen ? item.name : undefined}
                 className={cn(
-                  'group flex items-center rounded-2xl px-3 py-3 text-sm font-medium transition-all duration-200',
+                  'flex items-center rounded-2xl text-sm font-medium transition-all duration-200',
                   active
-                    ? 'bg-[#063e8e] text-white shadow-[0_12px_24px_rgba(6,62,142,0.16)]'
-                    : 'text-gray-700 hover:bg-[#063e8e]/8 hover:text-[#063e8e]',
-                  !isOpen && 'justify-center px-0',
+                    ? 'bg-[#063e8e] text-white shadow-[0_12px_24px_rgba(6,62,142,0.18)]'
+                    : 'text-slate-700 hover:bg-white/85 hover:text-[#063e8e]',
+                  isOpen ? 'gap-3 px-4 py-3.5' : 'mx-auto h-14 w-14 justify-center p-0',
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
-                {isOpen ? <span className="ml-3 truncate">{item.name}</span> : null}
+                {isOpen ? <span className="min-w-0 flex-1">{item.name}</span> : null}
               </Link>
             );
           })}
         </nav>
 
-        <div className="border-t border-[#063e8e]/12 bg-white/40 px-4 py-4 backdrop-blur-sm">
+        <div className="px-4 pb-5 pt-3">
           {isOpen ? (
-            <div className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-3 shadow-sm">
+            <div className="rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_14px_32px_rgba(6,62,142,0.08)]">
               <Link
                 href="/"
-                className="flex items-center gap-2 text-sm font-medium text-[#063e8e] hover:underline"
+                className="flex items-center gap-3 text-sm font-semibold text-[#063e8e] transition hover:opacity-80"
               >
-                <Globe className="h-4 w-4" />
-                Về trang chủ
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#063e8e]">
+                  <Globe className="h-4 w-4" />
+                </div>
+                <div>
+                  <div>Về trang chủ</div>
+                  <div className="mt-0.5 text-xs font-medium text-slate-500">Website công khai</div>
+                </div>
               </Link>
-              <div className="mt-2 text-xs leading-5 text-gray-700">© 2026 VCCI HCM</div>
+              <div className="mt-3 border-t border-slate-100 pt-3 text-xs text-slate-500">
+                © 2026 VCCI HCM
+              </div>
             </div>
           ) : (
             <Link
               href="/"
               title="Về trang chủ"
-              className="flex justify-center rounded-2xl border border-[#063e8e]/10 bg-white py-3 text-[#063e8e] shadow-sm"
+              className="mx-auto flex h-14 w-14 items-center justify-center rounded-[22px] border border-white/80 bg-white/95 text-[#063e8e] shadow-sm transition hover:bg-white"
             >
-              <Globe className="h-4 w-4" />
+              <Globe className="h-5 w-5" />
             </Link>
           )}
         </div>

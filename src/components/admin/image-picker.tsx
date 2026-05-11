@@ -93,7 +93,7 @@ export function AdminImagePicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[88vh] max-w-5xl overflow-hidden border-[#063e8e]/15 bg-white p-0">
+      <DialogContent className="max-h-[88vh] max-w-5xl overflow-hidden rounded-3xl border-[#063e8e]/15 bg-white p-0">
         <DialogHeader className="border-b border-[#063e8e]/10 px-6 py-5">
           <div className="flex items-start justify-between gap-4">
             <div>

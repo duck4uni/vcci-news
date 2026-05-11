@@ -29,6 +29,12 @@ export interface MemberImageRef {
   url: string;
 }
 
+export interface MemberSocialItem {
+  id: string;
+  label: string;
+  url: string;
+}
+
 import type { AdminNewsContentSection } from "@/mockdata/admin-news";
 
 export interface MemberItem {
@@ -43,6 +49,7 @@ export interface MemberItem {
   fax: string;
   email: string;
   website: string;
+  socials: MemberSocialItem[];
   introduction: AdminNewsContentSection[];
   created_at: string;
   updated_at: string;
@@ -60,6 +67,7 @@ export interface MemberFormValues {
   fax: string;
   email: string;
   website: string;
+  socials: MemberSocialItem[];
   introduction: AdminNewsContentSection[];
 }
 
@@ -99,6 +107,14 @@ const SEED_REGIONS: MemberRegion[] = [
   { id: "region-5", name: "Bình Dương" },
 ];
 
+const MEMBER_SOCIAL_SEED: MemberSocialItem[] = [
+  { id: "facebook", label: "Facebook", url: "" },
+  { id: "zalo", label: "Zalo", url: "" },
+  { id: "twitter", label: "Twitter", url: "" },
+  { id: "youtube", label: "Youtube", url: "" },
+  { id: "linkedin", label: "Linkedin", url: "" },
+];
+
 const SEED_MEMBERS: MemberItem[] = [
   {
     id: "member-1",
@@ -112,11 +128,34 @@ const SEED_MEMBERS: MemberItem[] = [
     fax: "028 1234 5679",
     email: "contact@abc.vn",
     website: "https://abc.vn",
+    socials: [
+      { id: "facebook", label: "Facebook", url: "https://facebook.com/abc" },
+      { id: "zalo", label: "Zalo", url: "https://zalo.me/abc" },
+      { id: "twitter", label: "Twitter", url: "" },
+      { id: "youtube", label: "Youtube", url: "" },
+      { id: "linkedin", label: "Linkedin", url: "https://linkedin.com/company/abc" },
+    ],
     introduction: [],
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
 ];
+
+export function getMemberSocialSeed(): MemberSocialItem[] {
+  return MEMBER_SOCIAL_SEED.map((item) => ({ ...item }));
+}
+
+function normalizeMemberSocials(socials?: MemberSocialItem[]): MemberSocialItem[] {
+  return MEMBER_SOCIAL_SEED.map((seedItem) => {
+    const matchedItem = socials?.find((item) => item?.id === seedItem.id);
+
+    return {
+      ...seedItem,
+      ...matchedItem,
+      url: typeof matchedItem?.url === "string" ? matchedItem.url : seedItem.url,
+    };
+  });
+}
 
 // ---------------------------------------------------------------------------
 // Field helpers
@@ -182,7 +221,12 @@ export function readMembers(): MemberItem[] {
   if (!raw) return getMemberSeed();
   try {
     const parsed = JSON.parse(raw) as MemberItem[];
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : getMemberSeed();
+    return Array.isArray(parsed) && parsed.length > 0
+      ? parsed.map((item) => ({
+          ...item,
+          socials: normalizeMemberSocials(item.socials),
+        }))
+      : getMemberSeed();
   } catch {
     return getMemberSeed();
   }
@@ -206,6 +250,7 @@ export function cloneMemberFormValues(item: MemberItem): MemberFormValues {
     fax: item.fax,
     email: item.email,
     website: item.website,
+    socials: normalizeMemberSocials(item.socials),
     introduction: item.introduction.map((section) => ({
       ...section,
       images: section.images.map((img) => ({ ...img })),
@@ -224,5 +269,6 @@ export const EMPTY_MEMBER_FORM: MemberFormValues = {
   fax: "",
   email: "",
   website: "",
+  socials: getMemberSocialSeed(),
   introduction: [],
 };
