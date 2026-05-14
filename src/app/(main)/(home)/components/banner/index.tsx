@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { Swiper as SwiperType } from "swiper/types";
 import { useRef } from "react";
+import "swiper/css";
 
 const Banner = () => {
   const swiperRef = useRef<SwiperType | null>(null);
@@ -16,6 +17,7 @@ const Banner = () => {
       loop
       slidesPerView={1}
       onSwiper={(s) => (swiperRef.current = s)}
+      className="w-full overflow-hidden"
     >
       <SwiperSlide>
         <ImageNext
