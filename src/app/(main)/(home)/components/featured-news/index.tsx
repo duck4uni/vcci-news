@@ -54,7 +54,7 @@ function FeaturedNews() {
       <div className="w-full">
         <div className="mb-8 flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-[#24469c] md:text-[34px]">
+            <h2 className="client-section-title uppercase text-[#24469c]">
               Tin nổi bật
             </h2>
             <div className="mt-3 h-[5px] w-[68px] rounded-full bg-[#f7b500]" />

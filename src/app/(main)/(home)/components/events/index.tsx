@@ -34,7 +34,7 @@ function Events() {
     <div className="flex-1 rounded-[28px] bg-linear-to-br from-[#14488f] to-[#2d67bf] p-4 text-white shadow-[0_18px_38px_rgba(16,61,130,0.24)] md:p-5">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-white md:text-[34px]">
+          <h2 className="client-section-title uppercase text-white">
             Sự kiện sắp diễn ra
           </h2>
           <div className="mt-2.5 h-[4px] w-[60px] rounded-full bg-[#f7b500]" />

@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { Edit, MoreHorizontal, Plus, Trash2 } from "lucide-react";
+import { Edit, MoreHorizontal, Plus, Trash2, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +43,7 @@ import {
 } from "@/mockdata/members";
 
 const selectTriggerClassName =
-  "w-full rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[200px]";
+  "w-full border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[200px]";
 
 const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
@@ -96,38 +97,55 @@ export default function AdminMembersPage() {
     });
   }, [items, search, fieldFilter, regionFilter]);
 
+  const stats = React.useMemo(
+    () => [
+      {
+        label: "Tổng hội viên",
+        value: items.length,
+        icon: <Users className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: "Số lĩnh vực",
+        value: fields.length,
+        icon: <Users className="h-4 w-4 text-[#063e8e]" />,
+      },
+      {
+        label: "Số khu vực",
+        value: regions.length,
+        icon: <Users className="h-4 w-4 text-[#063e8e]" />,
+      },
+    ],
+    [items, fields, regions],
+  );
+
   const fieldMap = React.useMemo(
-    () => Object.fromEntries(fields.map((field) => [field.id, field.name])),
+    () => Object.fromEntries(fields.map((f) => [f.id, f.name])),
     [fields],
   );
 
   const regionMap = React.useMemo(
-    () => Object.fromEntries(regions.map((region) => [region.id, region.name])),
+    () => Object.fromEntries(regions.map((r) => [r.id, r.name])),
     [regions],
   );
 
   const handleDelete = () => {
     if (!deleteTarget) return;
-
-    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
-    setItems(nextItems);
-    persistMembers(nextItems);
+    const next = items.filter((m) => m.id !== deleteTarget.id);
+    setItems(next);
+    persistMembers(next);
     toast.success("Đã xóa hội viên");
     setDeleteTarget(null);
   };
 
   return (
     <div className="space-y-8">
+      <AdminStatsGrid items={stats} />
+
       <AdminTableLayout
         searchValue={search}
         searchPlaceholder="Tìm kiếm hội viên..."
         actionLabel="Thêm hội viên"
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
-        actionMeta={
-          <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
-            Tổng số hội viên: {items.length}
-          </div>
-        }
         onSearchChange={setSearch}
         onActionClick={() => router.push("/admin/members/new")}
         filters={
@@ -140,9 +158,9 @@ export default function AdminMembersPage() {
                 <SelectItem value="all" className={selectItemClassName}>
                   Tất cả lĩnh vực
                 </SelectItem>
-                {fields.map((field) => (
-                  <SelectItem key={field.id} value={field.id} className={selectItemClassName}>
-                    {field.name}
+                {fields.map((f) => (
+                  <SelectItem key={f.id} value={f.id} className={selectItemClassName}>
+                    {f.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -156,9 +174,9 @@ export default function AdminMembersPage() {
                 <SelectItem value="all" className={selectItemClassName}>
                   Tất cả khu vực
                 </SelectItem>
-                {regions.map((region) => (
-                  <SelectItem key={region.id} value={region.id} className={selectItemClassName}>
-                    {region.name}
+                {regions.map((r) => (
+                  <SelectItem key={r.id} value={r.id} className={selectItemClassName}>
+                    {r.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -166,7 +184,7 @@ export default function AdminMembersPage() {
           </div>
         }
       >
-        <div className="scrollbar overflow-x-auto">
+        <div className="overflow-x-auto">
           <Table className="min-w-[900px] table-fixed">
             <TableHeader>
               <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
@@ -179,7 +197,6 @@ export default function AdminMembersPage() {
                 <TableHead className="w-[100px] py-4 text-center text-white">Thao tác</TableHead>
               </TableRow>
             </TableHeader>
-
             <TableBody>
               {!ready ? (
                 <MemberTableLoading />
@@ -208,7 +225,6 @@ export default function AdminMembersPage() {
                         ) : null}
                       </div>
                     </TableCell>
-
                     <TableCell className="px-4 py-3 text-center">
                       {item.image ? (
                         <div className="mx-auto h-12 w-16 overflow-hidden rounded-lg border border-[#063e8e]/15">
@@ -226,26 +242,21 @@ export default function AdminMembersPage() {
                         </div>
                       )}
                     </TableCell>
-
                     <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
                       {regionMap[item.region_id] ?? "—"}
                     </TableCell>
-
                     <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
                       {fieldMap[item.field_id] ?? "—"}
                     </TableCell>
-
                     <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
                       {item.phone && <div>{item.phone}</div>}
                       {item.email && (
                         <div className="truncate text-xs text-[#063e8e]">{item.email}</div>
                       )}
                     </TableCell>
-
                     <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
                       <span className="line-clamp-2">{item.address || "—"}</span>
                     </TableCell>
-
                     <TableCell className="px-4 py-3 text-center">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

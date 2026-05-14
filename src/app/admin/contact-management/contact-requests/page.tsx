@@ -90,8 +90,8 @@ export default function AdminContactRequestsPage() {
         searchValue={search}
         searchPlaceholder="Tìm kiếm đơn liên hệ..."
         actionMeta={
-          <div className="text-sm font-medium text-gray-700">
-            Tổng bản ghi: <span className="font-semibold text-[#063e8e]">{filteredItems.length}</span>
+          <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
+            Tổng số đơn liên hệ: {items.length}
           </div>
         }
         filters={

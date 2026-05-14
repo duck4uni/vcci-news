@@ -50,7 +50,7 @@ function Footer() {
       <div className="container mx-auto px-5 py-10 sm:px-6 lg:px-10 lg:py-12">
         <div className="grid gap-10 lg:grid-cols-[1.15fr_1.05fr_0.9fr]">
           <div>
-            <h2 className="text-xl md:text-2xl font-extrabold uppercase tracking-tight">
+            <h2 className="client-footer-title uppercase">
               Đăng ký nhận thông tin VCCI
             </h2>
             <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />
@@ -99,7 +99,7 @@ function Footer() {
           </div>
 
           <div>
-            <h2 className="text-xl md:text-2xl font-extrabold uppercase tracking-tight">
+            <h2 className="client-footer-title uppercase">
               Liên hệ
             </h2>
             <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />
@@ -131,7 +131,7 @@ function Footer() {
           </div>
 
           <div>
-            <h2 className="text-xl font-extrabold uppercase tracking-tight md:text-2xl">
+            <h2 className="client-footer-title uppercase">
               Kết nối
             </h2>
             <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />

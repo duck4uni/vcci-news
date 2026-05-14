@@ -43,18 +43,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  deleteCmsNewsItem,
+  fetchCmsNewsItems,
+  fetchHeaderConfigItems,
+} from "@/lib/api/cms-admin";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
   ADMIN_NEWS_TYPE_LABELS,
   ADMIN_NEWS_TYPE_OPTIONS,
   type AdminNewsItem,
-  persistAdminNewsItems,
-  readAdminNewsItems,
 } from "@/mockdata/admin-news";
-import {
-  type HeaderCategoryItem,
-  getHeaderCategorySeed,
-  HEADER_CONFIG_STORAGE_KEY,
-  normalizeHeaderCategories,
-} from "@/mockdata/header-config";
+import { type HeaderCategoryItem } from "@/mockdata/header-config";
 
 const selectTriggerClassName =
   "w-full rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[180px]";
@@ -63,26 +62,6 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
 const selectItemClassName =
   "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
-
-function readHeaderConfig() {
-  if (typeof window === "undefined") {
-    return getHeaderCategorySeed();
-  }
-
-  const raw = window.localStorage.getItem(HEADER_CONFIG_STORAGE_KEY);
-  if (!raw) return getHeaderCategorySeed();
-
-  try {
-    const parsed = JSON.parse(raw) as HeaderCategoryItem[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return getHeaderCategorySeed();
-    }
-
-    return normalizeHeaderCategories(parsed);
-  } catch {
-    return getHeaderCategorySeed();
-  }
-}
 
 function formatDateTime(value: string) {
   return value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "—";
@@ -115,12 +94,29 @@ export default function AdminNewsPage() {
   const [statusFilter, setStatusFilter] = React.useState("all");
   const [deleteTarget, setDeleteTarget] = React.useState<AdminNewsItem | null>(null);
   const [ready, setReady] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [page, setPage] = React.useState(1);
+  const [pageSize] = React.useState(20);
+  const [total, setTotal] = React.useState(0);
+
+  const load = React.useCallback(async () => {
+    const [newsData, headerConfig] = await Promise.all([
+      fetchCmsNewsItems({ page, pageSize, sortField: "created_at", sortOrder: "desc" }),
+      fetchHeaderConfigItems(),
+    ]);
+
+    setItems(newsData.items);
+    setTotal(newsData.total);
+    setHeaderItems(headerConfig.items);
+    setReady(true);
+  }, [page, pageSize]);
 
   React.useEffect(() => {
-    setItems(readAdminNewsItems());
-    setHeaderItems(readHeaderConfig());
-    setReady(true);
-  }, []);
+    void load().catch((error) => {
+      toast.error(error instanceof Error ? error.message : "Không thể tải danh sách bài viết");
+      setReady(true);
+    });
+  }, [load]);
 
   const categoryOptions = React.useMemo(() => {
     return headerItems.filter((item) => item.type === "news" || item.type === "page");
@@ -170,7 +166,7 @@ export default function AdminNewsPage() {
     return [
       {
         label: "Tổng bài viết",
-        value: items.length,
+        value: total,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
       {
@@ -184,16 +180,31 @@ export default function AdminNewsPage() {
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
     ];
-  }, [items]);
+  }, [total, items]);
 
-  const handleDelete = () => {
-    if (!deleteTarget) return;
+  const handleDelete = async () => {
+    if (!deleteTarget || isDeleting) return;
 
-    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
-    setItems(nextItems);
-    persistAdminNewsItems(nextItems);
-    toast.success("Đã xóa bài viết");
-    setDeleteTarget(null);
+    setIsDeleting(true);
+
+    try {
+      await deleteCmsNewsItem(deleteTarget.id);
+      toast.success("Đã xóa bài viết");
+      setDeleteTarget(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể xóa bài viết");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const totalPages = Math.ceil(total / pageSize);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
   };
 
   return (
@@ -315,7 +326,7 @@ export default function AdminNewsPage() {
                   return (
                     <TableRow
                       key={item.id}
-                      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
+                      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/[0.03]"}
                     >
                       <TableCell className="py-4">
                         <div className="space-y-2">
@@ -332,7 +343,7 @@ export default function AdminNewsPage() {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/3">
+                        <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.03]">
                           {item.thumbnail ? (
                             <SafeNextImage
                               src={item.thumbnail.url}
@@ -417,6 +428,63 @@ export default function AdminNewsPage() {
             </TableBody>
           </Table>
         </div>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-[#063e8e]/10 px-4 py-3">
+            <div className="text-sm text-gray-700">
+              Hiển thị {(page - 1) * pageSize + 1} đến {Math.min(page * pageSize, total)} của {total} bài viết
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "outline"}
+                      size="icon"
+                      className={
+                        page === pageNum
+                          ? "h-8 w-8 bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
+                          : "h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
+                      }
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </AdminTableLayout>
 
       <AdminDeleteDialog
@@ -432,7 +500,7 @@ export default function AdminNewsPage() {
         onOpenChange={(open) => {
           if (!open) setDeleteTarget(null);
         }}
-        onConfirm={handleDelete}
+        onConfirm={() => void handleDelete()}
       />
     </div>
   );

@@ -3,5 +3,8 @@ declare const links: {
   apiEndpoint: string
   imageEndpoint: string
   backendHost: string
+  backendProtocol: string
+  backendPathname: string
+  siteURL: string
 }
 export default links

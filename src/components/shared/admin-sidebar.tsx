@@ -13,6 +13,7 @@ import {
   Newspaper,
   Settings,
   Sparkles,
+  Tags,
   Users,
   Video,
 } from 'lucide-react';
@@ -32,6 +33,7 @@ const navigation: NavItem[] = [
   { name: 'Cấu hình chung', href: '/admin/base-config', icon: Settings },
   { name: 'Cấu hình danh mục', href: '/admin/header-config', icon: Layers },
   { name: 'Quản lý bài viết', href: '/admin/news', icon: Newspaper },
+  { name: 'Quản lý tag tìm kiếm', href: '/admin/tags', icon: Tags },
   { name: 'Quản lý video', href: '/admin/videos', icon: Video },
   {
     name: 'Quản lý hội viên',

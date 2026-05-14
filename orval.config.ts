@@ -1,41 +1,79 @@
-import { defineConfig } from 'orval'
-import axios from 'axios'
-import fs from 'fs'
-import path from 'path'
+import { defineConfig } from "orval";
+import axios from "axios";
+import fs from "fs";
+import path from "path";
 
+function loadEnvFile(filePath: string) {
+  if (!fs.existsSync(filePath)) return;
 
-const linksPath = path.resolve(process.cwd(), 'src/links/index.ts')
-const linksContent = fs.readFileSync(linksPath, 'utf8')
+  const content = fs.readFileSync(filePath, "utf8");
+  content.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) return;
 
+    const equalsIndex = trimmed.indexOf("=");
+    if (equalsIndex < 0) return;
 
-const backendHostMatch = linksContent.match(/const\s+backendHost\s*=\s*['"`]([^'"`]+)['"`]/)
-const backendHost = backendHostMatch ? backendHostMatch[1] : ''
+    const key = trimmed.slice(0, equalsIndex).trim();
+    const value = trimmed.slice(equalsIndex + 1).trim().replace(/^['"]|['"]$/g, "");
 
-const siteURLMatch = linksContent.match(/siteURL\s*:\s*['"`]([^'"`]+)['"`]/)
-const siteURL = siteURLMatch ? siteURLMatch[1] : ''
+    if (key && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  });
+}
 
+loadEnvFile(path.resolve(process.cwd(), ".env"));
+const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
+const siteURL = process.env.NEXT_PUBLIC_FRONTEND_HOST;
 
-const imageEndpointMatch = linksContent.match(/imageEndpoint\s*:\s*`([^`]*)`/)
-let imageEndpoint = ''
-if (imageEndpointMatch) {
-  imageEndpoint = imageEndpointMatch[1].replace(/\${\s*backendHost\s*}/g, backendHost)
-} else {
-  const simpleMatch = linksContent.match(/imageEndpoint\s*:\s*['"`]([^'"`]+)['"`]/)
-  imageEndpoint = simpleMatch ? simpleMatch[1] : ''
+const swaggerCandidates = [
+  process.env.ORVAL_SWAGGER_URL,
+  path.resolve(process.cwd(), "..", "vietprodev-cms-backend", "storage", "swagger", "swagger-output.json"),
+  `${backendHost}/swagger-output.json`,
+  `${backendHost}/swagger/swagger-output.json`,
+  `${backendHost}/swagger.json`,
+  `${backendHost}/openapi.json`,
+  `${backendHost}/api/swagger/swagger-output.json`,
+  `${backendHost}/vcci/swagger/swagger-output.json`,
+].filter(Boolean) as string[];
+
+async function fetchSwagger() {
+  for (const url of swaggerCandidates) {
+    if (typeof url === "string" && fs.existsSync(url)) {
+      return JSON.parse(fs.readFileSync(url, "utf8"));
+    }
+
+    try {
+      const { data } = await axios.get(url, {
+        headers: { Origin: siteURL },
+      });
+      return data;
+    } catch {
+      continue;
+    }
+  }
+
+  const localSwagger = path.resolve(process.cwd(), "openapi/swagger-output.json");
+  if (fs.existsSync(localSwagger)) {
+    return JSON.parse(fs.readFileSync(localSwagger, "utf8"));
+  }
+
+  throw new Error(
+    `Unable to load Swagger/OpenAPI JSON. Tried: ${swaggerCandidates.join(", ")}`,
+  );
 }
 
 const orvalConfig = async () => {
-  const { data: swagger } = await axios.get(`${imageEndpoint}/swagger/swagger-output.json`, {
-    headers: { Origin: siteURL }
-  })
+  const swagger = await fetchSwagger();
 
   return defineConfig({
-    'saigon-business': {
+    "saigon-business": {
       output: {
-        mode: 'tags',
-        target: 'src/api/endpoints/index.ts',
-        schemas: 'src/api/models',
-        client: 'react-query',
+        mode: "tags",
+        target: "src/api/endpoints/index.ts",
+        schemas: "src/api/models",
+        client: "react-query",
         prettier: true,
         override: {
           query: {
@@ -48,10 +86,6 @@ const orvalConfig = async () => {
               retryDelay: 1000,
             }
           },
-          mutator: {
-            path: './src/api/mutator/custom-client.ts',
-            name: 'useCustomClient'
-          }
         }
       },
       input: {
@@ -85,11 +119,11 @@ const orvalConfig = async () => {
             'News',
             'Category',
             'NewsPageConfig',
-          ]
-        }
-      }
-    }
-  })
+          ],
+        },
+      },
+    },
+  });
 }
 
 export default orvalConfig
