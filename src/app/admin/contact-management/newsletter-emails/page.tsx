@@ -2,12 +2,12 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { Eye, Mail, Trash2 } from "lucide-react";
+import { Mail } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { ContactManagementDetailDialog } from "@/components/admin/contact-management-detail-dialog";
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -116,28 +116,14 @@ export default function AdminNewsletterEmailsPage() {
                   <TableCell className="py-3 text-center text-sm text-gray-700">
                     {formatDateTime(item.submittedAt)}
                   </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-                        onClick={() => setDetailTarget(item)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                        onClick={() => setDeleteTarget(item)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <AdminRowActions
+                        actions={[
+                          { kind: "view", label: "Xem chi tiết email", onClick: () => setDetailTarget(item) },
+                          { kind: "delete", label: "Xóa email đăng ký", onClick: () => setDeleteTarget(item) },
+                        ]}
+                      />
+                    </TableCell>
                 </TableRow>
               ))
             )}

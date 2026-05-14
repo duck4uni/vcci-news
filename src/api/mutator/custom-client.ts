@@ -1,4 +1,12 @@
-import Axios, { AxiosError, AxiosRequestConfig } from "axios";
+import Axios, { AxiosError, AxiosHeaders, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
+import {
+  ensureValidAdminAccessToken,
+  refreshAdminAccessToken,
+} from "@/lib/auth/admin-auth";
+
+interface RetriableAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 const createAxiosInstance = () => {
   const instance = Axios.create({
@@ -6,11 +14,17 @@ const createAxiosInstance = () => {
     withCredentials: true,
   });
 
-  instance.interceptors.request.use((config) => {
-    const token = getPersistedAccessToken();
+  instance.interceptors.request.use(async (config) => {
+    if (shouldSkipAuthHandling(config.url)) {
+      return config;
+    }
 
-    if (token && !config.headers.Authorization) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const token = await ensureValidAdminAccessToken().catch(() => null);
+
+    if (token) {
+      const headers = AxiosHeaders.from(config.headers);
+      headers.set("Authorization", `Bearer ${token}`);
+      config.headers = headers;
     }
 
     return config;
@@ -18,7 +32,36 @@ const createAxiosInstance = () => {
 
   instance.interceptors.response.use(
     async (response) => response,
-    (error) => Promise.reject(error),
+    async (error: AxiosError) => {
+      const originalRequest = error.config as RetriableAxiosRequestConfig | undefined;
+
+      if (
+        error.response?.status !== 401 ||
+        !originalRequest ||
+        originalRequest._retry ||
+        shouldSkipAuthHandling(originalRequest.url)
+      ) {
+        return Promise.reject(error);
+      }
+
+      originalRequest._retry = true;
+
+      try {
+        const nextAccessToken = await refreshAdminAccessToken();
+
+        if (!nextAccessToken) {
+          return Promise.reject(error);
+        }
+
+        const headers = AxiosHeaders.from(originalRequest.headers);
+        headers.set("Authorization", `Bearer ${nextAccessToken}`);
+        originalRequest.headers = headers;
+
+        return instance(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
+    },
   );
 
   return instance;
@@ -26,23 +69,9 @@ const createAxiosInstance = () => {
 
 const AXIOS_INSTANCE = createAxiosInstance();
 
-const getPersistedAccessToken = () => {
-  if (typeof window === "undefined") return null;
-
-  try {
-    const rawAuthStorage = window.localStorage.getItem("app-auth-storage");
-    if (!rawAuthStorage) return null;
-
-    const parsedAuthStorage = JSON.parse(rawAuthStorage) as {
-      state?: {
-        appAccessToken?: string | null;
-      };
-    };
-
-    return parsedAuthStorage.state?.appAccessToken ?? null;
-  } catch {
-    return null;
-  }
+const shouldSkipAuthHandling = (url?: string | null) => {
+  if (!url) return false;
+  return /\/auth\/(login|refresh|logout)(\?|$)/.test(url);
 };
 
 const convertHeaders = (headers?: HeadersInit): Record<string, string> | undefined => {

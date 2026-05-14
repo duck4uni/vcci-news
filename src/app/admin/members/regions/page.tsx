@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Edit, Plus, Save, Trash2, X } from "lucide-react";
+import { Plus, Save, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { Button } from "@/components/ui/button";
 import {
@@ -206,26 +207,12 @@ export default function AdminMemberRegionsPage() {
                     {item.name}
                   </TableCell>
                   <TableCell className="py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-                        onClick={() => openEdit(item)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                        onClick={() => setDeleteTarget(item)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <AdminRowActions
+                      actions={[
+                        { kind: "edit", label: "Chỉnh sửa khu vực", onClick: () => openEdit(item) },
+                        { kind: "delete", label: "Xóa khu vực", onClick: () => setDeleteTarget(item) },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))

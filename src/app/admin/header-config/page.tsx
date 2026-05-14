@@ -34,6 +34,12 @@ const EMPTY_HEADER_CATEGORY_FORM: HeaderCategoryFormValues = {
   description: "",
 };
 
+const PROTECTED_HOME_CATEGORY_ID = "root-home";
+
+function isProtectedHomeCategory(itemId?: string | null) {
+  return itemId === PROTECTED_HOME_CATEGORY_ID;
+}
+
 function toFormValues(item?: CmsHeaderCategoryItem | null): HeaderCategoryFormValues {
   if (!item) return EMPTY_HEADER_CATEGORY_FORM;
 
@@ -199,6 +205,8 @@ export default function HeaderConfigPage() {
   };
 
   const openEdit = (item: HeaderCategoryTreeItem) => {
+    if (isProtectedHomeCategory(item.id)) return;
+
     const fullItem = itemMap.get(item.id) ?? null;
     setFormMode("edit");
     setFormValues(toFormValues(fullItem));
@@ -222,6 +230,10 @@ export default function HeaderConfigPage() {
 
   const handleSubmit = async () => {
     if (isSubmitting) return;
+
+    if (isProtectedHomeCategory(formValues.id)) {
+      return;
+    }
 
     if (!formValues.name.trim()) {
       toast.error("Tên danh mục là bắt buộc");
@@ -292,6 +304,11 @@ export default function HeaderConfigPage() {
 
   const handleDelete = async () => {
     if (!deleteTarget || isSubmitting) return;
+
+    if (isProtectedHomeCategory(deleteTarget.id)) {
+      setDeleteTarget(null);
+      return;
+    }
 
     setIsSubmitting(true);
 

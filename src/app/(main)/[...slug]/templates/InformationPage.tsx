@@ -1,62 +1,42 @@
 'use client';
 
-import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
-import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
-import ListCategory from "@/components/base/list-category";
-import { useParams } from "next/dist/client/components/navigation";
-import { Spinner } from "@/components/ui/spinner";
-import { GetNewsResponseType } from "@/api/types/news";
-import { useGetNews } from "@/api/endpoints/news";
 import parse from "html-react-parser";
+import ListCategory from "@/components/base/list-category";
+import {
+  buildDynamicCategoryMenu,
+  getDynamicPostBodyHtml,
+} from "./data";
+import type { DynamicCategoryRouteItem, DynamicPostItem } from "./types";
 
-export default function InformationPage() {
-  // get url
-  const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
-  const path = slug.join("/");
+type InformationPageProps = {
+  post: DynamicPostItem;
+  category: DynamicCategoryRouteItem;
+  allCategories: DynamicCategoryRouteItem[];
+};
 
-  // query
-  const { data: category } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
-    static_link: `/${slug[0]}`,
-  });
+export default function InformationPage({
+  post,
+  category,
+  allCategories,
+}: InformationPageProps) {
+  const categoryMenu = buildDynamicCategoryMenu(category, allCategories);
 
-  const { data: information, isLoading: informationLoading } = useGetNews<GetNewsResponseType>({
-    filters: `page_config.static_link==/${path}`,
-  });
-
-  const children = category?.responseData?.children ?? [];
-  //template
   return (
-    <div className='container w-full flex justify-center items-center pb-10'>
-      {informationLoading ? (
-        <div className="flex justify-center items-center w-full h-64">
-          <Spinner />
-        </div>
-      ) : (
-        <div className='flex flex-col gap-5 w-full'>
-          {children.length !== 0 ? (
-            <ListCategory categories={children} />
-          ) : (
-            <br />
-          )}
-          <main className=" bg-white border rounded-md py-10 px-5 md:px-20 lg:px-20">
-            <div className='text-primary text-2xl leading-normal font-bold'>
-              {information?.responseData?.rows[0]?.title}
+    <div className="container w-full flex justify-center items-center pb-10">
+      <div className="flex flex-col gap-5 w-full">
+        {categoryMenu.length > 0 ? <ListCategory categories={categoryMenu} /> : <br />}
+        <main className="bg-white border rounded-md py-10 px-5 md:px-20 lg:px-20">
+          <div className="text-primary text-2xl leading-normal font-bold">
+            {post.title}
+          </div>
+          <hr className="my-5" />
+          <div className="flex-1 text-app-grey text-base overflow-hidden">
+            <div className="prose tiptap max-w-none overflow-hidden">
+              {parse(getDynamicPostBodyHtml(post))}
             </div>
-            {/* <div className='flex items-center gap-2 text-sm mb-4'>
-            <span className='text-base text-blue-700'>
-              {dayjs(information?.responseData?.rows[0].created_at).format('DD/MM/YYYY')}
-            </span>
-          </div> */}
-            <hr className="my-5" />
-            <div className='flex-1 text-app-grey text-base overflow-hidden'>
-              <div className="prose tiptap overflow-hidden">
-                {parse(information?.responseData?.rows[0]?.description ?? '')}
-              </div>
-            </div>
-          </main>
-        </div>
-      )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

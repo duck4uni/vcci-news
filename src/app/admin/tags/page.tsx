@@ -2,9 +2,10 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { Edit2, Hash, Plus, Tag, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Hash, Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ import {
   type CmsTagItem,
   createCmsTag,
   deleteCmsTag,
-  fetchCmsTags,
+  fetchCmsTagsPage,
   updateCmsTag,
 } from "@/lib/api/cms-admin";
 
@@ -68,12 +69,17 @@ export default function AdminTagsPage() {
   const [formOpen, setFormOpen] = React.useState(false);
   const [formValues, setFormValues] = React.useState<TagFormValues>(EMPTY_FORM);
   const [deleteTarget, setDeleteTarget] = React.useState<CmsTagItem | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [pageSize] = React.useState(10);
+  const [total, setTotal] = React.useState(0);
 
   const load = React.useCallback(async () => {
-    const nextItems = await fetchCmsTags();
-    setItems(nextItems);
+    setIsReady(false);
+    const result = await fetchCmsTagsPage({ page, pageSize });
+    setItems(result.items);
+    setTotal(result.total);
     setIsReady(true);
-  }, []);
+  }, [page, pageSize]);
 
   React.useEffect(() => {
     void load().catch((error) => {
@@ -92,6 +98,18 @@ export default function AdminTagsPage() {
         item.slug.toLowerCase().includes(keyword),
     );
   }, [items, search]);
+
+  const totalPages = Math.ceil(total / pageSize);
+
+  React.useEffect(() => {
+    setPage((currentPage) => (currentPage === 1 ? currentPage : 1));
+  }, [search]);
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setPage(newPage);
+    }
+  };
 
   const openCreate = () => {
     setFormValues(EMPTY_FORM);
@@ -176,7 +194,7 @@ export default function AdminTagsPage() {
         actionDisabled={!isReady}
         actionMeta={
           <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
-            Tổng số tags: {items.length}
+            Tổng số tags: {total}
           </div>
         }
         onSearchChange={setSearch}
@@ -238,32 +256,77 @@ export default function AdminTagsPage() {
                     {item.updated_at ? dayjs(item.updated_at).format("DD/MM/YYYY") : "-"}
                   </TableCell>
                   <TableCell className="px-4 py-4">
-                    <div className="flex justify-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                        onClick={() => openEdit(item)}
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="icon"
-                        className="h-8 w-8 border-red-100 bg-white text-red-600 hover:bg-red-50"
-                        onClick={() => setDeleteTarget(item)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <AdminRowActions
+                      actions={[
+                        { kind: "edit", label: "Chỉnh sửa tag", onClick: () => openEdit(item) },
+                        { kind: "delete", label: "Xóa tag", onClick: () => setDeleteTarget(item) },
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between border-t border-[#063e8e]/10 px-4 py-3">
+            <div className="text-sm text-gray-700">
+              Hiển thị {(page - 1) * pageSize + 1} đến{" "}
+              {Math.min(page * pageSize, total)} của {total} tag
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
+                onClick={() => handlePageChange(page - 1)}
+                disabled={page === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = index + 1;
+                  } else if (page <= 3) {
+                    pageNum = index + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + index;
+                  } else {
+                    pageNum = page - 2 + index;
+                  }
+
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "outline"}
+                      size="icon"
+                      className={
+                        page === pageNum
+                          ? "h-8 w-8 bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
+                          : "h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
+                      }
+                      onClick={() => handlePageChange(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
+                onClick={() => handlePageChange(page + 1)}
+                disabled={page === totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </AdminTableLayout>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
