@@ -1,105 +1,109 @@
+'use client';
+
 import ImageNext from "@/components/shared/image-next";
 import partnerImages from "@/constants/partnerImages";
-import { ChevronsRight } from "lucide-react";
+import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
 
-import { Autoplay, Grid } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
+const videos = [
+  {
+    embedSrc: "https://www.youtube.com/embed/J0Iz0iGuAXY",
+    title: "VCCI-HCM 2025 IN REVIEW (ENGLISH VERSION)",
+    thumbnail:
+      "https://img.youtube.com/vi/J0Iz0iGuAXY/hqdefault.jpg",
+  },
+  {
+    embedSrc: "https://www.youtube.com/embed/_OnnGWv2ehM",
+    title: "Hội nghị Hội viên VCCI - Gala Mừng Xuân 2026",
+    thumbnail:
+      "https://img.youtube.com/vi/_OnnGWv2ehM/hqdefault.jpg",
+  },
+];
 
-import "swiper/css";
-import "swiper/css/grid";
-
-const VideoAndPartners = () => {
+function VideoAndPartners() {
   return (
-    <section className="flex flex-col lg:flex-row gap-5 pb-10">
-      {/* LEFT: VIDEO */}
-      <div className="flex flex-col flex-1">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-bold uppercase text-[#063e8e]">Video</h2>
+    <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-start">
+      <div className="flex-1">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-[#24469c] md:text-[34px]">
+              Video
+            </h2>
+            <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />
+          </div>
+
           <Link
             href="/video"
-            className="text-[#063e8e] hover:underline text-sm font-medium"
+            className="pt-1 text-[#24469c] transition-colors hover:text-[#1b55a1]"
           >
-            <ChevronsRight />
+            <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
 
-        <hr className="border-[#063e8e] mb-5" />
-
-        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-          {[
-            {
-              src: "https://www.youtube.com/embed/J0Iz0iGuAXY",
-              title: "VCCI-HCM 2024 IN REVIEW (ENGLISH VERSION)",
-            },
-            {
-              src: "https://www.youtube.com/embed/_OnnGWv2ehM",
-              title: "Hội nghị Hội viên VCCI - Gala Mừng Xuân Ất Tỵ 2025",
-            },
-          ].map((video, i) => (
-            <div key={i} className="w-full md:w-1/2">
-              <div className="aspect-video rounded-lg overflow-hidden shadow">
-                <iframe
-                  className="w-full h-full font-bold"
-                  src={video.src}
-                  title={video.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  referrerPolicy="strict-origin-when-cross-origin"
-                  allowFullScreen
+        <div className="grid gap-4 md:grid-cols-2">
+          {videos.map((video) => (
+            <a
+              key={video.embedSrc}
+              href={video.embedSrc.replace("/embed/", "/watch?v=")}
+              target="_blank"
+              rel="noreferrer"
+              className="overflow-hidden rounded-[16px] border border-[#e5ebf4] bg-white shadow-[0_10px_22px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(31,59,124,0.12)]"
+            >
+              <div className="group relative aspect-[1.95/1] overflow-hidden">
+                <ImageNext
+                  src={video.thumbnail}
+                  alt={video.title}
+                  width={640}
+                  height={440}
+                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                 />
+                <div className="absolute inset-0 bg-black/18" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="flex h-12 w-12 items-center justify-center rounded-full bg-white/92 text-[#2a4ea3] shadow-[0_10px_26px_rgba(0,0,0,0.18)]">
+                    <Play className="ml-1 h-5 w-5 fill-current" />
+                  </span>
+                </div>
               </div>
-              <p className="mt-2 text-sm text-gray-700 font-medium">
-                {video.title}
-              </p>
-            </div>
+
+              <div className="px-4 py-2.5">
+                <p className="line-clamp-2 text-[14px] font-semibold leading-[1.32] text-[#264798] md:text-[15px]">
+                  {video.title}
+                </p>
+              </div>
+            </a>
           ))}
         </div>
       </div>
 
-      {/* RIGHT: ĐỐI TÁC */}
-      <aside className="w-full lg:w-[30%]">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-bold uppercase text-[#063e8e]">
-            Đối tác
-          </h2>
+      <aside className="w-full xl:w-[43%]">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-[#24469c] md:text-[34px]">
+              Đối tác
+            </h2>
+            <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />
+          </div>
         </div>
 
-        <hr className="border-[#063e8e] mb-5" />
-
-        <div className="pb-10">
-          <Swiper
-            modules={[Autoplay, Grid]}
-            autoplay={{ delay: 4000, disableOnInteraction: false }}
-            loop
-            grid={{ rows: 2, fill: "row" }}
-            slidesPerView={3}
-            spaceBetween={16}
-            breakpoints={{
-              0: { slidesPerView: 3, spaceBetween: 10, grid: { rows: 2 } },
-              640: { slidesPerView: 3, spaceBetween: 16, grid: { rows: 2 } },
-              1024: { slidesPerView: 3, spaceBetween: 24, grid: { rows: 2 } },
-            }}
-            className="partner-swiper"
-          >
-            {partnerImages.map((src, i) => (
-              <SwiperSlide key={i}>
-                <div className="flex justify-center items-center bg-white rounded-lg shadow p-3 w-[120px] h-[120px]">
-                  <ImageNext
-                    src={src}
-                    alt={`partner-${i}`}
-                    width={120}
-                    height={120}
-                    className="object-contain w-full h-full"
-                  />
-                </div>
-              </SwiperSlide>
-            ))}
-          </Swiper>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+          {partnerImages.slice(0, 6).map((src, index) => (
+            <div
+              key={src}
+              className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)]"
+            >
+              <ImageNext
+                src={src}
+                alt={`Đối tác ${index + 1}`}
+                width={140}
+                height={72}
+                className="max-h-full w-full object-contain"
+              />
+            </div>
+          ))}
         </div>
       </aside>
     </section>
   );
-};
+}
 
 export default VideoAndPartners;
