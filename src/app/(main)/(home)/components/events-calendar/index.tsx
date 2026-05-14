@@ -80,7 +80,7 @@ function EventsCalendar() {
     <aside className="w-full rounded-[28px] bg-white p-4 text-[#24469c] shadow-[0_18px_38px_rgba(16,61,130,0.16)] md:p-5 xl:w-[28%] xl:min-w-[320px]">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-[28px] font-extrabold uppercase tracking-tight md:text-[34px]">
+          <h2 className="client-section-title uppercase">
             Lịch sự kiện
           </h2>
           <p className="mt-1.5 text-[12px] uppercase tracking-[0.28em] text-[#7f8eab]">

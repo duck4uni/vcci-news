@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { toast } from 'sonner';
+import React from "react";
+import { toast } from "sonner";
 import {
   HeaderCategoryDeleteDialog,
   HeaderCategoryFlatRow,
@@ -10,29 +10,31 @@ import {
   HeaderCategoryFormMode,
   HeaderCategoryStats,
   HeaderCategoryTable,
-} from './components';
+} from "./components";
+import {
+  CmsHeaderCategoryItem,
+  createHeaderConfigItem,
+  deleteHeaderConfigItem,
+  fetchHeaderConfigItems,
+  updateHeaderConfigItem,
+} from "@/lib/api/cms-admin";
 import {
   buildHeaderCategoryTree,
-  createHeaderCategoryId,
-  getHeaderCategorySeed,
-  HEADER_CONFIG_STORAGE_KEY,
   HeaderCategoryItem,
   HeaderCategoryTreeItem,
-  normalizeHeaderCategories,
   toSlug,
-} from '@/mockdata/header-config';
+} from "@/mockdata/header-config";
 
 const EMPTY_HEADER_CATEGORY_FORM: HeaderCategoryFormValues = {
-  name: '',
-  slug: '',
-  sort_order: '1',
-  parent_id: '',
-  type: 'page',
-  description: '',
-  tagsearch: '',
+  name: "",
+  slug: "",
+  sort_order: "1",
+  parent_id: "",
+  type: "page",
+  description: "",
 };
 
-function toFormValues(item?: HeaderCategoryItem | null): HeaderCategoryFormValues {
+function toFormValues(item?: CmsHeaderCategoryItem | null): HeaderCategoryFormValues {
   if (!item) return EMPTY_HEADER_CATEGORY_FORM;
 
   return {
@@ -40,167 +42,60 @@ function toFormValues(item?: HeaderCategoryItem | null): HeaderCategoryFormValue
     name: item.name,
     slug: item.slug,
     sort_order: String(item.sort_order),
-    parent_id: item.parent_id ?? '',
+    parent_id: item.parent_id ?? "",
     type: item.type,
-    description: item.description ?? '',
-    tagsearch: (item.tagsearch_values ?? []).join(', '),
+    description: item.description ?? "",
   };
 }
 
-function parseTagsearch(value: string) {
-  const seen = new Set<string>();
-
-  return value
-    .split(',')
-    .map((item) => item.trim())
-    .filter((item) => {
-      if (!item) return false;
-
-      const key = item.toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-}
-
-function getInitialHeaderConfig() {
-  if (typeof window === 'undefined') {
-    return getHeaderCategorySeed();
-  }
-
-  const raw = window.localStorage.getItem(HEADER_CONFIG_STORAGE_KEY);
-  if (!raw) return getHeaderCategorySeed();
-
-  try {
-    const parsed = JSON.parse(raw) as HeaderCategoryItem[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return getHeaderCategorySeed();
-    }
-
-    return normalizeHeaderCategories(parsed);
-  } catch {
-    return getHeaderCategorySeed();
-  }
-}
-
-function persistHeaderConfig(items: HeaderCategoryItem[]) {
-  if (typeof window === 'undefined') return;
-
-  window.localStorage.setItem(
-    HEADER_CONFIG_STORAGE_KEY,
-    JSON.stringify(normalizeHeaderCategories(items)),
-  );
-}
-
-function upsertHeaderCategory(items: HeaderCategoryItem[], item: HeaderCategoryItem) {
-  const exists = items.some((entry) => entry.id === item.id);
-  const next = exists
-    ? items.map((entry) => (entry.id === item.id ? item : entry))
-    : [...items, item];
-
-  return normalizeHeaderCategories(next);
-}
-
-function deleteHeaderCategory(items: HeaderCategoryItem[], id: string) {
-  const childIds = new Set<string>();
-
-  const collect = (targetId: string) => {
-    childIds.add(targetId);
-    items
-      .filter((item) => item.parent_id === targetId)
-      .forEach((child) => collect(child.id));
-  };
-
-  collect(id);
-  return normalizeHeaderCategories(items.filter((item) => !childIds.has(item.id)));
-}
+type ManagedHeaderCategoryItem = HeaderCategoryItem & {
+  code: string;
+  api_parent_id: string | null;
+};
 
 function useHeaderConfigModule() {
-  const [items, setItems] = React.useState<HeaderCategoryItem[]>([]);
+  const [items, setItems] = React.useState<ManagedHeaderCategoryItem[]>([]);
+  const [rootStaticLink, setRootStaticLink] = React.useState("/");
   const [isReady, setIsReady] = React.useState(false);
 
-  React.useEffect(() => {
-    setItems(getInitialHeaderConfig());
+  const load = React.useCallback(async () => {
+    const headerConfig = await fetchHeaderConfigItems();
+
+    setItems(headerConfig.items as ManagedHeaderCategoryItem[]);
+    setRootStaticLink(headerConfig.rootStaticLink);
     setIsReady(true);
   }, []);
 
   React.useEffect(() => {
-    if (!isReady) return;
-    persistHeaderConfig(items);
-  }, [isReady, items]);
+    void load().catch((error) => {
+      toast.error(error instanceof Error ? error.message : "Không thể tải cấu hình danh mục");
+      setIsReady(true);
+    });
+  }, [load]);
 
   const tree = React.useMemo(() => buildHeaderCategoryTree(items), [items]);
 
-  const createItem = React.useCallback((values: HeaderCategoryFormValues) => {
-    const nextItem: HeaderCategoryItem = {
-      id: createHeaderCategoryId(),
-      name: values.name.trim(),
-      slug: values.slug.trim() || toSlug(values.name),
-      static_link: '',
-      sort_order: Number(values.sort_order) || 1,
-      type: values.type,
-      is_article: values.type === 'news',
-      parent_id: values.parent_id || null,
-      level: 1,
-      category_ids: [],
-      tagsearch_values: values.type === 'news' ? parseTagsearch(values.tagsearch) : [],
-      description: values.description.trim(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-
-    setItems((current) => upsertHeaderCategory(current, nextItem));
-  }, []);
-
-  const updateItem = React.useCallback((values: HeaderCategoryFormValues) => {
-    if (!values.id) return;
-
-    setItems((current) => {
-      const existing = current.find((item) => item.id === values.id);
-      if (!existing) return current;
-
-      return upsertHeaderCategory(current, {
-        ...existing,
-        name: values.name.trim(),
-        slug: values.slug.trim() || toSlug(values.name),
-        sort_order: Number(values.sort_order) || 1,
-        type: values.type,
-        is_article: values.type === 'news',
-        parent_id: values.parent_id || null,
-        category_ids: [],
-        tagsearch_values: values.type === 'news' ? parseTagsearch(values.tagsearch) : [],
-        description: values.description.trim(),
-        updated_at: new Date().toISOString(),
-      });
-    });
-  }, []);
-
-  const removeItem = React.useCallback((id: string) => {
-    setItems((current) => deleteHeaderCategory(current, id));
-  }, []);
-
   return {
+    items,
     tree,
+    rootStaticLink,
     isReady,
-    createItem,
-    updateItem,
-    removeItem,
-    toFormValues,
+    reload: load,
   };
 }
 
 export default function HeaderConfigPage() {
-  const { tree, isReady, createItem, updateItem, removeItem, toFormValues } =
-    useHeaderConfigModule();
+  const { items, tree, rootStaticLink, isReady, reload } = useHeaderConfigModule();
 
   const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
-  const [search, setSearch] = React.useState('');
-  const [formMode, setFormMode] = React.useState<HeaderCategoryFormMode>('create');
+  const [search, setSearch] = React.useState("");
+  const [formMode, setFormMode] = React.useState<HeaderCategoryFormMode>("create");
   const [formOpen, setFormOpen] = React.useState(false);
   const [formValues, setFormValues] = React.useState<HeaderCategoryFormValues>(
     EMPTY_HEADER_CATEGORY_FORM,
   );
   const [deleteTarget, setDeleteTarget] = React.useState<HeaderCategoryTreeItem | null>(null);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   React.useEffect(() => {
     if (!isReady) return;
@@ -208,8 +103,8 @@ export default function HeaderConfigPage() {
     setExpanded((previous) => {
       const next = { ...previous };
 
-      const walk = (items: HeaderCategoryTreeItem[]) => {
-        items.forEach((item) => {
+      const walk = (nodes: HeaderCategoryTreeItem[]) => {
+        nodes.forEach((item) => {
           if (!(item.id in next)) {
             next[item.id] = true;
           }
@@ -228,8 +123,8 @@ export default function HeaderConfigPage() {
   const flatRows = React.useMemo(() => {
     const rows: HeaderCategoryFlatRow[] = [];
 
-    const walk = (items: HeaderCategoryTreeItem[], depth = 0) => {
-      items.forEach((item) => {
+    const walk = (nodes: HeaderCategoryTreeItem[], depth = 0) => {
+      nodes.forEach((item) => {
         rows.push({ ...item, depth, parentId: item.parent_id });
         if (item.children.length > 0) {
           walk(item.children, depth + 1);
@@ -240,6 +135,11 @@ export default function HeaderConfigPage() {
     walk(tree);
     return rows;
   }, [tree]);
+
+  const itemMap = React.useMemo(
+    () => new Map(items.map((item) => [item.id, item])),
+    [items],
+  );
 
   const visibleRows = React.useMemo(() => {
     return flatRows.filter((row) => {
@@ -264,7 +164,7 @@ export default function HeaderConfigPage() {
   }, [expanded, flatRows, search]);
 
   const categoryParentOptions = React.useMemo(
-    () => tree.filter((item) => item.type === 'category'),
+    () => tree.filter((item) => item.type === "category"),
     [tree],
   );
 
@@ -279,77 +179,132 @@ export default function HeaderConfigPage() {
   }, [editingItem, formValues.parent_id]);
 
   const openCreateRoot = () => {
-    setFormMode('create');
+    setFormMode("create");
     setFormValues(EMPTY_HEADER_CATEGORY_FORM);
     setFormOpen(true);
   };
 
   const openCreateChild = (item: HeaderCategoryTreeItem) => {
-    if (item.parent_id || item.type !== 'category') return;
+    if (item.parent_id || item.type !== "category") return;
 
-    setFormMode('create');
+    setFormMode("create");
     setFormValues({
       ...EMPTY_HEADER_CATEGORY_FORM,
       parent_id: item.id,
       sort_order: String(item.children.length + 1),
-      type: 'page',
+      type: "page",
     });
     setExpanded((previous) => ({ ...previous, [item.id]: true }));
     setFormOpen(true);
   };
 
   const openEdit = (item: HeaderCategoryTreeItem) => {
-    setFormMode('edit');
-    setFormValues(toFormValues(item));
+    const fullItem = itemMap.get(item.id) ?? null;
+    setFormMode("edit");
+    setFormValues(toFormValues(fullItem));
     setFormOpen(true);
   };
 
-  const handleSubmit = () => {
+  const resolveParentContext = (parentId: string) => {
+    if (!parentId) {
+      return {
+        apiParentId: "",
+        parentStaticLink: rootStaticLink,
+      };
+    }
+
+    const parent = itemMap.get(parentId);
+    return {
+      apiParentId: parent?.id ?? "",
+      parentStaticLink: parent?.static_link ?? rootStaticLink,
+    };
+  };
+
+  const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!formValues.name.trim()) {
-      toast.error('Tên danh mục là bắt buộc');
+      toast.error("Tên danh mục là bắt buộc");
+      return;
+    }
+
+    if (!formValues.slug.trim()) {
+      toast.error("Slug danh mục là bắt buộc");
       return;
     }
 
     if (formValues.parent_id) {
       const parent = tree.find((item) => item.id === formValues.parent_id);
-      if (!parent || parent.type !== 'category') {
-        toast.error('Danh mục cha không hợp lệ');
+      if (!parent || parent.type !== "category") {
+        toast.error("Danh mục cha không hợp lệ");
         return;
       }
     }
 
-    if (formValues.parent_id && formValues.type === 'category') {
-      toast.error('Danh mục con không được có thể loại Danh mục');
+    if (formValues.parent_id && formValues.type === "category") {
+      toast.error("Danh mục con không được có thể loại Danh mục");
       return;
     }
 
     if (editingItem && editingItem.children.length > 0 && formValues.parent_id) {
-      toast.error('Danh mục đang có danh mục con nên không thể chuyển thành danh mục con');
+      toast.error(
+        "Danh mục đang có danh mục con nên không thể chuyển thành danh mục con",
+      );
       return;
     }
 
-    if (editingItem && editingItem.children.length > 0 && formValues.type !== 'category') {
-      toast.error('Danh mục đang có danh mục con phải giữ thể loại Danh mục');
+    if (editingItem && editingItem.children.length > 0 && formValues.type !== "category") {
+      toast.error("Danh mục đang có danh mục con phải giữ thể loại Danh mục");
       return;
     }
 
-    if (formMode === 'create') {
-      createItem(formValues);
-      toast.success('Tạo danh mục thành công');
-    } else {
-      updateItem(formValues);
-      toast.success('Cập nhật danh mục thành công');
-    }
+    const parentContext = resolveParentContext(formValues.parent_id);
 
-    setFormOpen(false);
-    setFormValues(EMPTY_HEADER_CATEGORY_FORM);
+    setIsSubmitting(true);
+
+    try {
+      const payload = {
+        name: formValues.name.trim(),
+        slug: formValues.slug.trim() || toSlug(formValues.name),
+        sort_order: Number(formValues.sort_order) || 1,
+        type: formValues.type,
+        api_parent_id: parentContext.apiParentId,
+        parent_static_link: parentContext.parentStaticLink,
+      };
+
+      if (formMode === "create") {
+        await createHeaderConfigItem(payload);
+        toast.success("Tạo danh mục thành công");
+      } else if (formValues.id) {
+        await updateHeaderConfigItem(formValues.id, payload);
+        toast.success("Cập nhật danh mục thành công");
+      }
+
+      await reload();
+      setFormOpen(false);
+      setFormValues(EMPTY_HEADER_CATEGORY_FORM);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể lưu danh mục");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const handleDelete = () => {
-    if (!deleteTarget) return;
-    removeItem(deleteTarget.id);
-    toast.success('Xóa danh mục thành công');
-    setDeleteTarget(null);
+  const handleDelete = async () => {
+    if (!deleteTarget || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      await deleteHeaderConfigItem(deleteTarget.id);
+      toast.success("Xóa danh mục thành công");
+      setDeleteTarget(null);
+      await reload();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể xóa danh mục");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -383,7 +338,7 @@ export default function HeaderConfigPage() {
         canChangeParent={canChangeParent}
         onOpenChange={setFormOpen}
         onValuesChange={setFormValues}
-        onSubmit={handleSubmit}
+        onSubmit={() => void handleSubmit()}
       />
 
       <HeaderCategoryDeleteDialog
@@ -394,7 +349,7 @@ export default function HeaderConfigPage() {
             setDeleteTarget(null);
           }
         }}
-        onConfirm={handleDelete}
+        onConfirm={() => void handleDelete()}
       />
     </div>
   );

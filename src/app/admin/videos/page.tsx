@@ -214,8 +214,8 @@ export default function AdminVideosPage() {
         actionLabel="Thêm video"
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
         actionMeta={
-          <div className="text-sm font-medium text-gray-700">
-            Tổng video: <span className="font-semibold text-[#063e8e]">{items.length}</span>
+          <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
+            Tổng số video: {items.length}
           </div>
         }
         onSearchChange={setSearch}

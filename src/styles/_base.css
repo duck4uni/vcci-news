@@ -18,6 +18,10 @@
     border-color: var(--color-gray-200, currentColor);
   }
 
+  body {
+    font-family: var(--default-font-family);
+  }
+
   /* COLOR */
   :root {
     /* Default background color of <body />...etc */

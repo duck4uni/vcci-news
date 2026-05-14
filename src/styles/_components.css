@@ -24,6 +24,16 @@
     @apply flex flex-col items-stretch justify-between gap-6 xl:flex-row xl:items-start;
   }
 
+  .client-section-title {
+    @apply text-[28px] font-bold tracking-normal md:text-[34px];
+    font-family: var(--default-font-family);
+  }
+
+  .client-footer-title {
+    @apply text-xl font-bold tracking-normal md:text-2xl;
+    font-family: var(--default-font-family);
+  }
+
   /* Typography */
   .typography-h1 {
     @apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;

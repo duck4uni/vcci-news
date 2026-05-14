@@ -1,88 +1,97 @@
-import Axios, { AxiosError, AxiosRequestConfig } from 'axios'
-import config from '@/links/index'
-import useAuthStore from '@/store/useAuthStore'
-const { siteURL } = config
+import Axios, { AxiosError, AxiosRequestConfig } from "axios";
 
-const AXIOS_INSTANCE = Axios.create({ baseURL: config.apiEndpoint })
+const createAxiosInstance = () => {
+  const instance = Axios.create({
+    baseURL: `${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/v1.0`,
+    withCredentials: true,
+  });
 
-AXIOS_INSTANCE.interceptors.request.use(async (config) => {
-  config.headers.Authorization = `Bearer ${useAuthStore.getState().appAccessToken ?? ''}`
+  instance.interceptors.request.use((config) => {
+    const token = getPersistedAccessToken();
 
-  if (typeof window !== 'undefined') {
-    config.headers['IsAdmin'] = window.location.pathname.includes('/admin/')
-  } else {
-    config.headers['Origin'] = siteURL
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  });
+
+  instance.interceptors.response.use(
+    async (response) => response,
+    (error) => Promise.reject(error),
+  );
+
+  return instance;
+};
+
+const AXIOS_INSTANCE = createAxiosInstance();
+
+const getPersistedAccessToken = () => {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const rawAuthStorage = window.localStorage.getItem("app-auth-storage");
+    if (!rawAuthStorage) return null;
+
+    const parsedAuthStorage = JSON.parse(rawAuthStorage) as {
+      state?: {
+        appAccessToken?: string | null;
+      };
+    };
+
+    return parsedAuthStorage.state?.appAccessToken ?? null;
+  } catch {
+    return null;
   }
+};
 
-  if (config.method === 'post' && config.url?.includes('/exportJoinedOrgs')) {
-    config.responseType = 'blob'
-    config.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8'
-  }
-
-  return config
-})
-
-AXIOS_INSTANCE.interceptors.response.use(
-  async (response) => response,
-  (error) => Promise.reject(error)
-)
-
-// Helper function to convert RequestInit headers to Axios format
 const convertHeaders = (headers?: HeadersInit): Record<string, string> | undefined => {
-  if (!headers) return undefined
-  
+  if (!headers) return undefined;
+
   if (headers instanceof Headers) {
-    const result: Record<string, string> = {}
+    const result: Record<string, string> = {};
     headers.forEach((value, key) => {
-      result[key] = value
-    })
-    return result
+      result[key] = value;
+    });
+    return result;
   }
-  
+
   if (Array.isArray(headers)) {
-    const result: Record<string, string> = {}
+    const result: Record<string, string> = {};
     headers.forEach(([key, value]) => {
-      result[key] = value
-    })
-    return result
+      result[key] = value;
+    });
+    return result;
   }
-  
-  return headers as Record<string, string>
-}
+
+  return headers as Record<string, string>;
+};
 
 const useCustomClient = <T>(url: string, options?: RequestInit): Promise<T> => {
-  const source = Axios.CancelToken.source()
-  
-  // Convert RequestInit to AxiosRequestConfig
+  const source = Axios.CancelToken.source();
+
   const axiosConfig: AxiosRequestConfig = {
     url,
-    method: options?.method || 'GET',
+    method: options?.method || "GET",
     headers: convertHeaders(options?.headers),
     data: options?.body,
     signal: options?.signal || undefined,
-    cancelToken: source.token
-  }
+    cancelToken: source.token,
+  };
 
   const promise = AXIOS_INSTANCE(axiosConfig).then(({ data, status }) => {
-    return data instanceof Blob ? data : { ...data, statusCode: status }
-  })
+    return data instanceof Blob ? data : { ...data, statusCode: status };
+  });
 
   // @ts-expect-error not exist cancel
   promise.cancel = () => {
-    source.cancel('Query was cancelled')
-  }
-  return promise
-}
+    source.cancel("Query was cancelled");
+  };
+  return promise;
+};
 
-export { useCustomClient }
+export { useCustomClient };
 
-// In some case with react-query and swr you want to be able to override the return error type so you can also do it here like this
+export type ErrorType<Error> = AxiosError<Error>;
 
-export type ErrorType<Error> = AxiosError<Error>
-
-export type BodyType<BodyData> = BodyData
-
-// Or, in case you want to wrap the body type (optional)
-
-// (if the custom instance is processing data before sending it, like changing the case for example)
-// export type BodyType<BodyData> = CamelCase<BodyData>;
+export type BodyType<BodyData> = BodyData;

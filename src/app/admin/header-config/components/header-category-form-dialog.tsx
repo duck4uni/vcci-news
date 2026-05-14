@@ -36,7 +36,6 @@ export interface HeaderCategoryFormValues {
   parent_id: string;
   type: HeaderCategoryType;
   description: string;
-  tagsearch: string;
 }
 
 interface HeaderCategoryFormDialogProps {
@@ -97,11 +96,6 @@ export function HeaderCategoryFormDialog({
     }));
   };
 
-  const searchTags = values.tagsearch
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto rounded-3xl border-[#063e8e]/15 bg-white text-gray-700 shadow-xl">
@@ -114,7 +108,9 @@ export function HeaderCategoryFormDialog({
 
         <div className="grid grid-cols-1 gap-4 py-2 md:grid-cols-2">
           <div>
-            <Label className="mb-1.5 block text-gray-700">Tên danh mục <span className="text-red-600">*</span></Label>
+            <Label className="mb-1.5 block text-gray-700">
+              Tên danh mục <span className="text-red-600">*</span>
+            </Label>
             <Input
               value={values.name}
               onChange={(event) => handleNameChange(event.target.value)}
@@ -124,7 +120,9 @@ export function HeaderCategoryFormDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-gray-700">Thể loại <span className="text-red-600">*</span></Label>
+            <Label className="mb-1.5 block text-gray-700">
+              Thể loại <span className="text-red-600">*</span>
+            </Label>
             <Select
               value={values.type}
               onValueChange={(value) =>
@@ -185,7 +183,9 @@ export function HeaderCategoryFormDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-gray-700">Thứ tự <span className="text-red-600">*</span></Label>
+            <Label className="mb-1.5 block text-gray-700">
+              Thứ tự <span className="text-red-600">*</span>
+            </Label>
             <Input
               type="number"
               min="0"
@@ -197,7 +197,9 @@ export function HeaderCategoryFormDialog({
           </div>
 
           <div>
-            <Label className="mb-1.5 block text-gray-700">Slug <span className="text-red-600">*</span></Label>
+            <Label className="mb-1.5 block text-gray-700">
+              Slug <span className="text-red-600">*</span>
+            </Label>
             <Input
               value={values.slug}
               onChange={(event) => setField("slug", event.target.value)}
@@ -212,35 +214,11 @@ export function HeaderCategoryFormDialog({
               rows={3}
               value={values.description}
               onChange={(event) => setField("description", event.target.value)}
-              placeholder="Mô tả ngắn về danh mục"
+              placeholder="Ghi mô tả về danh mục"
               className={fieldClassName}
             />
           </div>
 
-          {mode === "edit" && values.type === "news" ? (
-            <div className="md:col-span-2">
-              <Label className="mb-1.5 block text-gray-700">Tag tìm kiếm</Label>
-              <Textarea
-                rows={3}
-                value={values.tagsearch}
-                onChange={(event) => setField("tagsearch", event.target.value)}
-                placeholder="Nhập tag tìm kiếm, ngăn cách bằng dấu phẩy"
-                className={fieldClassName}
-              />
-              {searchTags.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {searchTags.map((item) => (
-                    <span
-                      key={item}
-                      className="inline-flex items-center rounded-full border border-[#063e8e]/15 bg-[#063e8e]/[0.04] px-3 py-1 text-sm text-gray-700"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ) : null}
         </div>
 
         <DialogFooter>

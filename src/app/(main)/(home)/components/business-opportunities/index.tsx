@@ -35,7 +35,7 @@ function BusinessOpportunities() {
     <section className="flex-1">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-[#24469c] md:text-[34px]">
+          <h2 className="client-section-title uppercase text-[#24469c]">
             Cơ hội kinh doanh
           </h2>
           <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />

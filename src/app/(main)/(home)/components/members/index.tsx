@@ -29,7 +29,7 @@ function Members() {
       <aside className="flex-1 rounded-[22px] bg-[#f7b500] p-4 shadow-[0_18px_34px_rgba(247,181,0,0.18)] md:p-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-[#20449a] md:text-[34px]">
+            <h2 className="client-section-title uppercase text-[#20449a]">
               Hội viên tiêu biểu
             </h2>
             <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-white" />
@@ -68,7 +68,7 @@ function Members() {
       <aside className="w-full xl:w-[31%] xl:min-w-[320px]">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-[28px] font-extrabold uppercase tracking-tight text-[#24469c] md:text-[34px]">
+            <h2 className="client-section-title uppercase text-[#24469c]">
               Kết nối hội viên
             </h2>
             <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />

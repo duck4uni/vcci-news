@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 
-interface AuthStoreStateType {
+export interface AuthStoreStateType {
   // States
   appIsLoggedIn: boolean
   appAccessToken: string | null
@@ -40,12 +40,14 @@ const useAuthStore = create<AuthStoreStateType>()(
         setAppIsLoggedIn: (isLoggedIn: boolean) => set(() => ({ appIsLoggedIn: isLoggedIn })),
         setAppToken: (accessToken: string, accessTokenExpired: number, refreshToken?: string) =>
           set(() => ({
+            appIsLoggedIn: true,
             appAccessToken: accessToken,
-            appAccessTokenExpired: Date.now() + (accessTokenExpired / 60 - 5) * 60 * 1000,
+            appAccessTokenExpired: Date.now() + Math.max(accessTokenExpired - 300, 0) * 1000,
             appRefreshToken: refreshToken ?? get().appRefreshToken
           })),
         removeAppToken: () => {
           set(() => ({
+            appIsLoggedIn: false,
             appAccessToken: null,
             appAccessTokenExpired: null,
             appRefreshToken: null
@@ -67,7 +69,7 @@ const useAuthStore = create<AuthStoreStateType>()(
             appAccessTokenExpired: null,
             appRefreshToken: null,
             appUserRemember: null,
-            _hasHydrated: false
+            _hasHydrated: true
           }))
 
           // Remove persisted storage

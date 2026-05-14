@@ -2,18 +2,100 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Menu, X, Facebook, Linkedin, Twitter, Youtube } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
 import Image from "next/image";
 import MenuItem from "@/components/base/menu-item";
 import Link from "next/link";
-import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
-import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
+import { useCustomClient } from "@/api/mutator/custom-client";
+import type { Category } from "@/api/models/category";
+import { getCategoryFallbackResponse } from "@/mockdata/categories";
+
+type HeaderMenuItem = {
+  id: string;
+  name: string;
+  url: string;
+  sort_order: number | null;
+  children: HeaderMenuItem[];
+};
+
+type CategoryListResponse = {
+  responseData?: {
+    rows?: Category[];
+  };
+};
+
+function normalizeCategoryUrl(url?: string | null) {
+  if (!url) return "#";
+  return url.startsWith("/") ? url : `/${url}`;
+}
+
+function buildHeaderMenuTree(rows?: Category[]) {
+  if (!rows?.length) return [];
+
+  const itemMap = new Map<string, HeaderMenuItem>();
+  const sortMenuItems = (items: HeaderMenuItem[]) => {
+    items.sort((left, right) => {
+      const leftOrder = left.sort_order ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = right.sort_order ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return left.name.localeCompare(right.name, "vi");
+    });
+  };
+
+  rows.forEach((item) => {
+    if (!item.id || !item.name) return;
+
+    itemMap.set(item.id, {
+      id: item.id,
+      name: item.name,
+      url: normalizeCategoryUrl(item.url),
+      sort_order: item.sort_order ?? null,
+      children: [],
+    });
+  });
+
+  const roots: HeaderMenuItem[] = [];
+
+  rows.forEach((item) => {
+    if (!item.id || !item.name) return;
+
+    const current = itemMap.get(item.id);
+    if (!current) return;
+
+    if (item.parent_id && itemMap.has(item.parent_id)) {
+      const parent = itemMap.get(item.parent_id);
+      parent?.children.push(current);
+      if (parent) sortMenuItems(parent.children);
+      return;
+    }
+
+    if ((item.type ?? "") === "category") {
+      roots.push(current);
+    }
+  });
+
+  sortMenuItems(roots);
+  return roots;
+}
 
 function Header() {
   const [toggleMenu, setToggleMenu] = useState<boolean>(false);
   const router = useRouter();
 
-  const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>();
+  const { data: categoriesResponse } = useQuery({
+    queryKey: ["header-categories"],
+    queryFn: () =>
+      useCustomClient<CategoryListResponse>(
+        "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
+      ).catch(() => getCategoryFallbackResponse()),
+  });
+
+  const menuItems = React.useMemo(
+    () => buildHeaderMenuTree(categoriesResponse?.responseData?.rows),
+    [categoriesResponse?.responseData?.rows],
+  );
 
   return (
     <>
@@ -104,15 +186,15 @@ function Header() {
 
             {/* Desktop Menu */}
             <nav className="hidden lg:flex items-center">
-              {categoriesPage?.responseData?.children?.map((category) => (
+              {menuItems.map((category) => (
                 <MenuItem
                   key={category.id}
                   title={category.name}
-                  link={category.static_link}
+                  link={category.url}
                   items={[
                     ...category.children.map((child) => ({
                       title: child.name,
-                      link: child.static_link,
+                      link: child.url,
                     })),
                   ]}
                 />
@@ -134,10 +216,10 @@ function Header() {
           className={`lg:hidden bg-white shadow-lg transition-all duration-300 overflow-hidden ${toggleMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
             }`}
         >
-          {categoriesPage?.responseData?.children?.map((category) => (
+          {menuItems.map((category) => (
             <div key={category.id} className="border-b border-gray-200">
               <Link
-                href={category.static_link || "#"}
+                href={category.url || "#"}
                 className="block py-3 text-center hover:bg-[#124588] hover:text-white text-[16px] font-medium"
                 onClick={() => setToggleMenu(false)}
               >

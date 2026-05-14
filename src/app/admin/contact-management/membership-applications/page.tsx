@@ -71,8 +71,8 @@ export default function AdminMembershipApplicationsPage() {
         searchValue={search}
         searchPlaceholder="Tìm kiếm đơn đăng ký hội viên..."
         actionMeta={
-          <div className="text-sm font-medium text-gray-700">
-            Tổng bản ghi: <span className="font-semibold text-[#063e8e]">{filteredItems.length}</span>
+          <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
+            Tổng số đơn đăng ký: {items.length}
           </div>
         }
         onSearchChange={setSearch}

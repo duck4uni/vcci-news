@@ -30,7 +30,7 @@ import {
 } from "@/mockdata/members";
 
 const fieldClassName =
-  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
+  "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 interface FieldFormDialogProps {
   open: boolean;
@@ -57,7 +57,7 @@ function FieldFormDialog({ open, initial, onOpenChange, onSave }: FieldFormDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl border-[#063e8e]/15 bg-white">
+      <DialogContent className="max-w-md border-[#063e8e]/15 bg-white">
         <DialogHeader>
           <DialogTitle className="text-[#063e8e]">
             {initial ? "Chỉnh sửa lĩnh vực" : "Thêm lĩnh vực mới"}
@@ -163,8 +163,8 @@ export default function AdminMemberFieldsPage() {
         actionLabel="Thêm lĩnh vực"
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
         actionMeta={
-          <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
-            Tổng lĩnh vực: {items.length}
+          <div className="text-sm font-medium text-gray-700">
+            Tổng lĩnh vực: <span className="font-semibold text-[#063e8e]">{items.length}</span>
           </div>
         }
         onSearchChange={setSearch}

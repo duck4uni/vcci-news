@@ -18,7 +18,7 @@ function QuickLinks() {
   return (
     <aside className="w-full xl:grid xl:w-[32%] xl:grid-rows-[0.74fr_0.88fr] xl:gap-4">
       <div className="rounded-[22px] border border-[#dbe4f2] bg-white p-4 shadow-[0_8px_24px_rgba(31,59,124,0.08)] xl:h-full">
-        <h2 className="text-[28px] md:text-[34px] font-extrabold uppercase tracking-tight text-[#24469c]">
+        <h2 className="client-section-title uppercase text-[#24469c]">
           Liên kết nhanh
         </h2>
         <div className="mt-3 h-[5px] w-[68px] rounded-full bg-[#f7b500]" />

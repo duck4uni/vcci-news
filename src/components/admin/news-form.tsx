@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { ArrowLeft, Save, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronsUpDown, Save, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,8 +12,16 @@ import { AdminRichTextEditor } from "@/components/admin/rich-text-editor";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -23,27 +31,32 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
+  type CmsHeaderCategoryItem,
+  type CmsTagItem,
+  createCmsNewsItem,
+  fetchCmsNewsItem,
+  fetchCmsNewsItems,
+  fetchCmsTags,
+  fetchHeaderConfigItems,
+  updateCmsNewsItem,
+} from "@/lib/api/cms-admin";
+import {
+  ADMIN_NEWS_TYPE_OPTIONS,
+  cloneAdminNewsFormValues,
   type AdminMediaItem,
   type AdminNewsFormValues,
   type AdminNewsImageRef,
   type AdminNewsItem,
   type AdminNewsType,
-  ADMIN_NEWS_TYPE_OPTIONS,
-  cloneAdminNewsFormValues,
-  createAdminNewsId,
-  persistAdminNewsItems,
-  readAdminNewsItems,
   resolveAdminNewsType,
   slugifyAdminNews,
 } from "@/mockdata/admin-news";
 import {
   type HeaderCategoryItem,
   type HeaderCategoryTreeItem,
-  HEADER_CONFIG_STORAGE_KEY,
   buildHeaderCategoryTree,
-  getHeaderCategorySeed,
-  normalizeHeaderCategories,
 } from "@/mockdata/header-config";
+import { cn } from "@/lib/utils";
 
 interface AdminNewsFormProps {
   newsId?: string;
@@ -65,26 +78,6 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 
 const selectItemClassName =
   "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
-
-function readHeaderConfig() {
-  if (typeof window === "undefined") {
-    return getHeaderCategorySeed();
-  }
-
-  const raw = window.localStorage.getItem(HEADER_CONFIG_STORAGE_KEY);
-  if (!raw) return getHeaderCategorySeed();
-
-  try {
-    const parsed = JSON.parse(raw) as HeaderCategoryItem[];
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      return getHeaderCategorySeed();
-    }
-
-    return normalizeHeaderCategories(parsed);
-  } catch {
-    return getHeaderCategorySeed();
-  }
-}
 
 function flattenHeaderTree(
   items: HeaderCategoryTreeItem[],
@@ -120,6 +113,19 @@ function toImageRef(item: AdminMediaItem): AdminNewsImageRef {
   };
 }
 
+function formatHeaderCategoryOptionLabel(option: {
+  name: string;
+  depth: number;
+}) {
+  return `${"-- ".repeat(option.depth)}${option.name}`;
+}
+
+function isUuid(value: string) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value,
+  );
+}
+
 function FormSection({
   title,
   description,
@@ -142,6 +148,117 @@ function FormSection({
   );
 }
 
+function NewsFormLoadingState() {
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center gap-3">
+        <div className="h-10 w-10 animate-pulse rounded-xl bg-[#063e8e]/10" />
+      </div>
+
+      {Array.from({ length: 4 }).map((_, index) => (
+        <div
+          key={index}
+          className="rounded-2xl border border-[#063e8e]/15 bg-white p-5 shadow-sm"
+        >
+          <div className="mb-4 space-y-2">
+            <div className="h-5 w-48 animate-pulse rounded bg-[#063e8e]/10" />
+            <div className="h-4 w-72 animate-pulse rounded bg-[#063e8e]/[0.05]" />
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="h-11 animate-pulse rounded-xl bg-[#063e8e]/[0.05]" />
+            <div className="h-11 animate-pulse rounded-xl bg-[#063e8e]/[0.05]" />
+            <div className="h-11 animate-pulse rounded-xl bg-[#063e8e]/[0.05] md:col-span-2" />
+            <div className="h-40 animate-pulse rounded-2xl bg-[#063e8e]/[0.05] md:col-span-2" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function HeaderCategoryCombobox({
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  value: string;
+  options: Array<{
+    id: string;
+    name: string;
+    type: HeaderCategoryItem["type"];
+    depth: number;
+  }>;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const selectedOption = options.find((option) => option.id === value) ?? null;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          disabled={disabled}
+          className={cn(
+            "h-11 w-full justify-between rounded-xl border-[#063e8e]/15 bg-white px-4 font-normal text-gray-700 hover:bg-white hover:text-gray-700 focus-visible:ring-[#063e8e]/30",
+            !selectedOption && "text-gray-700",
+          )}
+        >
+          <span className="truncate text-left">
+            {selectedOption
+              ? formatHeaderCategoryOptionLabel(selectedOption)
+              : "Chọn danh mục hiển thị"}
+          </span>
+          <ChevronsUpDown className="ml-3 h-4 w-4 shrink-0 opacity-60" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] border-[#063e8e]/15 bg-white p-0 text-gray-700"
+      >
+        <Command className="bg-white text-gray-700">
+          <CommandInput
+            placeholder="Tìm danh mục hiển thị"
+            className="text-gray-700 placeholder:text-gray-500"
+          />
+          <CommandList className="max-h-72">
+            <CommandEmpty className="text-gray-700">
+              Không tìm thấy danh mục phù hợp
+            </CommandEmpty>
+            {options.map((option) => (
+              <CommandItem
+                key={option.id}
+                value={`${option.id} ${option.name} ${option.type}`}
+                onSelect={() => {
+                  onChange(option.id);
+                  setOpen(false);
+                }}
+                className="gap-3 px-3 py-2 text-gray-700 data-[selected=true]:bg-[#063e8e]/10 data-[selected=true]:text-[#063e8e]"
+              >
+                <Check
+                  className={cn(
+                    "h-4 w-4 text-[#063e8e]",
+                    value === option.id ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                <span className="truncate">
+                  {formatHeaderCategoryOptionLabel(option)}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function AdminNewsForm({
   newsId,
   presetHeaderCategoryId,
@@ -154,49 +271,97 @@ export function AdminNewsForm({
   const isHeaderCategoryLocked = Boolean(presetHeaderCategoryId);
   const isTypeLocked = Boolean(lockedType);
   const [items, setItems] = React.useState<AdminNewsItem[]>([]);
-  const [headerItems, setHeaderItems] = React.useState<HeaderCategoryItem[]>([]);
+  const [headerItems, setHeaderItems] = React.useState<CmsHeaderCategoryItem[]>([]);
+  const [allTags, setAllTags] = React.useState<CmsTagItem[]>([]);
   const [form, setForm] = React.useState<AdminNewsFormValues | null>(null);
   const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [isLoadingInitialData, setIsLoadingInitialData] = React.useState(true);
+  const [isMissingPost, setIsMissingPost] = React.useState(false);
 
   React.useEffect(() => {
-    const nextNewsItems = readAdminNewsItems();
-    const nextHeaderItems = readHeaderConfig();
-    const currentItem = nextNewsItems.find((item) => item.id === newsId) ?? null;
+    let cancelled = false;
 
-    setItems(nextNewsItems);
-    setHeaderItems(nextHeaderItems);
+    const load = async () => {
+      setIsLoadingInitialData(true);
+      setIsMissingPost(false);
+      setForm(isCreate ? cloneAdminNewsFormValues() : null);
 
-    if (isCreate) {
-      const now = new Date().toISOString();
-      setForm({
-        ...cloneAdminNewsFormValues(),
-        type: lockedType ?? "tintuc",
-        header_category_id: presetHeaderCategoryId ?? "",
-        created_at: now,
-        updated_at: now,
-      });
-      return;
-    }
+      try {
+        const [{ items: nextNewsItems }, nextHeaderConfig, nextTags] = await Promise.all([
+          fetchCmsNewsItems(),
+          fetchHeaderConfigItems(),
+          fetchCmsTags(),
+        ]);
 
-    if (!currentItem) {
-      setForm(null);
-      return;
-    }
+        if (cancelled) return;
 
-    if (
-      presetHeaderCategoryId &&
-      currentItem.header_category_id !== presetHeaderCategoryId
-    ) {
-      setForm(null);
-      return;
-    }
+        setItems(nextNewsItems);
+        setHeaderItems(nextHeaderConfig.items);
+        setAllTags(nextTags);
 
-    if (lockedType && currentItem.type !== lockedType) {
-      setForm(null);
-      return;
-    }
+        if (isCreate) {
+          const now = new Date().toISOString();
+          const presetHeader =
+            nextHeaderConfig.items.find((item) => item.id === presetHeaderCategoryId) ?? null;
 
-    setForm(cloneAdminNewsFormValues(currentItem));
+          setForm({
+            ...cloneAdminNewsFormValues(),
+            type: lockedType ?? (presetHeader?.type === "page" ? "baiviettrang" : "tintuc"),
+            header_category_id: presetHeaderCategoryId ?? "",
+            category_ids: presetHeader?.category_ids ?? [],
+            created_at: now,
+            updated_at: now,
+          });
+          return;
+        }
+
+        const currentItem =
+          nextNewsItems.find((item) => item.id === newsId) ??
+          (newsId ? await fetchCmsNewsItem(newsId) : null);
+
+        if (cancelled) return;
+
+        if (!currentItem) {
+          setIsMissingPost(true);
+          setForm(null);
+          return;
+        }
+
+        if (
+          presetHeaderCategoryId &&
+          currentItem.header_category_id !== presetHeaderCategoryId
+        ) {
+          setIsMissingPost(true);
+          setForm(null);
+          return;
+        }
+
+        if (lockedType && currentItem.type !== lockedType) {
+          setIsMissingPost(true);
+          setForm(null);
+          return;
+        }
+
+        setIsMissingPost(false);
+        setForm(cloneAdminNewsFormValues(currentItem));
+      } catch (error) {
+        if (cancelled) return;
+        toast.error(error instanceof Error ? error.message : "Không thể tải bài viết");
+        setIsMissingPost(!isCreate);
+        setForm(isCreate ? cloneAdminNewsFormValues() : null);
+      } finally {
+        if (!cancelled) {
+          setIsLoadingInitialData(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [isCreate, lockedType, newsId, presetHeaderCategoryId]);
 
   const headerOptions = React.useMemo(() => {
@@ -211,8 +376,20 @@ export function AdminNewsForm({
 
   const availableSearchTags = React.useMemo(() => {
     if (!selectedHeaderCategory || selectedHeaderCategory.type !== "news") return [];
-    return selectedHeaderCategory.tagsearch_values ?? [];
-  }, [selectedHeaderCategory]);
+    return allTags.map((item) => item.name);
+  }, [allTags, selectedHeaderCategory]);
+
+  const selectedTagIds = React.useMemo(() => {
+    if (!selectedHeaderCategory || selectedHeaderCategory.type !== "news") return [];
+
+    const tagMap = new Map(
+      allTags.map((item) => [item.name.trim().toLowerCase(), item.id] as const),
+    );
+
+    return form?.tagsearch_values
+      .map((name) => tagMap.get(name.trim().toLowerCase()))
+      .filter((value): value is string => Boolean(value)) ?? [];
+  }, [allTags, form?.tagsearch_values, selectedHeaderCategory]);
 
   const articlePageAlreadyUsed = React.useMemo(() => {
     if (!form?.header_category_id || form.type !== "baiviettrang") return false;
@@ -263,7 +440,12 @@ export function AdminNewsForm({
         ...current,
         type: nextType,
         header_category_id: compatibleHeader ? current.header_category_id : "",
-        category_ids: nextType === "baiviettrang" ? [] : current.category_ids,
+        category_ids:
+          nextType === "baiviettrang"
+            ? []
+            : compatibleHeader
+              ? current.category_ids
+              : [],
         tagsearch_values: nextType === "baiviettrang" ? [] : current.tagsearch_values,
         is_featured: nextType === "tintuc" ? current.is_featured : false,
       };
@@ -273,7 +455,7 @@ export function AdminNewsForm({
   const handleHeaderCategoryChange = (value: string) => {
     const nextCategory = headerItems.find((item) => item.id === value) ?? null;
     const nextSearchTags =
-      nextCategory?.type === "news" ? nextCategory.tagsearch_values ?? [] : [];
+      nextCategory?.type === "news" ? allTags.map((item) => item.name) : [];
 
     setForm((current) => {
       if (!current) return current;
@@ -281,6 +463,7 @@ export function AdminNewsForm({
       return {
         ...current,
         header_category_id: value,
+        category_ids: nextCategory?.category_ids ?? [],
         tagsearch_values: current.tagsearch_values.filter((item) =>
           nextSearchTags.includes(item),
         ),
@@ -305,9 +488,9 @@ export function AdminNewsForm({
     handleField("thumbnail", toImageRef(item));
   };
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form) return;
+    if (!form || isSubmitting) return;
 
     if (!form.title.trim()) {
       toast.error("Tiêu đề bài viết là bắt buộc");
@@ -320,7 +503,7 @@ export function AdminNewsForm({
     }
 
     if (!form.type) {
-      toast.error("Vui lòng chọn loại bài viết");
+      toast.error("Vui lòng chọn thể loại bài viết");
       return;
     }
 
@@ -334,32 +517,22 @@ export function AdminNewsForm({
       return;
     }
 
-    const now = new Date().toISOString();
-    const currentId =
-      items.find((item) => item.id === newsId)?.id ?? createAdminNewsId();
-
-    const payload: AdminNewsItem = {
-      id: isCreate ? currentId : (newsId as string),
+    const payload = {
       title: form.title.trim(),
       slug: slugifyAdminNews(form.slug.trim()),
       summary: form.summary,
-      type: form.type,
       header_category_id: form.header_category_id,
-      category_ids: form.type === "baiviettrang" ? [] : form.category_ids,
-      tagsearch_values:
-        form.type === "baiviettrang"
-          ? []
-          : form.tagsearch_values.filter((item) => availableSearchTags.includes(item)),
+      category_ids:
+        form.type === "baiviettrang" ? [] : selectedHeaderCategory?.category_ids ?? [],
+      tag_ids: form.type === "baiviettrang" ? [] : selectedTagIds,
       is_featured: form.type === "tintuc" ? form.is_featured : false,
-      thumbnail: form.thumbnail,
+      thumbnail_id: form.thumbnail && isUuid(form.thumbnail.id) ? form.thumbnail.id : null,
       is_hidden: form.is_hidden,
-      created_at: form.created_at || now,
-      updated_at: now,
-      published_at: form.published_at,
-      expired_at: form.expired_at,
-      started_at: form.started_at,
-      ended_at: form.ended_at,
-      registration_deadline: form.registration_deadline,
+      published_at: form.published_at || null,
+      expired_at: form.expired_at || null,
+      started_at: form.started_at || null,
+      ended_at: form.ended_at || null,
+      registration_deadline: form.registration_deadline || null,
       location: form.location.trim(),
       participation_fee: form.participation_fee.trim(),
       post_content: form.post_content.map((section, index) => ({
@@ -368,24 +541,36 @@ export function AdminNewsForm({
       })),
     };
 
-    const nextItems = isCreate
-      ? [payload, ...items]
-      : items.map((item) => (item.id === payload.id ? payload : item));
+    setIsSubmitting(true);
 
-    persistAdminNewsItems(nextItems);
-    setItems(nextItems);
-    toast.success(isCreate ? "Đã tạo bài viết" : "Đã cập nhật bài viết");
-    router.push(backPath);
+    try {
+      if (isCreate) {
+        await createCmsNewsItem(payload);
+      } else if (newsId) {
+        await updateCmsNewsItem(newsId, payload);
+      }
+
+      toast.success(isCreate ? "Đã tạo bài viết" : "Đã cập nhật bài viết");
+      router.push(backPath);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể lưu bài viết");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (form === null && !isCreate) {
+  if (isLoadingInitialData) {
+    return <NewsFormLoadingState />;
+  }
+
+  if (isMissingPost && !isCreate) {
     return (
       <div className="rounded-2xl border border-[#063e8e]/15 bg-white px-6 py-12 text-center">
         <p className="text-lg font-semibold text-black">Không tìm thấy bài viết</p>
         <p className="mt-2 text-sm text-gray-700">
           {presetHeaderCategoryId
-            ? "Bài viết bạn muốn chỉnh sửa không tồn tại hoặc không thuộc danh mục hiện tại."
-            : "Bài viết bạn muốn chỉnh sửa không tồn tại trong dữ liệu hiện tại."}
+            ? "Bài viết không tồn tại hoặc không thuộc danh mục hiện tại."
+            : "Bài viết không tồn tại trong dữ liệu hiện tại."}
         </p>
         <Button
           asChild
@@ -495,7 +680,7 @@ export function AdminNewsForm({
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-gray-700">
-                        Chưa chọn hình đại diện
+                        Chưa chọn ảnh đại diện
                       </div>
                     )}
                   </div>
@@ -556,28 +741,14 @@ export function AdminNewsForm({
                     <Label className="mb-1.5 block text-gray-700">
                       Danh mục hiển thị
                     </Label>
-                    <Select
+                    <HeaderCategoryCombobox
                       value={form.header_category_id}
-                      onValueChange={handleHeaderCategoryChange}
+                      onChange={handleHeaderCategoryChange}
                       disabled={isHeaderCategoryLocked}
-                    >
-                      <SelectTrigger className={selectTriggerClassName}>
-                        <SelectValue placeholder="Chọn danh mục hiển thị" />
-                      </SelectTrigger>
-                      <SelectContent className={selectContentClassName}>
-                        {headerOptions
-                          .filter((option) => isCategoryCompatible(option.type, form.type))
-                          .map((option) => (
-                            <SelectItem
-                              key={option.id}
-                              value={option.id}
-                              className={selectItemClassName}
-                            >
-                              {`${"-- ".repeat(option.depth)}${option.name}`}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
+                      options={headerOptions.filter((option) =>
+                        isCategoryCompatible(option.type, form.type),
+                      )}
+                    />
                   </div>
                 </div>
 
@@ -611,7 +782,7 @@ export function AdminNewsForm({
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-medium text-gray-700">
-                        Trạng thái hiển thị (bài viết sẽ được lưu nhưng không hiển thị trên website)
+                        Trạng thái hiển thị
                       </p>
                       <p className="mt-1 text-sm font-medium text-[#063e8e]">
                         {form.is_hidden ? "Đang ẩn" : "Đang hiển thị"}
@@ -696,7 +867,7 @@ export function AdminNewsForm({
 
               <div>
                 <Label className="mb-1.5 block text-gray-700">
-                  Ngày hạn đăng ký
+                  Hạn đăng ký
                 </Label>
                 <Input
                   type="datetime-local"
@@ -764,9 +935,14 @@ export function AdminNewsForm({
           <Button
             className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
             type="submit"
+            disabled={isSubmitting}
           >
             <Save className="mr-2 h-4 w-4" />
-            {isCreate ? "Lưu bài viết" : "Cập nhật bài viết"}
+            {isSubmitting
+              ? "Đang lưu..."
+              : isCreate
+                ? "Lưu bài viết"
+                : "Cập nhật bài viết"}
           </Button>
         </div>
       </form>
