@@ -57,7 +57,7 @@ function FeaturedNews() {
                     {primaryItem.categories[0]?.name || "Tin nổi bật"}
                   </span>
 
-                  <h3 className="max-w-3xl text-[20px] font-bold leading-[1.28] text-white md:text-[28px] xl:text-[32px]">
+                  <h3 className="max-w-3xl line-clamp-3 text-[20px] font-bold leading-[1.28] text-white md:text-[28px] xl:text-[32px]">
                     {primaryItem.title}
                   </h3>
 
@@ -70,8 +70,8 @@ function FeaturedNews() {
               </div>
             </Link>
           ) : (
-            <div className="relative min-h-[260px] overflow-hidden rounded-[24px] bg-[#e9eef8] shadow-[0_18px_38px_rgba(28,52,120,0.12)] md:min-h-[320px] xl:min-h-[350px]">
-              <div className="flex h-full min-h-[260px] flex-col justify-end p-4 md:min-h-[320px] md:p-5 xl:min-h-[350px]">
+            <div className="relative min-h-[260px] overflow-hidden rounded-3xl bg-[#e9eef8] shadow-[0_18px_38px_rgba(28,52,120,0.12)] md:min-h-[320px] xl:min-h-[350px]">
+              <div className="flex h-full min-h-[260px] flex-col justify-end p-4 md:min-h-80 md:p-5 xl:min-h-[350px]">
                 <span className="mb-2 h-8 w-28 rounded-[10px] bg-white/80" />
                 <div className="h-8 w-3/4 rounded bg-white/90 md:h-10" />
                 <div className="mt-2 h-5 w-28 rounded bg-white/70" />

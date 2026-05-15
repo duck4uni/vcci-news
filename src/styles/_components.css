@@ -13,6 +13,24 @@
     @apply fixed top-0 right-0 left-0;
   }
 
+  .header-menu-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .header-menu-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .menu-item-underline {
+    @apply absolute bottom-0 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-[#2f57ff] transition-all duration-200;
+  }
+
+  [aria-selected="true"] > .menu-item-underline,
+  a:hover > .menu-item-underline {
+    @apply w-[44px];
+  }
+
   /* Scrollbar */
   .scrollbar {
     scrollbar-color: rgba(6, 62, 142, 0.38) rgba(219, 232, 255, 0.38);

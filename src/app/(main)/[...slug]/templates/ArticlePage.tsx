@@ -93,7 +93,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
           {categoryMenu.length > 0 ? <ListCategory categories={categoryMenu} /> : <br />}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <main className="lg:col-span-2 bg-background">
+            <main className="lg:col-span-2 bg-white">
               <div className="pb-5 overflow-hidden">
                 {paginatedPosts.length ? (
                   paginatedPosts.map((item) => {
