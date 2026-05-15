@@ -1,4 +1,5 @@
 'use client'
+
 type Menu = {
   id: string | number
   name: string
@@ -7,19 +8,22 @@ type Menu = {
 }
 
 import { buttonVariants } from '@components/ui/button'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@components/ui/hover-card'
 import { cn } from '@lib/utils'
-import { useCallback, useMemo } from 'react'
-import { HoverCard, HoverCardTrigger, HoverCardContent } from '@components/ui/hover-card'
-import { cva } from 'class-variance-authority'
-import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useCallback, useMemo } from 'react'
 
 export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; active?: boolean }) {
   const { menu, variant = 'main', active } = props
 
   const pathname = usePathname()
-  const isActive = pathname.startsWith(menu.link ?? '');
+  const normalizedLink = menu.link && menu.link !== '#' ? menu.link : '/'
+  const hasChildren = Boolean(menu.children?.length)
+  const isRoot = normalizedLink === '/'
+  const isActive = active || (isRoot ? pathname === '/' : pathname.startsWith(normalizedLink))
   const linkId = useMemo(() => `trigger_${menu.id}`, [menu.id])
+
   const hoverCardRef = useCallback(
     (element: HTMLDivElement) => {
       if (!element) return
@@ -28,76 +32,67 @@ export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; ac
     [linkId]
   )
 
-  return (
-    <HoverCard openDelay={0} closeDelay={0}>
-      <HoverCardTrigger asChild>
-        <Link
-          aria-selected={active || isActive}
-          id={linkId}
-          target={(menu.link ?? '').startsWith('/') ? '_self' : '_blank'}
-          href={menu.link ?? '/'}
-          className={menuItemTriggerVariant({ variant })}
-        >
-          {menu.name}
-        </Link>
-      </HoverCardTrigger>
+  const trigger = (
+    <Link
+      aria-selected={isActive}
+      id={linkId}
+      target={normalizedLink.startsWith('/') ? '_self' : '_blank'}
+      href={normalizedLink}
+      className={menuItemTriggerClass(variant)}
+    >
+      <span className="relative z-10 truncate">{menu.name}</span>
+      {variant === 'main' ? <span className="menu-item-underline" aria-hidden="true" /> : null}
+    </Link>
+  )
 
-      {menu.children && (
-        <HoverCardContent ref={hoverCardRef} className={menuItemHoverBoxVariant({ variant })}>
-          {menu.children.map((subMenu) => (
-            <Link key={subMenu.id} href={subMenu.link ?? '/'} className={menuItemChildVariant({ variant })}>
-              {subMenu.name}
-            </Link>
-          ))}
-        </HoverCardContent>
-      )}
+  if (!hasChildren) {
+    return trigger
+  }
+
+  return (
+    <HoverCard openDelay={80} closeDelay={120}>
+      <HoverCardTrigger asChild>{trigger}</HoverCardTrigger>
+      <HoverCardContent ref={hoverCardRef} className={menuItemHoverBoxVariant(variant)}>
+        {menu.children?.map((subMenu) => (
+          <Link key={subMenu.id} href={subMenu.link ?? '/'} className={menuItemChildVariant(variant)}>
+            {subMenu.name}
+          </Link>
+        ))}
+      </HoverCardContent>
     </HoverCard>
   )
 }
 
-const menuItemTriggerVariant = cva(
-  cn(buttonVariants({ variant: 'ghost' }), 'font-semibold focus-visible:ring-0 focus-visible:ring-offset-0 py-'),
-  {
-    variants: {
-      variant: {
-        main: cn(
-          'font-semibold text-[#363636] text-2xl hover:text-muted-foreground hover:bg-white py-3.5 px-5',
-          'aria-selected:text-muted-foreground'
-        ),
-        secondary: cn(
-          'font-boldtext-primary border-t-2 border-t-transparent rounded-none',
-          'hover:text-primary/90',
-          'aria-selected:border-t-secondary aria-selected:bg-accent',
-          'aria-selected:bg-[#E9C826]'
-        )
-      }
-    },
-    defaultVariants: {
-      variant: 'main'
-    }
+function menuItemTriggerClass(variant: 'main' | 'secondary') {
+  if (variant === 'secondary') {
+    return cn(
+      'inline-flex h-[36px] items-center justify-center rounded-full border border-[#d6dfeb] bg-white px-5 text-[13px] font-medium leading-none text-[#5f6b7d] shadow-none transition-colors duration-150',
+      'hover:border-[#c5d2e3] hover:bg-[#f7faff] hover:text-[#1b5aa1]',
+      'aria-selected:border-[#16559d] aria-selected:bg-[#16559d] aria-selected:text-white',
+      'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'
+    )
   }
-)
 
-const menuItemHoverBoxVariant = cva('flex w-full flex-col gap-2 p-0', {
-  variants: {
-    variant: {
-      main: 'bg-secondary',
-      secondary: 'bg-muted '
-    }
-  },
-  defaultVariants: {
-    variant: 'main'
-  }
-})
+  return cn(
+    buttonVariants({ variant: 'ghost' }),
+    'group relative inline-flex h-[60px] rounded-none border-b-2 border-transparent px-3 py-0 text-[15px] font-semibold text-slate-700 shadow-none transition-colors duration-150',
+    'hover:bg-transparent hover:text-[#2f57ff]',
+    'aria-selected:bg-transparent aria-selected:text-[#2f57ff]',
+    'focus-visible:ring-0 focus-visible:ring-offset-0 xl:px-4'
+  )
+}
 
-const menuItemChildVariant = cva(cn(buttonVariants({ variant: 'ghost' }), 'justify-start'), {
-  variants: {
-    variant: {
-      main: 'text-secondary-foreground hover:text-muted-foreground hover:bg-secondary',
-      secondary: 'text-accent-foreground hover:text-primary/90 '
-    }
-  },
-  defaultVariants: {
-    variant: 'main'
-  }
-})
+function menuItemHoverBoxVariant(variant: 'main' | 'secondary') {
+  return cn(
+    'mt-1 flex w-full min-w-[220px] flex-col gap-1 rounded-md border border-slate-200 bg-white p-2 shadow-[0_12px_30px_rgba(15,23,42,0.12)]',
+    variant === 'secondary' ? 'bg-white' : ''
+  )
+}
+
+function menuItemChildVariant(_variant: 'main' | 'secondary') {
+  return cn(
+    buttonVariants({ variant: 'ghost' }),
+    'h-10 justify-start rounded-md px-3 text-sm font-medium text-slate-600 transition-colors',
+    'hover:bg-slate-50 hover:text-[#2f57ff]'
+  )
+}

@@ -22,7 +22,7 @@ const ListCategory: React.FC<{ categories?: Category[] }> = ({ categories = [] }
     <div className="border-t border-gray-200 bg-white py-2">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="py-3">
-          <div className="flex flex-wrap items-center max-w-full overflow-x-auto">
+          <div className="flex max-w-full items-center gap-3 overflow-x-auto pb-1">
             {categories.map((category) => {
               const href = resolveHref(category);
               const menu = { id: category.id, name: category.name, link: href };
@@ -30,7 +30,7 @@ const ListCategory: React.FC<{ categories?: Category[] }> = ({ categories = [] }
 
               return (
                 <div key={category.id} className="shrink-0">
-                  <MenuItem menu={menu} active={active} />
+                  <MenuItem menu={menu} active={active} variant="secondary" />
                 </div>
               );
             })}
