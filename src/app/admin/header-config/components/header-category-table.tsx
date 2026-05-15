@@ -5,24 +5,14 @@ import Link from "next/link";
 import {
   ChevronDown,
   ChevronRight,
-  Edit,
   ExternalLink,
   FileText,
   FolderTree,
-  MoreHorizontal,
   Plus,
-  Trash,
 } from "lucide-react";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -41,6 +31,8 @@ export type HeaderCategoryFlatRow = HeaderCategoryTreeItem & {
   depth: number;
   parentId: string | null;
 };
+
+const PROTECTED_HOME_CATEGORY_ID = "root-home";
 
 interface HeaderCategoryTableProps {
   rows: HeaderCategoryFlatRow[];
@@ -160,8 +152,11 @@ export function HeaderCategoryTable({
             rows.map((item, index) => {
               const hasChildren = item.children.length > 0;
               const isExpanded = expanded[item.id] ?? true;
-              const canCreateChild = !item.parent_id && item.type === "category";
-              const canManagePosts = item.type === "page" || item.type === "news";
+              const isProtectedHomeCategory = item.id === PROTECTED_HOME_CATEGORY_ID;
+              const canCreateChild =
+                !isProtectedHomeCategory && !item.parent_id && item.type === "category";
+              const canManagePosts =
+                !isProtectedHomeCategory && (item.type === "page" || item.type === "news");
 
               return (
                 <TableRow
@@ -221,56 +216,46 @@ export function HeaderCategoryTable({
                   </TableCell>
 
                   <TableCell className="w-[120px] text-center">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          className="text-gray-700 focus:text-[#063e8e]"
-                          onClick={() => onEdit(item)}
-                        >
-                          <Edit className="mr-2 h-4 w-4" />
-                          Chỉnh sửa
-                        </DropdownMenuItem>
-
-                        {canManagePosts ? (
-                          <DropdownMenuItem
-                            asChild
-                            className="text-gray-700 focus:text-[#063e8e]"
-                          >
-                            <Link href={`/admin/header-config/${item.id}/posts`}>
-                              <FileText className="mr-2 h-4 w-4" />
-                              Quản lý bài viết
-                            </Link>
-                          </DropdownMenuItem>
-                        ) : null}
-
-                        {canCreateChild ? (
-                          <DropdownMenuItem
-                            className="text-gray-700 focus:text-[#063e8e]"
-                            onClick={() => onCreateChild(item)}
-                          >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Thêm danh mục con
-                          </DropdownMenuItem>
-                        ) : null}
-
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          className="text-gray-700 focus:text-[#063e8e]"
-                          onClick={() => onDelete(item)}
-                        >
-                          <Trash className="mr-2 h-4 w-4" />
-                          Xóa
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <AdminRowActions
+                      actions={[
+                        ...(!isProtectedHomeCategory
+                          ? [
+                              {
+                                kind: "edit" as const,
+                                label: "Chỉnh sửa danh mục",
+                                onClick: () => onEdit(item),
+                              },
+                            ]
+                          : []),
+                        ...(canManagePosts
+                          ? [
+                              {
+                                kind: "manage" as const,
+                                label: "Quản lý bài viết",
+                                href: `/admin/header-config/${item.id}/posts`,
+                              },
+                            ]
+                          : []),
+                        ...(canCreateChild
+                          ? [
+                              {
+                                kind: "create-child" as const,
+                                label: "Thêm danh mục con",
+                                onClick: () => onCreateChild(item),
+                              },
+                            ]
+                          : []),
+                        ...(!isProtectedHomeCategory
+                          ? [
+                              {
+                                kind: "delete" as const,
+                                label: "Xóa danh mục",
+                                onClick: () => onDelete(item),
+                              },
+                            ]
+                          : []),
+                      ]}
+                    />
                   </TableCell>
                 </TableRow>
               );

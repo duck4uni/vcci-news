@@ -429,7 +429,7 @@ export default function AdminMediaPage() {
               </div>
               <h2 className="mt-5 text-lg font-semibold text-slate-800">Chưa có ảnh phù hợp</h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                Hãy tải ảnh mới hoặc thử lại với từ khóa khác để tìm đúng hình ảnh bạn cần.
+                H?y t?i ?nh m?i ho?c th? l?i v?i t? kh?a kh?c d? t?m d?ng h?nh ?nh b?n c?n.
               </p>
             </div>
           ) : (

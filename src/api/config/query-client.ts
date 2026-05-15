@@ -4,7 +4,7 @@ import { QueryClient } from '@tanstack/react-query'
 
 // App
 // import router from '@/router'
-import useAuthStore from '@/store/useAuthStore'
+import { handleAdminUnauthorized } from '@/lib/auth/admin-auth'
 // import useProfileStore from '@stores/profile'
 import { QueryData } from '@/lib/types/base-api'
 // import { BASE_PATHS } from '@/constants/path'
@@ -41,14 +41,13 @@ const handleCheckBaseRetryLogical = (failureCount: number, error: Error) => {
 
 // Handle un authorization error
 const handleUnAuthorizationError = () => {
-  useAuthStore.getState().resetStore()
+  void handleAdminUnauthorized()
   // useProfileStore.getState().resetStore()
 
   // const languageAwarePath = addLanguageToPath({
   //   path: BASE_PATHS.authSignIn
   // })
   // router.navigate('')
-  window.location.href = process ? '/' : '/admin'
 }
 
 // Handle delay value

@@ -1,11 +1,8 @@
 'use client';
 
 import ImageNext from "@/components/shared/image-next";
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import stripImagesAndHtml from "@/helpers/stripImageAndHtml";
-import {
-  type AdminNewsItem,
-  getAdminNewsSeed,
-} from "@/mockdata/admin-news";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -13,60 +10,32 @@ import { useMemo, useState } from "react";
 const tabs = [
   { id: "all", label: "Tất cả" },
   { id: "tin-vcci", label: "Tin VCCI" },
-  { id: "tin-kinh-te", label: "Tin Kinh Tế" },
-  { id: "chuyen-de", label: "Chuyên Đề" },
+  { id: "tin-kinh-te", label: "Tin Kinh tế" },
+  { id: "chuyen-de", label: "Chuyên đề" },
 ];
-
-const allNewsItems = getAdminNewsSeed().filter(
-  (item) => item.type === "tintuc" && !item.is_hidden,
-);
-
-function getTabLabel(item: AdminNewsItem) {
-  const tags = item.tagsearch_values.map((tag) => tag.toLowerCase());
-
-  if (tags.some((tag) => tag.includes("kinh tế") || tag.includes("vĩ mô"))) {
-    return "Tin Kinh Tế";
-  }
-
-  if (tags.some((tag) => tag.includes("chuyên đề") || tag.includes("cẩm nang"))) {
-    return "Chuyên Đề";
-  }
-
-  return "Tin VCCI";
-}
-
-function matchesTab(item: AdminNewsItem, tab: string) {
-  if (tab === "all") return true;
-
-  const tags = item.tagsearch_values.map((value) => value.toLowerCase());
-
-  if (tab === "tin-vcci") {
-    return tags.some((tag) => tag.includes("tin vcci") || tag.includes("hợp tác"));
-  }
-
-  if (tab === "tin-kinh-te") {
-    return tags.some((tag) => tag.includes("kinh tế") || tag.includes("vĩ mô"));
-  }
-
-  if (tab === "chuyen-de") {
-    return tags.some((tag) => tag.includes("chuyên đề") || tag.includes("cẩm nang"));
-  }
-
-  return true;
-}
 
 function News() {
   const [tab, setTab] = useState("all");
+  const { newsTabs, categoryLinks, categoryNames } = useHomePosts();
 
-  const filteredItems = useMemo(
-    () => allNewsItems.filter((item) => matchesTab(item, tab)),
-    [tab],
-  );
+  const filteredItems = useMemo(() => {
+    if (tab === "all") return newsTabs.all;
+    if (tab === "tin-kinh-te") return newsTabs.tinKinhTe;
+    if (tab === "chuyen-de") return newsTabs.chuyenDe;
+    return newsTabs.tinVcci;
+  }, [newsTabs, tab]);
 
-  const featuredArticle = filteredItems[0] ?? allNewsItems[0];
+  const featuredArticle = filteredItems[0] ?? newsTabs.all[0];
   const listArticles = filteredItems.slice(1, 5);
-
-  if (!featuredArticle) return null;
+  const listSlots = Array.from({ length: 4 }, (_, index) => listArticles[index] ?? null);
+  const overviewLink =
+    (tab === "all"
+      ? categoryLinks.get(categoryNames.tinVcci.toLowerCase())
+      : tab === "tin-kinh-te"
+      ? categoryLinks.get(categoryNames.tinKinhTe.toLowerCase())
+      : tab === "chuyen-de"
+        ? categoryLinks.get(categoryNames.chuyenDe.toLowerCase())
+        : categoryLinks.get(categoryNames.tinVcci.toLowerCase())) ?? "/hoat-dong/tin-tuc";
 
   return (
     <div className="flex-1">
@@ -102,58 +71,92 @@ function News() {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.02fr)_minmax(320px,0.98fr)]">
         <div>
-          <Link
-            href="/hoat-dong/tin-tuc"
-            className="block h-full overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
-          >
-            <div className="aspect-[1.75/1] overflow-hidden">
-              <ImageNext
-                src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
-                alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
-                width={720}
-                height={580}
-                className="h-full w-full object-cover"
-              />
+          {featuredArticle ? (
+            <Link
+              href={featuredArticle.externalLink}
+              className="block h-full overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
+            >
+              <div className="aspect-[1.75/1] overflow-hidden">
+                <ImageNext
+                  src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
+                  alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
+                  width={720}
+                  height={580}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+
+              <div className="space-y-1.5 p-3">
+                <span className="inline-flex text-[14px] font-bold text-[#e2a500]">
+                  {featuredArticle.categories[0]?.name || "Tin tức"}
+                </span>
+
+                <h3 className="line-clamp-2 text-[16px] font-bold leading-[1.28] text-[#20408f] md:text-[17px]">
+                  {featuredArticle.title}
+                </h3>
+
+                <p className="line-clamp-2 text-[13px] leading-[1.45] text-[#6c7b96]">
+                  {stripImagesAndHtml(featuredArticle.summary)}
+                </p>
+
+                <p className="text-[14px] text-[#8a9bb6]">
+                  {dayjs(featuredArticle.publishedAt || featuredArticle.createdAt).format(
+                    "DD/MM/YYYY",
+                  )}
+                </p>
+              </div>
+            </Link>
+          ) : (
+            <div className="h-full overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]">
+              <div className="aspect-[1.75/1] bg-[#eef3fb]" />
+              <div className="space-y-2 p-3">
+                <div className="h-5 w-24 rounded bg-[#eef3fb]" />
+                <div className="h-6 w-5/6 rounded bg-[#eef3fb]" />
+                <div className="h-4 w-full rounded bg-[#f4f7fb]" />
+                <div className="h-4 w-3/4 rounded bg-[#f4f7fb]" />
+                <div className="h-4 w-24 rounded bg-[#eef3fb]" />
+              </div>
             </div>
-
-            <div className="space-y-1.5 p-3">
-              <span className="inline-flex text-[14px] font-bold text-[#e2a500]">
-                {getTabLabel(featuredArticle)}
-              </span>
-
-              <h3 className="line-clamp-2 text-[16px] font-bold leading-[1.28] text-[#20408f] md:text-[17px]">
-                {featuredArticle.title}
-              </h3>
-
-              <p className="line-clamp-2 text-[13px] leading-[1.45] text-[#6c7b96]">
-                {stripImagesAndHtml(featuredArticle.summary)}
-              </p>
-
-              <p className="text-[14px] text-[#8a9bb6]">
-                {dayjs(featuredArticle.published_at || featuredArticle.created_at).format("DD/MM/YYYY")}
-              </p>
-            </div>
-          </Link>
+          )}
         </div>
 
         <div className="xl:flex xl:h-full xl:flex-col">
           <div className="space-y-3 xl:flex xl:flex-1 xl:flex-col">
-            {listArticles.map((news) => (
-              <Link
-                key={news.id}
-                href="/hoat-dong/tin-tuc"
-                className="block rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)] xl:flex-1"
-              >
-                <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.28] text-[#21408f]">
-                  {news.title}
-                </h4>
-                <p className="mt-1 text-[13px] text-[#8a9bb6]">
-                  {dayjs(news.published_at || news.created_at).format("DD/MM/YYYY")}
-                </p>
-              </Link>
-            ))}
+            {listSlots.map((news, index) =>
+              news ? (
+                <Link
+                  key={news.id}
+                  href={news.externalLink}
+                  className="block rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)] xl:flex-1"
+                >
+                  <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.28] text-[#21408f]">
+                    {news.title}
+                  </h4>
+                  <p className="mt-1 text-[13px] text-[#8a9bb6]">
+                    {dayjs(news.publishedAt || news.createdAt).format("DD/MM/YYYY")}
+                  </p>
+                </Link>
+              ) : (
+                <div
+                  key={`news-placeholder-${index}`}
+                  className="rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.06)] xl:flex-1"
+                >
+                  <div className="h-5 w-5/6 rounded bg-[#eef3fb]" />
+                  <div className="mt-2 h-4 w-24 rounded bg-[#f4f7fb]" />
+                </div>
+              ),
+            )}
           </div>
         </div>
+      </div>
+
+      <div className="mt-3 flex justify-end">
+        <Link
+          href={overviewLink}
+          className="text-sm font-semibold text-[#24469c] transition-colors hover:text-[#1b55a1]"
+        >
+          Xem tất cả
+        </Link>
       </div>
     </div>
   );

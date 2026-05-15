@@ -1,34 +1,17 @@
 'use client';
 
 import ImageNext from "@/components/shared/image-next";
-import {
-  type AdminNewsItem,
-  getAdminNewsSeed,
-} from "@/mockdata/admin-news";
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
 
-const eventItems = getAdminNewsSeed()
-  .filter(
-    (item) =>
-      item.type === "tintuc" &&
-      item.header_category_id === "activity-events" &&
-      !item.is_hidden &&
-      item.started_at,
-  )
-  .sort(
-    (left, right) =>
-      new Date(left.started_at).getTime() - new Date(right.started_at).getTime(),
-  );
-
-function formatEventDate(item: AdminNewsItem) {
-  return dayjs(item.started_at || item.published_at || item.created_at).format("DD/MM/YYYY");
-}
-
 function Events() {
+  const { eventPosts, categoryLinks, categoryNames } = useHomePosts();
+  const eventItems = eventPosts;
   const [featuredEvent, ...sideEvents] = eventItems;
-
-  if (!featuredEvent) return null;
+  const sideSlots = Array.from({ length: 4 }, (_, index) => sideEvents[index] ?? null);
+  const eventsLink =
+    categoryLinks.get(categoryNames.suKien.toLowerCase()) ?? "/hoat-dong/su-kien";
 
   return (
     <div className="flex-1 rounded-[28px] bg-linear-to-br from-[#14488f] to-[#2d67bf] p-4 text-white shadow-[0_18px_38px_rgba(16,61,130,0.24)] md:p-5">
@@ -41,7 +24,7 @@ function Events() {
         </div>
 
         <Link
-          href="/hoat-dong/su-kien"
+          href={eventsLink}
           className="pt-1.5 text-sm font-semibold text-[#ffd34f] transition-colors hover:text-white"
         >
           Xem sự kiện
@@ -49,53 +32,84 @@ function Events() {
       </div>
 
       <div className="grid items-stretch gap-3 xl:grid-cols-[minmax(0,1.02fr)_minmax(270px,0.98fr)]">
-        <Link
-          href="/hoat-dong/su-kien"
-          className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
-        >
-          <div className="h-[220px] overflow-hidden md:h-[235px] xl:h-[248px]">
-            <ImageNext
-              src={featuredEvent.thumbnail?.url ?? "/thumbnail.png"}
-              alt={featuredEvent.thumbnail?.alt || featuredEvent.title}
-              width={720}
-              height={520}
-              className="h-full w-full object-cover"
-            />
-          </div>
+        {featuredEvent ? (
+          <Link
+            href={featuredEvent.externalLink}
+            className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
+          >
+            <div className="h-[220px] overflow-hidden md:h-[235px] xl:h-[248px]">
+              <ImageNext
+                src={featuredEvent.thumbnail?.url ?? "/thumbnail.png"}
+                alt={featuredEvent.thumbnail?.alt || featuredEvent.title}
+                width={720}
+                height={520}
+                className="h-full w-full object-cover"
+              />
+            </div>
 
-          <div className="p-3 pt-2.5">
-            <h3 className="line-clamp-2 text-[16px] font-extrabold uppercase leading-[1.28] text-[#22459b] md:text-[18px]">
-              {featuredEvent.title}
-            </h3>
-            <p className="mt-1.5 text-[13px] text-[#90a0bd]">{formatEventDate(featuredEvent)}</p>
+            <div className="p-3 pt-2.5">
+              <h3 className="line-clamp-2 text-[16px] font-extrabold uppercase leading-[1.28] text-[#22459b] md:text-[18px]">
+                {featuredEvent.title}
+              </h3>
+              <p className="mt-1.5 text-[13px] text-[#90a0bd]">
+                {dayjs(
+                  featuredEvent.startedAt || featuredEvent.publishedAt || featuredEvent.createdAt,
+                ).format("DD/MM/YYYY")}
+              </p>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.12)]">
+            <div className="h-[220px] bg-[#d7e3f9] md:h-[235px] xl:h-[248px]" />
+            <div className="space-y-2 p-3 pt-2.5">
+              <div className="h-6 w-5/6 rounded bg-[#e7eefb]" />
+              <div className="h-4 w-24 rounded bg-[#eef3fb]" />
+            </div>
           </div>
-        </Link>
+        )}
 
         <div className="flex h-full flex-col gap-3">
-          {sideEvents.slice(0, 4).map((item) => (
-            <Link
-              key={item.id}
-              href="/hoat-dong/su-kien"
-              className="flex flex-1 items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
-            >
-              <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[12px]">
-                <ImageNext
-                  src={item.thumbnail?.url ?? "/thumbnail.png"}
-                  alt={item.thumbnail?.alt || item.title}
-                  width={160}
-                  height={160}
-                  className="h-full w-full object-cover"
-                />
-              </div>
+          {sideSlots.map((item, index) =>
+            item ? (
+              <Link
+                key={item.id}
+                href={item.externalLink}
+                className="flex flex-1 items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
+              >
+                <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[12px]">
+                  <ImageNext
+                    src={item.thumbnail?.url ?? "/thumbnail.png"}
+                    alt={item.thumbnail?.alt || item.title}
+                    width={160}
+                    height={160}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
 
-              <div className="min-w-0">
-                <h4 className="line-clamp-2 text-[15px] font-semibold leading-[1.35] text-white">
-                  {item.title}
-                </h4>
-                <p className="mt-1 text-[12px] text-white/78">{formatEventDate(item)}</p>
+                <div className="min-w-0">
+                  <h4 className="line-clamp-2 text-[15px] font-semibold leading-[1.35] text-white">
+                    {item.title}
+                  </h4>
+                  <p className="mt-1 text-[12px] text-white/78">
+                    {dayjs(item.startedAt || item.publishedAt || item.createdAt).format(
+                      "DD/MM/YYYY",
+                    )}
+                  </p>
+                </div>
+              </Link>
+            ) : (
+              <div
+                key={`event-placeholder-${index}`}
+                className="flex flex-1 items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+              >
+                <div className="h-[64px] w-[64px] shrink-0 rounded-[12px] bg-white/20" />
+                <div className="min-w-0 flex-1">
+                  <div className="h-5 w-5/6 rounded bg-white/25" />
+                  <div className="mt-2 h-3 w-20 rounded bg-white/20" />
+                </div>
               </div>
-            </Link>
-          ))}
+            ),
+          )}
         </div>
       </div>
     </div>

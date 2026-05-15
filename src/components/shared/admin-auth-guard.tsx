@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { ensureValidAdminAccessToken } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
 
 const LOGIN_PATH = "/admin/login";
@@ -71,20 +72,62 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
   const accessToken = useAuthStore((state) => state.appAccessToken);
+  const accessTokenExpired = useAuthStore((state) => state.appAccessTokenExpired);
+  const refreshToken = useAuthStore((state) => state.appRefreshToken);
+  const isRefreshing = useAuthStore((state) => state.appIsRefreshing);
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
 
   useEffect(() => {
     if (!hasHydrated || pathname === LOGIN_PATH) return;
 
-    if (!isLoggedIn || !accessToken) {
-      router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
-    }
-  }, [accessToken, hasHydrated, isLoggedIn, pathname, router]);
+    let cancelled = false;
+
+    const restoreSession = async () => {
+      const needsRefresh = Boolean(
+        accessToken &&
+          accessTokenExpired &&
+          accessTokenExpired <= Date.now() &&
+          refreshToken,
+      );
+
+      if (accessToken && isLoggedIn && !needsRefresh) return;
+
+      if (!refreshToken) {
+        router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
+        return;
+      }
+
+      setIsRestoringSession(true);
+
+      try {
+        const nextToken = await ensureValidAdminAccessToken();
+
+        if (!nextToken && !cancelled) {
+          router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
+        }
+      } catch {
+        if (!cancelled) {
+          router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRestoringSession(false);
+        }
+      }
+    };
+
+    void restoreSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, accessTokenExpired, hasHydrated, isLoggedIn, pathname, refreshToken, router]);
 
   if (pathname === LOGIN_PATH) {
     return <>{children}</>;
   }
 
-  if (!hasHydrated) {
+  if (!hasHydrated || isRefreshing || isRestoringSession) {
     return <AdminAuthLoadingScreen />;
   }
 

@@ -3,30 +3,31 @@
 import * as React from "react";
 import dayjs from "dayjs";
 import {
-  Edit,
+  Check,
+  ChevronsUpDown,
   EyeOff,
-  MoreHorizontal,
   Plus,
   Star,
   Tag,
-  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -53,7 +54,12 @@ import {
   ADMIN_NEWS_TYPE_OPTIONS,
   type AdminNewsItem,
 } from "@/mockdata/admin-news";
-import { type HeaderCategoryItem } from "@/mockdata/header-config";
+import {
+  buildHeaderCategoryTree,
+  type HeaderCategoryItem,
+  type HeaderCategoryTreeItem,
+} from "@/mockdata/header-config";
+import { cn } from "@/lib/utils";
 
 const selectTriggerClassName =
   "w-full rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[180px]";
@@ -63,12 +69,126 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 const selectItemClassName =
   "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
 
+function flattenHeaderTree(
+  items: HeaderCategoryTreeItem[],
+  depth = 0,
+): Array<HeaderCategoryItem & { depth: number }> {
+  return items.flatMap((item) => [
+    { ...item, depth },
+    ...flattenHeaderTree(item.children, depth + 1),
+  ]);
+}
+
+function formatHeaderCategoryOptionLabel(option: { name: string; depth: number }) {
+  return `${"-- ".repeat(option.depth)}${option.name}`;
+}
+
+function CategoryFilterCombobox({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: Array<HeaderCategoryItem & { depth: number }>;
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const selectedOption = options.find((option) => option.id === value) ?? null;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            "h-10 w-full justify-between rounded-xl border-[#063e8e]/15 bg-white px-3 font-normal text-gray-700 hover:bg-white hover:text-gray-700 focus-visible:ring-[#063e8e]/30 lg:w-[220px]",
+            !selectedOption && "text-gray-700",
+          )}
+        >
+          <span className="truncate text-left">
+            {selectedOption
+              ? formatHeaderCategoryOptionLabel(selectedOption)
+              : "T\u1ea5t c\u1ea3 danh m\u1ee5c"}
+          </span>
+          <ChevronsUpDown className="ml-3 h-4 w-4 shrink-0 opacity-60" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        align="start"
+        className="w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] border-[#063e8e]/15 bg-white p-0 text-gray-700"
+      >
+        <Command className="bg-white text-gray-700">
+          <CommandInput
+            placeholder={"T\u00ecm danh m\u1ee5c hi\u1ec3n th\u1ecb"}
+            className="text-gray-700 placeholder:text-gray-500"
+          />
+          <CommandList className="max-h-72">
+            <CommandEmpty className="text-gray-700">
+              {"Kh\u00f4ng t\u00ecm th\u1ea5y danh m\u1ee5c ph\u00f9 h\u1ee3p"}
+            </CommandEmpty>
+            <CommandItem
+              value="all Tat ca danh muc"
+              onSelect={() => {
+                onChange("all");
+                setOpen(false);
+              }}
+              className="gap-3 px-3 py-2 text-gray-700 data-[selected=true]:bg-[#063e8e]/10 data-[selected=true]:text-[#063e8e]"
+            >
+              <Check
+                className={cn(
+                  "h-4 w-4 text-[#063e8e]",
+                  value === "all" ? "opacity-100" : "opacity-0",
+                )}
+              />
+              <span className="truncate">{"T\u1ea5t c\u1ea3 danh m\u1ee5c"}</span>
+            </CommandItem>
+            {options.map((option) => (
+              <CommandItem
+                key={option.id}
+                value={`${option.id} ${option.name} ${option.type}`}
+                onSelect={() => {
+                  onChange(option.id);
+                  setOpen(false);
+                }}
+                className="gap-3 px-3 py-2 text-gray-700 data-[selected=true]:bg-[#063e8e]/10 data-[selected=true]:text-[#063e8e]"
+              >
+                <Check
+                  className={cn(
+                    "h-4 w-4 text-[#063e8e]",
+                    value === option.id ? "opacity-100" : "opacity-0",
+                  )}
+                />
+                <span className="truncate">
+                  {formatHeaderCategoryOptionLabel(option)}
+                </span>
+              </CommandItem>
+            ))}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function formatDateTime(value: string) {
   return value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "—";
 }
 
-function stripHtml(html: string) {
-  return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+function useDebouncedValue<T>(value: T, delay = 350) {
+  const [debouncedValue, setDebouncedValue] = React.useState(value);
+
+  React.useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => window.clearTimeout(timeout);
+  }, [delay, value]);
+
+  return debouncedValue;
 }
 
 function AdminNewsTableLoading() {
@@ -98,10 +218,40 @@ export default function AdminNewsPage() {
   const [page, setPage] = React.useState(1);
   const [pageSize] = React.useState(20);
   const [total, setTotal] = React.useState(0);
+  const debouncedSearch = useDebouncedValue(search);
+
+  const apiFilters = React.useMemo(() => {
+    const filters: string[] = [];
+    const keyword = debouncedSearch.trim();
+
+    if (keyword) {
+      filters.push(`title@=${keyword}`);
+    }
+
+    if (categoryFilter !== "all") {
+      filters.push(`category.id==${categoryFilter}`);
+    }
+
+    if (statusFilter === "visible") {
+      filters.push("is_hidden==false");
+    } else if (statusFilter === "hidden") {
+      filters.push("is_hidden==true");
+    }
+
+    return filters.join(",");
+  }, [categoryFilter, debouncedSearch, statusFilter]);
 
   const load = React.useCallback(async () => {
+    setReady(false);
+
     const [newsData, headerConfig] = await Promise.all([
-      fetchCmsNewsItems({ page, pageSize, sortField: "created_at", sortOrder: "desc" }),
+      fetchCmsNewsItems({
+        page,
+        pageSize,
+        sortField: "created_at",
+        sortOrder: "desc",
+        filters: apiFilters,
+      }),
       fetchHeaderConfigItems(),
     ]);
 
@@ -109,58 +259,36 @@ export default function AdminNewsPage() {
     setTotal(newsData.total);
     setHeaderItems(headerConfig.items);
     setReady(true);
-  }, [page, pageSize]);
+  }, [apiFilters, page, pageSize]);
 
   React.useEffect(() => {
     void load().catch((error) => {
-      toast.error(error instanceof Error ? error.message : "Không thể tải danh sách bài viết");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Không thể tải danh sách bài viết",
+      );
       setReady(true);
     });
   }, [load]);
 
+  React.useEffect(() => {
+    setPage((currentPage) => (currentPage === 1 ? currentPage : 1));
+  }, [apiFilters, typeFilter]);
+
   const categoryOptions = React.useMemo(() => {
-    return headerItems.filter((item) => item.type === "news" || item.type === "page");
+    return flattenHeaderTree(buildHeaderCategoryTree(headerItems)).filter(
+      (item) => item.type === "news" || item.type === "page",
+    );
   }, [headerItems]);
 
   const filteredItems = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    if (typeFilter === "all") {
+      return items;
+    }
 
-    return items
-      .filter((item) => {
-        const categoryName =
-          headerItems.find((category) => category.id === item.header_category_id)?.name ?? "";
-
-        const matchesKeyword =
-          !keyword ||
-          item.title.toLowerCase().includes(keyword) ||
-          item.slug.toLowerCase().includes(keyword) ||
-          stripHtml(item.summary).toLowerCase().includes(keyword) ||
-          categoryName.toLowerCase().includes(keyword);
-
-        const matchesType = typeFilter === "all" || item.type === typeFilter;
-        const matchesCategory =
-          categoryFilter === "all" || item.header_category_id === categoryFilter;
-        const matchesStatus =
-          statusFilter === "all" ||
-          (statusFilter === "visible" && !item.is_hidden) ||
-          (statusFilter === "hidden" && item.is_hidden);
-
-        return matchesKeyword && matchesType && matchesCategory && matchesStatus;
-      })
-      .sort((left, right) => {
-        const leftFeatured = left.type === "tintuc" && left.is_featured ? 1 : 0;
-        const rightFeatured = right.type === "tintuc" && right.is_featured ? 1 : 0;
-
-        if (leftFeatured !== rightFeatured) {
-          return rightFeatured - leftFeatured;
-        }
-
-        const leftTime = new Date(left.published_at || left.created_at).getTime();
-        const rightTime = new Date(right.published_at || right.created_at).getTime();
-
-        return rightTime - leftTime;
-      });
-  }, [categoryFilter, headerItems, items, search, statusFilter, typeFilter]);
+    return items.filter((item) => item.type === typeFilter);
+  }, [items, typeFilter]);
 
   const stats = React.useMemo(() => {
     return [
@@ -171,16 +299,16 @@ export default function AdminNewsPage() {
       },
       {
         label: "Đang hiển thị",
-        value: items.filter((item) => !item.is_hidden).length,
+        value: filteredItems.filter((item) => !item.is_hidden).length,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
       {
         label: "Tin nổi bật",
-        value: items.filter((item) => item.type === "tintuc" && item.is_featured).length,
+        value: filteredItems.filter((item) => item.type === "tintuc" && item.is_featured).length,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
     ];
-  }, [total, items]);
+  }, [filteredItems, total]);
 
   const handleDelete = async () => {
     if (!deleteTarget || isDeleting) return;
@@ -193,7 +321,9 @@ export default function AdminNewsPage() {
       setDeleteTarget(null);
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không thể xóa bài viết");
+      toast.error(
+        error instanceof Error ? error.message : "Không thể xóa bài viết",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -240,25 +370,11 @@ export default function AdminNewsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className={selectTriggerClassName}>
-                <SelectValue placeholder="Danh mục hiển thị" />
-              </SelectTrigger>
-              <SelectContent className={selectContentClassName}>
-                <SelectItem value="all" className={selectItemClassName}>
-                  Tất cả danh mục
-                </SelectItem>
-                {categoryOptions.map((category) => (
-                  <SelectItem
-                    key={category.id}
-                    value={category.id}
-                    className={selectItemClassName}
-                  >
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CategoryFilterCombobox
+              value={categoryFilter}
+              options={categoryOptions}
+              onChange={setCategoryFilter}
+            />
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className={selectTriggerClassName}>
@@ -391,35 +507,20 @@ export default function AdminNewsPage() {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0 text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-                            >
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              asChild
-                              className="text-gray-700 focus:text-[#063e8e]"
-                            >
-                              <Link href={`/admin/news/${item.id}`}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Chỉnh sửa
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              className="text-gray-700 focus:text-[#063e8e]"
-                              onClick={() => setDeleteTarget(item)}
-                            >
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              Xóa
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <AdminRowActions
+                          actions={[
+                            {
+                              kind: "edit",
+                              label: "Chỉnh sửa bài viết",
+                              onClick: () => router.push(`/admin/news/${item.id}`),
+                            },
+                            {
+                              kind: "delete",
+                              label: "Xóa bài viết",
+                              onClick: () => setDeleteTarget(item),
+                            },
+                          ]}
+                        />
                       </TableCell>
                     </TableRow>
                   );
@@ -432,7 +533,8 @@ export default function AdminNewsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-[#063e8e]/10 px-4 py-3">
             <div className="text-sm text-gray-700">
-              Hiển thị {(page - 1) * pageSize + 1} đến {Math.min(page * pageSize, total)} của {total} bài viết
+              Hiển thị {(page - 1) * pageSize + 1} đến{" "}
+              {Math.min(page * pageSize, total)} của {total} bài viết
             </div>
             <div className="flex items-center gap-2">
               <Button

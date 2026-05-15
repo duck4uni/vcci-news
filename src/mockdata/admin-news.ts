@@ -123,6 +123,25 @@ export const EMPTY_ADMIN_NEWS_FORM: AdminNewsFormValues = {
   post_content: [],
 };
 
+const mediaSeedLabelMap = {
+  "media-banner": {
+    name: "Banner VCCI News",
+    alt: "Banner VCCI News",
+  },
+  "media-thumbnail": {
+    name: "Thumbnail mặc định",
+    alt: "Thumbnail mặc định",
+  },
+  "media-home-01": {
+    name: "Hoạt động hội viên",
+    alt: "Hoạt động hội viên",
+  },
+  "media-home-02": {
+    name: "Banner sự kiện",
+    alt: "Banner sự kiện",
+  },
+} as const;
+
 const mediaSeed: AdminMediaItem[] = [
   {
     id: "media-banner",
@@ -179,17 +198,31 @@ function toImageRef(item: AdminMediaItem): AdminNewsImageRef {
   };
 }
 
+function normalizeSeedMediaLabels(item: AdminMediaItem): AdminMediaItem {
+  const seedLabel = mediaSeedLabelMap[item.id as keyof typeof mediaSeedLabelMap];
+
+  if (!seedLabel) {
+    return item;
+  }
+
+  return {
+    ...item,
+    name: seedLabel.name,
+    alt: seedLabel.alt,
+  };
+}
+
 const newsSeed: AdminNewsItem[] = [
   {
     id: "admin-news-01",
-    title: "VCCI thúc đẩy kết nối doanh nghiệp hội viên khu vực phía Nam",
+    title: "VCCI th�c d?y k?t n?i doanh nghi?p h?i vi�n khu v?c ph�a Nam",
     slug: "vcci-thuc-day-ket-noi-doanh-nghiep-hoi-vien-khu-vuc-phia-nam",
     summary:
-      "<p>Bản tin tổng hợp các hoạt động kết nối doanh nghiệp, mở rộng thị trường và nâng cao năng lực quản trị cho hội viên VCCI.</p>",
+      "<p>B?n tin t?ng h?p c�c ho?t d?ng k?t n?i doanh nghi?p, m? r?ng th? tru?ng v� n�ng cao nang l?c qu?n tr? cho h?i vi�n VCCI.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news", "cat-activity"],
-    tagsearch_values: ["Tin VCCI", "Doanh nghiệp hội viên", "Chuyển đổi số"],
+    tagsearch_values: ["Tin VCCI", "Doanh nghi?p h?i vi�n", "Chuy?n d?i s?"],
     is_featured: true,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -200,15 +233,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
-    participation_fee: "Miễn phí",
+    location: "TP. H? Ch� Minh",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-01-a",
         type: "text",
         position: 1,
         content:
-          "<p>Chương trình tập trung vào các giải pháp mở rộng mạng lưới doanh nghiệp hội viên, đồng thời hỗ trợ các đơn vị tiếp cận cơ hội hợp tác mới trong năm 2026.</p>",
+          "<p>Chuong tr�nh t?p trung v�o c�c gi?i ph�p m? r?ng m?ng lu?i doanh nghi?p h?i vi�n, d?ng th?i h? tr? c�c don v? ti?p c?n co h?i h?p t�c m?i trong nam 2026.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -229,14 +262,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-02",
-    title: "Lịch hội thảo chuyển đổi số dành cho hội viên tháng 5",
+    title: "L?ch h?i th?o chuy?n d?i s? d�nh cho h?i vi�n th�ng 5",
     slug: "lich-hoi-thao-chuyen-doi-so-danh-cho-hoi-vien-thang-5",
     summary:
-      "<p>Lịch hội thảo cập nhật những chương trình đào tạo, chia sẻ chuyên đề và kết nối nguồn lực hỗ trợ doanh nghiệp.</p>",
+      "<p>L?ch h?i th?o c?p nh?t nh?ng chuong tr�nh d�o t?o, chia s? chuy�n d? v� k?t n?i ngu?n l?c h? tr? doanh nghi?p.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Sự kiện", "Đăng ký"],
+    tagsearch_values: ["S? ki?n", "�ang k�"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -247,15 +280,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-05-20T08:00",
     ended_at: "2026-05-20T17:00",
     registration_deadline: "2026-05-18T17:00",
-    location: "Trung tâm Hội nghị VCCI",
-    participation_fee: "500.000 VNĐ",
+    location: "Trung t�m H?i ngh? VCCI",
+    participation_fee: "500.000 VN�",
     post_content: [
       {
         id: "section-admin-news-02-a",
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung chuỗi hội thảo bao gồm chuyển đổi số, quản trị dữ liệu, truyền thông nội bộ và ứng dụng AI trong hoạt động doanh nghiệp.</p>",
+          "<p>N?i dung chu?i h?i th?o bao g?m chuy?n d?i s?, qu?n tr? d? li?u, truy?n th�ng n?i b? v� ?ng d?ng AI trong ho?t d?ng doanh nghi?p.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -264,10 +297,10 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-03",
-    title: "Giới thiệu vai trò của VCCI News trong hệ sinh thái nội dung số",
+    title: "Gi?i thi?u vai tr� c?a VCCI News trong h? sinh th�i n?i dung s?",
     slug: "gioi-thieu-vai-tro-cua-vcci-news-trong-he-sinh-thai-noi-dung-so",
     summary:
-      "<p>Bài viết trang giới thiệu định hướng phát triển nội dung, cấu trúc quản trị và trải nghiệm người dùng trên website.</p>",
+      "<p>B�i vi?t trang gi?i thi?u d?nh hu?ng ph�t tri?n n?i dung, c?u tr�c qu?n tr? v� tr?i nghi?m ngu?i d�ng tr�n website.</p>",
     type: "baiviettrang",
     header_category_id: "intro-about",
     category_ids: [],
@@ -290,7 +323,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>VCCI News được định hướng là trung tâm cập nhật thông tin, chuyên đề và hoạt động hội viên trên cùng một nền tảng nội dung thống nhất.</p>",
+          "<p>VCCI News du?c d?nh hu?ng l� trung t�m c?p nh?t th�ng tin, chuy�n d? v� ho?t d?ng h?i vi�n tr�n c�ng m?t n?n t?ng n?i dung th?ng nh?t.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -308,14 +341,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-04",
-    title: "Diễn đàn xúc tiến thương mại khu vực phía Nam thu hút hơn 300 doanh nghiệp tham dự",
+    title: "Di?n d�n x�c ti?n thuong m?i khu v?c ph�a Nam thu h�t hon 300 doanh nghi?p tham d?",
     slug: "dien-dan-xuc-tien-thuong-mai-khu-vuc-phia-nam-thu-hut-hon-300-doanh-nghiep-tham-du",
     summary:
-      "<p>Chương trình quy tụ doanh nghiệp sản xuất, logistics và các đơn vị hỗ trợ xuất khẩu nhằm tạo mạng lưới kết nối giao thương thực chất.</p>",
+      "<p>Chuong tr�nh quy t? doanh nghi?p s?n xu?t, logistics v� c�c don v? h? tr? xu?t kh?u nh?m t?o m?ng lu?i k?t n?i giao thuong th?c ch?t.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news", "cat-activity"],
-    tagsearch_values: ["Tin Kinh Tế", "Xúc tiến thương mại", "Kết nối giao thương"],
+    tagsearch_values: ["Tin Kinh T?", "X�c ti?n thuong m?i", "K?t n?i giao thuong"],
     is_featured: true,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -326,15 +359,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Trung tâm Hội chợ và Triển lãm Sài Gòn",
-    participation_fee: "Miễn phí",
+    location: "Trung t�m H?i ch? v� Tri?n l�m S�i G�n",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-04-a",
         type: "text",
         position: 1,
         content:
-          "<p>Sự kiện nhấn mạnh nhu cầu tạo chuỗi kết nối ngắn, nhanh và có khả năng chuyển hóa thành cơ hội kinh doanh ngay sau chương trình.</p>",
+          "<p>S? ki?n nh?n m?nh nhu c?u t?o chu?i k?t n?i ng?n, nhanh v� c� kh? nang chuy?n h�a th�nh co h?i kinh doanh ngay sau chuong tr�nh.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -343,14 +376,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-05",
-    title: "Bản tin nhanh: doanh nghiệp hội viên tăng tốc chuyển đổi số trong khâu bán hàng và chăm sóc khách hàng",
+    title: "B?n tin nhanh: doanh nghi?p h?i vi�n tang t?c chuy?n d?i s? trong kh�u b�n h�ng v� cham s�c kh�ch h�ng",
     slug: "ban-tin-nhanh-doanh-nghiep-hoi-vien-tang-toc-chuyen-doi-so-trong-khau-ban-hang-va-cham-soc-khach-hang",
     summary:
-      "<p>Nhiều mô hình ứng dụng CRM, dashboard và tự động hóa quy trình đang được chia sẻ tại chuỗi chuyên đề của VCCI News.</p>",
+      "<p>Nhi?u m� h�nh ?ng d?ng CRM, dashboard v� t? d?ng h�a quy tr�nh dang du?c chia s? t?i chu?i chuy�n d? c?a VCCI News.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news"],
-    tagsearch_values: ["Chuyên Đề", "Chuyển đổi số"],
+    tagsearch_values: ["Chuy�n �?", "Chuy?n d?i s?"],
     is_featured: true,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -361,15 +394,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Hệ thống trực tuyến",
-    participation_fee: "Miễn phí",
+    location: "H? th?ng tr?c tuy?n",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-05-a",
         type: "text",
         position: 1,
         content:
-          "<p>Xu hướng tập trung vào trải nghiệm khách hàng, đo lường hiệu quả vận hành và chuẩn hóa dữ liệu đang trở thành ưu tiên hàng đầu.</p>",
+          "<p>Xu hu?ng t?p trung v�o tr?i nghi?m kh�ch h�ng, do lu?ng hi?u qu? v?n h�nh v� chu?n h�a d? li?u dang tr? th�nh uu ti�n h�ng d?u.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -378,14 +411,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-06",
-    title: "Khởi động chuỗi đối thoại chính sách với doanh nghiệp và hiệp hội ngành hàng năm 2026",
+    title: "Kh?i d?ng chu?i d?i tho?i ch�nh s�ch v?i doanh nghi?p v� hi?p h?i ng�nh h�ng nam 2026",
     slug: "khoi-dong-chuoi-doi-thoai-chinh-sach-voi-doanh-nghiep-va-hiep-hoi-nganh-hang-nam-2026",
     summary:
-      "<p>Chuỗi đối thoại sẽ tập trung vào vướng mắc thủ tục, chi phí tuân thủ và các đề xuất cải thiện môi trường kinh doanh.</p>",
+      "<p>Chu?i d?i tho?i s? t?p trung v�o vu?ng m?c th? t?c, chi ph� tu�n th? v� c�c d? xu?t c?i thi?n m�i tru?ng kinh doanh.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event", "cat-policy"],
-    tagsearch_values: ["Sự kiện", "Chính sách"],
+    tagsearch_values: ["S? ki?n", "Ch�nh s�ch"],
     is_featured: true,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -396,15 +429,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-05-28T08:30",
     ended_at: "2026-05-28T12:00",
     registration_deadline: "2026-05-25T17:00",
-    location: "Hà Nội",
-    participation_fee: "Miễn phí",
+    location: "H� N?i",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-06-a",
         type: "text",
         position: 1,
         content:
-          "<p>Chương trình được thiết kế như một không gian lắng nghe phản hồi thực tiễn và tạo đầu mối điều phối cho các kiến nghị có trọng tâm.</p>",
+          "<p>Chuong tr�nh du?c thi?t k? nhu m?t kh�ng gian l?ng nghe ph?n h?i th?c ti?n v� t?o d?u m?i di?u ph?i cho c�c ki?n ngh? c� tr?ng t�m.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -413,14 +446,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-07",
-    title: "Cẩm nang thiết kế gian hàng triển lãm hiệu quả cho doanh nghiệp tham gia hội chợ quốc tế",
+    title: "C?m nang thi?t k? gian h�ng tri?n l�m hi?u qu? cho doanh nghi?p tham gia h?i ch? qu?c t?",
     slug: "cam-nang-thiet-ke-gian-hang-trien-lam-hieu-qua-cho-doanh-nghiep-tham-gia-hoi-cho-quoc-te",
     summary:
-      "<p>Nội dung tổng hợp những lưu ý về nhận diện thương hiệu, luồng trưng bày và cách tạo trải nghiệm ghi nhớ cho khách tham quan.</p>",
+      "<p>N?i dung t?ng h?p nh?ng luu � v? nh?n di?n thuong hi?u, lu?ng trung b�y v� c�ch t?o tr?i nghi?m ghi nh? cho kh�ch tham quan.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news", "cat-activity"],
-    tagsearch_values: ["Chuyên Đề", "Cẩm nang"],
+    tagsearch_values: ["Chuy�n �?", "C?m nang"],
     is_featured: true,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -431,15 +464,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
-    participation_fee: "Miễn phí",
+    location: "TP. H? Ch� Minh",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-07-a",
         type: "text",
         position: 1,
         content:
-          "<p>Tài liệu hướng dẫn được biên tập để doanh nghiệp có thể ứng dụng ngay khi chuẩn bị tham gia các sự kiện giao thương trong nước và quốc tế.</p>",
+          "<p>T�i li?u hu?ng d?n du?c bi�n t?p d? doanh nghi?p c� th? ?ng d?ng ngay khi chu?n b? tham gia c�c s? ki?n giao thuong trong nu?c v� qu?c t?.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -448,14 +481,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-08",
-    title: "Hoa Kỳ muốn đẩy mạnh hợp tác kinh tế, thương mại bền vững với Việt Nam",
+    title: "Hoa K? mu?n d?y m?nh h?p t�c kinh t?, thuong m?i b?n v?ng v?i Vi?t Nam",
     slug: "hoa-ky-muon-day-manh-hop-tac-kinh-te-thuong-mai-ben-vung-voi-viet-nam",
     summary:
-      "<p>Chương trình làm việc tập trung vào hợp tác chuỗi cung ứng, tiêu chuẩn xanh và kết nối doanh nghiệp giữa các địa phương.</p>",
+      "<p>Chuong tr�nh l�m vi?c t?p trung v�o h?p t�c chu?i cung ?ng, ti�u chu?n xanh v� k?t n?i doanh nghi?p gi?a c�c d?a phuong.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news"],
-    tagsearch_values: ["Tin VCCI", "Hợp tác quốc tế"],
+    tagsearch_values: ["Tin VCCI", "H?p t�c qu?c t?"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -466,15 +499,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
-    participation_fee: "Miễn phí",
+    location: "TP. H? Ch� Minh",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-08-a",
         type: "text",
         position: 1,
         content:
-          "<p>Đại diện hai bên nhấn mạnh nhu cầu phát triển bền vững và hỗ trợ cộng đồng doanh nghiệp thích ứng với thay đổi thị trường toàn cầu.</p>",
+          "<p>�?i di?n hai b�n nh?n m?nh nhu c?u ph�t tri?n b?n v?ng v� h? tr? c?ng d?ng doanh nghi?p th�ch ?ng v?i thay d?i th? tru?ng to�n c?u.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -483,14 +516,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-09",
-    title: "Những điểm sáng trong bức tranh kinh tế, số liệu quý II và 6 tháng đầu năm 2026",
+    title: "Nh?ng di?m s�ng trong b?c tranh kinh t?, s? li?u qu� II v� 6 th�ng d?u nam 2026",
     slug: "nhung-diem-sang-trong-buc-tranh-kinh-te-so-lieu-quy-ii-va-6-thang-dau-nam-2026",
     summary:
-      "<p>Bản tin tổng hợp các tín hiệu phục hồi, tăng trưởng xuất khẩu và mức độ cải thiện niềm tin thị trường trong nhiều nhóm ngành.</p>",
+      "<p>B?n tin t?ng h?p c�c t�n hi?u ph?c h?i, tang tru?ng xu?t kh?u v� m?c d? c?i thi?n ni?m tin th? tru?ng trong nhi?u nh�m ng�nh.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news"],
-    tagsearch_values: ["Tin Kinh Tế", "Vĩ mô"],
+    tagsearch_values: ["Tin Kinh T?", "Vi m�"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -501,15 +534,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Hà Nội",
-    participation_fee: "Miễn phí",
+    location: "H� N?i",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-09-a",
         type: "text",
         position: 1,
         content:
-          "<p>Dữ liệu cho thấy nhiều nhóm doanh nghiệp đang cải thiện năng lực đơn hàng và thích ứng tốt hơn với biến động chi phí.</p>",
+          "<p>D? li?u cho th?y nhi?u nh�m doanh nghi?p dang c?i thi?n nang l?c don h�ng v� th�ch ?ng t?t hon v?i bi?n d?ng chi ph�.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -518,14 +551,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-10",
-    title: "Tình hình kinh tế - vĩ mô Quý 1 năm 2026",
+    title: "T�nh h�nh kinh t? - vi m� Qu� 1 nam 2026",
     slug: "tinh-hinh-kinh-te-vi-mo-quy-1-nam-2026",
     summary:
-      "<p>Báo cáo nhanh về tăng trưởng, lạm phát, lãi suất và xu hướng đầu tư trong bối cảnh kinh tế quốc tế còn nhiều thay đổi.</p>",
+      "<p>B�o c�o nhanh v? tang tru?ng, l?m ph�t, l�i su?t v� xu hu?ng d?u tu trong b?i c?nh kinh t? qu?c t? c�n nhi?u thay d?i.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news"],
-    tagsearch_values: ["Tin Kinh Tế", "Vĩ mô"],
+    tagsearch_values: ["Tin Kinh T?", "Vi m�"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -536,15 +569,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Hà Nội",
-    participation_fee: "Miễn phí",
+    location: "H� N?i",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-10-a",
         type: "text",
         position: 1,
         content:
-          "<p>Bản tin cung cấp góc nhìn cô đọng về những chỉ số ảnh hưởng trực tiếp đến hoạt động sản xuất, thương mại và đầu tư.</p>",
+          "<p>B?n tin cung c?p g�c nh�n c� d?ng v? nh?ng ch? s? ?nh hu?ng tr?c ti?p d?n ho?t d?ng s?n xu?t, thuong m?i v� d?u tu.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -553,14 +586,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-11",
-    title: "Cẩm nang hướng dẫn đầu tư kinh doanh tại Việt Nam dành cho doanh nghiệp mới",
+    title: "C?m nang hu?ng d?n d?u tu kinh doanh t?i Vi?t Nam d�nh cho doanh nghi?p m?i",
     slug: "cam-nang-huong-dan-dau-tu-kinh-doanh-tai-viet-nam-danh-cho-doanh-nghiep-moi",
     summary:
-      "<p>Tài liệu tổng hợp các bước chuẩn bị hồ sơ, lựa chọn địa điểm và những lưu ý pháp lý ban đầu cho nhà đầu tư và doanh nghiệp.</p>",
+      "<p>T�i li?u t?ng h?p c�c bu?c chu?n b? h? so, l?a ch?n d?a di?m v� nh?ng luu � ph�p l� ban d?u cho nh� d?u tu v� doanh nghi?p.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-news"],
-    tagsearch_values: ["Chuyên Đề", "Cẩm nang"],
+    tagsearch_values: ["Chuy�n �?", "C?m nang"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -571,15 +604,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Trực tuyến",
-    participation_fee: "Miễn phí",
+    location: "Tr?c tuy?n",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-11-a",
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung được biên tập theo hướng dễ áp dụng, giúp doanh nghiệp mới có thể tra cứu nhanh khi bắt đầu triển khai dự án.</p>",
+          "<p>N?i dung du?c bi�n t?p theo hu?ng d? �p d?ng, gi�p doanh nghi?p m?i c� th? tra c?u nhanh khi b?t d?u tri?n khai d? �n.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -588,14 +621,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-12",
-    title: "Khóa đào tạo: Quản trị Thuế và Pháp lý trong giao dịch",
+    title: "Kh�a d�o t?o: Qu?n tr? Thu? v� Ph�p l� trong giao d?ch",
     slug: "khoa-dao-tao-quan-tri-thue-va-phap-ly-trong-giao-dich",
     summary:
-      "<p>Chương trình cập nhật các điểm mới về quản trị thuế, hồ sơ giao dịch và kiểm soát rủi ro pháp lý trong doanh nghiệp.</p>",
+      "<p>Chuong tr�nh c?p nh?t c�c di?m m?i v? qu?n tr? thu?, h? so giao d?ch v� ki?m so�t r?i ro ph�p l� trong doanh nghi?p.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Đào tạo", "Sự kiện"],
+    tagsearch_values: ["��o t?o", "S? ki?n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -606,15 +639,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-11-18T08:30",
     ended_at: "2026-11-18T16:30",
     registration_deadline: "2026-11-15T17:00",
-    location: "TP. Hồ Chí Minh",
-    participation_fee: "800.000 VNĐ",
+    location: "TP. H? Ch� Minh",
+    participation_fee: "800.000 VN�",
     post_content: [
       {
         id: "section-admin-news-12-a",
         type: "text",
         position: 1,
         content:
-          "<p>Khóa học dành cho đội ngũ quản lý, kế toán trưởng và chuyên viên pháp chế cần chuẩn hóa quy trình nội bộ.</p>",
+          "<p>Kh�a h?c d�nh cho d?i ngu qu?n l�, k? to�n tru?ng v� chuy�n vi�n ph�p ch? c?n chu?n h�a quy tr�nh n?i b?.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -623,14 +656,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-13",
-    title: "Sự kiện - Tập huấn NSDLĐ",
+    title: "S? ki?n - T?p hu?n NSDL�",
     slug: "su-kien-tap-huan-nsdld",
     summary:
-      "<p>Buổi tập huấn hướng dẫn người sử dụng lao động cập nhật các quy định thực thi và quy trình phối hợp với bộ phận nhân sự.</p>",
+      "<p>Bu?i t?p hu?n hu?ng d?n ngu?i s? d?ng lao d?ng c?p nh?t c�c quy d?nh th?c thi v� quy tr�nh ph?i h?p v?i b? ph?n nh�n s?.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Đào tạo", "Sự kiện"],
+    tagsearch_values: ["��o t?o", "S? ki?n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -641,15 +674,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-11-20T13:30",
     ended_at: "2026-11-20T17:00",
     registration_deadline: "2026-11-18T17:00",
-    location: "Hà Nội",
-    participation_fee: "Miễn phí",
+    location: "H� N?i",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-13-a",
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung tập huấn tập trung vào các tình huống thường gặp trong quá trình vận hành chính sách nhân sự và lao động.</p>",
+          "<p>N?i dung t?p hu?n t?p trung v�o c�c t�nh hu?ng thu?ng g?p trong qu� tr�nh v?n h�nh ch�nh s�ch nh�n s? v� lao d?ng.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -658,14 +691,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-14",
-    title: "Diễn đàn hội viên: Kết nối thị trường và chuỗi cung ứng",
+    title: "Di?n d�n h?i vi�n: K?t n?i th? tru?ng v� chu?i cung ?ng",
     slug: "dien-dan-hoi-vien-ket-noi-thi-truong-va-chuoi-cung-ung",
     summary:
-      "<p>Diễn đàn tạo không gian gặp gỡ giữa doanh nghiệp sản xuất, đơn vị phân phối và nhà cung cấp dịch vụ hỗ trợ thị trường.</p>",
+      "<p>Di?n d�n t?o kh�ng gian g?p g? gi?a doanh nghi?p s?n xu?t, don v? ph�n ph?i v� nh� cung c?p d?ch v? h? tr? th? tru?ng.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Sự kiện", "Hội viên"],
+    tagsearch_values: ["S? ki?n", "H?i vi�n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -676,15 +709,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-11-24T08:00",
     ended_at: "2026-11-24T12:00",
     registration_deadline: "2026-11-22T17:00",
-    location: "Đà Nẵng",
-    participation_fee: "Miễn phí",
+    location: "�� N?ng",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-14-a",
         type: "text",
         position: 1,
         content:
-          "<p>Chương trình hướng đến việc mở rộng cơ hội kết nối đối tác, chia sẻ nhu cầu thị trường và xây dựng chuỗi cung ứng linh hoạt hơn.</p>",
+          "<p>Chuong tr�nh hu?ng d?n vi?c m? r?ng co h?i k?t n?i d?i t�c, chia s? nhu c?u th? tru?ng v� x�y d?ng chu?i cung ?ng linh ho?t hon.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -693,14 +726,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-15",
-    title: "Chương trình kết nối doanh nghiệp hội viên ngành thực phẩm và bán lẻ",
+    title: "Chuong tr�nh k?t n?i doanh nghi?p h?i vi�n ng�nh th?c ph?m v� b�n l?",
     slug: "chuong-trinh-ket-noi-doanh-nghiep-hoi-vien-nganh-thuc-pham-va-ban-le",
     summary:
-      "<p>Buổi kết nối tạo không gian giới thiệu sản phẩm, chia sẻ nhu cầu mua hàng và ghép nối đối tác giữa doanh nghiệp sản xuất với hệ thống phân phối.</p>",
+      "<p>Bu?i k?t n?i t?o kh�ng gian gi?i thi?u s?n ph?m, chia s? nhu c?u mua h�ng v� gh�p n?i d?i t�c gi?a doanh nghi?p s?n xu?t v?i h? th?ng ph�n ph?i.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Sự kiện", "Hội viên"],
+    tagsearch_values: ["S? ki?n", "H?i vi�n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -711,15 +744,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-05-22T14:00",
     ended_at: "2026-05-22T17:00",
     registration_deadline: "2026-05-20T17:00",
-    location: "TP. Hồ Chí Minh",
-    participation_fee: "Miễn phí",
+    location: "TP. H? Ch� Minh",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-15-a",
         type: "text",
         position: 1,
         content:
-          "<p>Chương trình ưu tiên các nhóm doanh nghiệp đang cần mở rộng hệ thống phân phối và tìm đối tác đồng hành tại khu vực phía Nam.</p>",
+          "<p>Chuong tr�nh uu ti�n c�c nh�m doanh nghi?p dang c?n m? r?ng h? th?ng ph�n ph?i v� t�m d?i t�c d?ng h�nh t?i khu v?c ph�a Nam.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -728,14 +761,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-16",
-    title: "Lớp đào tạo ngắn hạn: Kỹ năng xây dựng kế hoạch xúc tiến thương mại",
+    title: "L?p d�o t?o ng?n h?n: K? nang x�y d?ng k? ho?ch x�c ti?n thuong m?i",
     slug: "lop-dao-tao-ngan-han-ky-nang-xay-dung-ke-hoach-xuc-tien-thuong-mai",
     summary:
-      "<p>Khóa học hướng dẫn doanh nghiệp xác định mục tiêu, ngân sách và cách triển khai hoạt động xúc tiến thương mại theo từng giai đoạn.</p>",
+      "<p>Kh�a h?c hu?ng d?n doanh nghi?p x�c d?nh m?c ti�u, ng�n s�ch v� c�ch tri?n khai ho?t d?ng x�c ti?n thuong m?i theo t?ng giai do?n.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Đào tạo", "Sự kiện"],
+    tagsearch_values: ["��o t?o", "S? ki?n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -746,15 +779,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-05-26T08:30",
     ended_at: "2026-05-26T11:30",
     registration_deadline: "2026-05-24T17:00",
-    location: "Trực tuyến",
-    participation_fee: "350.000 VNĐ",
+    location: "Tr?c tuy?n",
+    participation_fee: "350.000 VN�",
     post_content: [
       {
         id: "section-admin-news-16-a",
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung tập trung vào cấu trúc kế hoạch, xây dựng đầu việc ưu tiên và lựa chọn kênh triển khai phù hợp với nguồn lực của doanh nghiệp.</p>",
+          "<p>N?i dung t?p trung v�o c?u tr�c k? ho?ch, x�y d?ng d?u vi?c uu ti�n v� l?a ch?n k�nh tri?n khai ph� h?p v?i ngu?n l?c c?a doanh nghi?p.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -763,14 +796,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-17",
-    title: "Công ty Western Coast Enterprise LTD cần thuê mua vật liệu xây dựng tại Việt Nam",
+    title: "C�ng ty Western Coast Enterprise LTD c?n thu� mua v?t li?u x�y d?ng t?i Vi?t Nam",
     slug: "cong-ty-western-coast-enterprise-ltd-can-thue-mua-vat-lieu-xay-dung-tai-viet-nam",
     summary:
-      "<p>Doanh nghiệp tìm kiếm đối tác cung ứng vật liệu xây dựng ổn định tại thị trường Việt Nam để phục vụ kế hoạch mở rộng chuỗi dự án trong khu vực.</p>",
+      "<p>Doanh nghi?p t�m ki?m d?i t�c cung ?ng v?t li?u x�y d?ng ?n d?nh t?i th? tru?ng Vi?t Nam d? ph?c v? k? ho?ch m? r?ng chu?i d? �n trong khu v?c.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-business-opportunity"],
-    tagsearch_values: ["Cơ hội kinh doanh", "Kết nối giao thương"],
+    tagsearch_values: ["Co h?i kinh doanh", "K?t n?i giao thuong"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -781,7 +814,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
+    location: "TP. H? Ch� Minh",
     participation_fee: "",
     post_content: [
       {
@@ -789,7 +822,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Nhu cầu tập trung vào nhóm vật liệu hoàn thiện, vật liệu nền móng và các nhà cung ứng có khả năng đáp ứng đơn hàng dài hạn.</p>",
+          "<p>Nhu c?u t?p trung v�o nh�m v?t li?u ho�n thi?n, v?t li?u n?n m�ng v� c�c nh� cung ?ng c� kh? nang d�p ?ng don h�ng d�i h?n.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -798,14 +831,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-18",
-    title: "VCCI-HCM kết nối các nhà đầu tư nước ngoài với doanh nghiệp Việt trong chuỗi cung ứng công nghiệp",
+    title: "VCCI-HCM k?t n?i c�c nh� d?u tu nu?c ngo�i v?i doanh nghi?p Vi?t trong chu?i cung ?ng c�ng nghi?p",
     slug: "vcci-hcm-ket-noi-cac-nha-dau-tu-nuoc-ngoai-voi-doanh-nghiep-viet-trong-chuoi-cung-ung-cong-nghiep",
     summary:
-      "<p>Chương trình giới thiệu danh mục nhu cầu hợp tác, tìm nhà cung ứng linh kiện và đối tác gia công cho nhóm doanh nghiệp FDI.</p>",
+      "<p>Chuong tr�nh gi?i thi?u danh m?c nhu c?u h?p t�c, t�m nh� cung ?ng linh ki?n v� d?i t�c gia c�ng cho nh�m doanh nghi?p FDI.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-business-opportunity"],
-    tagsearch_values: ["Cơ hội kinh doanh", "Hội viên"],
+    tagsearch_values: ["Co h?i kinh doanh", "H?i vi�n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -816,7 +849,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Bình Dương",
+    location: "B�nh Duong",
     participation_fee: "",
     post_content: [
       {
@@ -824,7 +857,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Hoạt động ưu tiên những doanh nghiệp có năng lực sản xuất ổn định, minh bạch hồ sơ chất lượng và sẵn sàng tham gia đánh giá nhà máy.</p>",
+          "<p>Ho?t d?ng uu ti�n nh?ng doanh nghi?p c� nang l?c s?n xu?t ?n d?nh, minh b?ch h? so ch?t lu?ng v� s?n s�ng tham gia d�nh gi� nh� m�y.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -833,14 +866,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-19",
-    title: "Doanh nghiệp logistics tìm đối tác phân phối và khai thác tuyến vận chuyển liên vùng",
+    title: "Doanh nghi?p logistics t�m d?i t�c ph�n ph?i v� khai th�c tuy?n v?n chuy?n li�n v�ng",
     slug: "doanh-nghiep-logistics-tim-doi-tac-phan-phoi-va-khai-thac-tuyen-van-chuyen-lien-vung",
     summary:
-      "<p>Thông tin mời hợp tác dành cho các doanh nghiệp có hệ thống kho bãi, đội xe và năng lực xử lý đơn hàng tại khu vực phía Nam.</p>",
+      "<p>Th�ng tin m?i h?p t�c d�nh cho c�c doanh nghi?p c� h? th?ng kho b�i, d?i xe v� nang l?c x? l� don h�ng t?i khu v?c ph�a Nam.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-business-opportunity"],
-    tagsearch_values: ["Cơ hội kinh doanh", "Logistics"],
+    tagsearch_values: ["Co h?i kinh doanh", "Logistics"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -859,7 +892,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung hợp tác bao gồm phân phối nội địa, gom hàng xuất khẩu và phát triển thêm các điểm trung chuyển mới tại khu vực lân cận.</p>",
+          "<p>N?i dung h?p t�c bao g?m ph�n ph?i n?i d?a, gom h�ng xu?t kh?u v� ph�t tri?n th�m c�c di?m trung chuy?n m?i t?i khu v?c l�n c?n.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -868,14 +901,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-20",
-    title: "Những chính sách mới có hiệu lực từ ngày 01/10/2026",
+    title: "Nh?ng ch�nh s�ch m?i c� hi?u l?c t? ng�y 01/10/2026",
     slug: "nhung-chinh-sach-moi-co-hieu-luc-tu-ngay-01-10-2026",
     summary:
-      "<p>Tổng hợp nhanh các quy định mới liên quan đến thuế, lao động và thủ tục hành chính mà doanh nghiệp cần lưu ý trong kỳ áp dụng mới.</p>",
+      "<p>T?ng h?p nhanh c�c quy d?nh m?i li�n quan d?n thu?, lao d?ng v� th? t?c h�nh ch�nh m� doanh nghi?p c?n luu � trong k? �p d?ng m?i.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-policy-law"],
-    tagsearch_values: ["Chính sách & pháp luật", "Chính sách"],
+    tagsearch_values: ["Ch�nh s�ch & ph�p lu?t", "Ch�nh s�ch"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -886,7 +919,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Hà Nội",
+    location: "H� N?i",
     participation_fee: "",
     post_content: [
       {
@@ -894,7 +927,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Bài viết hệ thống lại các mốc áp dụng, nhóm đối tượng chịu tác động và một số đầu việc doanh nghiệp nên chuẩn bị sớm.</p>",
+          "<p>B�i vi?t h? th?ng l?i c�c m?c �p d?ng, nh�m d?i tu?ng ch?u t�c d?ng v� m?t s? d?u vi?c doanh nghi?p n�n chu?n b? s?m.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -903,14 +936,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-21",
-    title: "Luật được sửa đổi: nhiều quy định mới có lợi cho doanh nghiệp",
+    title: "Lu?t du?c s?a d?i: nhi?u quy d?nh m?i c� l?i cho doanh nghi?p",
     slug: "luat-duoc-sua-doi-nhieu-quy-dinh-moi-co-loi-cho-doanh-nghiep",
     summary:
-      "<p>Nội dung cập nhật tập trung vào các điểm sửa đổi về điều kiện kinh doanh, thủ tục hồ sơ và cơ chế hỗ trợ doanh nghiệp nhỏ và vừa.</p>",
+      "<p>N?i dung c?p nh?t t?p trung v�o c�c di?m s?a d?i v? di?u ki?n kinh doanh, th? t?c h? so v� co ch? h? tr? doanh nghi?p nh? v� v?a.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-policy-law"],
-    tagsearch_values: ["Chính sách & pháp luật", "Pháp luật"],
+    tagsearch_values: ["Ch�nh s�ch & ph�p lu?t", "Ph�p lu?t"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -921,7 +954,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Hà Nội",
+    location: "H� N?i",
     participation_fee: "",
     post_content: [
       {
@@ -929,7 +962,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Các thay đổi đáng chú ý giúp rút ngắn thời gian xử lý thủ tục và mở rộng thêm một số cơ chế linh hoạt cho nhà đầu tư.</p>",
+          "<p>C�c thay d?i d�ng ch� � gi�p r�t ng?n th?i gian x? l� th? t?c v� m? r?ng th�m m?t s? co ch? linh ho?t cho nh� d?u tu.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -938,14 +971,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-22",
-    title: "Bảo vệ cổ đông: có được coi là sự kiện bất khả kháng đối với doanh nghiệp",
+    title: "B?o v? c? d�ng: c� du?c coi l� s? ki?n b?t kh? kh�ng d?i v?i doanh nghi?p",
     slug: "bao-ve-co-dong-co-duoc-coi-la-su-kien-bat-kha-khang-doi-voi-doanh-nghiep",
     summary:
-      "<p>Phân tích tình huống pháp lý thường gặp trong quản trị doanh nghiệp, trách nhiệm công bố thông tin và cách xác định rủi ro phát sinh.</p>",
+      "<p>Ph�n t�ch t�nh hu?ng ph�p l� thu?ng g?p trong qu?n tr? doanh nghi?p, tr�ch nhi?m c�ng b? th�ng tin v� c�ch x�c d?nh r?i ro ph�t sinh.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-policy-law"],
-    tagsearch_values: ["Chính sách & pháp luật", "Pháp luật"],
+    tagsearch_values: ["Ch�nh s�ch & ph�p lu?t", "Ph�p lu?t"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -956,7 +989,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
+    location: "TP. H? Ch� Minh",
     participation_fee: "",
     post_content: [
       {
@@ -964,7 +997,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Bài viết đưa ra góc nhìn thực tiễn và khuyến nghị bước chuẩn bị hồ sơ nội bộ khi phát sinh tranh chấp liên quan đến quyền cổ đông.</p>",
+          "<p>B�i vi?t dua ra g�c nh�n th?c ti?n v� khuy?n ngh? bu?c chu?n b? h? so n?i b? khi ph�t sinh tranh ch?p li�n quan d?n quy?n c? d�ng.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -973,14 +1006,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-23",
-    title: "Kết nối hội viên ngành xây dựng và vật liệu tại khu vực phía Nam",
+    title: "K?t n?i h?i vi�n ng�nh x�y d?ng v� v?t li?u t?i khu v?c ph�a Nam",
     slug: "ket-noi-hoi-vien-nganh-xay-dung-va-vat-lieu-tai-khu-vuc-phia-nam",
     summary:
-      "<p>Hoạt động kết nối tập trung vào nhóm doanh nghiệp sản xuất vật liệu, thi công công trình và đơn vị tư vấn đang cần mở rộng mạng lưới hợp tác.</p>",
+      "<p>Ho?t d?ng k?t n?i t?p trung v�o nh�m doanh nghi?p s?n xu?t v?t li?u, thi c�ng c�ng tr�nh v� don v? tu v?n dang c?n m? r?ng m?ng lu?i h?p t�c.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-member-connection"],
-    tagsearch_values: ["Kết nối hội viên", "Hội viên"],
+    tagsearch_values: ["K?t n?i h?i vi�n", "H?i vi�n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -991,7 +1024,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
+    location: "TP. H? Ch� Minh",
     participation_fee: "",
     post_content: [
       {
@@ -999,7 +1032,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Chương trình giới thiệu nhu cầu hợp tác, nhu cầu nhà cung ứng và các cơ hội triển khai dự án chung trong giai đoạn tới.</p>",
+          "<p>Chuong tr�nh gi?i thi?u nhu c?u h?p t�c, nhu c?u nh� cung ?ng v� c�c co h?i tri?n khai d? �n chung trong giai do?n t?i.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1008,14 +1041,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-24",
-    title: "Không gian gặp gỡ hội viên mới trong mạng lưới doanh nghiệp dịch vụ",
+    title: "Kh�ng gian g?p g? h?i vi�n m?i trong m?ng lu?i doanh nghi?p d?ch v?",
     slug: "khong-gian-gap-go-hoi-vien-moi-trong-mang-luoi-doanh-nghiep-dich-vu",
     summary:
-      "<p>Buổi networking quy tụ đại diện doanh nghiệp dịch vụ, thương mại và đơn vị tư vấn cùng chia sẻ nhu cầu kết nối khách hàng.</p>",
+      "<p>Bu?i networking quy t? d?i di?n doanh nghi?p d?ch v?, thuong m?i v� don v? tu v?n c�ng chia s? nhu c?u k?t n?i kh�ch h�ng.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-member-connection"],
-    tagsearch_values: ["Kết nối hội viên", "Networking"],
+    tagsearch_values: ["K?t n?i h?i vi�n", "Networking"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -1026,7 +1059,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "TP. Hồ Chí Minh",
+    location: "TP. H? Ch� Minh",
     participation_fee: "",
     post_content: [
       {
@@ -1034,7 +1067,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung chú trọng vào việc tạo điểm chạm ban đầu giữa các hội viên mới với cộng đồng doanh nghiệp hiện có của VCCI-HCM.</p>",
+          "<p>N?i dung ch� tr?ng v�o vi?c t?o di?m ch?m ban d?u gi?a c�c h?i vi�n m?i v?i c?ng d?ng doanh nghi?p hi?n c� c?a VCCI-HCM.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1043,14 +1076,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-25",
-    title: "Chương trình chia sẻ cơ hội hợp tác giữa hội viên công nghệ và doanh nghiệp truyền thống",
+    title: "Chuong tr�nh chia s? co h?i h?p t�c gi?a h?i vi�n c�ng ngh? v� doanh nghi?p truy?n th?ng",
     slug: "chuong-trinh-chia-se-co-hoi-hop-tac-giua-hoi-vien-cong-nghe-va-doanh-nghiep-truyen-thong",
     summary:
-      "<p>Chuỗi hoạt động giúp doanh nghiệp công nghệ giới thiệu giải pháp số và tìm đối tác ứng dụng trong sản xuất, thương mại và dịch vụ.</p>",
+      "<p>Chu?i ho?t d?ng gi�p doanh nghi?p c�ng ngh? gi?i thi?u gi?i ph�p s? v� t�m d?i t�c ?ng d?ng trong s?n xu?t, thuong m?i v� d?ch v?.</p>",
     type: "tintuc",
     header_category_id: "activity-news",
     category_ids: ["cat-member-connection"],
-    tagsearch_values: ["Kết nối hội viên", "Chuyển đổi số"],
+    tagsearch_values: ["K?t n?i h?i vi�n", "Chuy?n d?i s?"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -1061,7 +1094,7 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "",
     ended_at: "",
     registration_deadline: "",
-    location: "Trực tuyến",
+    location: "Tr?c tuy?n",
     participation_fee: "",
     post_content: [
       {
@@ -1069,7 +1102,7 @@ const newsSeed: AdminNewsItem[] = [
         type: "text",
         position: 1,
         content:
-          "<p>Chương trình mở ra nhiều phiên giới thiệu nhanh, matching nhu cầu và trao đổi mô hình triển khai phù hợp theo từng nhóm ngành.</p>",
+          "<p>Chuong tr�nh m? ra nhi?u phi�n gi?i thi?u nhanh, matching nhu c?u v� trao d?i m� h�nh tri?n khai ph� h?p theo t?ng nh�m ng�nh.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1078,14 +1111,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-26",
-    title: "Phiên kết nối nhà mua hàng quốc tế với doanh nghiệp hội viên ngành gỗ",
+    title: "Phi�n k?t n?i nh� mua h�ng qu?c t? v?i doanh nghi?p h?i vi�n ng�nh g?",
     slug: "phien-ket-noi-nha-mua-hang-quoc-te-voi-doanh-nghiep-hoi-vien-nganh-go",
     summary:
-      "<p>Chương trình tập trung vào nhu cầu sourcing sản phẩm nội thất, vật liệu hoàn thiện và nhóm doanh nghiệp có năng lực xuất khẩu tại khu vực phía Nam.</p>",
+      "<p>Chuong tr�nh t?p trung v�o nhu c?u sourcing s?n ph?m n?i th?t, v?t li?u ho�n thi?n v� nh�m doanh nghi?p c� nang l?c xu?t kh?u t?i khu v?c ph�a Nam.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Sự kiện", "Hội viên"],
+    tagsearch_values: ["S? ki?n", "H?i vi�n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -1096,15 +1129,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-05-29T08:30",
     ended_at: "2026-05-29T11:30",
     registration_deadline: "2026-05-27T17:00",
-    location: "TP. Hồ Chí Minh",
-    participation_fee: "Miễn phí",
+    location: "TP. H? Ch� Minh",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-26-a",
         type: "text",
         position: 1,
         content:
-          "<p>Hoạt động ưu tiên các doanh nghiệp có bộ hồ sơ năng lực xuất khẩu rõ ràng và sản phẩm phù hợp với nhóm nhà mua hàng đang mở rộng nguồn cung tại Việt Nam.</p>",
+          "<p>Ho?t d?ng uu ti�n c�c doanh nghi?p c� b? h? so nang l?c xu?t kh?u r� r�ng v� s?n ph?m ph� h?p v?i nh�m nh� mua h�ng dang m? r?ng ngu?n cung t?i Vi?t Nam.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1113,14 +1146,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-27",
-    title: "Hội thảo chuyên đề logistics lạnh cho doanh nghiệp thực phẩm và nông sản",
+    title: "H?i th?o chuy�n d? logistics l?nh cho doanh nghi?p th?c ph?m v� n�ng s?n",
     slug: "hoi-thao-chuyen-de-logistics-lanh-cho-doanh-nghiep-thuc-pham-va-nong-san",
     summary:
-      "<p>Chuỗi chia sẻ cập nhật xu hướng bảo quản lạnh, tối ưu chi phí vận chuyển và tiêu chuẩn chất lượng trong chuỗi cung ứng thực phẩm.</p>",
+      "<p>Chu?i chia s? c?p nh?t xu hu?ng b?o qu?n l?nh, t?i uu chi ph� v?n chuy?n v� ti�u chu?n ch?t lu?ng trong chu?i cung ?ng th?c ph?m.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Sự kiện", "Chuyên đề"],
+    tagsearch_values: ["S? ki?n", "Chuy�n d?"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[0]),
     is_hidden: false,
@@ -1131,15 +1164,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-05-30T13:30",
     ended_at: "2026-05-30T16:30",
     registration_deadline: "2026-05-28T17:00",
-    location: "Cần Thơ",
-    participation_fee: "Miễn phí",
+    location: "C?n Tho",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-27-a",
         type: "text",
         position: 1,
         content:
-          "<p>Phiên thảo luận kết nối doanh nghiệp sản xuất với đơn vị kho vận, chuỗi bán lẻ và nhà cung cấp giải pháp kiểm soát nhiệt độ trong bảo quản.</p>",
+          "<p>Phi�n th?o lu?n k?t n?i doanh nghi?p s?n xu?t v?i don v? kho v?n, chu?i b�n l? v� nh� cung c?p gi?i ph�p ki?m so�t nhi?t d? trong b?o qu?n.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1148,14 +1181,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-28",
-    title: "Khóa đào tạo thực hành xây dựng hồ sơ năng lực số cho doanh nghiệp hội viên",
+    title: "Kh�a d�o t?o th?c h�nh x�y d?ng h? so nang l?c s? cho doanh nghi?p h?i vi�n",
     slug: "khoa-dao-tao-thuc-hanh-xay-dung-ho-so-nang-luc-so-cho-doanh-nghiep-hoi-vien",
     summary:
-      "<p>Khóa học hướng dẫn doanh nghiệp chuẩn hóa profile giới thiệu, tài liệu bán hàng và công cụ trình bày năng lực trên môi trường số.</p>",
+      "<p>Kh�a h?c hu?ng d?n doanh nghi?p chu?n h�a profile gi?i thi?u, t�i li?u b�n h�ng v� c�ng c? tr�nh b�y nang l?c tr�n m�i tru?ng s?.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Đào tạo", "Hội viên"],
+    tagsearch_values: ["��o t?o", "H?i vi�n"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[3]),
     is_hidden: false,
@@ -1166,15 +1199,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-06-03T08:30",
     ended_at: "2026-06-03T11:30",
     registration_deadline: "2026-06-01T17:00",
-    location: "Trực tuyến",
-    participation_fee: "300.000 VNĐ",
+    location: "Tr?c tuy?n",
+    participation_fee: "300.000 VN�",
     post_content: [
       {
         id: "section-admin-news-28-a",
         type: "text",
         position: 1,
         content:
-          "<p>Nội dung tập trung vào các phần cốt lõi của bộ hồ sơ giới thiệu doanh nghiệp, hình ảnh minh họa và cách trình bày thông tin súc tích để chào đối tác.</p>",
+          "<p>N?i dung t?p trung v�o c�c ph?n c?t l�i c?a b? h? so gi?i thi?u doanh nghi?p, h�nh ?nh minh h?a v� c�ch tr�nh b�y th�ng tin s�c t�ch d? ch�o d?i t�c.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1183,14 +1216,14 @@ const newsSeed: AdminNewsItem[] = [
   },
   {
     id: "admin-news-29",
-    title: "Diễn đàn kết nối tài chính xanh cho doanh nghiệp sản xuất và xuất khẩu",
+    title: "Di?n d�n k?t n?i t�i ch�nh xanh cho doanh nghi?p s?n xu?t v� xu?t kh?u",
     slug: "dien-dan-ket-noi-tai-chinh-xanh-cho-doanh-nghiep-san-xuat-va-xuat-khau",
     summary:
-      "<p>Chương trình cập nhật các nguồn vốn xanh, tiêu chí đánh giá dự án và giải pháp chuẩn bị hồ sơ tiếp cận tài chính cho doanh nghiệp.</p>",
+      "<p>Chuong tr�nh c?p nh?t c�c ngu?n v?n xanh, ti�u ch� d�nh gi� d? �n v� gi?i ph�p chu?n b? h? so ti?p c?n t�i ch�nh cho doanh nghi?p.</p>",
     type: "tintuc",
     header_category_id: "activity-events",
     category_ids: ["cat-event"],
-    tagsearch_values: ["Sự kiện", "Tài chính xanh"],
+    tagsearch_values: ["S? ki?n", "T�i ch�nh xanh"],
     is_featured: false,
     thumbnail: toImageRef(mediaSeed[2]),
     is_hidden: false,
@@ -1201,15 +1234,15 @@ const newsSeed: AdminNewsItem[] = [
     started_at: "2026-06-05T14:00",
     ended_at: "2026-06-05T17:00",
     registration_deadline: "2026-06-03T17:00",
-    location: "Hà Nội",
-    participation_fee: "Miễn phí",
+    location: "H� N?i",
+    participation_fee: "Mi?n ph�",
     post_content: [
       {
         id: "section-admin-news-29-a",
         type: "text",
         position: 1,
         content:
-          "<p>Diễn đàn tạo nhịp kết nối giữa doanh nghiệp, ngân hàng và đơn vị tư vấn để trao đổi về điều kiện tiếp cận các chương trình tài chính xanh.</p>",
+          "<p>Di?n d�n t?o nh?p k?t n?i gi?a doanh nghi?p, ng�n h�ng v� don v? tu v?n d? trao d?i v? di?u ki?n ti?p c?n c�c chuong tr�nh t�i ch�nh xanh.</p>",
         image_columns: 2,
         image_rows: 2,
         images: [],
@@ -1222,8 +1255,8 @@ export function slugifyAdminNews(value: string) {
   return value
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
+    .replace(/d/g, "d")
+    .replace(/�/g, "D")
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9\s-]/g, "")
@@ -1308,12 +1341,14 @@ export function cloneAdminNewsFormValues(item?: AdminNewsItem | null): AdminNews
 }
 
 export function normalizeAdminMediaItems(items: AdminMediaItem[]) {
-  return [...items].sort((left, right) => {
-    return (
-      new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime() ||
-      right.name.localeCompare(left.name, "vi")
-    );
-  });
+  return items
+    .map((item) => normalizeSeedMediaLabels(item))
+    .sort((left, right) => {
+      return (
+        new Date(right.updated_at).getTime() - new Date(left.updated_at).getTime() ||
+        right.name.localeCompare(left.name, "vi")
+      );
+    });
 }
 
 export function normalizeAdminNewsItems(items: AdminNewsItem[]) {
@@ -1354,7 +1389,18 @@ export function readAdminMediaItems() {
       return getAdminMediaSeed();
     }
 
-    return normalizeAdminMediaItems(parsed);
+    const normalizedItems = normalizeAdminMediaItems(parsed);
+    const hasNormalizedChanges =
+      JSON.stringify(parsed) !== JSON.stringify(normalizedItems);
+
+    if (hasNormalizedChanges) {
+      window.localStorage.setItem(
+        ADMIN_MEDIA_STORAGE_KEY,
+        JSON.stringify(normalizedItems),
+      );
+    }
+
+    return normalizedItems;
   } catch {
     return getAdminMediaSeed();
   }

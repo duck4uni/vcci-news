@@ -1,9 +1,6 @@
 'use client';
 
-import {
-  type AdminNewsItem,
-  getAdminNewsSeed,
-} from "@/mockdata/admin-news";
+import { useHomePosts, type HomePostItem } from "@/app/(main)/(home)/lib/use-home-posts";
 import { addMonths, format, getDay, startOfMonth, subMonths } from "date-fns";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -11,41 +8,32 @@ import { useMemo, useState } from "react";
 
 const weekDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
-const eventItems = getAdminNewsSeed()
-  .filter(
-    (item) =>
-      item.type === "tintuc" &&
-      !item.is_hidden &&
-      item.started_at,
-  )
-  .sort(
-    (left, right) =>
-      new Date(left.started_at).getTime() - new Date(right.started_at).getTime(),
-  );
-
-function isTrainingEvent(item: AdminNewsItem) {
-  return item.tagsearch_values.some((tag) => tag.toLowerCase().includes("đào tạo"));
-}
-
 function EventsCalendar() {
-  const firstEventDate = eventItems[0]?.started_at
-    ? new Date(eventItems[0].started_at)
+  const { eventPosts } = useHomePosts();
+
+  const firstEventDate = eventPosts[0]?.startedAt
+    ? new Date(eventPosts[0].startedAt)
     : new Date("2026-11-01T00:00:00");
 
   const [currentMonth, setCurrentMonth] = useState(
     new Date(firstEventDate.getFullYear(), firstEventDate.getMonth(), 1),
   );
 
+  const isTrainingEvent = (item: HomePostItem) =>
+    item.categories.some((category) =>
+      category.name.toLowerCase().includes("đào tạo"),
+    );
+
   const monthEvents = useMemo(
     () =>
-      eventItems.filter((item) => {
-        const date = new Date(item.started_at);
+      eventPosts.filter((item) => {
+        const date = new Date(item.startedAt);
         return (
           date.getMonth() === currentMonth.getMonth() &&
           date.getFullYear() === currentMonth.getFullYear()
         );
       }),
-    [currentMonth],
+    [currentMonth, eventPosts],
   );
 
   const days = useMemo(() => {
@@ -62,10 +50,10 @@ function EventsCalendar() {
   }, [currentMonth]);
 
   const eventMap = useMemo(() => {
-    const map = new Map<string, AdminNewsItem[]>();
+    const map = new Map<string, HomePostItem[]>();
 
     monthEvents.forEach((item) => {
-      const key = dayjs(item.started_at).format("YYYY-MM-DD");
+      const key = dayjs(item.startedAt).format("YYYY-MM-DD");
       const existing = map.get(key) ?? [];
       existing.push(item);
       map.set(key, existing);

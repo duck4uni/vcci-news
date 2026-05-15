@@ -1,28 +1,15 @@
 'use client';
 
 import ImageNext from "@/components/shared/image-next";
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import memberImages from "@/constants/memberImages";
-import {
-  getAdminNewsSeed,
-} from "@/mockdata/admin-news";
 import Link from "next/link";
 
-const memberConnectionItems = getAdminNewsSeed()
-  .filter(
-    (item) =>
-      item.type === "tintuc" &&
-      !item.is_hidden &&
-      (item.category_ids.includes("cat-member-connection") ||
-        item.tagsearch_values.some((tag) => tag.toLowerCase().includes("kết nối hội viên"))),
-  )
-  .sort(
-    (left, right) =>
-      new Date(right.published_at || right.created_at).getTime() -
-      new Date(left.published_at || left.created_at).getTime(),
-  );
-
 function Members() {
-  const featuredConnection = memberConnectionItems[0];
+  const { memberConnectionPosts, categoryLinks, categoryNames } = useHomePosts();
+  const featuredConnection = memberConnectionPosts[0];
+  const sectionLink =
+    categoryLinks.get(categoryNames.ketNoiHoiVien.toLowerCase()) ?? "/hoi-vien/ket-noi-hoi-vien";
 
   return (
     <section className="flex flex-col gap-5 pb-8 xl:flex-row xl:items-stretch">
@@ -36,7 +23,7 @@ function Members() {
           </div>
 
           <Link
-            href="/danh-ba-hoi-vien"
+            href={sectionLink}
             className="pt-1 text-sm font-semibold text-[#1e2f5e] transition-colors hover:text-[#20449a]"
           >
             Xem thêm
@@ -77,7 +64,7 @@ function Members() {
 
         {featuredConnection ? (
           <Link
-            href="/danh-ba-hoi-vien"
+            href={featuredConnection.externalLink}
             className="block overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
           >
             <div className="aspect-[1.25/1] overflow-hidden rounded-[20px]">
@@ -90,7 +77,11 @@ function Members() {
               />
             </div>
           </Link>
-        ) : null}
+        ) : (
+          <div className="overflow-hidden rounded-[20px] bg-[#eef3fb] shadow-[0_16px_32px_rgba(31,59,124,0.08)]">
+            <div className="aspect-[1.25/1] rounded-[20px] bg-[#e3ebf8]" />
+          </div>
+        )}
       </aside>
     </section>
   );

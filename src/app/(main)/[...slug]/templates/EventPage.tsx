@@ -23,6 +23,7 @@ export default function EventPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParamsString = searchParams.toString();
 
   // states
   const initialPage = Number(searchParams.get("page") ?? "1");
@@ -31,15 +32,20 @@ export default function EventPage() {
   const pageSize = 5;
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParamsString);
     if (page > 1) {
       params.set("page", String(page));
     } else {
       params.delete("page");
     }
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [page]);
+    const nextUrl = qs ? `${pathname}?${qs}` : pathname;
+    const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
+
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [page, pathname, router, searchParamsString]);
 
   // query
   const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({

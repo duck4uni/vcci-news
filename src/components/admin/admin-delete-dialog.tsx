@@ -33,14 +33,20 @@ export function AdminDeleteDialog({
 }: AdminDeleteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="rounded-3xl border border-[#063e8e]/15 bg-white p-6 shadow-xl">
         <AlertDialogHeader>
-          <AlertDialogTitle>{title}</AlertDialogTitle>
-          <AlertDialogDescription>{description}</AlertDialogDescription>
+          <AlertDialogTitle className="text-xl font-semibold text-gray-900">
+            {title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm leading-6 text-gray-700">
+            {description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{cancelLabel}</AlertDialogCancel>
-          <AlertDialogAction className="bg-[#063e8e] hover:bg-[#063e8e]/90" onClick={onConfirm}>
+        <AlertDialogFooter className="mt-2 gap-2">
+          <AlertDialogCancel className="mt-0 border-[#063e8e]/15 bg-white text-gray-700 hover:bg-gray-50 hover:text-gray-900">
+            {cancelLabel}
+          </AlertDialogCancel>
+          <AlertDialogAction className="bg-red-600 text-white hover:bg-red-700" onClick={onConfirm}>
             {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>

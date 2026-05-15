@@ -1,53 +1,20 @@
 'use client';
 
 import ImageNext from "@/components/shared/image-next";
-import {
-  type AdminNewsItem,
-  getAdminNewsSeed,
-} from "@/mockdata/admin-news";
-import { getHeaderCategorySeed } from "@/mockdata/header-config";
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import { ChevronRight, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 
 const FALLBACK_CATEGORY_LINK = "/hoat-dong/tin-tuc";
-const headerCategoryMap = new Map(
-  getHeaderCategorySeed().map((item) => [item.id, item.static_link]),
-);
-const FEATURED_OVERVIEW_LINK =
-  headerCategoryMap.get("activity-news") ?? FALLBACK_CATEGORY_LINK;
-
-function getFeaturedNewsItems(items: AdminNewsItem[]) {
-  return items
-    .filter(
-      (item) =>
-        item.type === "tintuc" &&
-        item.is_featured &&
-        !item.is_hidden &&
-        Boolean(item.thumbnail?.url),
-    )
-    .slice(0, 3);
-}
-
-function getNewsLink(item: AdminNewsItem) {
-  return headerCategoryMap.get(item.header_category_id) ?? FALLBACK_CATEGORY_LINK;
-}
-
-function getBadgeLabel(item: AdminNewsItem) {
-  if (item.header_category_id === "activity-events") return "Sự kiện";
-
-  const firstTag = item.tagsearch_values.find(Boolean);
-  if (firstTag) return firstTag;
-
-  return "Tin VCCI";
-}
-
-const featuredNewsItems = getFeaturedNewsItems(getAdminNewsSeed());
 
 function FeaturedNews() {
+  const { featuredPosts, categoryNames, categoryLinks } = useHomePosts();
+  const featuredNewsItems = featuredPosts.slice(0, 3);
   const [primaryItem, ...secondaryItems] = featuredNewsItems;
-
-  if (!primaryItem) return null;
+  const secondarySlots = Array.from({ length: 2 }, (_, index) => secondaryItems[index] ?? null);
+  const featuredOverviewLink =
+    categoryLinks.get(categoryNames.tinVcci.toLowerCase()) ?? FALLBACK_CATEGORY_LINK;
 
   return (
     <section className="py-8 md:py-10">
@@ -61,7 +28,7 @@ function FeaturedNews() {
           </div>
 
           <Link
-            href={FEATURED_OVERVIEW_LINK}
+            href={featuredOverviewLink}
             className="inline-flex items-center gap-2 pt-2 text-base font-semibold text-[#2b56c0] transition-colors hover:text-[#173f9f]"
           >
             <span>Xem tất cả</span>
@@ -70,70 +37,97 @@ function FeaturedNews() {
         </div>
 
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1.14fr)_minmax(0,0.96fr)]">
-          <Link
-            href={getNewsLink(primaryItem)}
-            className="group relative block min-h-[260px] overflow-hidden rounded-[24px] bg-[#0d2f5f] shadow-[0_18px_38px_rgba(28,52,120,0.22)] md:min-h-[320px] xl:min-h-[350px]"
-          >
-            <div className="relative h-full min-h-[260px] md:min-h-[320px] xl:min-h-[350px]">
-              <ImageNext
-                src={primaryItem.thumbnail?.url ?? "/thumbnail.png"}
-                alt={primaryItem.thumbnail?.alt || primaryItem.title}
-                width={1200}
-                height={800}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-[#26356d] via-[#53669b]/34 to-transparent" />
+          {primaryItem ? (
+            <Link
+              href={primaryItem.externalLink}
+              className="group relative block min-h-[260px] overflow-hidden rounded-[24px] bg-[#0d2f5f] shadow-[0_18px_38px_rgba(28,52,120,0.22)] md:min-h-[320px] xl:min-h-[350px]"
+            >
+              <div className="relative h-full min-h-[260px] md:min-h-[320px] xl:min-h-[350px]">
+                <ImageNext
+                  src={primaryItem.thumbnail?.url ?? "/thumbnail.png"}
+                  alt={primaryItem.thumbnail?.alt || primaryItem.title}
+                  width={1200}
+                  height={800}
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-[#26356d] via-[#53669b]/34 to-transparent" />
 
-              <div className="relative flex h-full flex-col justify-end p-4 md:p-5">
-                <span className="mb-2 inline-flex w-fit rounded-[10px] bg-[#ffc400] px-3 py-1 text-sm font-bold text-[#1d3f90]">
-                  {getBadgeLabel(primaryItem)}
-                </span>
+                <div className="relative flex h-full flex-col justify-end p-4 md:p-5">
+                  <span className="mb-2 inline-flex w-fit rounded-[10px] bg-[#ffc400] px-3 py-1 text-sm font-bold text-[#1d3f90]">
+                    {primaryItem.categories[0]?.name || "Tin nổi bật"}
+                  </span>
 
-                <h3 className="max-w-3xl text-[20px] font-bold leading-[1.28] text-white md:text-[28px] xl:text-[32px]">
-                  {primaryItem.title}
-                </h3>
+                  <h3 className="max-w-3xl text-[20px] font-bold leading-[1.28] text-white md:text-[28px] xl:text-[32px]">
+                    {primaryItem.title}
+                  </h3>
 
-                <p className="mt-2 text-base font-medium text-white/78 md:text-[17px]">
-                  {dayjs(primaryItem.published_at || primaryItem.created_at).format("DD/MM/YYYY")}
-                </p>
+                  <p className="mt-2 text-base font-medium text-white/78 md:text-[17px]">
+                    {dayjs(primaryItem.publishedAt || primaryItem.createdAt).format(
+                      "DD/MM/YYYY",
+                    )}
+                  </p>
+                </div>
+              </div>
+            </Link>
+          ) : (
+            <div className="relative min-h-[260px] overflow-hidden rounded-[24px] bg-[#e9eef8] shadow-[0_18px_38px_rgba(28,52,120,0.12)] md:min-h-[320px] xl:min-h-[350px]">
+              <div className="flex h-full min-h-[260px] flex-col justify-end p-4 md:min-h-[320px] md:p-5 xl:min-h-[350px]">
+                <span className="mb-2 h-8 w-28 rounded-[10px] bg-white/80" />
+                <div className="h-8 w-3/4 rounded bg-white/90 md:h-10" />
+                <div className="mt-2 h-5 w-28 rounded bg-white/70" />
               </div>
             </div>
-          </Link>
+          )}
 
           <div className="grid gap-4">
             <div className="grid gap-4 md:grid-cols-2">
-              {secondaryItems.map((item) => (
-                <Link
-                  key={item.id}
-                  href={getNewsLink(item)}
-                  className="group relative block min-h-[195px] overflow-hidden rounded-[20px] bg-[#27447f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] md:min-h-[205px] xl:min-h-[215px]"
-                >
-                  <div className="relative h-full min-h-[195px] md:min-h-[205px] xl:min-h-[215px]">
-                    <ImageNext
-                      src={item.thumbnail?.url ?? "/thumbnail.png"}
-                      alt={item.thumbnail?.alt || item.title}
-                      width={600}
-                      height={420}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-                    />
-                    <div className="absolute inset-0 bg-linear-to-t from-[#5a6796] via-[#405083]/34 to-transparent" />
+              {secondarySlots.map((item, index) =>
+                item ? (
+                  <Link
+                    key={item.id}
+                    href={item.externalLink}
+                    className="group relative block min-h-[195px] overflow-hidden rounded-[20px] bg-[#27447f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] md:min-h-[205px] xl:min-h-[215px]"
+                  >
+                    <div className="relative h-full min-h-[195px] md:min-h-[205px] xl:min-h-[215px]">
+                      <ImageNext
+                        src={item.thumbnail?.url ?? "/thumbnail.png"}
+                        alt={item.thumbnail?.alt || item.title}
+                        width={600}
+                        height={420}
+                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-[#5a6796] via-[#405083]/34 to-transparent" />
 
-                    <div className="relative flex h-full flex-col justify-end p-3.5">
-                      <span className="mb-2 inline-flex w-fit rounded-[10px] bg-[#ffc400] px-3 py-1 text-sm font-bold text-[#1d3f90]">
-                        {getBadgeLabel(item)}
-                      </span>
+                      <div className="relative flex h-full flex-col justify-end p-3.5">
+                        <span className="mb-2 inline-flex w-fit rounded-[10px] bg-[#ffc400] px-3 py-1 text-sm font-bold text-[#1d3f90]">
+                          {item.categories[0]?.name || "Tin nổi bật"}
+                        </span>
 
-                      <h4 className="line-clamp-2 text-[16px] font-bold leading-[1.32] text-white md:text-[17px]">
-                        {item.title}
-                      </h4>
+                        <h4 className="line-clamp-2 text-[16px] font-bold leading-[1.32] text-white md:text-[17px]">
+                          {item.title}
+                        </h4>
 
-                      <p className="mt-1.5 text-[15px] font-medium text-white/78 md:text-base">
-                        {dayjs(item.published_at || item.created_at).format("DD/MM/YYYY")}
-                      </p>
+                        <p className="mt-1.5 text-[15px] font-medium text-white/78 md:text-base">
+                          {dayjs(item.publishedAt || item.createdAt).format(
+                            "DD/MM/YYYY",
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ) : (
+                  <div
+                    key={`featured-placeholder-${index}`}
+                    className="min-h-[195px] rounded-[20px] bg-[#dde5f3] shadow-[0_16px_32px_rgba(28,52,120,0.1)] md:min-h-[205px] xl:min-h-[215px]"
+                  >
+                    <div className="flex h-full min-h-[195px] flex-col justify-end p-3.5 md:min-h-[205px] xl:min-h-[215px]">
+                      <span className="mb-2 h-7 w-24 rounded-[10px] bg-white/80" />
+                      <div className="h-6 w-5/6 rounded bg-white/90" />
+                      <div className="mt-2 h-4 w-24 rounded bg-white/70" />
                     </div>
                   </div>
-                </Link>
-              ))}
+                ),
+              )}
             </div>
 
             <div className="overflow-hidden rounded-[28px] bg-linear-to-r from-[#214b95] to-[#2b66bb] px-5 py-5 text-white shadow-[0_18px_38px_rgba(28,52,120,0.2)] md:px-7">

@@ -159,7 +159,7 @@ export default function AdminDashboardPage() {
     () => [
       {
         title: "Cấu hình chung",
-        description: "Logo, banner, chi nhánh liên hệ và mạng xã hội",
+        description: "Logo, banner, chi nh?nh li?n h? v? m?ng x? h?i",
         href: "/admin/base-config",
         icon: Globe,
       },
@@ -313,7 +313,7 @@ export default function AdminDashboardPage() {
                 <div className="mt-2 text-2xl font-semibold text-[#163b73]">{activeBanners.length}</div>
               </div>
               <div className="rounded-[24px] border border-[#063e8e]/10 bg-white p-4">
-                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Mạng xã hội hiển thị</div>
+                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">M?ng x? h?i hi?n th?</div>
                 <div className="mt-2 text-2xl font-semibold text-[#163b73]">{visibleSocials.length}</div>
               </div>
             </div>

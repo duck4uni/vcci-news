@@ -143,7 +143,7 @@ export function AdminImagePicker({
               <ImagePlus className="mb-3 h-10 w-10 text-[#063e8e]" />
               <p className="text-base font-medium text-black">Chưa có hình ảnh phù hợp</p>
               <p className="mt-1 text-sm text-gray-700">
-                Hãy thử từ khóa khác hoặc tải thêm hình ảnh vào thư viện.
+                H?y th? t? kh?a kh?c ho?c t?i th?m h?nh ?nh v?o thu vi?n.
               </p>
             </div>
           ) : (
@@ -172,7 +172,7 @@ export function AdminImagePicker({
                     />
                     {item.id === selectedId ? (
                       <div className="absolute right-3 top-3 rounded-full bg-[#063e8e] px-2 py-1 text-xs font-medium text-white">
-                        Đã chọn
+                        ?? ch?n
                       </div>
                     ) : null}
                   </div>

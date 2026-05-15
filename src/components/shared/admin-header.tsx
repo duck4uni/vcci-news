@@ -1,11 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { LogOut, Menu, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { deleteAuthLogout } from '@/api/endpoints/auth';
+import { logoutAdmin } from '@/lib/auth/admin-auth';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
 import useAuthStore from '@/store/useAuthStore';
 
@@ -40,23 +39,30 @@ function getTitle(pathname: string): string {
   return 'Quản trị';
 }
 
+function formatPrimaryRole(role?: string) {
+  if (!role) return currentUserRoleLabel;
+
+  return role
+    .split('_')
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function formatRoles(roles?: string[]) {
+  if (!roles || roles.length === 0) return currentUserRoleLabel;
+
+  return roles.map((role) => formatPrimaryRole(role)).join(', ');
+}
+
 export function AdminHeader() {
   const { toggle } = useSidebarStore();
   const pathname = usePathname();
-  const router = useRouter();
   const title = getTitle(pathname);
-  const resetStore = useAuthStore((state) => state.resetStore);
+  const currentUser = useAuthStore((state) => state.appUser);
 
   const handleLogout = async () => {
-    try {
-      await deleteAuthLogout();
-    } catch {
-      // Ignore API logout failure and continue clearing local state.
-    } finally {
-      resetStore();
-      toast.success('Đã đăng xuất khỏi trang quản trị');
-      router.replace('/admin/login');
-    }
+    await logoutAdmin({ redirectToLogin: true });
   };
 
   return (
@@ -78,7 +84,7 @@ export function AdminHeader() {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 rounded-full border border-[#063e8e]/10 bg-[#f8fbff] px-3 py-1.5 text-sm font-medium text-[#163b73]">
             <ShieldCheck className="h-4 w-4 text-[#063e8e]" />
-            <span>{currentUserRoleLabel}</span>
+            <span>{formatRoles(currentUser?.roles)}</span>
           </div>
           <Button
             variant="outline"

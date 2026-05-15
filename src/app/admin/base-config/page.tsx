@@ -432,7 +432,11 @@ export default function AdminBaseConfigPage() {
     saveConfig(nextConfig);
     setSavingItem(false);
     setItemDialogOpen(false);
-    toast.success(itemDialogMode === "logo" ? "Đã lưu cấu hình logo" : "Đã lưu cấu hình banner");
+    toast.success(
+      itemDialogMode === "logo"
+        ? "Đã lưu cấu hình logo"
+        : "Đã lưu cấu hình banner",
+    );
   };
 
   const handleDeleteItem = () => {
@@ -575,7 +579,7 @@ export default function AdminBaseConfigPage() {
             value="social"
             className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
           >
-            Mạng xã hội
+            M?ng x? h?i
           </TabsTrigger>
         </TabsList>
 
@@ -700,7 +704,7 @@ export default function AdminBaseConfigPage() {
                     </div>
                   ) : (
                     <div className="rounded-3xl border border-dashed border-[#063e8e]/15 bg-white px-5 py-8 text-center text-sm text-gray-500">
-                      Chưa có logo nào. Hãy thiết lập logo cho website.
+                      Chua c? logo n?o. H?y thi?t l?p logo cho website.
                     </div>
                   )}
                 </div>
@@ -974,7 +978,7 @@ export default function AdminBaseConfigPage() {
                   </>
                 ) : (
                   <div className="rounded-3xl border border-dashed border-[#063e8e]/15 bg-white px-5 py-10 text-center text-sm text-gray-500">
-                    Chưa có chi nhánh nào. Hãy thêm chi nhánh để bắt đầu cấu hình.
+                    Chua c? chi nh?nh n?o. H?y th?m chi nh?nh d? b?t d?u c?u h?nh.
                   </div>
                 )}
               </div>
@@ -1018,9 +1022,9 @@ export default function AdminBaseConfigPage() {
             <CardHeader>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <CardTitle className="text-2xl text-[#163b73]">Mạng xã hội</CardTitle>
+                  <CardTitle className="text-2xl text-[#163b73]">M?ng x? h?i</CardTitle>
                   <CardDescription className="mt-2 text-sm text-slate-600">
-                    Quản lý link mạng xã hội và thứ tự hiển thị trên website.
+                    Qu?n l? link m?ng x? h?i v? th? t? hi?n th? tr?n website.
                   </CardDescription>
                 </div>
 
@@ -1030,7 +1034,7 @@ export default function AdminBaseConfigPage() {
                   className="rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Lưu mạng xã hội
+                  Luu m?ng x? h?i
                 </Button>
               </div>
             </CardHeader>

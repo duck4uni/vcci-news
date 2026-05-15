@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import dayjs from "dayjs";
@@ -7,27 +7,18 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  Edit,
   EyeOff,
   FileText,
-  MoreHorizontal,
   Plus,
   Star,
-  Trash2,
 } from "lucide-react";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
+import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Table,
   TableBody,
@@ -358,37 +349,22 @@ export default function HeaderCategoryPostsPage() {
                       )}
                     </TableCell>
 
-                    <TableCell className="text-center">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            asChild
-                            className="text-gray-700 focus:text-[#063e8e]"
-                          >
-                            <Link href={`/admin/header-config/${categoryId}/posts/${item.id}`}>
-                              <Edit className="mr-2 h-4 w-4" />
-                              Chỉnh sửa
-                            </Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-gray-700 focus:text-[#063e8e]"
-                            onClick={() => setDeleteTarget(item)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Xóa
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                      <TableCell className="text-center">
+                        <AdminRowActions
+                          actions={[
+                            {
+                              kind: "edit",
+                              label: "Chỉnh sửa bài viết",
+                              onClick: () => router.push(`/admin/header-config/${categoryId}/posts/${item.id}`),
+                            },
+                            {
+                              kind: "delete",
+                              label: "Xóa bài viết",
+                              onClick: () => setDeleteTarget(item),
+                            },
+                          ]}
+                        />
+                      </TableCell>
                   </TableRow>
                 ))
               )}

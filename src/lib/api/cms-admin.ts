@@ -2,7 +2,6 @@
 
 import { useCustomClient } from "@/api/mutator/custom-client";
 import { categoryFallbackRows } from "@/mockdata/categories";
-import useAuthStore from "@/store/useAuthStore";
 
 export type CmsHeaderCategoryType = "category" | "page" | "news";
 
@@ -189,14 +188,9 @@ const readMessage = (payload: unknown) => {
 
 const authHeaders = (withJson = true) => {
   const headers = new Headers();
-  const token = useAuthStore.getState().appAccessToken;
 
   if (withJson) {
     headers.set("Content-Type", "application/json");
-  }
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
   }
 
   return headers;
@@ -341,7 +335,9 @@ const transformPost = (
     slug: post.slug ?? "",
     summary: post.summary ?? "",
     type:
-      primaryCategoryType === "post" || primaryCategoryType === "page"
+      post.type === "page" ||
+      primaryCategoryType === "post" ||
+      primaryCategoryType === "page"
         ? "baiviettrang"
         : "tintuc",
     header_category_id: primaryCategory?.id ?? "",
@@ -550,6 +546,29 @@ export async function fetchCmsTags() {
   return fetchAllTagsInternal();
 }
 
+export async function fetchCmsTagsPage(params?: {
+  page?: number;
+  pageSize?: number;
+}) {
+  const searchParams = new URLSearchParams({
+    page: String(params?.page ?? 1),
+    pageSize: String(params?.pageSize ?? 10),
+    sortField: "name",
+    sortOrder: "ASC",
+  });
+
+  const result = await cmsRequest<CmsPagedResult<CmsTagItem>>(
+    `/tag?${searchParams.toString()}`,
+  );
+
+  return {
+    items: result.rows ?? [],
+    total: result.count ?? 0,
+    page: result.page ?? params?.page ?? 1,
+    pageSize: result.pageSize ?? params?.pageSize ?? 10,
+  };
+}
+
 export async function createCmsTag(input: { name: string; slug?: string }) {
   return cmsRequest<CmsTagItem>("/tag", {
     method: "POST",
@@ -723,6 +742,7 @@ export async function fetchCmsNewsItems(params?: {
   pageSize?: number;
   sortField?: string;
   sortOrder?: string;
+  filters?: string;
 }) {
   const queryParams = new URLSearchParams({
     page: String(params?.page ?? 1),
@@ -730,6 +750,10 @@ export async function fetchCmsNewsItems(params?: {
     sortField: params?.sortField ?? "created_at",
     sortOrder: params?.sortOrder ?? "desc",
   });
+
+  if (params?.filters?.trim()) {
+    queryParams.set("filters", params.filters.trim());
+  }
 
   const result = await cmsRequest<CmsPagedResult<CmsRawPostItem>>(
     `/post?${queryParams.toString()}`,
@@ -757,6 +781,7 @@ export async function createCmsNewsItem(input: {
   title: string;
   slug: string;
   summary: string;
+  type: "tintuc" | "baiviettrang";
   header_category_id: string;
   category_ids: string[];
   tag_ids: string[];
@@ -776,6 +801,7 @@ export async function createCmsNewsItem(input: {
     title: input.title,
     slug: input.slug,
     summary: input.summary,
+    type: input.type === "baiviettrang" ? "page" : "news",
     external_link: input.slug ? `/${input.slug}` : "/",
     content: input.summary || "",
     category_ids: input.category_ids,
@@ -816,6 +842,7 @@ export async function updateCmsNewsItem(
     title: string;
     slug: string;
     summary: string;
+    type: "tintuc" | "baiviettrang";
     header_category_id: string;
     category_ids: string[];
     tag_ids: string[];
@@ -836,6 +863,7 @@ export async function updateCmsNewsItem(
     title: input.title,
     slug: input.slug,
     summary: input.summary,
+    type: input.type === "baiviettrang" ? "page" : "news",
     external_link: input.slug ? `/${input.slug}` : "/",
     content: input.summary || "",
     category_ids: input.category_ids,

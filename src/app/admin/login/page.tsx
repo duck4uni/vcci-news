@@ -14,32 +14,16 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { postAuthLogin } from "@/api/endpoints/auth";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
 
 type AuthMode = "login" | "forgot" | "reset";
 type ResetStep = "request" | "verify" | "password" | "done";
-
-type LoginApiSuccess = {
-  responseData?: LoginPayload;
-  data?: {
-    responseData?: LoginPayload;
-  };
-};
-
-type LoginPayload = {
-  access_token?: string;
-  refresh_token?: string;
-  expires_in?: number;
-  user?: {
-    email?: string;
-  };
-};
 
 type ApiEnvelope<T = unknown> = {
   responseData?: T;
@@ -141,8 +125,8 @@ function AuthShell({
     mode === "login"
       ? "Truy cập khu vực quản trị nội dung VCCI News."
       : mode === "forgot"
-        ? "Xác thực email quản trị để nhận mã OTP."
-        : "Nhập mã OTP và tạo mật khẩu mới cho tài khoản.";
+        ? "X?c th?c email qu?n tr? d? nh?n m? OTP."
+        : "Nh?p m? OTP v? t?o m?t kh?u m?i cho t?i kho?n.";
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] px-4 py-8 text-gray-700">
@@ -290,7 +274,6 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
   const rememberState = useAuthStore((state) => state.appUserRemember);
-  const setAppToken = useAuthStore((state) => state.setAppToken);
   const setAppUserRemember = useAuthStore((state) => state.setAppUserRemember);
 
   const [mode, setMode] = useState<AuthMode>("login");
@@ -329,18 +312,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     setLoginLoading(true);
 
     try {
-      const response = await postAuthLogin({
-        email: email.trim(),
-        password,
-      });
-
-      const payload = getResponseData<LoginPayload>(response as unknown as LoginApiSuccess);
-
-      if (!payload?.access_token || !payload.expires_in) {
-        throw new Error("Thiếu dữ liệu token từ API đăng nhập.");
-      }
-
-      setAppToken(payload.access_token, payload.expires_in, payload.refresh_token);
+      await loginAdmin(email.trim(), password);
       setAppUserRemember(remember ? email.trim() : "", remember ? password : "", remember);
 
       toast.success("Đăng nhập quản trị thành công");
@@ -365,9 +337,9 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
 
       setResetStep("verify");
       setMode("reset");
-      setResetMessage("Mã OTP đã được gửi đến email quản trị.");
+      setResetMessage("M? OTP d? du?c g?i d?n email qu?n tr?.");
     } catch (error) {
-      setResetError(getAuthErrorMessage(error, "Không thể gửi mã OTP. Vui lòng thử lại."));
+      setResetError(getAuthErrorMessage(error, "Kh?ng th? g?i m? OTP. Vui l?ng th? l?i."));
     } finally {
       setResetLoading(false);
     }
@@ -390,14 +362,14 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
       const payload = getResponseData<VerifyOtpPayload>(response);
 
       if (!payload?.reset_token) {
-        throw new Error("Không nhận được mã đặt lại mật khẩu từ API.");
+        throw new Error("Kh?ng nh?n du?c m? d?t l?i m?t kh?u t? API.");
       }
 
       setResetToken(payload.reset_token);
       setResetStep("password");
       setResetMessage("OTP hợp lệ. Bạn có thể tạo mật khẩu mới.");
     } catch (error) {
-      setResetError(getAuthErrorMessage(error, "OTP không hợp lệ hoặc đã hết hạn."));
+      setResetError(getAuthErrorMessage(error, "OTP kh?ng h?p l? ho?c d? h?t h?n."));
     } finally {
       setResetLoading(false);
     }
@@ -571,7 +543,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
                 Đang gửi OTP...
               </>
             ) : (
-              "Gửi mã OTP"
+              "G?i m? OTP"
             )}
           </Button>
 
@@ -621,7 +593,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             <form className="space-y-5" onSubmit={handleVerifyOtp}>
               <div className="space-y-2">
                 <Label htmlFor="otp" className="text-gray-700">
-                  Mã OTP
+                  M? OTP
                 </Label>
                 <Input
                   id="otp"
@@ -650,7 +622,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
                 onClick={switchToForgot}
                 className="h-10 w-full rounded-xl text-gray-700 hover:bg-[#edf4ff] hover:text-[#063e8e]"
               >
-                Gửi lại mã OTP
+                G?i l?i m? OTP
               </Button>
             </form>
           ) : null}
@@ -700,7 +672,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             <div className="space-y-5">
               <div className="rounded-2xl border border-[#063e8e]/15 bg-[#f8fbff] p-5 text-center">
                 <CheckCircle2 className="mx-auto h-10 w-10 text-[#063e8e]" />
-                <div className="mt-3 text-base font-semibold text-gray-900">Mật khẩu đã được cập nhật</div>
+                <div className="mt-3 text-base font-semibold text-gray-900">M?t kh?u d? du?c c?p nh?t</div>
                 <p className="mt-2 text-sm leading-6 text-gray-700">
                   Quay lại màn đăng nhập để vào khu vực quản trị bằng mật khẩu mới.
                 </p>

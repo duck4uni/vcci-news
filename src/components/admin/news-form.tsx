@@ -521,9 +521,14 @@ export function AdminNewsForm({
       title: form.title.trim(),
       slug: slugifyAdminNews(form.slug.trim()),
       summary: form.summary,
+      type: form.type,
       header_category_id: form.header_category_id,
       category_ids:
-        form.type === "baiviettrang" ? [] : selectedHeaderCategory?.category_ids ?? [],
+        form.type === "baiviettrang"
+          ? form.header_category_id
+            ? [form.header_category_id]
+            : []
+          : selectedHeaderCategory?.category_ids ?? [],
       tag_ids: form.type === "baiviettrang" ? [] : selectedTagIds,
       is_featured: form.type === "tintuc" ? form.is_featured : false,
       thumbnail_id: form.thumbnail && isUuid(form.thumbnail.id) ? form.thumbnail.id : null,
@@ -812,30 +817,31 @@ export function AdminNewsForm({
                   </div>
                 ) : null}
 
-                {availableSearchTags.length > 0 ? (
-                  <div className="rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.02] p-4">
-                    <Label className="mb-3 block text-gray-700">Tag tìm kiếm</Label>
-                    <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                      {availableSearchTags.map((item) => (
-                        <label
-                          key={item}
-                          className="flex items-center gap-3 rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2"
-                        >
-                          <Checkbox
-                            checked={form.tagsearch_values.includes(item)}
-                            onCheckedChange={(checked) =>
-                              handleToggleSearchTag(item, checked === true)
-                            }
-                            className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
-                          />
-                          <span className="text-sm text-gray-700">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
               </div>
             </div>
+
+            {availableSearchTags.length > 0 ? (
+              <div className="rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.02] p-4 xl:col-span-2">
+                <Label className="mb-3 block text-gray-700">Tag tìm kiếm</Label>
+                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                  {availableSearchTags.map((item) => (
+                    <label
+                      key={item}
+                      className="flex items-center gap-3 rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2"
+                    >
+                      <Checkbox
+                        checked={form.tagsearch_values.includes(item)}
+                        onCheckedChange={(checked) =>
+                          handleToggleSearchTag(item, checked === true)
+                        }
+                        className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
+                      />
+                      <span className="text-sm text-gray-700">{item}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
         </FormSection>
 

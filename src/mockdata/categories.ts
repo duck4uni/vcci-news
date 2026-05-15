@@ -257,7 +257,7 @@ export const categoryFallbackRows: Category[] = [
     id: "142c9525-b206-4b87-8978-4b7048a46a3b",
     name: "Trang chủ",
     slug: "trang-chu",
-    url: "/trang-chu",
+    url: "/",
     sort_order: 1,
     created_at: "2026-05-14T04:54:26.127Z",
     created_by: null,
