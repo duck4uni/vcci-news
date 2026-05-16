@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import {
   Eye,
+  EyeOff,
   FileText,
   FolderPlus,
   PencilLine,
@@ -14,7 +15,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-type AdminRowActionKind = "edit" | "view" | "delete" | "manage" | "create-child";
+type AdminRowActionKind =
+  | "edit"
+  | "view"
+  | "hidden"
+  | "visible"
+  | "delete"
+  | "manage"
+  | "create-child";
 
 type AdminRowActionBase = {
   label: string;
@@ -29,6 +37,14 @@ type AdminRowAction =
   | (AdminRowActionBase & {
       kind: "view";
       onClick: () => void;
+    })
+  | (AdminRowActionBase & {
+      kind: "visible";
+      onClick?: () => void;
+    })
+  | (AdminRowActionBase & {
+      kind: "hidden";
+      onClick?: () => void;
     })
   | (AdminRowActionBase & {
       kind: "delete";
@@ -64,6 +80,16 @@ const actionStyles: Record<
     button:
       "border-emerald-100 bg-white text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700",
     icon: <Eye className="h-4 w-4" />,
+  },
+  visible: {
+    button:
+      "border-emerald-100 bg-white text-emerald-600 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700",
+    icon: <Eye className="h-4 w-4" />,
+  },
+  hidden: {
+    button:
+      "border-red-100 bg-white text-red-600 hover:border-red-200 hover:bg-red-50 hover:text-red-700",
+    icon: <EyeOff className="h-4 w-4" />,
   },
   delete: {
     button:

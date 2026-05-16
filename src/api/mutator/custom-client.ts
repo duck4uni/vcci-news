@@ -68,6 +68,20 @@ const createAxiosInstance = () => {
 };
 
 const AXIOS_INSTANCE = createAxiosInstance();
+const GET_CACHE_TTL = 2 * 60 * 1000;
+const MAX_GET_CACHE_SIZE = 100;
+
+type CustomClientPromise<T> = Promise<T> & {
+  cancel?: () => void;
+};
+
+type CachedGetResponse = {
+  expiresAt: number;
+  value: unknown;
+};
+
+const inFlightGetRequests = new Map<string, CustomClientPromise<unknown>>();
+const cachedGetResponses = new Map<string, CachedGetResponse>();
 
 const shouldSkipAuthHandling = (url?: string | null) => {
   if (!url) return false;
@@ -96,23 +110,115 @@ const convertHeaders = (headers?: HeadersInit): Record<string, string> | undefin
   return headers as Record<string, string>;
 };
 
+const getRequestMethod = (options?: RequestInit) =>
+  (options?.method || "GET").toUpperCase();
+
+const shouldUseGetCache = (url: string, options?: RequestInit) => {
+  const method = getRequestMethod(options);
+  const headers = convertHeaders(options?.headers);
+  const hasAuthorizationHeader = Object.keys(headers ?? {}).some(
+    (key) => key.toLowerCase() === "authorization",
+  );
+
+  return (
+    method === "GET" &&
+    !options?.body &&
+    !hasAuthorizationHeader &&
+    !shouldSkipAuthHandling(url)
+  );
+};
+
+const makeGetCacheKey = (url: string, options?: RequestInit) => {
+  const headers = convertHeaders(options?.headers);
+  const headerKey = headers
+    ? Object.entries(headers)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, value]) => `${key}:${value}`)
+        .join("|")
+    : "";
+
+  return `${url}::${headerKey}`;
+};
+
+const clearGetCache = () => {
+  inFlightGetRequests.clear();
+  cachedGetResponses.clear();
+};
+
+const trimGetCache = () => {
+  while (cachedGetResponses.size > MAX_GET_CACHE_SIZE) {
+    const firstKey = cachedGetResponses.keys().next().value;
+    if (!firstKey) return;
+    cachedGetResponses.delete(firstKey);
+  }
+};
+
+const withNoopCancel = <T>(promise: Promise<T>): CustomClientPromise<T> => {
+  const nextPromise = promise as CustomClientPromise<T>;
+  nextPromise.cancel = () => {};
+  return nextPromise;
+};
+
 const useCustomClient = <T>(url: string, options?: RequestInit): Promise<T> => {
+  const method = getRequestMethod(options);
+  const shouldCacheGet = shouldUseGetCache(url, options);
+  const cacheKey = shouldCacheGet ? makeGetCacheKey(url, options) : "";
+
+  if (shouldCacheGet) {
+    const cachedResponse = cachedGetResponses.get(cacheKey);
+
+    if (cachedResponse && cachedResponse.expiresAt > Date.now()) {
+      return withNoopCancel(Promise.resolve(cachedResponse.value as T));
+    }
+
+    cachedGetResponses.delete(cacheKey);
+
+    const inFlightRequest = inFlightGetRequests.get(cacheKey);
+
+    if (inFlightRequest) {
+      return withNoopCancel(inFlightRequest as Promise<T>);
+    }
+  } else if (method !== "GET") {
+    clearGetCache();
+  }
+
   const source = Axios.CancelToken.source();
 
   const axiosConfig: AxiosRequestConfig = {
     url,
-    method: options?.method || "GET",
+    method,
     headers: convertHeaders(options?.headers),
     data: options?.body,
     signal: options?.signal || undefined,
     cancelToken: source.token,
   };
 
-  const promise = AXIOS_INSTANCE(axiosConfig).then(({ data, status }) => {
-    return data instanceof Blob ? data : { ...data, statusCode: status };
-  });
+  const promise = AXIOS_INSTANCE(axiosConfig)
+    .then(({ data, status }) => {
+      const response = data instanceof Blob ? data : { ...data, statusCode: status };
 
-  // @ts-expect-error not exist cancel
+      if (shouldCacheGet) {
+        cachedGetResponses.set(cacheKey, {
+          expiresAt: Date.now() + GET_CACHE_TTL,
+          value: response,
+        });
+        trimGetCache();
+      } else if (method !== "GET") {
+        clearGetCache();
+      }
+
+      return response;
+    })
+    .finally(() => {
+      if (shouldCacheGet) {
+        inFlightGetRequests.delete(cacheKey);
+      }
+    }) as CustomClientPromise<T>;
+
+  if (shouldCacheGet) {
+    inFlightGetRequests.set(cacheKey, promise as CustomClientPromise<unknown>);
+  }
+
   promise.cancel = () => {
     source.cancel("Query was cancelled");
   };

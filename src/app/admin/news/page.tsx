@@ -5,13 +5,12 @@ import dayjs from "dayjs";
 import {
   Check,
   ChevronsUpDown,
-  EyeOff,
   Plus,
   Star,
   Tag,
 } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
@@ -46,6 +45,7 @@ import {
 import {
   deleteCmsNewsItem,
   fetchCmsNewsItems,
+  fetchCmsPostCount,
   fetchHeaderConfigItems,
 } from "@/lib/api/cms-admin";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -177,6 +177,22 @@ function formatDateTime(value: string) {
   return value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "—";
 }
 
+function getDisplayCategoryNames(
+  item: AdminNewsItem,
+  categories: HeaderCategoryItem[],
+) {
+  const categoryIds = Array.from(
+    new Set([
+      ...item.category_ids,
+      ...(item.header_category_id ? [item.header_category_id] : []),
+    ]),
+  );
+
+  return categoryIds
+    .map((categoryId) => categories.find((entry) => entry.id === categoryId)?.name)
+    .filter((name): name is string => Boolean(name));
+}
+
 function useDebouncedValue<T>(value: T, delay = 350) {
   const [debouncedValue, setDebouncedValue] = React.useState(value);
 
@@ -197,7 +213,7 @@ function AdminNewsTableLoading() {
       key={`loading-${index}`}
       className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/[0.03]"}
     >
-      <TableCell colSpan={8} className="px-4 py-4">
+      <TableCell colSpan={7} className="px-4 py-4">
         <div className="h-20 animate-pulse rounded-2xl bg-[#063e8e]/10" />
       </TableCell>
     </TableRow>
@@ -206,19 +222,88 @@ function AdminNewsTableLoading() {
 
 export default function AdminNewsPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [items, setItems] = React.useState<AdminNewsItem[]>([]);
   const [headerItems, setHeaderItems] = React.useState<HeaderCategoryItem[]>([]);
-  const [search, setSearch] = React.useState("");
-  const [typeFilter, setTypeFilter] = React.useState("all");
-  const [categoryFilter, setCategoryFilter] = React.useState("all");
-  const [statusFilter, setStatusFilter] = React.useState("all");
+  const [search, setSearch] = React.useState(() => searchParams.get("q") ?? "");
+  const [typeFilter, setTypeFilter] = React.useState(
+    () => searchParams.get("type") ?? "all",
+  );
+  const [categoryFilter, setCategoryFilter] = React.useState(
+    () => searchParams.get("category") ?? "all",
+  );
+  const [statusFilter, setStatusFilter] = React.useState(
+    () => searchParams.get("status") ?? "all",
+  );
   const [deleteTarget, setDeleteTarget] = React.useState<AdminNewsItem | null>(null);
   const [ready, setReady] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = React.useState(() => {
+    const parsedPage = Number(searchParams.get("page") ?? 1);
+    return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
+  });
   const [pageSize] = React.useState(20);
   const [total, setTotal] = React.useState(0);
+  const [publishedTotal, setPublishedTotal] = React.useState(0);
+  const [featuredTotal, setFeaturedTotal] = React.useState(0);
+  const didMountRef = React.useRef(false);
   const debouncedSearch = useDebouncedValue(search);
+
+  const listQueryString = React.useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (page > 1) {
+      params.set("page", String(page));
+    }
+
+    if (debouncedSearch.trim()) {
+      params.set("q", debouncedSearch.trim());
+    }
+
+    if (typeFilter !== "all") {
+      params.set("type", typeFilter);
+    }
+
+    if (categoryFilter !== "all") {
+      params.set("category", categoryFilter);
+    }
+
+    if (statusFilter !== "all") {
+      params.set("status", statusFilter);
+    }
+
+    return params.toString();
+  }, [categoryFilter, debouncedSearch, page, statusFilter, typeFilter]);
+
+  const listPath = React.useMemo(
+    () => (listQueryString ? `${pathname}?${listQueryString}` : pathname),
+    [listQueryString, pathname],
+  );
+
+  React.useEffect(() => {
+    void fetchHeaderConfigItems()
+      .then((headerConfig) => {
+        setHeaderItems(headerConfig.items);
+      })
+      .catch((error) => {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Kh\u00f4ng th\u1ec3 t\u1ea3i danh m\u1ee5c hi\u1ec3n th\u1ecb",
+        );
+      });
+  }, []);
+
+  const loadStats = React.useCallback(async () => {
+    const [nextPublishedTotal, nextFeaturedTotal] = await Promise.all([
+      fetchCmsPostCount("status==published"),
+      fetchCmsPostCount("is_featured==true"),
+    ]);
+
+    setPublishedTotal(nextPublishedTotal);
+    setFeaturedTotal(nextFeaturedTotal);
+  }, []);
 
   const apiFilters = React.useMemo(() => {
     const filters: string[] = [];
@@ -244,22 +329,28 @@ export default function AdminNewsPage() {
   const load = React.useCallback(async () => {
     setReady(false);
 
-    const [newsData, headerConfig] = await Promise.all([
-      fetchCmsNewsItems({
-        page,
-        pageSize,
-        sortField: "created_at",
-        sortOrder: "desc",
-        filters: apiFilters,
-      }),
-      fetchHeaderConfigItems(),
-    ]);
+    const newsData = await fetchCmsNewsItems({
+      page,
+      pageSize,
+      sortField: "created_at",
+      sortOrder: "desc",
+      filters: apiFilters,
+    });
 
     setItems(newsData.items);
     setTotal(newsData.total);
-    setHeaderItems(headerConfig.items);
     setReady(true);
   }, [apiFilters, page, pageSize]);
+
+  React.useEffect(() => {
+    void loadStats().catch((error) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Kh\u00f4ng th\u1ec3 t\u1ea3i s\u1ed1 li\u1ec7u b\u00e0i vi\u1ebft",
+      );
+    });
+  }, [loadStats]);
 
   React.useEffect(() => {
     void load().catch((error) => {
@@ -273,6 +364,20 @@ export default function AdminNewsPage() {
   }, [load]);
 
   React.useEffect(() => {
+    const nextPath = listQueryString ? `${pathname}?${listQueryString}` : pathname;
+    const currentPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
+
+    if (nextPath !== currentPath) {
+      router.replace(nextPath, { scroll: false });
+    }
+  }, [listQueryString, pathname, router, searchParams]);
+
+  React.useEffect(() => {
+    if (!didMountRef.current) {
+      didMountRef.current = true;
+      return;
+    }
+
     setPage((currentPage) => (currentPage === 1 ? currentPage : 1));
   }, [apiFilters, typeFilter]);
 
@@ -299,16 +404,16 @@ export default function AdminNewsPage() {
       },
       {
         label: "Đang hiển thị",
-        value: filteredItems.filter((item) => !item.is_hidden).length,
+        value: publishedTotal,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
       {
         label: "Tin nổi bật",
-        value: filteredItems.filter((item) => item.type === "tintuc" && item.is_featured).length,
+        value: featuredTotal,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
     ];
-  }, [filteredItems, total]);
+  }, [featuredTotal, publishedTotal, total]);
 
   const handleDelete = async () => {
     if (!deleteTarget || isDeleting) return;
@@ -319,7 +424,7 @@ export default function AdminNewsPage() {
       await deleteCmsNewsItem(deleteTarget.id);
       toast.success("Đã xóa bài viết");
       setDeleteTarget(null);
-      await load();
+      await Promise.all([load(), loadStats()]);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể xóa bài viết",
@@ -396,7 +501,7 @@ export default function AdminNewsPage() {
         }
       >
         <div className="scrollbar overflow-x-auto">
-          <Table className="min-w-[1250px] table-fixed">
+          <Table className="min-w-[1120px] table-fixed">
             <TableHeader>
               <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
                 <TableHead className="w-[260px] py-4 text-center text-white">
@@ -417,10 +522,7 @@ export default function AdminNewsPage() {
                 <TableHead className="w-[170px] py-4 text-center text-white">
                   Ngày hết hạn
                 </TableHead>
-                <TableHead className="w-[120px] py-4 text-center text-white">
-                  Hiển thị
-                </TableHead>
-                <TableHead className="w-[100px] py-4 text-center text-white">
+                <TableHead className="w-[130px] py-4 text-center text-white">
                   Thao tác
                 </TableHead>
               </TableRow>
@@ -431,13 +533,15 @@ export default function AdminNewsPage() {
                 <AdminNewsTableLoading />
               ) : filteredItems.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="py-12 text-center text-sm text-gray-700">
+                  <TableCell colSpan={7} className="py-12 text-center text-sm text-gray-700">
                     Không có bài viết nào phù hợp.
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredItems.map((item, index) => {
-                  const category = headerItems.find((entry) => entry.id === item.header_category_id);
+                  const categoryNames = getDisplayCategoryNames(item, headerItems);
+                  const primaryCategoryName = categoryNames[0] ?? "\u2014";
+                  const extraCategoryCount = Math.max(categoryNames.length - 1, 0);
 
                   return (
                     <TableRow
@@ -482,7 +586,8 @@ export default function AdminNewsPage() {
                       </TableCell>
 
                       <TableCell className="text-center text-sm text-gray-700">
-                        {category?.name || "—"}
+                        {primaryCategoryName}
+                        {extraCategoryCount > 0 ? ` (+${extraCategoryCount})` : ""}
                       </TableCell>
 
                       <TableCell className="text-center text-sm text-gray-700">
@@ -492,27 +597,22 @@ export default function AdminNewsPage() {
                       <TableCell className="text-center text-sm text-gray-700">
                         {formatDateTime(item.expired_at)}
                       </TableCell>
-
-                      <TableCell className="text-center">
-                        {item.is_hidden ? (
-                          <span className="inline-flex items-center rounded-full border border-gray-300 px-2.5 py-1 text-sm text-gray-700">
-                            <EyeOff className="mr-1.5 h-3.5 w-3.5" />
-                            Ẩn
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center rounded-full border border-[#063e8e]/20 bg-[#063e8e]/10 px-2.5 py-1 text-sm text-[#063e8e]">
-                            Hiển thị
-                          </span>
-                        )}
-                      </TableCell>
-
                       <TableCell className="text-center">
                         <AdminRowActions
                           actions={[
                             {
+                              kind: item.is_hidden ? "hidden" : "visible",
+                              label: item.is_hidden
+                                ? "B\u00e0i vi\u1ebft \u0111ang \u1ea9n"
+                                : "B\u00e0i vi\u1ebft \u0111ang hi\u1ec3n th\u1ecb",
+                            },
+                            {
                               kind: "edit",
                               label: "Chỉnh sửa bài viết",
-                              onClick: () => router.push(`/admin/news/${item.id}`),
+                              onClick: () =>
+                                router.push(
+                                  `/admin/news/${item.id}?returnTo=${encodeURIComponent(listPath)}`,
+                                ),
                             },
                             {
                               kind: "delete",

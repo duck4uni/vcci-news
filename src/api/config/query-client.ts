@@ -14,6 +14,8 @@ const RETRY_COUNT = 3
 const EXPIRED_TOKEN_ERROR = 401
 const DENIED_PERMISSION_ERROR = 403
 const INTERNAL_SERVER_ERROR = 500
+const API_QUERY_STALE_TIME = 2 * 60 * 1000
+const API_QUERY_GC_TIME = 10 * 60 * 1000
 
 // Utils
 // Handle check base retry logical
@@ -57,7 +59,11 @@ const handleDelayRetry = (failureCount: number) => failureCount * 1000 + Math.ra
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: API_QUERY_STALE_TIME,
+      gcTime: API_QUERY_GC_TIME,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
       placeholderData: (previousData: unknown) => previousData,
       retry(failureCount, error) {
         if (!handleCheckBaseRetryLogical(failureCount, error)) return false
