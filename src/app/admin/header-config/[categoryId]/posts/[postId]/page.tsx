@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AdminNewsForm } from "@/components/admin/news-form";
 import { fetchHeaderConfigItems, type CmsHeaderCategoryItem } from "@/lib/api/cms-admin";
@@ -9,8 +9,10 @@ import { fetchHeaderConfigItems, type CmsHeaderCategoryItem } from "@/lib/api/cm
 export default function HeaderCategoryPostFormPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const categoryId = String(params.categoryId ?? "");
   const postId = String(params.postId ?? "");
+  const returnTo = searchParams.get("returnTo");
   const [category, setCategory] = React.useState<CmsHeaderCategoryItem | null>(null);
   const [ready, setReady] = React.useState(false);
 
@@ -60,7 +62,7 @@ export default function HeaderCategoryPostFormPage() {
       newsId={postId}
       presetHeaderCategoryId={category.id}
       lockedType={category.type === "page" ? "baiviettrang" : "tintuc"}
-      returnPath={`/admin/header-config/${category.id}/posts`}
+      returnPath={returnTo || `/admin/header-config/${category.id}/posts`}
     />
   );
 }

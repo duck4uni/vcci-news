@@ -79,6 +79,8 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 const selectItemClassName =
   "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
 
+const SEARCH_TAG_VISIBLE_LIMIT = 20;
+
 function flattenHeaderTree(
   items: HeaderCategoryTreeItem[],
   depth = 0,
@@ -99,9 +101,9 @@ function isCategoryCompatible(
   postType: AdminNewsType | "",
 ) {
   if (!postType) return true;
-  if (headerType === "news") return postType !== "baiviettrang";
-  if (headerType === "page") return postType === "baiviettrang";
-  return true;
+  if (postType === "tintuc") return headerType === "news";
+  if (postType === "baiviettrang") return headerType === "page";
+  return false;
 }
 
 function toImageRef(item: AdminMediaItem): AdminNewsImageRef {
@@ -259,6 +261,124 @@ function HeaderCategoryCombobox({
   );
 }
 
+function HeaderCategoryMultiPicker({
+  values,
+  options,
+  disabled,
+  onChange,
+}: {
+  values: string[];
+  options: Array<{
+    id: string;
+    name: string;
+    type: HeaderCategoryItem["type"];
+    depth: number;
+  }>;
+  disabled?: boolean;
+  onChange: (values: string[]) => void;
+}) {
+  const [search, setSearch] = React.useState("");
+  const selectedIds = React.useMemo(() => new Set(values), [values]);
+  const selectedOptions = React.useMemo(
+    () => options.filter((option) => selectedIds.has(option.id)),
+    [options, selectedIds],
+  );
+  const filteredOptions = React.useMemo(() => {
+    const keyword = search.trim().toLowerCase();
+    const availableOptions = options.filter((option) => !selectedIds.has(option.id));
+    const matchedOptions = keyword
+      ? availableOptions.filter((option) =>
+          option.name.toLowerCase().includes(keyword),
+        )
+      : availableOptions;
+
+    return [...selectedOptions, ...matchedOptions.slice(0, 20)];
+  }, [options, search, selectedIds, selectedOptions]);
+
+  const toggleValue = (id: string, checked: boolean) => {
+    onChange(checked ? [...values, id] : values.filter((item) => item !== id));
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0 flex-1">
+          <Label className="mb-1.5 block text-gray-700">
+            Danh mục hiển thị <span className="text-red-600">*</span>
+          </Label>
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Tìm danh mục theo tên"
+            disabled={disabled}
+            className={fieldClassName}
+          />
+        </div>
+        <div className="rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2 text-sm text-gray-700">
+          Đã chọn {values.length} danh mục
+        </div>
+      </div>
+      <div className="max-h-64 overflow-y-auto rounded-xl border border-[#063e8e]/10 bg-white p-2">
+        {filteredOptions.length > 0 ? (
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+            {filteredOptions.map((option) => (
+              <label
+                key={option.id}
+                className="flex items-center gap-3 rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2"
+              >
+                <Checkbox
+                  checked={selectedIds.has(option.id)}
+                  disabled={disabled}
+                  onCheckedChange={(checked) => toggleValue(option.id, checked === true)}
+                  className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
+                />
+                <span className="min-w-0 truncate text-sm text-gray-700">
+                  {formatHeaderCategoryOptionLabel(option)}
+                </span>
+              </label>
+            ))}
+          </div>
+        ) : (
+          <p className="px-3 py-2 text-sm text-gray-700">
+            {"Kh\u00f4ng t\u00ecm th\u1ea5y danh m\u1ee5c ph\u00f9 h\u1ee3p."}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HeaderCategorySinglePicker({
+  value,
+  options,
+  disabled,
+  onChange,
+}: {
+  value: string;
+  options: Array<{
+    id: string;
+    name: string;
+    type: HeaderCategoryItem["type"];
+    depth: number;
+  }>;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label className="mb-1.5 block text-gray-700">
+        Danh mục hiển thị <span className="text-red-600">*</span>
+      </Label>
+      <HeaderCategoryCombobox
+        value={value}
+        onChange={onChange}
+        disabled={disabled}
+        options={options}
+      />
+    </div>
+  );
+}
+
 export function AdminNewsForm({
   newsId,
   presetHeaderCategoryId,
@@ -275,6 +395,7 @@ export function AdminNewsForm({
   const [allTags, setAllTags] = React.useState<CmsTagItem[]>([]);
   const [form, setForm] = React.useState<AdminNewsFormValues | null>(null);
   const [pickerOpen, setPickerOpen] = React.useState(false);
+  const [tagSearch, setTagSearch] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLoadingInitialData, setIsLoadingInitialData] = React.useState(true);
   const [isMissingPost, setIsMissingPost] = React.useState(false);
@@ -309,7 +430,7 @@ export function AdminNewsForm({
             ...cloneAdminNewsFormValues(),
             type: lockedType ?? (presetHeader?.type === "page" ? "baiviettrang" : "tintuc"),
             header_category_id: presetHeaderCategoryId ?? "",
-            category_ids: presetHeader?.category_ids ?? [],
+            category_ids: presetHeaderCategoryId ? [presetHeaderCategoryId] : [],
             created_at: now,
             updated_at: now,
           });
@@ -328,10 +449,12 @@ export function AdminNewsForm({
           return;
         }
 
-        if (
-          presetHeaderCategoryId &&
-          currentItem.header_category_id !== presetHeaderCategoryId
-        ) {
+        const belongsToPresetHeaderCategory =
+          !presetHeaderCategoryId ||
+          currentItem.header_category_id === presetHeaderCategoryId ||
+          currentItem.category_ids.includes(presetHeaderCategoryId);
+
+        if (!belongsToPresetHeaderCategory) {
           setIsMissingPost(true);
           setForm(null);
           return;
@@ -344,7 +467,16 @@ export function AdminNewsForm({
         }
 
         setIsMissingPost(false);
-        setForm(cloneAdminNewsFormValues(currentItem));
+        const nextForm = cloneAdminNewsFormValues(currentItem);
+        if (
+          presetHeaderCategoryId &&
+          currentItem.type === "tintuc" &&
+          !nextForm.category_ids.includes(presetHeaderCategoryId)
+        ) {
+          nextForm.category_ids = [presetHeaderCategoryId, ...nextForm.category_ids];
+          nextForm.header_category_id = nextForm.category_ids[0] ?? "";
+        }
+        setForm(nextForm);
       } catch (error) {
         if (cancelled) return;
         toast.error(error instanceof Error ? error.message : "Không thể tải bài viết");
@@ -365,9 +497,7 @@ export function AdminNewsForm({
   }, [isCreate, lockedType, newsId, presetHeaderCategoryId]);
 
   const headerOptions = React.useMemo(() => {
-    return flattenHeaderTree(buildHeaderCategoryTree(headerItems)).filter(
-      (item) => item.type === "news" || item.type === "page",
-    );
+    return flattenHeaderTree(buildHeaderCategoryTree(headerItems));
   }, [headerItems]);
 
   const selectedHeaderCategory = React.useMemo(() => {
@@ -375,12 +505,12 @@ export function AdminNewsForm({
   }, [form?.header_category_id, headerItems]);
 
   const availableSearchTags = React.useMemo(() => {
-    if (!selectedHeaderCategory || selectedHeaderCategory.type !== "news") return [];
+    if (form?.type !== "tintuc") return [];
     return allTags.map((item) => item.name);
-  }, [allTags, selectedHeaderCategory]);
+  }, [allTags, form?.type]);
 
   const selectedTagIds = React.useMemo(() => {
-    if (!selectedHeaderCategory || selectedHeaderCategory.type !== "news") return [];
+    if (form?.type !== "tintuc") return [];
 
     const tagMap = new Map(
       allTags.map((item) => [item.name.trim().toLowerCase(), item.id] as const),
@@ -389,7 +519,38 @@ export function AdminNewsForm({
     return form?.tagsearch_values
       .map((name) => tagMap.get(name.trim().toLowerCase()))
       .filter((value): value is string => Boolean(value)) ?? [];
-  }, [allTags, form?.tagsearch_values, selectedHeaderCategory]);
+  }, [allTags, form?.tagsearch_values, form?.type]);
+
+  const visibleSearchTags = React.useMemo(() => {
+    if (form?.type !== "tintuc") return [];
+
+    const normalizedKeyword = tagSearch.trim().toLowerCase();
+    const selectedNames = new Set(form.tagsearch_values);
+    const selectedTags = availableSearchTags.filter((item) => selectedNames.has(item));
+    const availableTags = availableSearchTags.filter((item) => !selectedNames.has(item));
+    const matchedTags = normalizedKeyword
+      ? availableTags.filter((item) => item.toLowerCase().includes(normalizedKeyword))
+      : availableTags;
+
+    return [
+      ...selectedTags,
+      ...matchedTags.slice(
+        0,
+        Math.max(SEARCH_TAG_VISIBLE_LIMIT - selectedTags.length, 0),
+      ),
+    ];
+  }, [availableSearchTags, form?.tagsearch_values, form?.type, tagSearch]);
+
+  const matchedSearchTagTotal = React.useMemo(() => {
+    if (form?.type !== "tintuc") return 0;
+
+    const normalizedKeyword = tagSearch.trim().toLowerCase();
+    if (!normalizedKeyword) return availableSearchTags.length;
+
+    return availableSearchTags.filter((item) =>
+      item.toLowerCase().includes(normalizedKeyword),
+    ).length;
+  }, [availableSearchTags, form?.type, tagSearch]);
 
   const articlePageAlreadyUsed = React.useMemo(() => {
     if (!form?.header_category_id || form.type !== "baiviettrang") return false;
@@ -439,13 +600,24 @@ export function AdminNewsForm({
       return {
         ...current,
         type: nextType,
-        header_category_id: compatibleHeader ? current.header_category_id : "",
+        header_category_id:
+          nextType === "baiviettrang"
+            ? compatibleHeader
+              ? current.header_category_id
+              : ""
+            : current.category_ids.find((id) =>
+                headerOptions.some(
+                  (option) => option.id === id && isCategoryCompatible(option.type, nextType),
+                ),
+              ) ?? "",
         category_ids:
           nextType === "baiviettrang"
             ? []
-            : compatibleHeader
-              ? current.category_ids
-              : [],
+            : current.category_ids.filter((id) =>
+                headerOptions.some(
+                  (option) => option.id === id && isCategoryCompatible(option.type, nextType),
+                ),
+              ),
         tagsearch_values: nextType === "baiviettrang" ? [] : current.tagsearch_values,
         is_featured: nextType === "tintuc" ? current.is_featured : false,
       };
@@ -454,19 +626,31 @@ export function AdminNewsForm({
 
   const handleHeaderCategoryChange = (value: string) => {
     const nextCategory = headerItems.find((item) => item.id === value) ?? null;
-    const nextSearchTags =
-      nextCategory?.type === "news" ? allTags.map((item) => item.name) : [];
 
+    setForm((current) => {
+      if (!current) return current;
+      const nextSearchTags =
+        current.type === "tintuc" ? allTags.map((item) => item.name) : [];
+
+      return {
+        ...current,
+        header_category_id: value,
+        category_ids: nextCategory?.id ? [nextCategory.id] : [],
+        tagsearch_values: current.tagsearch_values.filter((item) =>
+          nextSearchTags.includes(item),
+        ),
+      };
+    });
+  };
+
+  const handleHeaderCategoriesChange = (values: string[]) => {
     setForm((current) => {
       if (!current) return current;
 
       return {
         ...current,
-        header_category_id: value,
-        category_ids: nextCategory?.category_ids ?? [],
-        tagsearch_values: current.tagsearch_values.filter((item) =>
-          nextSearchTags.includes(item),
-        ),
+        header_category_id: values[0] ?? "",
+        category_ids: values,
       };
     });
   };
@@ -507,7 +691,12 @@ export function AdminNewsForm({
       return;
     }
 
-    if (!form.header_category_id) {
+    if (form.type === "baiviettrang" && !form.header_category_id) {
+      toast.error("Vui lòng chọn danh mục hiển thị");
+      return;
+    }
+
+    if (form.type === "tintuc" && form.category_ids.length === 0) {
       toast.error("Vui lòng chọn danh mục hiển thị");
       return;
     }
@@ -522,13 +711,13 @@ export function AdminNewsForm({
       slug: slugifyAdminNews(form.slug.trim()),
       summary: form.summary,
       type: form.type,
-      header_category_id: form.header_category_id,
+      header_category_id: form.type === "tintuc" ? form.category_ids[0] ?? "" : form.header_category_id,
       category_ids:
         form.type === "baiviettrang"
           ? form.header_category_id
             ? [form.header_category_id]
             : []
-          : selectedHeaderCategory?.category_ids ?? [],
+          : form.category_ids,
       tag_ids: form.type === "baiviettrang" ? [] : selectedTagIds,
       is_featured: form.type === "tintuc" ? form.is_featured : false,
       thumbnail_id: form.thumbnail && isUuid(form.thumbnail.id) ? form.thumbnail.id : null,
@@ -741,20 +930,6 @@ export function AdminNewsForm({
                       </SelectContent>
                     </Select>
                   </div>
-
-                  <div>
-                    <Label className="mb-1.5 block text-gray-700">
-                      Danh mục hiển thị
-                    </Label>
-                    <HeaderCategoryCombobox
-                      value={form.header_category_id}
-                      onChange={handleHeaderCategoryChange}
-                      disabled={isHeaderCategoryLocked}
-                      options={headerOptions.filter((option) =>
-                        isCategoryCompatible(option.type, form.type),
-                      )}
-                    />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -820,26 +995,85 @@ export function AdminNewsForm({
               </div>
             </div>
 
-            {availableSearchTags.length > 0 ? (
+            <div className="rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.02] p-4 xl:col-span-2">
+              {form.type === "tintuc" ? (
+                <HeaderCategoryMultiPicker
+                  values={form.category_ids}
+                  onChange={handleHeaderCategoriesChange}
+                  disabled={isHeaderCategoryLocked}
+                  options={headerOptions.filter((option) =>
+                    isCategoryCompatible(option.type, form.type),
+                  )}
+                />
+              ) : (
+                <HeaderCategorySinglePicker
+                  value={form.header_category_id}
+                  onChange={handleHeaderCategoryChange}
+                  disabled={isHeaderCategoryLocked}
+                  options={headerOptions.filter((option) =>
+                    isCategoryCompatible(option.type, form.type),
+                  )}
+                />
+              )}
+            </div>
+
+            {form.type === "tintuc" ? (
               <div className="rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.02] p-4 xl:col-span-2">
-                <Label className="mb-3 block text-gray-700">Tag tìm kiếm</Label>
-                <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                  {availableSearchTags.map((item) => (
-                    <label
-                      key={item}
-                      className="flex items-center gap-3 rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2"
-                    >
-                      <Checkbox
-                        checked={form.tagsearch_values.includes(item)}
-                        onCheckedChange={(checked) =>
-                          handleToggleSearchTag(item, checked === true)
-                        }
-                        className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
-                      />
-                      <span className="text-sm text-gray-700">{item}</span>
-                    </label>
-                  ))}
+                <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div className="min-w-0 flex-1">
+                    <Label className="mb-1.5 block text-gray-700">Tag tìm kiếm</Label>
+                    <Input
+                      value={tagSearch}
+                      onChange={(event) => setTagSearch(event.target.value)}
+                      placeholder="Tìm tag theo tên"
+                      className={fieldClassName}
+                    />
+                  </div>
+                  <div className="rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2 text-sm text-gray-700">
+                    Đã chọn {form.tagsearch_values.length} tag
+                  </div>
                 </div>
+                {availableSearchTags.length > 0 ? (
+                  <>
+                    {visibleSearchTags.length > 0 ? (
+                      <div className="max-h-64 overflow-y-auto rounded-xl border border-[#063e8e]/10 bg-white p-2">
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                          {visibleSearchTags.map((item) => (
+                            <label
+                              key={item}
+                              className="flex items-center gap-3 rounded-lg border border-[#063e8e]/10 bg-white px-3 py-2"
+                            >
+                              <Checkbox
+                                checked={form.tagsearch_values.includes(item)}
+                                onCheckedChange={(checked) =>
+                                  handleToggleSearchTag(item, checked === true)
+                                }
+                                className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
+                              />
+                              <span className="min-w-0 truncate text-sm text-gray-700">
+                                {item}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="rounded-lg border border-dashed border-[#063e8e]/20 bg-white px-3 py-2 text-sm text-gray-700">
+                        Không tìm thấy tag phù hợp.
+                      </p>
+                    )}
+                    {matchedSearchTagTotal > visibleSearchTags.length ? (
+                      <p className="mt-2 text-sm text-gray-700">
+                        Đang hiển thị {visibleSearchTags.length} trong{" "}
+                        {matchedSearchTagTotal} tag phù hợp. Nhập thêm từ khóa để lọc nhanh hơn.
+                      </p>
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="rounded-lg border border-dashed border-[#063e8e]/20 bg-white px-3 py-2 text-sm text-gray-700">
+                    {"Ch\u01b0a c\u00f3 tag t\u00ecm ki\u1ebfm n\u00e0o. Vui l\u00f2ng t\u1ea1o tag trong m\u1ee5c qu\u1ea3n l\u00fd tag tr\u01b0\u1edbc khi g\u00e1n cho b\u00e0i vi\u1ebft."}
+                  </p>
+                )}
               </div>
             ) : null}
           </div>

@@ -76,6 +76,10 @@ const orvalConfig = async () => {
         client: "react-query",
         prettier: true,
         override: {
+          mutator: {
+            path: "src/api/mutator/custom-client.ts",
+            name: "useCustomClient",
+          },
           query: {
             useQuery: true,
             useInfinite: true,

@@ -319,9 +319,9 @@ const parseLegacyPostContent = (content?: string | null): CmsPostContentSection[
 
 const transformPost = (
   post: CmsRawPostItem,
-  tagMap: Map<string, CmsTagItem[]>,
+  tagMap?: Map<string, CmsTagItem[]>,
 ): CmsNewsItem => {
-  const tagItems = tagMap.get(post.id ?? "") ?? [];
+  const tagItems = tagMap?.get(post.id ?? "") ?? [];
   const categories = Array.isArray(post.categories) ? post.categories : [];
   const primaryCategory = categories[0] ?? null;
   const primaryCategoryType = primaryCategory?.type ?? null;
@@ -385,14 +385,6 @@ async function fetchTagsForPost(postId: string) {
     headers: authHeaders(),
     body: JSON.stringify({ tag_ids: tagIds }),
   });
-}
-
-async function fetchTagMapForPosts(postIds: string[]) {
-  const entries = await Promise.all(
-    postIds.map(async (postId) => [postId, await fetchTagsForPost(postId)] as const),
-  );
-
-  return new Map(entries);
 }
 
 function buildHeaderItemsFromTree(
@@ -760,14 +752,30 @@ export async function fetchCmsNewsItems(params?: {
   );
 
   const rows = result.rows ?? [];
-  const tagMap = await fetchTagMapForPosts(rows.map((item) => item.id ?? "").filter(Boolean));
 
   return {
-    items: rows.map((item) => transformPost(item, tagMap)),
+    items: rows.map((item) => transformPost(item)),
     total: result.count ?? 0,
     page: result.page ?? 1,
     pageSize: result.pageSize ?? 20,
   };
+}
+
+export async function fetchCmsPostCount(filters?: string) {
+  const queryParams = new URLSearchParams();
+
+  if (filters?.trim()) {
+    queryParams.set("filters", filters.trim());
+  }
+
+  queryParams.set("page", "1");
+  queryParams.set("pageSize", "1");
+
+  const result = await cmsRequest<CmsPagedResult<CmsRawPostItem>>(
+    `/post?${queryParams.toString()}`,
+  );
+
+  return result.count ?? 0;
 }
 
 export async function fetchCmsNewsItem(id: string) {
