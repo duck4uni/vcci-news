@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import {
-  Edit,
   Image as ImageIcon,
   Plus,
   Save,
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { Pagination } from "@/components/base/pagination";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,44 +23,41 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  type AdminMediaItem,
-  createAdminMediaId,
-  persistAdminMediaItems,
-  readAdminMediaItems,
-} from "@/mockdata/admin-news";
+  type CmsFileItem,
+  deleteCmsFile,
+  fetchCmsFiles,
+  resolveCmsFileUrl,
+  uploadCmsFile,
+} from "@/lib/api/files";
+
+const PAGE_SIZE = 10;
 
 const inputClassName =
   "rounded-2xl border-[#063e8e]/15 bg-white text-gray-700 shadow-sm placeholder:text-gray-400 focus-visible:ring-[#063e8e]/20";
 
 type MediaFormValues = {
-  id?: string;
+  file: File | null;
   name: string;
-  alt: string;
-  url: string;
-  mime: string;
-  size: number;
-  source: "seed" | "upload";
+  previewUrl: string;
 };
 
 const EMPTY_MEDIA_FORM: MediaFormValues = {
+  file: null,
   name: "",
-  alt: "",
-  url: "",
-  mime: "image/*",
-  size: 0,
-  source: "upload",
+  previewUrl: "",
 };
 
-function formatFileSize(size: number) {
+function formatFileSize(size?: number | null) {
   if (!size) return "Ảnh hệ thống";
   if (size < 1024) return `${size} B`;
   if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function formatDate(value: string) {
+function formatDate(value?: string | null) {
+  if (!value) return "-";
+
   return new Date(value).toLocaleString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
@@ -68,6 +65,22 @@ function formatDate(value: string) {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+function getFileSize(item: CmsFileItem) {
+  const importInfo = item as CmsFileItem & {
+    size?: number | null;
+    file_size?: number | null;
+    import_info?: { size?: number; file_size?: number } | null;
+  };
+
+  return (
+    importInfo.size ??
+    importInfo.file_size ??
+    importInfo.import_info?.size ??
+    importInfo.import_info?.file_size ??
+    0
+  );
 }
 
 function MediaCardSkeleton() {
@@ -85,14 +98,14 @@ function MediaCardSkeleton() {
 
 interface MediaFormDialogProps {
   open: boolean;
-  initial: AdminMediaItem | null;
+  saving: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: MediaFormValues) => void;
+  onSave: (data: MediaFormValues) => Promise<void>;
 }
 
 function MediaFormDialog({
   open,
-  initial,
+  saving,
   onOpenChange,
   onSave,
 }: MediaFormDialogProps) {
@@ -101,67 +114,48 @@ function MediaFormDialog({
 
   React.useEffect(() => {
     if (!open) return;
-
-    setForm(
-      initial
-        ? {
-            id: initial.id,
-            name: initial.name,
-            alt: initial.alt,
-            url: initial.url,
-            mime: initial.mime,
-            size: initial.size,
-            source: initial.source,
-          }
-        : EMPTY_MEDIA_FORM,
-    );
-  }, [initial, open]);
-
-  const handleField = <K extends keyof MediaFormValues>(
-    key: K,
-    value: MediaFormValues[K],
-  ) => {
-    setForm((previous) => ({ ...previous, [key]: value }));
-  };
+    setForm(EMPTY_MEDIA_FORM);
+  }, [open]);
 
   const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const defaultName = file.name.replace(/\.[^.]+$/, "");
-      setForm((previous) => ({
-        ...previous,
-        name: previous.name || defaultName,
-        alt: previous.alt || defaultName,
-        url: typeof reader.result === "string" ? reader.result : previous.url,
-        mime: file.type || "image/*",
-        size: file.size,
-        source: "upload",
-      }));
-    };
+    const previewUrl = URL.createObjectURL(file);
+    const defaultName = file.name.replace(/\.[^.]+$/, "");
 
-    reader.readAsDataURL(file);
+    setForm((previous) => {
+      if (previous.previewUrl) {
+        URL.revokeObjectURL(previous.previewUrl);
+      }
+
+      return {
+        file,
+        name: previous.name || defaultName,
+        previewUrl,
+      };
+    });
+
     event.target.value = "";
   };
 
-  const handleSave = () => {
-    if (!form.name.trim()) {
-      toast.error("Vui lòng nhập tên ảnh");
+  React.useEffect(() => {
+    return () => {
+      if (form.previewUrl) {
+        URL.revokeObjectURL(form.previewUrl);
+      }
+    };
+  }, [form.previewUrl]);
+
+  const handleSave = async () => {
+    if (!form.file) {
+      toast.error("Vui lòng chọn ảnh cần tải lên");
       return;
     }
 
-    if (!form.url.trim()) {
-      toast.error("Vui lòng chọn ảnh hoặc nhập liên kết ảnh");
-      return;
-    }
-
-    onSave({
+    await onSave({
       ...form,
-      name: form.name.trim(),
-      alt: form.alt.trim() || form.name.trim(),
-      url: form.url.trim(),
+      name: form.name.trim() || form.file.name,
     });
   };
 
@@ -170,7 +164,7 @@ function MediaFormDialog({
       <DialogContent className="flex max-h-[calc(100dvh-32px)] w-[calc(100vw-32px)] max-w-4xl flex-col overflow-hidden rounded-[32px] border border-[#063e8e]/15 bg-white p-0 shadow-[0_26px_70px_rgba(15,23,42,0.24)]">
         <DialogHeader className="shrink-0 border-b border-[#063e8e]/10 px-6 py-5 sm:px-7">
           <DialogTitle className="text-xl font-semibold text-[#063e8e]">
-            {initial ? "Chỉnh sửa ảnh" : "Tải ảnh lên"}
+            Tải ảnh lên
           </DialogTitle>
         </DialogHeader>
 
@@ -179,10 +173,10 @@ function MediaFormDialog({
             <div className="space-y-4">
               <div className="overflow-hidden rounded-[28px] border border-[#063e8e]/10 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                 <div className="relative aspect-[16/10] bg-[radial-gradient(circle_at_top,#d9e8ff_0%,#f7faff_58%,#ffffff_100%)]">
-                  {form.url ? (
+                  {form.previewUrl ? (
                     <SafeNextImage
-                      src={form.url}
-                      alt={form.alt || form.name}
+                      src={form.previewUrl}
+                      alt={form.name}
                       fill
                       className="object-contain p-4"
                     />
@@ -196,7 +190,7 @@ function MediaFormDialog({
                           Chưa có ảnh nào được chọn
                         </p>
                         <p className="text-xs text-slate-500">
-                          Kéo thả hoặc tải ảnh từ máy tính của bạn
+                          Chọn ảnh từ máy tính để tải lên hệ thống
                         </p>
                       </div>
                     </div>
@@ -218,7 +212,7 @@ function MediaFormDialog({
                     Tải ảnh từ máy tính
                   </p>
                   <p className="text-sm text-slate-500">
-                    Hỗ trợ ảnh JPG, PNG, WEBP. Dung lượng sẽ được lưu theo file bạn chọn.
+                    Hỗ trợ ảnh JPG, PNG, WEBP. Ảnh sẽ được lưu vào API /file/upload.
                   </p>
                   <Button
                     type="button"
@@ -237,50 +231,23 @@ function MediaFormDialog({
           <div className="p-6 lg:p-7">
             <div className="space-y-5">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">Tiêu đề ảnh</Label>
+                <Label className="text-sm font-medium text-slate-700">Tên ảnh</Label>
                 <Input
                   value={form.name}
-                  onChange={(event) => handleField("name", event.target.value)}
-                  placeholder="Nhập tiêu đề ảnh"
+                  onChange={(event) =>
+                    setForm((previous) => ({ ...previous, name: event.target.value }))
+                  }
+                  placeholder="Nhập tên ảnh"
                   className={inputClassName}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">Mô tả alt</Label>
-                <Input
-                  value={form.alt}
-                  onChange={(event) => handleField("alt", event.target.value)}
-                  placeholder="Nhập mô tả alt"
-                  className={inputClassName}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">Liên kết ảnh</Label>
-                <Input
-                  value={form.url}
-                  onChange={(event) => handleField("url", event.target.value)}
-                  placeholder="https://... hoặc data:image/..."
-                  className={inputClassName}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">Ghi chú hiển thị</Label>
-                <Textarea
-                  value={form.alt}
-                  onChange={(event) => handleField("alt", event.target.value)}
-                  placeholder="Nhập nội dung mô tả ngắn cho ảnh"
-                  rows={4}
-                  className={`${inputClassName} min-h-[120px] resize-none`}
                 />
               </div>
 
               <div className="rounded-[24px] border border-[#063e8e]/10 bg-white p-4 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <p className="text-xs uppercase tracking-[0.14em] text-slate-400">Dung lượng</p>
-                  <p className="font-semibold text-slate-700">{formatFileSize(form.size)}</p>
+                  <p className="font-semibold text-slate-700">
+                    {formatFileSize(form.file?.size)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -289,23 +256,25 @@ function MediaFormDialog({
 
         <div className="shrink-0 border-t border-[#063e8e]/10 bg-[#f8fbff] px-6 py-4 sm:px-7">
           <div className="flex justify-end gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="rounded-2xl border-[#063e8e]/15 bg-white text-slate-600 hover:bg-slate-50"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Hủy
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSave}
-            className="rounded-2xl bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            {initial ? "Lưu thay đổi" : "Tải ảnh lên"}
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="rounded-2xl border-[#063e8e]/15 bg-white text-slate-600 hover:bg-slate-50"
+              disabled={saving}
+            >
+              <X className="mr-2 h-4 w-4" />
+              Hủy
+            </Button>
+            <Button
+              type="button"
+              onClick={handleSave}
+              className="rounded-2xl bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
+              disabled={saving}
+            >
+              <Save className="mr-2 h-4 w-4" />
+              {saving ? "Đang tải..." : "Tải ảnh lên"}
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -314,90 +283,81 @@ function MediaFormDialog({
 }
 
 export default function AdminMediaPage() {
-  const [items, setItems] = React.useState<AdminMediaItem[]>([]);
+  const [items, setItems] = React.useState<CmsFileItem[]>([]);
   const [search, setSearch] = React.useState("");
   const [ready, setReady] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editTarget, setEditTarget] = React.useState<AdminMediaItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = React.useState<AdminMediaItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<CmsFileItem | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [total, setTotal] = React.useState(0);
+
+  const load = React.useCallback(async () => {
+    setReady(false);
+
+    try {
+      const result = await fetchCmsFiles({
+        page,
+        pageSize: PAGE_SIZE,
+        search,
+      });
+
+      setItems(result.rows);
+      setTotal(result.count);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể tải danh sách ảnh");
+      setItems([]);
+      setTotal(0);
+    } finally {
+      setReady(true);
+    }
+  }, [page, search]);
 
   React.useEffect(() => {
-    setItems(readAdminMediaItems());
-    setReady(true);
-  }, []);
+    void load();
+  }, [load]);
 
-  const filtered = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return items;
+  React.useEffect(() => {
+    setPage(1);
+  }, [search]);
 
-    return items.filter((item) => {
-      return [item.name, item.alt, item.url].some((value) =>
-        value.toLowerCase().includes(keyword),
-      );
-    });
-  }, [items, search]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const openCreate = () => {
-    setEditTarget(null);
     setDialogOpen(true);
   };
 
-  const openEdit = (item: AdminMediaItem) => {
-    setEditTarget(item);
-    setDialogOpen(true);
-  };
+  const handleSave = async (data: MediaFormValues) => {
+    if (!data.file) return;
 
-  const handleSave = (data: MediaFormValues) => {
-    const now = new Date().toISOString();
-    let nextItems: AdminMediaItem[];
+    setSaving(true);
 
-    if (data.id) {
-      nextItems = items.map((item) =>
-        item.id === data.id
-          ? {
-              ...item,
-              name: data.name,
-              alt: data.alt,
-              url: data.url,
-              mime: data.mime,
-              size: data.size,
-              source: data.source,
-              updated_at: now,
-            }
-          : item,
-      );
-      toast.success("Đã cập nhật ảnh");
-    } else {
-      nextItems = [
-        {
-          id: createAdminMediaId(),
-          name: data.name,
-          alt: data.alt,
-          url: data.url,
-          mime: data.mime,
-          size: data.size,
-          source: data.source,
-          created_at: now,
-          updated_at: now,
-        },
-        ...items,
-      ];
-      toast.success("Đã thêm ảnh mới");
+    try {
+      await uploadCmsFile({
+        file: data.file,
+        original: data.name,
+      });
+      toast.success("Đã tải ảnh lên");
+      setDialogOpen(false);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể tải ảnh lên");
+    } finally {
+      setSaving(false);
     }
-
-    persistAdminMediaItems(nextItems);
-    setItems(readAdminMediaItems());
-    setDialogOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
-    setItems(nextItems);
-    persistAdminMediaItems(nextItems);
-    toast.success("Đã xóa ảnh");
-    setDeleteTarget(null);
+    try {
+      await deleteCmsFile(deleteTarget.id);
+      toast.success("Đã xóa ảnh");
+      setDeleteTarget(null);
+      await load();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể xóa ảnh");
+    }
   };
 
   return (
@@ -409,7 +369,7 @@ export default function AdminMediaPage() {
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
         actionMeta={
           <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
-            Tổng số ảnh: {items.length}
+            Tổng số ảnh: {total}
           </div>
         }
         onSearchChange={setSearch}
@@ -417,32 +377,32 @@ export default function AdminMediaPage() {
       >
         <div className="bg-white p-4 sm:p-5">
           {!ready ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
                 <MediaCardSkeleton key={`media-loading-${index}`} />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : items.length === 0 ? (
             <div className="flex min-h-[320px] flex-col items-center justify-center rounded-[28px] border border-dashed border-[#063e8e]/20 bg-[#fbfdff] text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-[22px] bg-[#063e8e]/10 text-[#063e8e]">
                 <ImageIcon className="h-8 w-8" />
               </div>
               <h2 className="mt-5 text-lg font-semibold text-slate-800">Chưa có ảnh phù hợp</h2>
               <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-                H?y t?i ?nh m?i ho?c th? l?i v?i t? kh?a kh?c d? t?m d?ng h?nh ?nh b?n c?n.
+                Hãy tải ảnh mới hoặc thử lại với từ khóa khác để tìm đúng hình ảnh bạn cần.
               </p>
             </div>
           ) : (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {filtered.map((item) => (
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+              {items.map((item) => (
                 <article
                   key={item.id}
                   className="group overflow-hidden rounded-[28px] border border-[#063e8e]/10 bg-white shadow-[0_18px_45px_rgba(6,62,142,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(6,62,142,0.14)]"
                 >
                   <div className="relative aspect-square overflow-hidden bg-[radial-gradient(circle_at_top,#dce9ff_0%,#f8fbff_55%,#ffffff_100%)]">
                     <SafeNextImage
-                      src={item.url}
-                      alt={item.alt || item.name}
+                      src={resolveCmsFileUrl(item.path)}
+                      alt={item.original}
                       fill
                       className="object-contain p-4 transition duration-300 group-hover:scale-[1.03]"
                     />
@@ -453,45 +413,34 @@ export default function AdminMediaPage() {
                       <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur">
                         {item.mime.split("/")[1]?.toUpperCase() || "IMG"}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="secondary"
-                          onClick={() => openEdit(item)}
-                          className="h-10 w-10 rounded-2xl bg-white text-[#063e8e] shadow-lg hover:bg-white"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="secondary"
-                          onClick={() => setDeleteTarget(item)}
-                          className="h-10 w-10 rounded-2xl bg-white text-red-600 shadow-lg hover:bg-white"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        type="button"
+                        size="icon"
+                        variant="secondary"
+                        onClick={() => setDeleteTarget(item)}
+                        className="h-10 w-10 rounded-2xl bg-white text-red-600 shadow-lg hover:bg-white"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
 
                   <div className="space-y-3 p-4">
                     <div className="space-y-1">
                       <h3 className="line-clamp-1 text-sm font-semibold text-slate-900">
-                        {item.name}
+                        {item.original}
                       </h3>
                       <p className="line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">
-                        {item.alt || "Chưa có mô tả alt cho ảnh này."}
+                        {item.path}
                       </p>
                     </div>
 
                     <div className="flex items-center justify-between text-xs text-slate-500">
-                      <span>{formatFileSize(item.size)}</span>
+                      <span>{formatFileSize(getFileSize(item))}</span>
                     </div>
 
                     <div className="border-t border-[#063e8e]/8 pt-3 text-xs text-slate-500">
-                      {formatDate(item.updated_at)}
+                      {formatDate(item.created_at)}
                     </div>
                   </div>
                 </article>
@@ -499,11 +448,25 @@ export default function AdminMediaPage() {
             </div>
           )}
         </div>
+
+        {totalPages > 1 ? (
+          <div className="flex flex-col gap-3 border-t border-[#063e8e]/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-gray-700">
+              Hiển thị {(page - 1) * PAGE_SIZE + 1} đến{" "}
+              {Math.min(page * PAGE_SIZE, total)} của {total} ảnh
+            </div>
+            <Pagination
+              page={page}
+              pageCount={totalPages}
+              onChangePage={setPage}
+            />
+          </div>
+        ) : null}
       </AdminTableLayout>
 
       <MediaFormDialog
         open={dialogOpen}
-        initial={editTarget}
+        saving={saving}
         onOpenChange={setDialogOpen}
         onSave={handleSave}
       />
@@ -513,7 +476,7 @@ export default function AdminMediaPage() {
         title="Xóa ảnh"
         description={
           <>
-            Bạn có chắc muốn xóa ảnh <span className="font-semibold">{deleteTarget?.name}</span>?
+            Bạn có chắc muốn xóa ảnh <span className="font-semibold">{deleteTarget?.original}</span>?
           </>
         }
         onOpenChange={(open) => !open && setDeleteTarget(null)}

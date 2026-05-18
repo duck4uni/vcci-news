@@ -369,7 +369,7 @@ const transformPost = (
 
 async function fetchAllTagsInternal() {
   const result = await cmsRequest<CmsPagedResult<CmsTagItem>>(
-    "/tag?page=1&pageSize=200&sortField=name&sortOrder=ASC",
+    "/tag?page=1&pageSize=10&sortField=name&sortOrder=ASC",
   );
   return result.rows ?? [];
 }
@@ -541,6 +541,7 @@ export async function fetchCmsTags() {
 export async function fetchCmsTagsPage(params?: {
   page?: number;
   pageSize?: number;
+  filters?: string;
 }) {
   const searchParams = new URLSearchParams({
     page: String(params?.page ?? 1),
@@ -548,6 +549,10 @@ export async function fetchCmsTagsPage(params?: {
     sortField: "name",
     sortOrder: "ASC",
   });
+
+  if (params?.filters?.trim()) {
+    searchParams.set("filters", params.filters.trim());
+  }
 
   const result = await cmsRequest<CmsPagedResult<CmsTagItem>>(
     `/tag?${searchParams.toString()}`,
@@ -738,7 +743,7 @@ export async function fetchCmsNewsItems(params?: {
 }) {
   const queryParams = new URLSearchParams({
     page: String(params?.page ?? 1),
-    pageSize: String(params?.pageSize ?? 20),
+    pageSize: String(params?.pageSize ?? 10),
     sortField: params?.sortField ?? "created_at",
     sortOrder: params?.sortOrder ?? "desc",
   });
@@ -757,7 +762,7 @@ export async function fetchCmsNewsItems(params?: {
     items: rows.map((item) => transformPost(item)),
     total: result.count ?? 0,
     page: result.page ?? 1,
-    pageSize: result.pageSize ?? 20,
+    pageSize: result.pageSize ?? 10,
   };
 }
 

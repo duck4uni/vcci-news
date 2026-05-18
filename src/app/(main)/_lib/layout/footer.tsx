@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Facebook,
   Linkedin,
@@ -8,11 +8,12 @@ import {
   MapPin,
   Phone,
   Printer,
-  SendHorizonal,
+  SendHorizontal,
   Twitter,
   Youtube,
 } from "lucide-react";
 import Link from "next/link";
+import { subscribeNewsletterEmail } from "@/lib/api/newsletter-subscriptions";
 
 const socialLinks = [
   { icon: <Facebook className="h-5 w-5" />, link: "https://www.facebook.com/VCCIHCMC/" },
@@ -31,18 +32,53 @@ const quickLinks = [
   { label: "Xúc tiến Thương mại", href: "/xuc-tien-thuong-mai/co-hoi/" },
 ];
 
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
 function Footer() {
-  const emailRef = useRef<HTMLInputElement>(null);
-  const checkBoxRef = useRef<HTMLInputElement>(null);
-  const [emailError, setEmailError] = useState(false);
+  const [email, setEmail] = useState("");
+  const [accepted, setAccepted] = useState(false);
+  const [emailError, setEmailError] = useState("");
   const [checkError, setCheckError] = useState(false);
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (emailRef.current?.value === "") setEmailError(true);
-    else setEmailError(false);
+  const handleSubmit = async () => {
+    const trimmedEmail = email.trim();
+    let hasError = false;
 
-    if (!checkBoxRef.current?.checked) setCheckError(true);
-    else setCheckError(false);
+    setMessage("");
+
+    if (!trimmedEmail) {
+      setEmailError("Thông tin bắt buộc");
+      hasError = true;
+    } else if (!isValidEmail(trimmedEmail)) {
+      setEmailError("Email không hợp lệ");
+      hasError = true;
+    } else {
+      setEmailError("");
+    }
+
+    if (!accepted) {
+      setCheckError(true);
+      hasError = true;
+    } else {
+      setCheckError(false);
+    }
+
+    if (hasError) return;
+
+    setSubmitting(true);
+
+    try {
+      await subscribeNewsletterEmail(trimmedEmail);
+      setEmail("");
+      setAccepted(false);
+      setMessage("Đăng ký nhận thông tin thành công.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể đăng ký nhận thông tin.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -58,26 +94,31 @@ function Footer() {
             <div className="mt-5">
               <div className="flex w-full max-w-[350px] gap-2">
                 <input
-                  ref={emailRef}
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   className="h-12 flex-1 rounded-[4px] border border-[#31458d] bg-[#29418f] px-4 text-[15px] text-white placeholder:text-[#84a1ef] outline-hidden"
                   type="email"
                   placeholder="Nhập email của bạn"
                 />
                 <button
+                  type="button"
                   onClick={handleSubmit}
-                  className="flex h-12 w-12 items-center justify-center rounded-[4px] bg-[#f7b500] text-[#203067] transition-colors hover:bg-[#ffca30]"
+                  disabled={submitting}
+                  className="flex h-12 w-12 items-center justify-center rounded-[4px] bg-[#f7b500] text-[#203067] transition-colors hover:bg-[#ffca30] disabled:cursor-not-allowed disabled:opacity-70"
+                  aria-label="Đăng ký nhận thông tin"
                 >
-                  <SendHorizonal className="h-5 w-5" />
+                  <SendHorizontal className="h-5 w-5" />
                 </button>
               </div>
 
               {emailError ? (
-                <p className="mt-2 text-[12px] text-[#ff9b9b]">Thông tin bắt buộc</p>
+                <p className="mt-2 text-[12px] text-[#ff9b9b]">{emailError}</p>
               ) : null}
 
               <div className="mt-3 flex items-center gap-2">
                 <input
-                  ref={checkBoxRef}
+                  checked={accepted}
+                  onChange={(event) => setAccepted(event.target.checked)}
                   type="checkbox"
                   id="footer-check"
                   className="h-4 w-4 rounded border-white/30 bg-transparent accent-[#f7b500]"
@@ -94,6 +135,10 @@ function Footer() {
                 <p className="mt-2 text-[12px] text-[#ff9b9b]">
                   Bạn cần đồng ý với Điều khoản nhận email
                 </p>
+              ) : null}
+
+              {message ? (
+                <p className="mt-2 text-[12px] text-[#b8d8ff]">{message}</p>
               ) : null}
             </div>
           </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { notFound, useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -53,7 +53,7 @@ export default function EventPage() {
   });
 
   const { data: events, isLoading: eventsLoading } = useGetEvents<EventApiResponse>({
-    filters: `name@=${submitSearch ? `title@=${submitSearch}` : ""}`,
+    filters: submitSearch.trim() ? `name@=${submitSearch.trim()}` : undefined,
     pageSize: String(pageSize),
     currentPage: String(page),
   });

@@ -243,7 +243,7 @@ export default function AdminNewsPage() {
     const parsedPage = Number(searchParams.get("page") ?? 1);
     return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   });
-  const [pageSize] = React.useState(20);
+  const [pageSize] = React.useState(10);
   const [total, setTotal] = React.useState(0);
   const [publishedTotal, setPublishedTotal] = React.useState(0);
   const [featuredTotal, setFeaturedTotal] = React.useState(0);
@@ -295,17 +295,7 @@ export default function AdminNewsPage() {
       });
   }, []);
 
-  const loadStats = React.useCallback(async () => {
-    const [nextPublishedTotal, nextFeaturedTotal] = await Promise.all([
-      fetchCmsPostCount("status==published"),
-      fetchCmsPostCount("is_featured==true"),
-    ]);
-
-    setPublishedTotal(nextPublishedTotal);
-    setFeaturedTotal(nextFeaturedTotal);
-  }, []);
-
-  const apiFilters = React.useMemo(() => {
+  const baseFilterParts = React.useMemo(() => {
     const filters: string[] = [];
     const keyword = debouncedSearch.trim();
 
@@ -323,14 +313,42 @@ export default function AdminNewsPage() {
       filters.push("type==page");
     }
 
+    return filters;
+  }, [categoryFilter, debouncedSearch, typeFilter]);
+
+  const statusFilterParts = React.useMemo(() => {
     if (statusFilter === "visible") {
-      filters.push("is_hidden==false");
-    } else if (statusFilter === "hidden") {
-      filters.push("is_hidden==true");
+      return ["is_hidden==false"];
     }
 
-    return filters.join(",");
-  }, [categoryFilter, debouncedSearch, statusFilter, typeFilter]);
+    if (statusFilter === "hidden") {
+      return ["is_hidden==true"];
+    }
+
+    return [];
+  }, [statusFilter]);
+
+  const apiFilters = React.useMemo(() => {
+    return [...baseFilterParts, ...statusFilterParts].join(",");
+  }, [baseFilterParts, statusFilterParts]);
+
+  const visibleStatsFilters = React.useMemo(() => {
+    return [...baseFilterParts, ...statusFilterParts, "is_hidden==false"].join(",");
+  }, [baseFilterParts, statusFilterParts]);
+
+  const featuredStatsFilters = React.useMemo(() => {
+    return [...baseFilterParts, ...statusFilterParts, "is_featured==true"].join(",");
+  }, [baseFilterParts, statusFilterParts]);
+
+  const loadStats = React.useCallback(async () => {
+    const [nextPublishedTotal, nextFeaturedTotal] = await Promise.all([
+      fetchCmsPostCount(visibleStatsFilters),
+      fetchCmsPostCount(featuredStatsFilters),
+    ]);
+
+    setPublishedTotal(nextPublishedTotal);
+    setFeaturedTotal(nextFeaturedTotal);
+  }, [featuredStatsFilters, visibleStatsFilters]);
 
   const load = React.useCallback(async () => {
     setReady(false);
