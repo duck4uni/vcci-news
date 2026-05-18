@@ -38,7 +38,7 @@ interface LoginResponseData {
   token_type?: string | null;
 }
 
-interface MeResponseData extends Partial<AuthenticatedAdminUser> {}
+type MeResponseData = Partial<AuthenticatedAdminUser>;
 
 interface RefreshResponseData {
   session?: Partial<AuthenticatedAdminSession> | null;
@@ -57,6 +57,7 @@ type AuthFailureReason = "missing_refresh_token" | "refresh_failed";
 
 let refreshPromise: Promise<string | null> | null = null;
 let forcedLogoutPromise: Promise<void> | null = null;
+const ACCESS_TOKEN_EXPIRY_SKEW_SECONDS = 300;
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
@@ -105,6 +106,27 @@ const normalizeSession = (
     refresh_expires_at:
       typeof session.refresh_expires_at === "string" ? session.refresh_expires_at : null,
   };
+};
+
+const getJwtExpiresAt = (token?: string | null) => {
+  if (!token) return null;
+
+  const [, payload] = token.split(".");
+  if (!payload) return null;
+
+  try {
+    const normalizedPayload = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded =
+      typeof window === "undefined"
+        ? Buffer.from(normalizedPayload, "base64").toString("utf8")
+        : window.atob(normalizedPayload.padEnd(Math.ceil(normalizedPayload.length / 4) * 4, "="));
+    const parsed = JSON.parse(decoded) as { exp?: unknown };
+    const exp = typeof parsed.exp === "number" ? parsed.exp : null;
+
+    return exp ? (exp - ACCESS_TOKEN_EXPIRY_SKEW_SECONDS) * 1000 : null;
+  } catch {
+    return null;
+  }
 };
 
 async function requestAuth<T>(
@@ -163,7 +185,11 @@ const markSessionExpiredAndNotify = () => {
   }
 };
 
-export async function loginAdmin(email: string, password: string) {
+export async function loginAdmin(
+  email: string,
+  password: string,
+  options?: { persistSession?: boolean },
+) {
   const payload = await requestAuth<LoginResponseData>("/login", {
     method: "POST",
     body: JSON.stringify({
@@ -188,8 +214,10 @@ export async function loginAdmin(email: string, password: string) {
     accessToken: payload.access_token,
     refreshToken: payload.refresh_token,
     expiresIn: payload.expires_in,
+    accessTokenExpired: getJwtExpiresAt(payload.access_token),
     user: normalizedUser,
     session: normalizeSession(payload.session),
+    persistSession: options?.persistSession === true,
   });
 
   useAuthStore.getState().setAppUser(normalizedUser);
@@ -276,6 +304,7 @@ export async function refreshAdminAccessToken() {
       useAuthStore.getState().updateAccessToken({
         accessToken: payload.access_token,
         expiresIn: payload.expires_in,
+        accessTokenExpired: getJwtExpiresAt(payload.access_token),
         refreshToken: payload.refresh_token ?? refreshToken,
         session: normalizeSession(payload.session),
       });
@@ -305,7 +334,11 @@ export async function ensureValidAdminAccessToken() {
   }
 
   if (!store.appAccessTokenExpired || store.appAccessTokenExpired > Date.now()) {
-    return store.appAccessToken;
+    const jwtExpiresAt = getJwtExpiresAt(store.appAccessToken);
+
+    if (!jwtExpiresAt || jwtExpiresAt > Date.now()) {
+      return store.appAccessToken;
+    }
   }
 
   return refreshAdminAccessToken();

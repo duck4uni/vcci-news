@@ -8,32 +8,37 @@ import { useMemo, useState } from "react";
 
 const weekDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
-function EventsCalendar() {
-  const { eventPosts } = useHomePosts();
+const formatDateTime = (value: string) =>
+  value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "Đang cập nhật";
 
-  const firstEventDate = eventPosts[0]?.startedAt
-    ? new Date(eventPosts[0].startedAt)
-    : new Date("2026-11-01T00:00:00");
+const isTrainingEvent = (item: HomePostItem) =>
+  item.categories.some((category) => {
+    const key = `${category.name} ${category.slug} ${category.url}`.toLowerCase();
+    return key.includes("đào tạo") || key.includes("dao-tao");
+  });
+
+function EventsCalendar() {
+  const { eventCalendarPosts } = useHomePosts();
+
+  const firstEventDate = eventCalendarPosts[0]?.registrationDeadline
+    ? new Date(eventCalendarPosts[0].registrationDeadline)
+    : new Date();
 
   const [currentMonth, setCurrentMonth] = useState(
     new Date(firstEventDate.getFullYear(), firstEventDate.getMonth(), 1),
   );
-
-  const isTrainingEvent = (item: HomePostItem) =>
-    item.categories.some((category) =>
-      category.name.toLowerCase().includes("đào tạo"),
-    );
+  const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
 
   const monthEvents = useMemo(
     () =>
-      eventPosts.filter((item) => {
-        const date = new Date(item.startedAt);
+      eventCalendarPosts.filter((item) => {
+        const date = new Date(item.registrationDeadline);
         return (
           date.getMonth() === currentMonth.getMonth() &&
           date.getFullYear() === currentMonth.getFullYear()
         );
       }),
-    [currentMonth, eventPosts],
+    [currentMonth, eventCalendarPosts],
   );
 
   const days = useMemo(() => {
@@ -53,7 +58,7 @@ function EventsCalendar() {
     const map = new Map<string, HomePostItem[]>();
 
     monthEvents.forEach((item) => {
-      const key = dayjs(item.startedAt).format("YYYY-MM-DD");
+      const key = dayjs(item.registrationDeadline).format("YYYY-MM-DD");
       const existing = map.get(key) ?? [];
       existing.push(item);
       map.set(key, existing);
@@ -62,7 +67,8 @@ function EventsCalendar() {
     return map;
   }, [monthEvents]);
 
-  const highlightedEvent = monthEvents[0];
+  const selectedEvents = selectedDateKey ? eventMap.get(selectedDateKey) ?? [] : [];
+  const highlightedEvent = selectedEvents[0] ?? monthEvents[0];
 
   return (
     <aside className="w-full rounded-[28px] bg-white p-4 text-[#24469c] shadow-[0_18px_38px_rgba(16,61,130,0.16)] md:p-5 xl:w-[28%] xl:min-w-[320px]">
@@ -109,11 +115,21 @@ function EventsCalendar() {
             const inMonth = day.getMonth() === currentMonth.getMonth();
             const hasTraining = items.some((item) => isTrainingEvent(item));
             const hasEvent = items.length > 0 && !hasTraining;
+            const tooltip = items.map((item) => item.title).join("\n");
+            const selectable = inMonth && items.length > 0;
+            const selected = selectable && selectedDateKey === key;
 
             return (
-              <div key={key} className="relative flex items-center justify-center">
-                <span
-                  className={`relative flex h-7 w-7 items-center justify-center rounded-full ${
+              <div
+                key={key}
+                className="relative flex items-center justify-center"
+              >
+                <button
+                  type="button"
+                  title={tooltip || undefined}
+                  disabled={!selectable}
+                  onClick={() => setSelectedDateKey(key)}
+                  className={`relative flex h-7 w-7 items-center justify-center rounded-full transition-all ${
                     !inMonth
                       ? "text-[#c9d2e2]"
                       : hasTraining
@@ -121,10 +137,14 @@ function EventsCalendar() {
                         : hasEvent
                           ? "bg-[#1e3f9a] font-semibold text-white"
                           : ""
-                  }`}
+                  } ${
+                    selectable
+                      ? "cursor-pointer hover:ring-2 hover:ring-[#f7b500]/60"
+                      : "cursor-default"
+                  } ${selected ? "ring-2 ring-[#f7b500] ring-offset-2" : ""}`}
                 >
                   {format(day, "d")}
-                </span>
+                </button>
 
                 {items.length > 0 && !hasTraining && inMonth ? (
                   <span className="absolute bottom-[-5px] h-1.5 w-1.5 rounded-full bg-[#1e3f9a]" />
@@ -154,11 +174,17 @@ function EventsCalendar() {
         <div className="mt-4 rounded-[16px] bg-[#f7f9fd] p-3.5 text-[12px] leading-5 text-[#3d547f]">
           <div className="flex items-start gap-3">
             <span
-              className={`mt-1 h-2.5 w-2.5 rounded-full ${
+              className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
                 isTrainingEvent(highlightedEvent) ? "bg-[#ffbc11]" : "bg-[#1e3f9a]"
               }`}
             />
-            <p className="line-clamp-3">{highlightedEvent.title}</p>
+            <div className="min-w-0 space-y-1">
+              <p>
+                Hạn đăng ký: {formatDateTime(highlightedEvent.registrationDeadline)} · Chi phí:{" "}
+                {highlightedEvent.participationFee || "Đang cập nhật"}
+              </p>
+              <p>Địa điểm: {highlightedEvent.location || "Đang cập nhật"}</p>
+            </div>
           </div>
         </div>
       ) : null}

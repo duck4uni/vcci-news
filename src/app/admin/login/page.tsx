@@ -125,8 +125,8 @@ function AuthShell({
     mode === "login"
       ? "Truy cập khu vực quản trị nội dung VCCI News."
       : mode === "forgot"
-        ? "X?c th?c email qu?n tr? d? nh?n m? OTP."
-        : "Nh?p m? OTP v? t?o m?t kh?u m?i cho t?i kho?n.";
+        ? "Xác thực email quản trị để nhận mã OTP."
+        : "Nhập mã OTP để tạo mật khẩu mới cho tài khoản.";
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] px-4 py-8 text-gray-700">
@@ -312,7 +312,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     setLoginLoading(true);
 
     try {
-      await loginAdmin(email.trim(), password);
+      await loginAdmin(email.trim(), password, { persistSession: remember });
       setAppUserRemember(remember ? email.trim() : "", remember ? password : "", remember);
 
       toast.success("Đăng nhập quản trị thành công");
@@ -543,7 +543,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
                 Đang gửi OTP...
               </>
             ) : (
-              "G?i m? OTP"
+              "Gửi mã OTP"
             )}
           </Button>
 

@@ -8,14 +8,13 @@ import Link from "next/link";
 function PolicyAndLaws() {
   const { policyPosts, categoryLinks, categoryNames } = useHomePosts();
   const policyItems = policyPosts;
-  const [featuredItem, ...listItems] = policyItems;
-  const listSlots = [featuredItem, ...listItems.slice(0, 2)];
+  const listSlots = Array.from({ length: 4 }, (_, index) => policyItems[index] ?? null);
   const sectionLink =
     categoryLinks.get(categoryNames.chinhSachPhapLuat.toLowerCase()) ??
     "/thong-tin-truyen-thong/thong-tin-chinh-sach-va-phap-luat";
 
   return (
-    <section className="flex-1">
+    <section className="flex flex-1 flex-col">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="client-section-title uppercase text-[#24469c]">
@@ -32,13 +31,13 @@ function PolicyAndLaws() {
         </Link>
       </div>
 
-      <div className="space-y-2.5">
+      <div className="flex min-h-[270px] flex-1 flex-col justify-between gap-2.5">
         {listSlots.map((item, index) =>
           item ? (
             <Link
               key={item.id}
               href={item.externalLink}
-              className={`flex gap-3 rounded-[14px] px-0.5 py-1 transition-colors hover:bg-[#f8fafe] ${
+              className={`flex min-h-[58px] gap-3 rounded-[14px] px-0.5 py-1 transition-colors hover:bg-[#f8fafe] ${
                 index === 0 ? "pt-0.5" : ""
               }`}
             >
@@ -55,7 +54,7 @@ function PolicyAndLaws() {
           ) : (
             <div
               key={`policy-placeholder-${index}`}
-              className={`flex gap-3 rounded-[14px] px-0.5 py-1 ${index === 0 ? "pt-0.5" : ""}`}
+              className={`flex min-h-[58px] gap-3 rounded-[14px] px-0.5 py-1 ${index === 0 ? "pt-0.5" : ""}`}
             >
               <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500]/40" />
               <div className="min-w-0 flex-1">

@@ -7,7 +7,7 @@ import useAuthStore from "@/store/useAuthStore";
 
 const LOGIN_PATH = "/admin/login";
 
-function AdminAuthLoadingScreen() {
+export function AdminAuthLoadingScreen() {
   return (
     <div className="min-h-screen bg-white">
       <div className="fixed inset-y-0 left-0 hidden w-24 border-r border-[#063e8e]/10 bg-white lg:block">
@@ -76,7 +76,10 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const refreshToken = useAuthStore((state) => state.appRefreshToken);
   const isRefreshing = useAuthStore((state) => state.appIsRefreshing);
   const [authCheckState, setAuthCheckState] = useState<"idle" | "checking" | "ready">("idle");
-  const redirectParam = encodeURIComponent(pathname || "/admin");
+  const redirectParam =
+    typeof window === "undefined"
+      ? encodeURIComponent(pathname || "/admin")
+      : encodeURIComponent(`${window.location.pathname}${window.location.search}`);
 
   useEffect(() => {
     if (pathname === LOGIN_PATH) {
@@ -156,9 +159,117 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     return <AdminAuthLoadingScreen />;
   }
 
+  if (!isLoggedIn || (!accessToken && refreshToken)) {
+    return <AdminAuthLoadingScreen />;
+  }
+
   if (!isLoggedIn || !accessToken) {
     return null;
   }
 
   return <>{children}</>;
+}
+
+export function useAdminAuthStatus() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
+  const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
+  const accessToken = useAuthStore((state) => state.appAccessToken);
+  const accessTokenExpired = useAuthStore((state) => state.appAccessTokenExpired);
+  const refreshToken = useAuthStore((state) => state.appRefreshToken);
+  const isRefreshing = useAuthStore((state) => state.appIsRefreshing);
+  const [authCheckState, setAuthCheckState] = useState<"idle" | "checking" | "ready">("idle");
+  const redirectParam =
+    typeof window === "undefined"
+      ? encodeURIComponent(pathname || "/admin")
+      : encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+
+  useEffect(() => {
+    if (pathname === LOGIN_PATH) {
+      setAuthCheckState("ready");
+      return;
+    }
+
+    if (!hasHydrated) {
+      setAuthCheckState("idle");
+      return;
+    }
+
+    let cancelled = false;
+
+    const restoreSession = async () => {
+      setAuthCheckState("checking");
+
+      const hasValidAccessToken = Boolean(
+        accessToken &&
+          isLoggedIn &&
+          (!accessTokenExpired || accessTokenExpired > Date.now()),
+      );
+
+      if (hasValidAccessToken) {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+        }
+        return;
+      }
+
+      if (!refreshToken) {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+        }
+        return;
+      }
+
+      try {
+        const nextToken = await ensureValidAdminAccessToken();
+
+        if (!nextToken && !cancelled) {
+          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+        }
+      } catch {
+        if (!cancelled) {
+          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+        }
+      } finally {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+        }
+      }
+    };
+
+    void restoreSession();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    accessToken,
+    accessTokenExpired,
+    hasHydrated,
+    isLoggedIn,
+    pathname,
+    redirectParam,
+    refreshToken,
+    router,
+  ]);
+
+  if (pathname === LOGIN_PATH) {
+    return "ready" as const;
+  }
+
+  if (!hasHydrated || isRefreshing || authCheckState !== "ready") {
+    return "loading" as const;
+  }
+
+  if (!isLoggedIn || (!accessToken && refreshToken)) {
+    return "loading" as const;
+  }
+
+  if (!isLoggedIn || !accessToken) {
+    return "blocked" as const;
+  }
+
+  return "ready" as const;
 }
