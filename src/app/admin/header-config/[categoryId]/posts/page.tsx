@@ -7,8 +7,6 @@ import { useParams, usePathname, useRouter, useSearchParams } from "next/navigat
 import { toast } from "sonner";
 import {
   ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
   FileText,
   Plus,
   Star,
@@ -17,6 +15,7 @@ import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
+import { Pagination } from "@/components/base/pagination";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +36,8 @@ import {
 } from "@/lib/api/cms-admin";
 import { ADMIN_NEWS_TYPE_LABELS } from "@/mockdata/admin-news";
 import { buildHeaderCategoryTree } from "@/mockdata/header-config";
+
+const PAGE_SIZE = 10;
 
 function formatDateTime(value: string) {
   return value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "—";
@@ -83,11 +84,11 @@ export default function HeaderCategoryPostsPage() {
   const [ready, setReady] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<CmsNewsItem | null>(null);
   const didMountRef = React.useRef(false);
+  const [total, setTotal] = React.useState(0);
   const [page, setPage] = React.useState(() => {
     const parsedPage = Number(searchParams.get("page") ?? 1);
     return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   });
-  const [pageSize] = React.useState(20);
 
   const listQueryString = React.useMemo(() => {
     const nextParams = new URLSearchParams();
@@ -113,14 +114,27 @@ export default function HeaderCategoryPostsPage() {
 
     const load = async () => {
       try {
-        const [{ items: newsItems }, headerConfig] = await Promise.all([
-          fetchCmsNewsItems(),
+        const keyword = search.trim();
+        const filters = [
+          `category.id==${categoryId}`,
+          keyword ? `title@=${keyword}|slug@=${keyword}` : "",
+        ].filter(Boolean).join(",");
+
+        const [newsData, headerConfig] = await Promise.all([
+          fetchCmsNewsItems({
+            page,
+            pageSize: PAGE_SIZE,
+            sortField: "created_at",
+            sortOrder: "desc",
+            filters,
+          }),
           fetchHeaderConfigItems(),
         ]);
 
         if (cancelled) return;
 
-        setItems(newsItems);
+        setItems(newsData.items);
+        setTotal(newsData.total);
         setHeaderItems(headerConfig.items);
         setReady(true);
       } catch (error) {
@@ -135,7 +149,7 @@ export default function HeaderCategoryPostsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [categoryId, page, search]);
 
   const flatCategories = React.useMemo(() => {
     return flattenTree(buildHeaderCategoryTree(headerItems));
@@ -150,45 +164,7 @@ export default function HeaderCategoryPostsPage() {
     category && (category.type === "page" || category.type === "news"),
   );
 
-  const categoryPosts = React.useMemo(() => {
-    return items
-      .filter(
-        (item) =>
-          item.header_category_id === categoryId ||
-          item.category_ids.includes(categoryId),
-      )
-      .sort((left, right) => {
-        const leftFeatured = left.type === "tintuc" && left.is_featured ? 1 : 0;
-        const rightFeatured = right.type === "tintuc" && right.is_featured ? 1 : 0;
-
-        if (leftFeatured !== rightFeatured) {
-          return rightFeatured - leftFeatured;
-        }
-
-        const leftTime = new Date(left.published_at || left.created_at).getTime();
-        const rightTime = new Date(right.published_at || right.created_at).getTime();
-
-        return rightTime - leftTime;
-      });
-  }, [categoryId, items]);
-
-  const filteredPosts = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return categoryPosts;
-
-    return categoryPosts.filter((item) => {
-      return (
-        item.title.toLowerCase().includes(keyword) ||
-        item.slug.toLowerCase().includes(keyword)
-      );
-    });
-  }, [categoryPosts, search]);
-
-  const totalPages = Math.ceil(filteredPosts.length / pageSize);
-  const paginatedPosts = React.useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredPosts.slice(start, start + pageSize);
-  }, [filteredPosts, page, pageSize]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const isSinglePostCategory = category?.type === "page";
   const createHref = `/admin/header-config/${categoryId}/posts/new`;
 
@@ -227,21 +203,21 @@ export default function HeaderCategoryPostsPage() {
     return [
       {
         label: "Tổng bài viết",
-        value: categoryPosts.length,
+        value: total,
         icon: <FileText className="h-4 w-4 text-[#063e8e]" />,
       },
       {
         label: "Đang hiển thị",
-        value: categoryPosts.filter((item) => !item.is_hidden).length,
+        value: items.filter((item) => !item.is_hidden).length,
         icon: <FileText className="h-4 w-4 text-[#063e8e]" />,
       },
       {
         label: "Tin nổi bật",
-        value: categoryPosts.filter((item) => item.type === "tintuc" && item.is_featured).length,
+        value: items.filter((item) => item.type === "tintuc" && item.is_featured).length,
         icon: <Star className="h-4 w-4 text-[#063e8e]" />,
       },
     ];
-  }, [categoryPosts]);
+  }, [items, total]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -249,6 +225,7 @@ export default function HeaderCategoryPostsPage() {
     try {
       await deleteCmsNewsItem(deleteTarget.id);
       setItems((current) => current.filter((item) => item.id !== deleteTarget.id));
+      setTotal((current) => Math.max(0, current - 1));
       toast.success("Đã xóa bài viết");
       setDeleteTarget(null);
     } catch (error) {
@@ -304,7 +281,7 @@ export default function HeaderCategoryPostsPage() {
         searchPlaceholder="Tìm kiếm bài viết thuộc danh mục..."
         actionLabel={isSinglePostCategory ? "Thêm bài viết trang" : "Thêm bài viết"}
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
-        actionDisabled={isSinglePostCategory && categoryPosts.length >= 1}
+        actionDisabled={isSinglePostCategory && total >= 1}
         onSearchChange={setSearch}
         onActionClick={() =>
           router.push(`${createHref}?returnTo=${encodeURIComponent(listPath)}`)
@@ -337,16 +314,16 @@ export default function HeaderCategoryPostsPage() {
             <TableBody>
               {!ready ? (
                 <HeaderCategoryPostsLoading />
-              ) : filteredPosts.length === 0 ? (
+              ) : items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="py-12 text-center text-sm text-gray-700">
-                    {categoryPosts.length === 0
+                    {total === 0
                       ? "Danh mục này chưa có bài viết nào."
                       : "Không có bài viết nào phù hợp."}
                   </TableCell>
                 </TableRow>
               ) : (
-                paginatedPosts.map((item, index) => (
+                items.map((item, index) => (
                   <TableRow
                     key={item.id}
                     className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/[0.03]"}
@@ -430,60 +407,11 @@ export default function HeaderCategoryPostsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-[#063e8e]/10 px-4 py-3">
             <div className="text-sm text-gray-700">
-              {"Hi\u1ec3n th\u1ecb"} {(page - 1) * pageSize + 1} {"\u0111\u1ebfn"}{" "}
-              {Math.min(page * pageSize, filteredPosts.length)} {"c\u1ee7a"}{" "}
-              {filteredPosts.length} {"b\u00e0i vi\u1ebft"}
+              {"Hi\u1ec3n th\u1ecb"} {(page - 1) * PAGE_SIZE + 1} {"\u0111\u1ebfn"}{" "}
+              {Math.min(page * PAGE_SIZE, total)} {"c\u1ee7a"}{" "}
+              {total} {"b\u00e0i vi\u1ebft"}
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = index + 1;
-                  } else if (page <= 3) {
-                    pageNum = index + 1;
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + index;
-                  } else {
-                    pageNum = page - 2 + index;
-                  }
-
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="icon"
-                      className={
-                        page === pageNum
-                          ? "h-8 w-8 bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-                          : "h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                      }
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <Pagination page={page} pageCount={totalPages} onChangePage={handlePageChange} />
           </div>
         )}
       </AdminTableLayout>

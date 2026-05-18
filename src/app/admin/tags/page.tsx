@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { ChevronLeft, ChevronRight, Hash, Plus, Tag } from "lucide-react";
+import { Hash, Plus, Tag } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
+import { Pagination } from "@/components/base/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +42,8 @@ interface TagFormValues {
   slug: string;
 }
 
+const PAGE_SIZE = 10;
+
 const EMPTY_FORM: TagFormValues = {
   name: "",
   slug: "",
@@ -70,40 +73,37 @@ export default function AdminTagsPage() {
   const [formValues, setFormValues] = React.useState<TagFormValues>(EMPTY_FORM);
   const [deleteTarget, setDeleteTarget] = React.useState<CmsTagItem | null>(null);
   const [page, setPage] = React.useState(1);
-  const [pageSize] = React.useState(10);
   const [total, setTotal] = React.useState(0);
 
   const load = React.useCallback(async () => {
     setIsReady(false);
-    const result = await fetchCmsTagsPage({ page, pageSize });
+
+    const keyword = search.trim();
+    const result = await fetchCmsTagsPage({
+      page,
+      pageSize: PAGE_SIZE,
+      filters: keyword ? `name@=${keyword}|slug@=${keyword}` : undefined,
+    });
+
     setItems(result.items);
     setTotal(result.total);
     setIsReady(true);
-  }, [page, pageSize]);
+  }, [page, search]);
 
   React.useEffect(() => {
     void load().catch((error) => {
       toast.error(error instanceof Error ? error.message : "Không thể tải danh sách tag");
+      setItems([]);
+      setTotal(0);
       setIsReady(true);
     });
   }, [load]);
 
-  const filteredItems = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return items;
-
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(keyword) ||
-        item.slug.toLowerCase().includes(keyword),
-    );
-  }, [items, search]);
-
-  const totalPages = Math.ceil(total / pageSize);
-
   React.useEffect(() => {
-    setPage((currentPage) => (currentPage === 1 ? currentPage : 1));
+    setPage(1);
   }, [search]);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
@@ -229,24 +229,26 @@ export default function AdminTagsPage() {
                   ))}
                 </TableRow>
               ))
-            ) : filteredItems.length === 0 ? (
+            ) : items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="py-14 text-center text-gray-700">
                   Không có tag nào phù hợp.
                 </TableCell>
               </TableRow>
             ) : (
-              filteredItems.map((item) => (
+              items.map((item) => (
                 <TableRow key={item.id} className="hover:bg-[#063e8e]/[0.03]">
                   <TableCell className="px-4 py-4">
                     <Badge
                       variant="outline"
                       className="rounded-full border-[#063e8e]/20 bg-[#063e8e]/[0.04] px-3 py-1 text-[#063e8e]"
                     >
+                      <Tag className="mr-1.5 h-3.5 w-3.5" />
                       {item.name}
                     </Badge>
                   </TableCell>
                   <TableCell className="px-4 py-4 font-mono text-sm text-gray-700">
+                    <Hash className="mr-1 inline h-3.5 w-3.5 text-[#063e8e]" />
                     {item.slug}
                   </TableCell>
                   <TableCell className="px-4 py-4 text-center text-gray-700">
@@ -269,64 +271,19 @@ export default function AdminTagsPage() {
           </TableBody>
         </Table>
 
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[#063e8e]/10 px-4 py-3">
+        {totalPages > 1 ? (
+          <div className="flex flex-col gap-3 border-t border-[#063e8e]/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-gray-700">
-              Hiển thị {(page - 1) * pageSize + 1} đến{" "}
-              {Math.min(page * pageSize, total)} của {total} tag
+              Hiển thị {(page - 1) * PAGE_SIZE + 1} đến{" "}
+              {Math.min(page * PAGE_SIZE, total)} của {total} tag
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                onClick={() => handlePageChange(page - 1)}
-                disabled={page === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(totalPages, 5) }, (_, index) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = index + 1;
-                  } else if (page <= 3) {
-                    pageNum = index + 1;
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + index;
-                  } else {
-                    pageNum = page - 2 + index;
-                  }
-
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="icon"
-                      className={
-                        page === pageNum
-                          ? "h-8 w-8 bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-                          : "h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                      }
-                      onClick={() => handlePageChange(pageNum)}
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-8 w-8 border-[#063e8e]/15 bg-white text-[#063e8e] hover:bg-[#063e8e]/10"
-                onClick={() => handlePageChange(page + 1)}
-                disabled={page === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
+            <Pagination
+              page={page}
+              pageCount={totalPages}
+              onChangePage={handlePageChange}
+            />
           </div>
-        )}
+        ) : null}
       </AdminTableLayout>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>

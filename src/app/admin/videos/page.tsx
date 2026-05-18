@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
+import { Pagination } from "@/components/base/pagination";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -25,25 +26,45 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  createVideoId,
-  EMPTY_VIDEO_FORM,
-  type VideoFormValues,
-  type VideoItem,
-  persistVideos,
-  readVideos,
-} from "@/mockdata/videos";
+  deleteVideoId,
+  getVideo,
+  patchVideoId,
+  postVideo,
+} from "@/api/endpoints/video";
+import type { Video as CmsVideoItem } from "@/api/models/video";
+import { readVideoPageData, readVideoRows } from "@/lib/api/videos";
+
+const PAGE_SIZE = 10;
 
 const fieldClassName =
   "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
-interface VideoFormDialogProps {
-  open: boolean;
-  initial: VideoItem | null;
-  onOpenChange: (open: boolean) => void;
-  onSave: (data: VideoFormValues) => void;
+interface VideoFormValues {
+  id?: string;
+  name: string;
+  url: string;
 }
 
-function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialogProps) {
+const EMPTY_VIDEO_FORM: VideoFormValues = {
+  name: "",
+  url: "",
+};
+
+interface VideoFormDialogProps {
+  open: boolean;
+  initial: CmsVideoItem | null;
+  saving: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSave: (data: VideoFormValues) => Promise<void>;
+}
+
+function VideoFormDialog({
+  open,
+  initial,
+  saving,
+  onOpenChange,
+  onSave,
+}: VideoFormDialogProps) {
   const [form, setForm] = React.useState<VideoFormValues>(EMPTY_VIDEO_FORM);
 
   React.useEffect(() => {
@@ -60,11 +81,14 @@ function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialo
     );
   }, [initial, open]);
 
-  const handleField = <K extends keyof VideoFormValues>(key: K, value: VideoFormValues[K]) => {
+  const handleField = <K extends keyof VideoFormValues>(
+    key: K,
+    value: VideoFormValues[K],
+  ) => {
     setForm((previous) => ({ ...previous, [key]: value }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name.trim()) {
       toast.error("Vui lòng nhập tên video");
       return;
@@ -75,7 +99,7 @@ function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialo
       return;
     }
 
-    onSave({
+    await onSave({
       id: form.id,
       name: form.name.trim(),
       url: form.url.trim(),
@@ -122,6 +146,7 @@ function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialo
               variant="outline"
               className="border-[#063e8e]/15 text-gray-700"
               onClick={() => onOpenChange(false)}
+              disabled={saving}
             >
               <X className="mr-2 h-4 w-4" />
               Hủy
@@ -130,6 +155,7 @@ function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialo
               type="button"
               className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
               onClick={handleSave}
+              disabled={saving}
             >
               <Save className="mr-2 h-4 w-4" />
               Lưu
@@ -142,69 +168,93 @@ function VideoFormDialog({ open, initial, onOpenChange, onSave }: VideoFormDialo
 }
 
 export default function AdminVideosPage() {
-  const [items, setItems] = React.useState<VideoItem[]>([]);
+  const [items, setItems] = React.useState<CmsVideoItem[]>([]);
   const [search, setSearch] = React.useState("");
   const [ready, setReady] = React.useState(false);
+  const [saving, setSaving] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editTarget, setEditTarget] = React.useState<VideoItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = React.useState<VideoItem | null>(null);
+  const [editTarget, setEditTarget] = React.useState<CmsVideoItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = React.useState<CmsVideoItem | null>(null);
+  const [page, setPage] = React.useState(1);
+  const [total, setTotal] = React.useState(0);
+
+  const loadVideos = React.useCallback(async () => {
+    setReady(false);
+
+    try {
+      const keyword = search.trim();
+      const response = await getVideo({
+        page,
+        pageSize: PAGE_SIZE,
+        sortField: "created_at",
+        sortOrder: "desc",
+        filters: keyword ? `name@=${keyword}|url@=${keyword}` : undefined,
+      });
+      const pageData = readVideoPageData(response);
+
+      setItems(readVideoRows(response));
+      setTotal(pageData.count ?? 0);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể tải danh sách video");
+      setItems([]);
+      setTotal(0);
+    } finally {
+      setReady(true);
+    }
+  }, [page, search]);
 
   React.useEffect(() => {
-    setItems(readVideos());
-    setReady(true);
-  }, []);
+    void loadVideos();
+  }, [loadVideos]);
 
-  const filtered = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return items;
+  React.useEffect(() => {
+    setPage(1);
+  }, [search]);
 
-    return items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(keyword) || item.url.toLowerCase().includes(keyword),
-    );
-  }, [items, search]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const openCreate = () => {
     setEditTarget(null);
     setDialogOpen(true);
   };
 
-  const openEdit = (item: VideoItem) => {
+  const openEdit = (item: CmsVideoItem) => {
     setEditTarget(item);
     setDialogOpen(true);
   };
 
-  const handleSave = (data: VideoFormValues) => {
-    let next: VideoItem[];
+  const handleSave = async (data: VideoFormValues) => {
+    setSaving(true);
 
-    if (data.id) {
-      next = items.map((item) => (item.id === data.id ? { ...item, ...data, id: data.id } : item));
-      toast.success("Đã cập nhật video");
-    } else {
-      next = [
-        ...items,
-        {
-          id: createVideoId(),
-          name: data.name,
-          url: data.url,
-        },
-      ];
-      toast.success("Đã thêm video mới");
+    try {
+      if (data.id) {
+        await patchVideoId(data.id, { name: data.name, url: data.url });
+        toast.success("Đã cập nhật video");
+      } else {
+        await postVideo({ name: data.name, url: data.url });
+        toast.success("Đã thêm video mới");
+      }
+
+      setDialogOpen(false);
+      await loadVideos();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể lưu video");
+    } finally {
+      setSaving(false);
     }
-
-    setItems(next);
-    persistVideos(next);
-    setDialogOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    const next = items.filter((item) => item.id !== deleteTarget.id);
-    setItems(next);
-    persistVideos(next);
-    toast.success("Đã xóa video");
-    setDeleteTarget(null);
+    try {
+      await deleteVideoId(deleteTarget.id);
+      toast.success("Đã xóa video");
+      setDeleteTarget(null);
+      await loadVideos();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể xóa video");
+    }
   };
 
   return (
@@ -216,7 +266,7 @@ export default function AdminVideosPage() {
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
         actionMeta={
           <div className="rounded-xl border border-[#063e8e]/15 bg-[#f8fbff] px-4 py-2 text-sm font-semibold text-[#163b73]">
-            Tổng số video: {items.length}
+            Tổng số video: {total}
           </div>
         }
         onSearchChange={setSearch}
@@ -240,20 +290,20 @@ export default function AdminVideosPage() {
                   </TableCell>
                 </TableRow>
               ))
-            ) : filtered.length === 0 ? (
+            ) : items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-16 text-center text-gray-400">
                   Không có video nào
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((item, index) => (
+              items.map((item, index) => (
                 <TableRow
                   key={item.id}
                   className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
                 >
                   <TableCell className="py-3 text-center text-sm text-gray-500">
-                    {index + 1}
+                    {(page - 1) * PAGE_SIZE + index + 1}
                   </TableCell>
                   <TableCell className="py-3 text-sm font-medium text-gray-800">
                     <div className="flex items-center gap-3">
@@ -286,11 +336,26 @@ export default function AdminVideosPage() {
             )}
           </TableBody>
         </Table>
+
+        {totalPages > 1 ? (
+          <div className="flex flex-col gap-3 border-t border-[#063e8e]/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-gray-700">
+              Hiển thị {(page - 1) * PAGE_SIZE + 1} đến{" "}
+              {Math.min(page * PAGE_SIZE, total)} của {total} video
+            </div>
+            <Pagination
+              page={page}
+              pageCount={totalPages}
+              onChangePage={setPage}
+            />
+          </div>
+        ) : null}
       </AdminTableLayout>
 
       <VideoFormDialog
         open={dialogOpen}
         initial={editTarget}
+        saving={saving}
         onOpenChange={setDialogOpen}
         onSave={handleSave}
       />

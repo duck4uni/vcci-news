@@ -280,30 +280,50 @@ function createCategoryPostsQuery(categoryId: string, pageSize: string) {
 }
 
 async function fetchHomePosts() {
-  const query = new URLSearchParams({
+  const categoryRows = await fetchHomeCategoryRows().catch(() => []);
+  const trainingCategoryId = findCategoryIdByAliases(
+    categoryRows,
+    HOME_CATEGORY_ALIASES.daoTao,
+  );
+  const businessCategoryId = findCategoryIdByAliases(
+    categoryRows,
+    HOME_CATEGORY_ALIASES.coHoiKinhDoanh,
+  );
+  const memberConnectionCategoryId = findCategoryIdByAliases(
+    categoryRows,
+    HOME_CATEGORY_ALIASES.ketNoiHoiVien,
+  );
+  const featuredQuery = new URLSearchParams({
     page: "1",
-    pageSize: "200",
-    sortField: "created_at",
+    pageSize: "10",
+    sortField: "release_at",
     sortOrder: "desc",
+    filters: [
+      "is_featured==true",
+      "is_hidden==false",
+      "is_active==true",
+      "status==published",
+      "type==news",
+    ].join(","),
   });
-
   const tinVcciQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.tinVcci, "6");
   const tinKinhTeQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.tinKinhTe, "6");
   const chuyenDeQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chuyenDe, "6");
   const eventQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.suKien, "5");
   const policyQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chinhSachPhapLuat, "6");
   const quickLinksQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.lienKetNhanh, "6");
-  const categoryRows = await fetchHomeCategoryRows().catch(() => []);
-  const trainingCategoryId = findCategoryIdByAliases(
-    categoryRows,
-    HOME_CATEGORY_ALIASES.daoTao,
-  );
   const trainingQuery = trainingCategoryId
-    ? createCategoryPostsQuery(String(trainingCategoryId), "20")
+    ? createCategoryPostsQuery(String(trainingCategoryId), "10")
+    : null;
+  const businessQuery = businessCategoryId
+    ? createCategoryPostsQuery(String(businessCategoryId), "10")
+    : null;
+  const memberConnectionQuery = memberConnectionCategoryId
+    ? createCategoryPostsQuery(String(memberConnectionCategoryId), "10")
     : null;
 
   const [
-    homeRows,
+    featuredRows,
     tinVcciRows,
     tinKinhTeRows,
     chuyenDeRows,
@@ -311,8 +331,10 @@ async function fetchHomePosts() {
     eventRows,
     quickLinkRows,
     trainingRows,
+    businessRows,
+    memberConnectionRows,
   ] = await Promise.all([
-    fetchHomePostRows(`/post?${query.toString()}`),
+    fetchHomePostRows(`/post?${featuredQuery.toString()}`),
     fetchHomePostRows(`/post?${tinVcciQuery.toString()}`),
     fetchHomePostRows(`/post?${tinKinhTeQuery.toString()}`),
     fetchHomePostRows(`/post?${chuyenDeQuery.toString()}`),
@@ -320,9 +342,12 @@ async function fetchHomePosts() {
     fetchHomePostRows(`/post?${eventQuery.toString()}`),
     fetchHomePostRows(`/post?${quickLinksQuery.toString()}`),
     trainingQuery ? fetchHomePostRows(`/post?${trainingQuery.toString()}`) : [],
+    businessQuery ? fetchHomePostRows(`/post?${businessQuery.toString()}`) : [],
+    memberConnectionQuery ? fetchHomePostRows(`/post?${memberConnectionQuery.toString()}`) : [],
   ]);
 
   const rows = [
+    ...featuredRows,
     ...tinVcciRows,
     ...tinKinhTeRows,
     ...chuyenDeRows,
@@ -330,7 +355,8 @@ async function fetchHomePosts() {
     ...eventRows,
     ...trainingRows,
     ...quickLinkRows,
-    ...homeRows,
+    ...businessRows,
+    ...memberConnectionRows,
   ];
 
   return rows

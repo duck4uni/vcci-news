@@ -36,7 +36,6 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
-import { readAdminMediaItems } from "@/mockdata/admin-news";
 import {
   type BaseConfigBannerItem,
   type BaseConfigBranchItem,
@@ -46,7 +45,6 @@ import {
   EMPTY_BASE_CONFIG_BRANCH,
   cloneBaseConfigData,
   createBaseConfigItemId,
-  getMediaMap,
   persistBaseConfig,
   readBaseConfig,
   sortBaseConfigBanners,
@@ -327,10 +325,12 @@ export default function AdminBaseConfigPage() {
 
   React.useEffect(() => {
     setConfig(readBaseConfig());
-    setMediaItems(readAdminMediaItems());
   }, []);
 
-  const mediaMap = React.useMemo(() => getMediaMap(mediaItems), [mediaItems]);
+  const mediaMap = React.useMemo(
+    () => new Map(mediaItems.map((item) => [item.id, item])),
+    [mediaItems],
+  );
   const sortedBanners = React.useMemo(
     () => (config ? sortBaseConfigBanners(config.banners) : []),
     [config],
@@ -980,39 +980,8 @@ export default function AdminBaseConfigPage() {
                   </>
                 ) : (
                   <div className="rounded-3xl border border-dashed border-[#063e8e]/15 bg-white px-5 py-10 text-center text-sm text-gray-500">
-                    Chua c? chi nh?nh n?o. H?y th?m chi nh?nh d? b?t d?u c?u h?nh.
+                    Chưa có chi nhánh nào. Hãy thêm chi nhánh để bắt đầu cấu hình
                   </div>
-                )}
-              </div>
-
-              <div className="hidden rounded-[28px] border border-[#063e8e]/10 bg-gradient-to-br from-[#063e8e] to-[#0f4a9f] p-6 text-white shadow-[0_16px_30px_rgba(6,62,142,0.18)] lg:block">
-                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
-                  Preview chi nhánh
-                </div>
-                {currentBranch ? (
-                  <>
-                    <div className="mt-4 text-2xl font-semibold">{currentBranch.branchName}</div>
-                    <div className="mt-6 space-y-4 text-sm leading-6">
-                      <div className="flex gap-3">
-                        <MapPin className="mt-1 h-4 w-4 shrink-0 text-white/80" />
-                        <span>{currentBranch.address || "Chưa cập nhật địa chỉ"}</span>
-                      </div>
-                      <div className="flex gap-3">
-                        <Phone className="mt-1 h-4 w-4 shrink-0 text-white/80" />
-                        <span>{currentBranch.hotline || "Chưa cập nhật hotline"}</span>
-                      </div>
-                      <div className="flex gap-3">
-                        <Mail className="mt-1 h-4 w-4 shrink-0 text-white/80" />
-                        <span>{currentBranch.email || "Chưa cập nhật email"}</span>
-                      </div>
-                      <div className="flex gap-3">
-                        <Globe className="mt-1 h-4 w-4 shrink-0 text-white/80" />
-                        <span>{currentBranch.fax || "Chưa cập nhật fax"}</span>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="mt-6 text-sm text-white/80">Không có dữ liệu chi nhánh để preview.</div>
                 )}
               </div>
             </CardContent>
@@ -1123,7 +1092,14 @@ export default function AdminBaseConfigPage() {
         open={imagePickerOpen}
         selectedId={itemForm.imageId}
         onOpenChange={setImagePickerOpen}
-        onSelect={(item) => setItemForm((previous) => ({ ...previous, imageId: item.id }))}
+        onSelect={(item) => {
+          setMediaItems((previous) => {
+            const nextMap = new Map(previous.map((entry) => [entry.id, entry]));
+            nextMap.set(item.id, item);
+            return Array.from(nextMap.values());
+          });
+          setItemForm((previous) => ({ ...previous, imageId: item.id }));
+        }}
       />
 
       <AdminDeleteDialog

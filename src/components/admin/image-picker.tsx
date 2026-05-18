@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ImagePlus, Search, Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,13 +13,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
+import type { AdminMediaItem } from "@/mockdata/admin-news";
 import {
-  AdminMediaItem,
-  createAdminMediaId,
-  persistAdminMediaItems,
-  readAdminMediaItems,
-} from "@/mockdata/admin-news";
+  fetchCmsFiles,
+  toAdminMediaItem,
+  uploadCmsFile,
+} from "@/lib/api/files";
+import { Pagination } from "@/components/base/pagination";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 10;
 
 interface AdminImagePickerProps {
   open: boolean;
@@ -43,52 +47,71 @@ export function AdminImagePicker({
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [search, setSearch] = React.useState("");
   const [items, setItems] = React.useState<AdminMediaItem[]>([]);
+  const [page, setPage] = React.useState(1);
+  const [total, setTotal] = React.useState(0);
+  const [ready, setReady] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    if (!open) return;
+
+    setReady(false);
+
+    try {
+      const result = await fetchCmsFiles({
+        page,
+        pageSize: PAGE_SIZE,
+        search,
+      });
+
+      setItems(result.rows.map(toAdminMediaItem));
+      setTotal(result.count);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể tải thư viện hình ảnh");
+      setItems([]);
+      setTotal(0);
+    } finally {
+      setReady(true);
+    }
+  }, [open, page, search]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   React.useEffect(() => {
     if (!open) return;
-    setItems(readAdminMediaItems());
-  }, [open]);
+    setPage(1);
+  }, [open, search]);
 
-  const visibleItems = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
-    if (!keyword) return items;
-
-    return items.filter((item) => {
-      return (
-        item.name.toLowerCase().includes(keyword) ||
-        item.alt.toLowerCase().includes(keyword) ||
-        item.url.toLowerCase().includes(keyword)
-      );
-    });
-  }, [items, search]);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const nextItem: AdminMediaItem = {
-        id: createAdminMediaId(),
-        name: file.name,
-        alt: file.name.replace(/\.[^.]+$/, ""),
-        url: typeof reader.result === "string" ? reader.result : "/img-error.png",
-        mime: file.type || "image/*",
-        size: file.size,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        source: "upload",
-      };
+    setUploading(true);
 
-      const nextItems = [nextItem, ...items];
-      setItems(nextItems);
-      persistAdminMediaItems(nextItems);
+    try {
+      const uploaded = await uploadCmsFile({
+        file,
+        original: file.name,
+      });
+
+      if (!uploaded) {
+        throw new Error("Không thể tải hình ảnh lên");
+      }
+
+      const nextItem = toAdminMediaItem(uploaded);
+      toast.success("Đã tải hình ảnh lên");
       onSelect(nextItem);
       onOpenChange(false);
-    };
-
-    reader.readAsDataURL(file);
-    event.target.value = "";
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể tải hình ảnh lên");
+    } finally {
+      setUploading(false);
+      event.target.value = "";
+    }
   };
 
   return (
@@ -101,7 +124,7 @@ export function AdminImagePicker({
                 Thư viện hình ảnh
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm text-gray-700">
-                Chọn ảnh có sẵn hoặc tải thêm ảnh mới cho bài viết.
+                Chọn ảnh từ API /file hoặc tải thêm ảnh mới cho bài viết.
               </DialogDescription>
             </div>
           </div>
@@ -130,25 +153,41 @@ export function AdminImagePicker({
               type="button"
               onClick={() => inputRef.current?.click()}
               className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
+              disabled={uploading}
             >
               <Upload className="mr-2 h-4 w-4" />
-              Tải hình ảnh
+              {uploading ? "Đang tải..." : "Tải hình ảnh"}
             </Button>
           </div>
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto px-6 py-6">
-          {visibleItems.length === 0 ? (
+          {!ready ? (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+              {Array.from({ length: PAGE_SIZE }).map((_, index) => (
+                <div
+                  key={`image-picker-loading-${index}`}
+                  className="overflow-hidden rounded-2xl border border-[#063e8e]/10 bg-white"
+                >
+                  <div className="aspect-[4/3] animate-pulse bg-[#063e8e]/10" />
+                  <div className="space-y-2 p-4">
+                    <div className="h-4 animate-pulse rounded bg-[#063e8e]/10" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-[#063e8e]/10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : items.length === 0 ? (
             <div className="flex min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed border-[#063e8e]/15 bg-[#063e8e]/[0.03] px-6 text-center">
               <ImagePlus className="mb-3 h-10 w-10 text-[#063e8e]" />
               <p className="text-base font-medium text-black">Chưa có hình ảnh phù hợp</p>
               <p className="mt-1 text-sm text-gray-700">
-                H?y th? t? kh?a kh?c ho?c t?i th?m h?nh ?nh v?o thu vi?n.
+                Hãy thử từ khóa khác hoặc tải thêm hình ảnh vào thư viện.
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
-              {visibleItems.map((item) => (
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
+              {items.map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -172,7 +211,7 @@ export function AdminImagePicker({
                     />
                     {item.id === selectedId ? (
                       <div className="absolute right-3 top-3 rounded-full bg-[#063e8e] px-2 py-1 text-xs font-medium text-white">
-                        ?? ch?n
+                        Đã chọn
                       </div>
                     ) : null}
                   </div>
@@ -180,7 +219,7 @@ export function AdminImagePicker({
                     <p className="line-clamp-1 text-sm font-medium text-black">{item.name}</p>
                     <div className="flex items-center justify-between gap-2 text-xs text-gray-700">
                       <span>{formatFileSize(item.size)}</span>
-                      <span>{item.source === "upload" ? "Tải lên" : "Hệ thống"}</span>
+                      <span>Tải lên</span>
                     </div>
                   </div>
                 </button>
@@ -188,6 +227,16 @@ export function AdminImagePicker({
             </div>
           )}
         </div>
+
+        {totalPages > 1 ? (
+          <div className="flex flex-col gap-3 border-t border-[#063e8e]/10 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-gray-700">
+              Hiển thị {(page - 1) * PAGE_SIZE + 1} đến{" "}
+              {Math.min(page * PAGE_SIZE, total)} của {total} ảnh
+            </div>
+            <Pagination page={page} pageCount={totalPages} onChangePage={setPage} />
+          </div>
+        ) : null}
 
         <div className="flex justify-end border-t border-[#063e8e]/10 px-6 py-4">
           <Button

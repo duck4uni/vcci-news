@@ -409,11 +409,17 @@ export function AdminNewsForm({
       setForm(isCreate ? cloneAdminNewsFormValues() : null);
 
       try {
-        const [{ items: nextNewsItems }, nextHeaderConfig, nextTags] = await Promise.all([
-          fetchCmsNewsItems(),
+        const [nextHeaderConfig, nextTags] = await Promise.all([
           fetchHeaderConfigItems(),
           fetchCmsTags(),
         ]);
+        const nextNewsItems = isCreate
+          ? []
+          : (await fetchCmsNewsItems({
+              page: 1,
+              pageSize: 10,
+              filters: newsId ? `id==${newsId}` : undefined,
+            })).items;
 
         if (cancelled) return;
 
