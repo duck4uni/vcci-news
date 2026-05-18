@@ -29,7 +29,7 @@ const Page = () => {
           </Link>
         </div> */}
 
-        <section className="flex flex-col lg:flex-row pb-16 gap-5 mb-0">
+        <section className="flex flex-col lg:flex-row pb-8 gap-5 mb-0">
           <News />
           <QuickLinks />
         </section >

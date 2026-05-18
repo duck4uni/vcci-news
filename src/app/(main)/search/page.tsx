@@ -1,104 +1,258 @@
 "use client";
 
-import React, { useState, Suspense, useEffect } from "react";
-import ListCategory from "@/components/base/list-category";
-import ListFilter from "@/components/base/list-filter";
-import CardNews from "@/components/base/card-news";
+import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import ImageNext from "@/components/shared/image-next";
 import { Pagination } from "@components/base/pagination";
-import Image from "next/image";
-import { useGetNews } from "@api/endpoints/news";
-import { GetNewsResponseType } from "@api/types/news";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Spinner } from "@components/ui/spinner";
-import { useSearchParams, useRouter } from 'next/navigation'
+import {
+  buildPostFilters,
+  fetchDynamicPostList,
+  resolveDynamicPostImage,
+  stripHtml,
+} from "@/app/(main)/[...slug]/templates/data";
+import type { DynamicPostItem } from "@/app/(main)/[...slug]/templates/types";
+
+const formatPostDate = (value?: string | null) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
+};
+
+const getTagClassName = (index: number) => {
+  const classes = [
+    "bg-[#eaf0ff] text-[#1f4fa3]",
+    "bg-[#e9f7ee] text-[#138040]",
+    "bg-[#fff0e3] text-[#d47a16]",
+    "bg-[#ffe9f0] text-[#d22f62]",
+  ];
+
+  return classes[index % classes.length];
+};
+
+function SearchResultItem({ item, index }: { item: DynamicPostItem; index: number }) {
+  const fallbackDescription = item.content_structure?.post_content
+    ?.map((section) => section.content)
+    .join(" ");
+  const description =
+    item.summary || stripHtml(item.content) || stripHtml(fallbackDescription);
+  const date = formatPostDate(item.release_at || item.published_at || item.created_at);
+  const categoryName = item.categories[0]?.name || "Tin tức";
+
+  return (
+    <article className="border-b border-[#eceff3] pb-8 last:border-b-0">
+      <Link
+        href={item.external_link || "#"}
+        className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
+      >
+        <div className="overflow-hidden rounded-md bg-[#edf1f5]">
+          <ImageNext
+            src={resolveDynamicPostImage(item.thumbnail)}
+            alt={item.title}
+            width={520}
+            height={360}
+            className="h-[170px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:h-[150px]"
+          />
+        </div>
+
+        <div className="min-w-0 pt-1">
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            <span className={`rounded-full px-2.5 py-1 font-semibold ${getTagClassName(index)}`}>
+              {categoryName}
+            </span>
+            {date ? <span className="text-[#9aa3ad]">{date}</span> : null}
+          </div>
+
+          <h2 className="mt-3 line-clamp-2 text-[18px] font-bold leading-snug text-[#111827] transition-colors group-hover:text-[#144c9c]">
+            {item.title}
+          </h2>
+
+          {description ? (
+            <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#5f6875]">
+              {description}
+            </p>
+          ) : null}
+        </div>
+      </Link>
+    </article>
+  );
+}
 
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const query = searchParams.get('q') || '';
-  const pageFromUrl = searchParams.get('page');
-  const [page, setPage] = useState(pageFromUrl ? parseInt(pageFromUrl) : 1);
+  const query = searchParams.get("q") || "";
+  const pageFromUrl = searchParams.get("page");
+  const [page, setPage] = useState(pageFromUrl ? Number(pageFromUrl) : 1);
+  const [searchInput, setSearchInput] = useState(query);
 
-  const pageSize = 5;
-  const { data: allData, isLoading } = useGetNews<GetNewsResponseType>({
-    pageSize: String(pageSize),
-    currentPage: String(page),
-    filters: query ? `title @=${query}` : undefined,
+  const pageSize = 10;
+  const postsQuery = useQuery({
+    queryKey: ["search-posts", page, pageSize, query],
+    queryFn: () =>
+      fetchDynamicPostList({
+        page,
+        pageSize,
+        filters: buildPostFilters([
+          "is_hidden==false",
+          "is_active==true",
+          "status==published",
+          "type==news",
+          query ? `title@=${query}` : null,
+        ]),
+      }),
+    staleTime: 60 * 1000,
   });
 
-  // Update URL when page changes
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', String(page));
-    router.push(`/search?${params.toString()}`, { scroll: false });
-  }, [page]);
-
-  // Sync state with URL on mount/change
-  useEffect(() => {
-    if (pageFromUrl) {
-      setPage(parseInt(pageFromUrl));
+    const nextPage = pageFromUrl ? Number(pageFromUrl) : 1;
+    if (Number.isFinite(nextPage)) {
+      setPage(nextPage);
     }
   }, [pageFromUrl]);
 
+  useEffect(() => {
+    setSearchInput(query);
+  }, [query]);
+
+  const updateSearchUrl = (nextQuery: string, nextPage = 1) => {
+    const params = new URLSearchParams();
+    const trimmedQuery = nextQuery.trim();
+
+    if (trimmedQuery) params.set("q", trimmedQuery);
+    params.set("page", String(nextPage));
+    router.push(`/search?${params.toString()}`, { scroll: false });
+  };
+
+  const rows = postsQuery.data?.rows ?? [];
+  const totalPages = Number(postsQuery.data?.totalPages ?? 1);
+  const currentPage = Number(postsQuery.data?.page ?? page);
+
   return (
-    <div className="min-h-screen container mx-auto p-4">
-      <div className="w-full flex flex-col gap-5">
-        <div className="border-t border-gray-200 bg-white p-2.5">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="py-3">
-              <h1 className="text-md md:text-lg font-semibold leading-6 text-gray-900">
-                Search Results for: {query}
-              </h1>
-            </div>
-          </div>
+    <div className="min-h-screen bg-[#fbfbfa]">
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
+            Tìm kiếm
+          </h1>
+          <div className="mt-2 h-[3px] w-16 rounded-full bg-[#f5a400]" />
+          {query ? (
+            <p className="mt-4 text-sm text-[#5f6875]">
+              Kết quả tìm kiếm cho: <span className="font-semibold text-[#111827]">{query}</span>
+            </p>
+          ) : null}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <main className="lg:col-span-2 bg-background ">
-            <div className="pb-5 overflow-hidden">
-              {isLoading ? (
-                <div className="flex justify-center items-center py-12">
-                  <Spinner className="size-8" />
-                  <span className="ml-2 text-gray-600">Đang tìm kiếm...</span>
-                </div>
-              ) : (
-                <>
-                  {allData?.responseData.rows.map((news) => (
-                    <CardNews
-                      key={news.id}
-                      news={news}
-                      link={news.external_link}
-                    />
-                  ))}
-
-                  <div className="w-full flex justify-center mt-4">
-                    <Pagination
-                      pageCount={Number(allData?.responseData.totalPages ?? 1)}
-                      page={Number(allData?.responseData.currentPage ?? page)}
-                      onChangePage={(p) => setPage(p)}
-                      onGoToPreviousPage={() => setPage(Math.max(1, page - 1))}
-                      onGoToNextPage={() =>
-                        setPage(
-                          Math.min(
-                            Number(allData?.responseData.totalPages ?? 1),
-                            page + 1
-                          )
-                        )
-                      }
-                    />
+        <div className="flex flex-col gap-10 xl:flex-row xl:gap-14">
+          <main className="order-2 min-w-0 xl:order-1 xl:flex-1">
+            {postsQuery.isLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <Spinner className="size-8" />
+                <span className="ml-2 text-gray-600">Đang tìm kiếm...</span>
+              </div>
+            ) : (
+              <div className="space-y-9">
+                {rows.length ? (
+                  rows.map((item, index) => (
+                    <SearchResultItem key={item.id} item={item} index={index} />
+                  ))
+                ) : (
+                  <div className="rounded-2xl border border-[#edf1f5] bg-white px-6 py-12 text-center text-gray-600">
+                    Không tìm thấy bài viết phù hợp.
                   </div>
-                </>
-              )}
-            </div>
+                )}
+
+                <div className="flex w-full justify-center pt-2">
+                  <Pagination
+                    pageCount={totalPages}
+                    page={currentPage}
+                    onChangePage={(nextPage) => {
+                      setPage(nextPage);
+                      updateSearchUrl(query, nextPage);
+                    }}
+                    onGoToPreviousPage={() => {
+                      const nextPage = Math.max(1, currentPage - 1);
+                      setPage(nextPage);
+                      updateSearchUrl(query, nextPage);
+                    }}
+                    onGoToNextPage={() => {
+                      const nextPage = Math.min(totalPages, currentPage + 1);
+                      setPage(nextPage);
+                      updateSearchUrl(query, nextPage);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
           </main>
 
-          <aside className="space-y-6 order-first lg:order-last">
-            <div className="bg-white border rounded-md overflow-hidden hidden lg:block">
-              <div className="w-full relative bg-gray-100">
-                <img
+          <aside className="order-1 space-y-5 xl:order-2 xl:w-[320px] xl:pt-0">
+            <form
+              className="rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)]"
+              onSubmit={(event) => {
+                event.preventDefault();
+                setPage(1);
+                updateSearchUrl(searchInput, 1);
+              }}
+            >
+              <h2 className="text-lg font-bold text-[#111827]">Tìm kiếm</h2>
+              <Input
+                value={searchInput}
+                onChange={(event) => setSearchInput(event.target.value)}
+                placeholder="Tên bài viết ..."
+                className="mt-4 h-11 rounded-xl border-[#edf1f5] bg-[#f8fafc] text-sm placeholder:text-gray-700"
+              />
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Button
+                  type="submit"
+                  className="h-11 rounded-xl bg-[#14519f] text-white hover:bg-[#0f4386]"
+                >
+                  Tìm kiếm
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 rounded-xl border-[#edf1f5] bg-white text-[#4b5563]"
+                  onClick={() => {
+                    setSearchInput("");
+                    setPage(1);
+                    updateSearchUrl("", 1);
+                  }}
+                >
+                  Bỏ tìm
+                </Button>
+              </div>
+            </form>
+
+            <div className="overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)]">
+              <div className="relative min-h-[390px] bg-[#1f334f]">
+                <ImageNext
                   src="/banner.webp"
-                  alt="Quảng cáo"
-                  className="object-cover"
+                  alt="Đối tác quảng bá"
+                  width={640}
+                  height={760}
+                  className="absolute inset-0 h-full w-full object-cover"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-[#14213d]/92 via-[#14213d]/28 to-transparent" />
+                <div className="absolute bottom-8 left-7 right-7 text-white">
+                  <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
+                    Đối tác quảng bá
+                  </div>
+                  <div className="mt-3 text-2xl font-bold leading-tight">
+                    Business Combo cho doanh nghiệp hội viên
+                  </div>
+                </div>
               </div>
             </div>
           </aside>
@@ -110,14 +264,13 @@ function SearchContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen container mx-auto p-4 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#063e8e] mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading search results...</p>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-[#fbfbfa]">
+          <Spinner className="size-8" />
         </div>
-      </div>
-    }>
+      }
+    >
       <SearchContent />
     </Suspense>
   );

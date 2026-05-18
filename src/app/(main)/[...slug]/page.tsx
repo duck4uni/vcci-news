@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui";
 import ArticlePage from "./templates/ArticlePage";
 import ArticleDetailPage from "./templates/ArticleDetailPage";
+import CatalogPage from "./templates/CatalogPage";
 import InformationPage from "./templates/InformationPage";
 import {
   fetchDynamicCategories,
@@ -98,6 +99,18 @@ export default function DynamicPage() {
   }
 
   if (resolvedCategory?.type === "news") {
+    if (
+      resolvedCategory.slug === "an-pham" ||
+      resolvedCategory.slug === "thu-vien-tai-lieu"
+    ) {
+      return (
+        <CatalogPage
+          category={resolvedCategory}
+          allCategories={categoryQuery.data ?? []}
+        />
+      );
+    }
+
     return (
       <ArticlePage
         category={resolvedCategory}

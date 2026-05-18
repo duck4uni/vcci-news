@@ -22,7 +22,7 @@ const videos = [
 
 function VideoAndPartners() {
   return (
-    <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-start">
+    <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
       <div className="flex-1">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
@@ -75,7 +75,7 @@ function VideoAndPartners() {
         </div>
       </div>
 
-      <aside className="w-full xl:w-[43%]">
+      <aside className="flex w-full flex-col xl:w-[43%]">
         <div className="mb-5 flex items-start justify-between gap-3">
           <div>
             <h2 className="client-section-title uppercase text-[#24469c]">
@@ -85,11 +85,11 @@ function VideoAndPartners() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:h-[318px] xl:grid-rows-2">
           {partnerImages.slice(0, 6).map((src, index) => (
             <div
               key={src}
-              className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)]"
+              className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-auto"
             >
               <ImageNext
                 src={src}

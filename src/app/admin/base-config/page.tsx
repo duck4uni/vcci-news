@@ -556,7 +556,8 @@ export default function AdminBaseConfigPage() {
   return (
     <div className="space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-        <TabsList className="h-auto rounded-2xl bg-[#eaf2ff] p-1.5">
+        <div className="overflow-x-auto pb-1">
+          <TabsList className="h-auto min-w-max rounded-2xl bg-[#eaf2ff] p-1.5">
           <TabsTrigger
             value="branding"
             className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
@@ -581,7 +582,8 @@ export default function AdminBaseConfigPage() {
           >
             Mạng xã hội
           </TabsTrigger>
-        </TabsList>
+          </TabsList>
+        </div>
 
         <TabsContent value="branding" className="mt-0">
           <Card className="rounded-[30px] border-[#063e8e]/10 shadow-sm">
@@ -636,9 +638,9 @@ export default function AdminBaseConfigPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 px-4 sm:px-6">
               <div className="grid gap-6 lg:grid-cols-[minmax(0,1.3fr)_360px]">
-                <div className="rounded-[28px] border border-[#063e8e]/10 bg-gradient-to-br from-[#f8fbff] to-white p-5">
+                <div className="rounded-[28px] border border-[#063e8e]/10 bg-gradient-to-br from-[#f8fbff] to-white p-4 sm:p-5">
                   <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-[#063e8e]/18 bg-[#eef4ff]">
                     {currentLogoMedia ? (
                       <div className="relative h-[220px] w-[220px]">
@@ -658,7 +660,7 @@ export default function AdminBaseConfigPage() {
                   </div>
                 </div>
 
-                <div className="space-y-4 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5">
+                <div className="space-y-4 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-4 sm:p-5">
                   {currentLogo ? (
                     <div className="space-y-4 rounded-3xl border border-[#063e8e]/12 bg-white p-5 text-sm text-slate-600 shadow-sm">
                       <div>
@@ -765,8 +767,8 @@ export default function AdminBaseConfigPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-6">
-              <div className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5">
+            <CardContent className="space-y-6 px-4 sm:px-6">
+              <div className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-4 sm:p-5">
                 <div className="relative aspect-[16/6] overflow-hidden rounded-[24px] border border-[#063e8e]/12 bg-[#eef4ff]">
                   {currentBannerMedia ? (
                     <SafeNextImage
@@ -819,7 +821,7 @@ export default function AdminBaseConfigPage() {
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                 {sortedBanners.map((item, index) => (
                   <ConfigItemPreview
                     key={item.id}
@@ -833,7 +835,7 @@ export default function AdminBaseConfigPage() {
               </div>
 
               {currentBanner ? (
-                <div className="grid gap-4 md:grid-cols-4">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-4">
                     <div className="text-xs uppercase tracking-[0.14em] text-gray-500">Tên banner</div>
                     <div className="mt-2 font-semibold text-[#163b73]">{currentBanner.name}</div>
@@ -899,8 +901,8 @@ export default function AdminBaseConfigPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="grid gap-6 lg:grid-cols-[360px_minmax(0,1fr)]">
-              <div className="space-y-4 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5">
+            <CardContent className="grid gap-6 px-4 sm:px-6 lg:grid-cols-[360px_minmax(0,1fr)]">
+              <div className="space-y-4 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-4 sm:p-5">
                 <div className="text-sm font-semibold uppercase tracking-[0.15em] text-[#4b74b8]">
                   Danh sách chi nhánh
                 </div>
@@ -917,7 +919,7 @@ export default function AdminBaseConfigPage() {
                 </div>
               </div>
 
-              <div className="space-y-5 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5">
+              <div className="space-y-5 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-4 sm:p-5">
                 {currentBranch ? (
                   <>
                     <div className="space-y-2">
@@ -983,7 +985,7 @@ export default function AdminBaseConfigPage() {
                 )}
               </div>
 
-              <div className="hidden rounded-[28px] border border-[#063e8e]/10 bg-gradient-to-br from-[#063e8e] to-[#0f4a9f] p-6 text-white shadow-[0_16px_30px_rgba(6,62,142,0.18)]">
+              <div className="hidden rounded-[28px] border border-[#063e8e]/10 bg-gradient-to-br from-[#063e8e] to-[#0f4a9f] p-6 text-white shadow-[0_16px_30px_rgba(6,62,142,0.18)] lg:block">
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/75">
                   Preview chi nhánh
                 </div>
@@ -1034,16 +1036,16 @@ export default function AdminBaseConfigPage() {
                   className="rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Luu cấu hình
+                  Lưu cấu hình
                 </Button>
               </div>
             </CardHeader>
 
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-4 sm:px-6">
               {sortedSocials.map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5"
+                  className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-4 sm:p-5"
                 >
                   <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)_180px] lg:items-end">
                     <div className="flex items-center gap-3 rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-4">

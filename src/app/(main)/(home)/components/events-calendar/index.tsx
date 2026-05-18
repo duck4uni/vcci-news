@@ -5,6 +5,7 @@ import { addMonths, format, getDay, startOfMonth, subMonths } from "date-fns";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 
 const weekDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
@@ -17,7 +18,13 @@ const isTrainingEvent = (item: HomePostItem) =>
     return key.includes("đào tạo") || key.includes("dao-tao");
   });
 
-function EventsCalendar() {
+function EventsCalendar({
+  className,
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const { eventCalendarPosts } = useHomePosts();
 
   const firstEventDate = eventCalendarPosts[0]?.registrationDeadline
@@ -71,18 +78,36 @@ function EventsCalendar() {
   const highlightedEvent = selectedEvents[0] ?? monthEvents[0];
 
   return (
-    <aside className="w-full rounded-[28px] bg-white p-4 text-[#24469c] shadow-[0_18px_38px_rgba(16,61,130,0.16)] md:p-5 xl:w-[28%] xl:min-w-[320px]">
+    <aside
+      className={cn(
+        "w-full rounded-[28px] bg-white text-[#24469c] shadow-[0_18px_38px_rgba(16,61,130,0.16)]",
+        compact ? "p-4" : "p-4 md:p-5",
+        className ?? "xl:w-[28%] xl:min-w-[320px]",
+      )}
+    >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="client-section-title uppercase">
+        <div className="min-w-0">
+          <h2
+            className={cn(
+              "uppercase",
+              compact
+                ? "text-[26px] font-bold leading-tight tracking-normal"
+                : "client-section-title",
+            )}
+          >
             Lịch sự kiện
           </h2>
-          <p className="mt-1.5 text-[12px] uppercase tracking-[0.28em] text-[#7f8eab]">
+          <p
+            className={cn(
+              "mt-1.5 text-[12px] uppercase text-[#7f8eab]",
+              compact ? "tracking-[0.18em]" : "tracking-[0.28em]",
+            )}
+          >
             {`THÁNG ${format(currentMonth, "MM/yyyy")}`}
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex shrink-0 gap-2">
           <button
             type="button"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -100,8 +125,8 @@ function EventsCalendar() {
         </div>
       </div>
 
-      <div className="mt-3 h-[4px] w-[60px] rounded-full bg-[#f7b500]" />
-      <div className="mt-4 border-t border-[#ebf0f8] pt-3.5">
+      <div className={cn("h-[4px] w-[60px] rounded-full bg-[#f7b500]", compact ? "mt-2.5" : "mt-3")} />
+      <div className={cn("border-t border-[#ebf0f8] pt-3.5", compact ? "mt-3" : "mt-4")}>
         <div className="grid grid-cols-7 gap-y-2.5 text-center text-[11px] font-semibold uppercase text-[#9aabc6]">
           {weekDays.map((day) => (
             <div key={day}>{day}</div>
@@ -159,7 +184,7 @@ function EventsCalendar() {
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-5 text-[12px] font-medium text-[#45608f]">
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] font-medium text-[#45608f]">
         <div className="flex items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#1e3f9a]" />
           <span>Sự kiện</span>

@@ -143,12 +143,12 @@ function Header() {
                 {"\u0110\u0103ng K\u00fd H\u1ed9i Vi\u00ean"}
               </Link>
             </div>
-            <Link
+            {/* <Link
               className="px-3 py-1 text-[13px] font-medium text-white transition hover:opacity-80"
               href="/site-map"
             >
               Sitemap
-            </Link>
+            </Link> */}
             <Link
               className="px-3 py-1 text-[13px] font-medium text-white transition hover:opacity-80"
               href="https://vccihcm.vn/lien-he"
@@ -252,13 +252,15 @@ function Header() {
       </div>
 
       <div
-        className={`overflow-hidden border-t border-slate-200 bg-white transition-all duration-300 lg:hidden ${
-          toggleMenu ? "max-h-[520px] opacity-100" : "max-h-0 opacity-0"
+        className={`fixed left-0 right-0 top-[80px] z-40 border-t border-slate-200 bg-white transition-all duration-300 lg:hidden ${
+          toggleMenu
+            ? "pointer-events-auto h-[calc(100dvh-80px)] translate-y-0 opacity-100"
+            : "pointer-events-none h-[calc(100dvh-80px)] -translate-y-2 opacity-0"
         }`}
       >
-        <div className="px-4 py-3">
+        <div className="flex h-full flex-col overflow-y-auto overscroll-contain px-4 py-3">
           <input
-            className="h-11 w-full rounded-md border border-slate-200 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-[#2f57ff]"
+            className="h-11 w-full shrink-0 rounded-md border border-slate-200 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-[#2f57ff]"
             type="text"
             placeholder={"T\u00ecm ki\u1ebfm"}
             onKeyDown={(e) => {
@@ -270,34 +272,34 @@ function Header() {
               }
             }}
           />
-        </div>
 
-        <div className="pb-3">
-          {menuItems.map((category) => (
-            <div key={category.id} className="border-t border-slate-100 first:border-t-0">
-              <Link
-                href={category.url || "#"}
-                className="block px-5 py-3 text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#2f57ff]"
-                onClick={() => setToggleMenu(false)}
-              >
-                {category.name}
-              </Link>
-              {category.children.length > 0 ? (
-                <div className="pb-2 pl-8 pr-5">
-                  {category.children.map((child) => (
-                    <Link
-                      key={child.id}
-                      href={child.url || "#"}
-                      className="block py-2 text-sm text-slate-500 transition hover:text-[#2f57ff]"
-                      onClick={() => setToggleMenu(false)}
-                    >
-                      {child.name}
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
-            </div>
-          ))}
+          <div className="pb-6">
+            {menuItems.map((category) => (
+              <div key={category.id} className="border-t border-slate-100 first:border-t-0">
+                <Link
+                  href={category.url || "#"}
+                  className="block px-5 py-3 text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#2f57ff]"
+                  onClick={() => setToggleMenu(false)}
+                >
+                  {category.name}
+                </Link>
+                {category.children.length > 0 ? (
+                  <div className="pb-2 pl-8 pr-5">
+                    {category.children.map((child) => (
+                      <Link
+                        key={child.id}
+                        href={child.url || "#"}
+                        className="block py-2 text-sm text-slate-500 transition hover:text-[#2f57ff]"
+                        onClick={() => setToggleMenu(false)}
+                      >
+                        {child.name}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </header>
