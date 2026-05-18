@@ -317,6 +317,12 @@ export default function AdminNewsPage() {
       filters.push(`category.id==${categoryFilter}`);
     }
 
+    if (typeFilter === "tintuc") {
+      filters.push("type==news");
+    } else if (typeFilter === "baiviettrang") {
+      filters.push("type==page");
+    }
+
     if (statusFilter === "visible") {
       filters.push("is_hidden==false");
     } else if (statusFilter === "hidden") {
@@ -324,7 +330,7 @@ export default function AdminNewsPage() {
     }
 
     return filters.join(",");
-  }, [categoryFilter, debouncedSearch, statusFilter]);
+  }, [categoryFilter, debouncedSearch, statusFilter, typeFilter]);
 
   const load = React.useCallback(async () => {
     setReady(false);
@@ -387,14 +393,6 @@ export default function AdminNewsPage() {
     );
   }, [headerItems]);
 
-  const filteredItems = React.useMemo(() => {
-    if (typeFilter === "all") {
-      return items;
-    }
-
-    return items.filter((item) => item.type === typeFilter);
-  }, [items, typeFilter]);
-
   const stats = React.useMemo(() => {
     return [
       {
@@ -452,7 +450,9 @@ export default function AdminNewsPage() {
         actionLabel="Thêm bài viết"
         actionIcon={<Plus className="mr-2 h-4 w-4" />}
         onSearchChange={setSearch}
-        onActionClick={() => router.push("/admin/news/new")}
+        onActionClick={() =>
+          router.push(`/admin/news/new?returnTo=${encodeURIComponent(listPath)}`)
+        }
         filters={
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
@@ -531,14 +531,14 @@ export default function AdminNewsPage() {
             <TableBody>
               {!ready ? (
                 <AdminNewsTableLoading />
-              ) : filteredItems.length === 0 ? (
+              ) : items.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={7} className="py-12 text-center text-sm text-gray-700">
                     Không có bài viết nào phù hợp.
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredItems.map((item, index) => {
+                items.map((item, index) => {
                   const categoryNames = getDisplayCategoryNames(item, headerItems);
                   const primaryCategoryName = categoryNames[0] ?? "\u2014";
                   const extraCategoryCount = Math.max(categoryNames.length - 1, 0);

@@ -7,7 +7,7 @@ import useAuthStore, {
 } from "@/store/useAuthStore";
 
 const AUTH_BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/v1.0/auth`;
-const SESSION_EXPIRED_MESSAGE = "Phi?n dang nh?p d? h?t h?n. Vui l?ng dang nh?p l?i.";
+const SESSION_EXPIRED_MESSAGE = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
 
 interface AuthEnvelope<T> {
   message?: string | null;
@@ -50,6 +50,7 @@ interface RefreshResponseData {
 
 interface AuthRequestOptions extends RequestInit {
   skipAuthHeader?: boolean;
+  authToken?: string | null;
 }
 
 type AuthFailureReason = "missing_refresh_token" | "refresh_failed";
@@ -114,7 +115,7 @@ async function requestAuth<T>(
   headers.set("Content-Type", "application/json");
 
   if (!init?.skipAuthHeader) {
-    const token = useAuthStore.getState().appAccessToken;
+    const token = init?.authToken ?? useAuthStore.getState().appAccessToken;
     if (token && !headers.has("Authorization")) {
       headers.set("Authorization", `Bearer ${token}`);
     }
@@ -178,6 +179,7 @@ export async function loginAdmin(email: string, password: string) {
 
   const me = await requestAuth<MeResponseData>("/me", {
     method: "GET",
+    authToken: payload.access_token,
   }).catch(() => payload.user ?? null);
 
   const normalizedUser = normalizeUser(me ?? payload.user);

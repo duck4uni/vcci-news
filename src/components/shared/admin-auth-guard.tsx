@@ -75,43 +75,59 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const accessTokenExpired = useAuthStore((state) => state.appAccessTokenExpired);
   const refreshToken = useAuthStore((state) => state.appRefreshToken);
   const isRefreshing = useAuthStore((state) => state.appIsRefreshing);
-  const [isRestoringSession, setIsRestoringSession] = useState(false);
+  const [authCheckState, setAuthCheckState] = useState<"idle" | "checking" | "ready">("idle");
+  const redirectParam = encodeURIComponent(pathname || "/admin");
 
   useEffect(() => {
-    if (!hasHydrated || pathname === LOGIN_PATH) return;
+    if (pathname === LOGIN_PATH) {
+      setAuthCheckState("ready");
+      return;
+    }
+
+    if (!hasHydrated) {
+      setAuthCheckState("idle");
+      return;
+    }
 
     let cancelled = false;
 
     const restoreSession = async () => {
-      const needsRefresh = Boolean(
+      setAuthCheckState("checking");
+
+      const hasValidAccessToken = Boolean(
         accessToken &&
-          accessTokenExpired &&
-          accessTokenExpired <= Date.now() &&
-          refreshToken,
+          isLoggedIn &&
+          (!accessTokenExpired || accessTokenExpired > Date.now()),
       );
 
-      if (accessToken && isLoggedIn && !needsRefresh) return;
-
-      if (!refreshToken) {
-        router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
+      if (hasValidAccessToken) {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+        }
         return;
       }
 
-      setIsRestoringSession(true);
+      if (!refreshToken) {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+        }
+        return;
+      }
 
       try {
         const nextToken = await ensureValidAdminAccessToken();
 
         if (!nextToken && !cancelled) {
-          router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
+          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
         }
       } catch {
         if (!cancelled) {
-          router.replace(`${LOGIN_PATH}?redirect=${encodeURIComponent(pathname)}`);
+          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
         }
       } finally {
         if (!cancelled) {
-          setIsRestoringSession(false);
+          setAuthCheckState("ready");
         }
       }
     };
@@ -121,13 +137,22 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, accessTokenExpired, hasHydrated, isLoggedIn, pathname, refreshToken, router]);
+  }, [
+    accessToken,
+    accessTokenExpired,
+    hasHydrated,
+    isLoggedIn,
+    pathname,
+    redirectParam,
+    refreshToken,
+    router,
+  ]);
 
   if (pathname === LOGIN_PATH) {
     return <>{children}</>;
   }
 
-  if (!hasHydrated || isRefreshing || isRestoringSession) {
+  if (!hasHydrated || isRefreshing || authCheckState !== "ready") {
     return <AdminAuthLoadingScreen />;
   }
 
