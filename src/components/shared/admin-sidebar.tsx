@@ -70,7 +70,7 @@ const membersReservedSegments = new Set(['fields', 'regions']);
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { isOpen } = useSidebarStore();
+  const { close, isOpen } = useSidebarStore();
   const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({});
 
   const isItemActive = React.useCallback(
@@ -93,17 +93,22 @@ export function AdminSidebar() {
   const toggleGroup = (name: string) =>
     setExpandedGroups((previous) => ({ ...previous, [name]: !previous[name] }));
 
+  const handleMobileNavigate = () => {
+    if (window.innerWidth < 1024) close();
+  };
+
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen border-r border-[#063e8e]/10 bg-gradient-to-b from-[#f6f9ff] via-[#edf4ff] to-[#f8fbff] shadow-[0_18px_45px_rgba(6,62,142,0.08)] transition-all duration-300',
-        isOpen ? 'w-72' : 'w-24',
+        'fixed left-0 top-0 z-40 h-dvh border-r border-[#063e8e]/10 bg-gradient-to-b from-[#f6f9ff] via-[#edf4ff] to-[#f8fbff] shadow-[0_18px_45px_rgba(6,62,142,0.08)] transition-all duration-300',
+        isOpen ? 'w-72 translate-x-0 lg:w-72' : '-translate-x-full lg:w-24 lg:translate-x-0',
       )}
     >
       <div className="flex h-full flex-col">
         <div className={cn('px-4 pb-4 pt-5', !isOpen && 'px-3')}>
           <Link
             href="/admin/base-config"
+            onClick={handleMobileNavigate}
             className={cn(
               'flex items-center backdrop-blur-sm',
               isOpen
@@ -189,6 +194,7 @@ export function AdminSidebar() {
                           <Link
                             key={child.name}
                             href={child.href}
+                            onClick={handleMobileNavigate}
                             className={cn(
                               'group relative flex rounded-2xl px-4 py-3 text-sm leading-6 transition-all',
                               childActive
@@ -212,6 +218,7 @@ export function AdminSidebar() {
               <Link
                 key={item.name}
                 href={item.href || '#'}
+                onClick={handleMobileNavigate}
                 title={!isOpen ? item.name : undefined}
                 className={cn(
                   'flex items-center rounded-2xl text-sm font-medium transition-all duration-200',
@@ -233,6 +240,7 @@ export function AdminSidebar() {
             <div className="rounded-[28px] border border-white/80 bg-white/95 p-4 shadow-[0_14px_32px_rgba(6,62,142,0.08)]">
               <Link
                 href="/"
+                onClick={handleMobileNavigate}
                 className="flex items-center gap-3 text-sm font-semibold text-[#063e8e] transition hover:opacity-80"
               >
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#063e8e]">
@@ -250,6 +258,7 @@ export function AdminSidebar() {
           ) : (
             <Link
               href="/"
+              onClick={handleMobileNavigate}
               title="Về trang chủ"
               className="mx-auto flex h-14 w-14 items-center justify-center rounded-[22px] border border-white/80 bg-white/95 text-[#063e8e] shadow-sm transition hover:bg-white"
             >

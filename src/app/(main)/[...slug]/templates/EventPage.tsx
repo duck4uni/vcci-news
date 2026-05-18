@@ -61,17 +61,17 @@ export default function EventPage() {
   //template
   return (
     <>
-      <div className="min-h-screen container mx-auto">
+      <div className="container mx-auto min-h-screen px-4 py-6 sm:px-6 lg:px-10">
         {eventsLoading ? (
           <div className="flex justify-center items-center w-full h-64">
             <Spinner />
           </div>
         ) : (
-          <div className="w-full flex flex-col gap-5">
+          <div className="flex w-full flex-col gap-5">
             <ListCategory categories={categoriesPage?.responseData?.children} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <main className="lg:col-span-2 bg-background">
-                <div className="pb-5 overflow-hidden">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <main className="min-w-0 bg-background">
+                <div className="overflow-hidden pb-5">
                   {events?.responseData?.rows?.map((item) => (
                     <CardEvents
                       key={item.id}
@@ -92,7 +92,7 @@ export default function EventPage() {
                   </div>
                 </div>
               </main>
-              <aside className="space-y-6">
+              <aside className="min-w-0 space-y-6">
                 <ListFilter onSearch={setSubmitSearch} />
                 <EventCalendar />
               </aside>

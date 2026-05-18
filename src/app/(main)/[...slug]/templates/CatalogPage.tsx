@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -13,40 +13,24 @@ import {
   buildPostFilters,
   fetchDynamicPostList,
   resolveDynamicPostImage,
-  stripHtml,
 } from "./data";
 import type { DynamicCategoryRouteItem } from "./types";
 
-type ArticlePageProps = {
+type CatalogPageProps = {
   category: DynamicCategoryRouteItem;
   allCategories: DynamicCategoryRouteItem[];
 };
 
-const formatPostDate = (value?: string | null) => {
-  if (!value) return "";
+const getCatalogImageClassName = (index: number) =>
+  index % 4 === 0
+    ? "object-cover"
+    : index % 4 === 1
+      ? "object-contain bg-[#f0f3f8]"
+      : index % 4 === 2
+        ? "object-cover object-center"
+        : "object-contain bg-[#eef4fb]";
 
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  }).format(date);
-};
-
-const getTagClassName = (index: number) => {
-  const classes = [
-    "bg-[#eaf0ff] text-[#1f4fa3]",
-    "bg-[#e9f7ee] text-[#138040]",
-    "bg-[#fff0e3] text-[#d47a16]",
-    "bg-[#ffe9f0] text-[#d22f62]",
-  ];
-
-  return classes[index % classes.length];
-};
-
-export default function ArticlePage({ category, allCategories }: ArticlePageProps) {
+export default function CatalogPage({ category, allCategories }: CatalogPageProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -56,7 +40,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
   const [searchInput, setSearchInput] = useState("");
   const [submitSearch, setSubmitSearch] = useState("");
   const [page, setPage] = useState(initialPage);
-  const pageSize = 10;
+  const pageSize = 8;
   const keyword = submitSearch.trim();
 
   useEffect(() => {
@@ -77,7 +61,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
   }, [page, pathname, router, searchParamsString]);
 
   const postsQuery = useQuery({
-    queryKey: ["dynamic-posts", category.id, page, pageSize, keyword],
+    queryKey: ["catalog-posts", category.id, page, pageSize, keyword],
     queryFn: () =>
       fetchDynamicPostList({
         page,
@@ -97,16 +81,11 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
   const totalPages = postsQuery.data?.totalPages ?? 1;
   const currentPage = Math.min(page, totalPages);
   const paginatedPosts = postsQuery.data?.rows ?? [];
-  const categoryIndexMap = useMemo(() => {
-    const entries = allCategories.map((item, index) => [item.id, index] as const);
-
-    return new Map(entries);
-  }, [allCategories]);
 
   return (
     <div className="min-h-screen bg-[#fbfbfa]">
       {postsQuery.isLoading ? (
-        <div className="flex justify-center items-center w-full h-64">
+        <div className="flex h-64 w-full items-center justify-center">
           <Spinner />
         </div>
       ) : (
@@ -120,80 +99,50 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
 
           <div className="flex flex-col gap-10 xl:flex-row xl:gap-14">
             <main className="order-2 min-w-0 xl:order-1 xl:flex-1">
-              <div className="space-y-9">
-                {paginatedPosts.length ? (
-                  paginatedPosts.map((item, index) => {
-                    const fallbackDescription = item.content_structure?.post_content
-                      ?.map((section) => section.content)
-                      .join(" ");
-                    const description =
-                      item.summary ||
-                      stripHtml(item.content) ||
-                      stripHtml(fallbackDescription);
-                    const primaryCategory = item.categories[0];
-                    const tagIndex = categoryIndexMap.get(primaryCategory?.id ?? "") ?? index;
-                    const date = formatPostDate(
-                      item.release_at ?? item.published_at ?? item.created_at,
-                    );
-
+              {paginatedPosts.length ? (
+                <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 xl:grid-cols-4 xl:gap-6">
+                  {paginatedPosts.map((item, index) => {
                     return (
-                      <article
+                      <Link
                         key={item.id}
-                        className="border-b border-[#eceff3] pb-8 last:border-b-0"
+                        href={item.external_link}
+                        className="group block"
                       >
-                        <Link
-                          href={item.external_link}
-                          className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
-                        >
-                          <div className="overflow-hidden rounded-md bg-[#edf1f5]">
+                        <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">
+                          <div className="relative aspect-[3/4] overflow-hidden bg-white">
                             <ImageNext
                               src={resolveDynamicPostImage(item.thumbnail)}
                               alt={item.title}
                               width={520}
-                              height={360}
-                              className="h-[170px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:h-[150px]"
+                              height={693}
+                              className={`h-full w-full transition-transform duration-500 group-hover:scale-[1.03] ${getCatalogImageClassName(index)}`}
                             />
                           </div>
+                        </div>
 
-                          <div className="min-w-0 pt-1">
-                            <div className="flex flex-wrap items-center gap-3 text-xs">
-                              <span
-                                className={`rounded-full px-2.5 py-1 font-semibold ${getTagClassName(tagIndex)}`}
-                              >
-                                {primaryCategory?.name || category.name}
-                              </span>
-                              {date ? <span className="text-[#9aa3ad]">{date}</span> : null}
-                            </div>
-
-                            <h2 className="mt-3 line-clamp-2 text-[18px] font-bold leading-snug text-[#111827] transition-colors group-hover:text-[#144c9c]">
-                              {item.title}
-                            </h2>
-
-                            {description ? (
-                              <p className="mt-2 line-clamp-3 text-sm leading-6 text-[#5f6875]">
-                                {description}
-                              </p>
-                            ) : null}
-                          </div>
-                        </Link>
-                      </article>
+                        <div className="px-1 pt-3 text-center">
+                          <h2 className="line-clamp-2 text-[14px] leading-[1.45] text-[#1f2f57]">
+                            {item.title}
+                          </h2>
+                        </div>
+                      </Link>
                     );
-                  })
-                ) : (
-                  <div className="rounded-2xl border border-[#edf1f5] bg-white px-6 py-12 text-center text-gray-600">
-                    {"Ch\u01b0a c\u00f3 b\u00e0i vi\u1ebft ph\u00f9 h\u1ee3p trong danh m\u1ee5c n\u00e0y."}
-                  </div>
-                )}
-
-                <div className="flex w-full justify-center pt-2">
-                  <Pagination
-                    pageCount={totalPages}
-                    page={currentPage}
-                    onChangePage={setPage}
-                    onGoToPreviousPage={() => setPage(Math.max(1, currentPage - 1))}
-                    onGoToNextPage={() => setPage(Math.min(totalPages, currentPage + 1))}
-                  />
+                  })}
                 </div>
+              ) : (
+                <div className="rounded-2xl border border-[#edf1f5] bg-white px-6 py-12 text-center text-gray-600">
+                  {"Ch\u01b0a c\u00f3 b\u00e0i vi\u1ebft ph\u00f9 h\u1ee3p trong danh m\u1ee5c n\u00e0y."}
+                </div>
+              )}
+
+              <div className="flex w-full justify-center pt-8">
+                <Pagination
+                  pageCount={totalPages}
+                  page={currentPage}
+                  onChangePage={setPage}
+                  onGoToPreviousPage={() => setPage(Math.max(1, currentPage - 1))}
+                  onGoToNextPage={() => setPage(Math.min(totalPages, currentPage + 1))}
+                />
               </div>
             </main>
 

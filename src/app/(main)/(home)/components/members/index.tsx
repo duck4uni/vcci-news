@@ -5,11 +5,17 @@ import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import memberImages from "@/constants/memberImages";
 import Link from "next/link";
 
+const MEMBER_CONNECTION_FALLBACK_IMAGE = "/home/20-2048x1365.webp";
+
 function Members() {
   const { memberConnectionPosts, categoryLinks, categoryNames } = useHomePosts();
   const featuredConnection = memberConnectionPosts[0];
   const sectionLink =
     categoryLinks.get(categoryNames.ketNoiHoiVien.toLowerCase()) ?? "/hoi-vien/ket-noi-hoi-vien";
+  const connectionImage =
+    featuredConnection?.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE;
+  const connectionImageAlt =
+    featuredConnection?.thumbnail?.alt || featuredConnection?.title || "VCCI HCM";
 
   return (
     <section className="flex flex-col gap-5 pb-8 xl:flex-row xl:items-stretch">
@@ -62,26 +68,20 @@ function Members() {
           </div>
         </div>
 
-        {featuredConnection ? (
-          <Link
-            href={featuredConnection.externalLink}
-            className="block overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
-          >
-            <div className="aspect-[1.25/1] overflow-hidden rounded-[20px]">
-              <ImageNext
-                src={featuredConnection.thumbnail?.url ?? "/thumbnail.png"}
-                alt={featuredConnection.thumbnail?.alt || featuredConnection.title}
-                width={520}
-                height={420}
-                className="h-full w-full object-cover"
-              />
-            </div>
-          </Link>
-        ) : (
-          <div className="overflow-hidden rounded-[20px] bg-[#eef3fb] shadow-[0_16px_32px_rgba(31,59,124,0.08)]">
-            <div className="aspect-[1.25/1] rounded-[20px] bg-[#e3ebf8]" />
+        <Link
+          href={sectionLink}
+          className="block overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+        >
+          <div className="aspect-[1.25/1] overflow-hidden rounded-[20px]">
+            <ImageNext
+              src={connectionImage}
+              alt={connectionImageAlt}
+              width={520}
+              height={420}
+              className="h-full w-full object-cover"
+            />
           </div>
-        )}
+        </Link>
       </aside>
     </section>
   );

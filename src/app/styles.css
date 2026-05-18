@@ -52,6 +52,19 @@
   --tiptap-rose: oklch(0.72 0.17 13);
 }
 
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+canvas,
+svg {
+  max-width: 100%;
+}
+
 @layer components {
   .tiptap {
     @apply border-gray-200;

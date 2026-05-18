@@ -67,8 +67,8 @@ export function AdminHeader() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-[#063e8e]/15 bg-background/95 shadow-sm backdrop-blur supports-backdrop-filter:bg-background/80">
-      <div className="flex h-16 items-center justify-between px-4 lg:px-6">
-        <div className="flex items-center gap-4">
+      <div className="flex min-h-16 items-center justify-between gap-3 px-3 py-2 sm:px-4 lg:px-6">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -78,11 +78,11 @@ export function AdminHeader() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-xl font-bold text-[#063e8e]">{title}</h1>
+          <h1 className="truncate text-base font-bold text-[#063e8e] sm:text-xl">{title}</h1>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-full border border-[#063e8e]/10 bg-[#f8fbff] px-3 py-1.5 text-sm font-medium text-[#163b73]">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="hidden items-center gap-2 rounded-full border border-[#063e8e]/10 bg-[#f8fbff] px-3 py-1.5 text-sm font-medium text-[#163b73] sm:flex">
             <ShieldCheck className="h-4 w-4 text-[#063e8e]" />
             <span>{formatRoles(currentUser?.roles)}</span>
           </div>
@@ -93,7 +93,7 @@ export function AdminHeader() {
             className="border-[#063e8e]/15 text-[#063e8e]"
           >
             <LogOut className="h-4 w-4" />
-            Đăng xuất
+            <span className="hidden sm:inline">Đăng xuất</span>
           </Button>
         </div>
       </div>
