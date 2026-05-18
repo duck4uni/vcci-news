@@ -1,20 +1,13 @@
 'use client';
 
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import ImageNext from "@/components/shared/image-next";
 import Link from "next/link";
 
-const quickLinks = [
-  {
-    href: "https://vcci-hcm.org.vn/lien-ket-nhanh/doanh-nghiep-kien-nghi-ve-chinh-sach-va-phap-luat/",
-    label: "Doanh nghiệp kiến nghị về chính sách và pháp luật",
-  },
-  {
-    href: "https://vcci-hcm.org.vn/lien-ket-nhanh/cam-nang-huong-dan-dau-tu-kinh-doanh-tai-viet-nam-2023/",
-    label: "Cẩm nang hướng dẫn đầu tư kinh doanh tại Việt Nam",
-  },
-];
-
 function QuickLinks() {
+  const { quickLinkPosts } = useHomePosts();
+  const linkSlots = Array.from({ length: 4 }, (_, index) => quickLinkPosts[index] ?? null);
+
   return (
     <aside className="w-full xl:grid xl:w-[32%] xl:grid-rows-[0.74fr_0.88fr] xl:gap-4">
       <div className="rounded-[22px] border border-[#dbe4f2] bg-white p-4 shadow-[0_8px_24px_rgba(31,59,124,0.08)] xl:h-full">
@@ -23,17 +16,27 @@ function QuickLinks() {
         </h2>
         <div className="mt-3 h-[5px] w-[68px] rounded-full bg-[#f7b500]" />
 
-        <div className="mt-4 space-y-2.5">
-          {quickLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-start gap-3 text-[15px] leading-[1.32] text-[#556684] transition-colors hover:text-[#21408f]"
-            >
-              <span className="mt-1 text-[#e2a500]">›</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
+        <div className="mt-4 space-y-3">
+          {linkSlots.map((item, index) =>
+            item ? (
+              <Link
+                key={item.id}
+                href={item.externalLink}
+                className="flex items-start gap-3 text-[15px] leading-[1.32] text-[#556684] transition-colors hover:text-[#21408f]"
+              >
+                <span className="mt-1 text-[#e2a500]">›</span>
+                <span className="line-clamp-1">{item.title}</span>
+              </Link>
+            ) : (
+              <div
+                key={`quick-link-placeholder-${index}`}
+                className="flex items-start gap-3"
+              >
+                <span className="mt-1 h-4 w-2 shrink-0 rounded bg-[#f5d774]" />
+                <span className="h-5 w-5/6 rounded bg-[#eef3fb]" />
+              </div>
+            ),
+          )}
         </div>
       </div>
 

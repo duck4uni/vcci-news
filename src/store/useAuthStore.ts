@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { devtools, persist } from "zustand/middleware";
+import { createJSONStorage, devtools, persist } from "zustand/middleware";
 
 export interface AuthenticatedAdminUser {
   id: string;
@@ -23,13 +23,16 @@ export interface AuthSessionPayload {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
+  accessTokenExpired?: number | null;
   user: AuthenticatedAdminUser | null;
   session: AuthenticatedAdminSession | null;
+  persistSession?: boolean;
 }
 
 export interface AuthRefreshPayload {
   accessToken: string;
   expiresIn: number;
+  accessTokenExpired?: number | null;
   refreshToken?: string | null;
   session?: AuthenticatedAdminSession | null;
 }
@@ -41,6 +44,7 @@ export interface AuthStoreStateType {
   appRefreshToken: string | null;
   appSession: AuthenticatedAdminSession | null;
   appUser: AuthenticatedAdminUser | null;
+  appPersistSession: boolean;
   appIsRefreshing: boolean;
   appSessionExpiredNotified: boolean;
   appUserRemember: {
@@ -62,8 +66,17 @@ export interface AuthStoreStateType {
   resetStore: () => void;
 }
 
+const ACCESS_TOKEN_EXPIRY_SKEW_SECONDS = 300;
+
 const getAccessTokenExpiredAt = (expiresIn: number) =>
-  Date.now() + Math.max(expiresIn - 300, 0) * 1000;
+  Date.now() + Math.max(expiresIn - ACCESS_TOKEN_EXPIRY_SKEW_SECONDS, 0) * 1000;
+
+const getRefreshTokenExpiredAt = (session?: AuthenticatedAdminSession | null) => {
+  if (!session?.refresh_expires_at) return null;
+
+  const time = new Date(session.refresh_expires_at).getTime();
+  return Number.isFinite(time) ? time : null;
+};
 
 const baseState = {
   appIsLoggedIn: false,
@@ -72,6 +85,7 @@ const baseState = {
   appRefreshToken: null,
   appSession: null,
   appUser: null,
+  appPersistSession: false,
   appIsRefreshing: false,
   appSessionExpiredNotified: false,
   appUserRemember: null,
@@ -85,8 +99,65 @@ const clearSessionState = {
   appRefreshToken: null,
   appSession: null,
   appUser: null,
+  appPersistSession: false,
   appIsRefreshing: false,
   appSessionExpiredNotified: false,
+};
+
+const normalizePersistedAuthState = (
+  persistedState: unknown,
+  currentState: AuthStoreStateType,
+) => {
+  const storageState =
+    typeof persistedState === "object" &&
+    persistedState !== null &&
+    "state" in persistedState &&
+    typeof (persistedState as { state?: unknown }).state === "object" &&
+    (persistedState as { state?: unknown }).state !== null
+      ? (persistedState as { state: unknown }).state
+      : persistedState;
+  const persisted =
+    typeof storageState === "object" && storageState !== null
+      ? (storageState as Partial<AuthStoreStateType>)
+      : {};
+  const rememberState = persisted.appUserRemember ?? currentState.appUserRemember;
+  const persistSession = persisted.appPersistSession === true;
+  const refreshTokenExpiredAt = getRefreshTokenExpiredAt(persisted.appSession ?? null);
+  const hasUsableSession =
+    persistSession &&
+    Boolean(persisted.appRefreshToken) &&
+    (!refreshTokenExpiredAt || refreshTokenExpiredAt > Date.now()) &&
+    (!persisted.appAccessTokenExpired ||
+      typeof persisted.appAccessTokenExpired === "number");
+
+  if (!hasUsableSession) {
+    return {
+      ...currentState,
+      ...clearSessionState,
+      appUserRemember: rememberState,
+    };
+  }
+
+  return {
+    ...currentState,
+    ...persisted,
+    appPersistSession: true,
+    appUserRemember: rememberState,
+    appIsRefreshing: false,
+  };
+};
+
+const shouldPersistAuthStorage = (value: string) => {
+  try {
+    const parsed = JSON.parse(value) as {
+      state?: Partial<AuthStoreStateType>;
+    };
+    const state = parsed.state ?? {};
+
+    return state.appPersistSession === true || state.appUserRemember?.remember === true;
+  } catch {
+    return true;
+  }
 };
 
 const useAuthStore = create<AuthStoreStateType>()(
@@ -102,22 +173,31 @@ const useAuthStore = create<AuthStoreStateType>()(
           set(() => ({
             appIsLoggedIn: isLoggedIn,
           })),
-        setAuthSession: ({ accessToken, refreshToken, expiresIn, user, session }) =>
+        setAuthSession: ({
+          accessToken,
+          refreshToken,
+          expiresIn,
+          accessTokenExpired,
+          user,
+          session,
+          persistSession = false,
+        }) =>
           set(() => ({
             appIsLoggedIn: true,
             appAccessToken: accessToken,
-            appAccessTokenExpired: getAccessTokenExpiredAt(expiresIn),
+            appAccessTokenExpired: accessTokenExpired ?? getAccessTokenExpiredAt(expiresIn),
             appRefreshToken: refreshToken,
             appSession: session,
             appUser: user,
+            appPersistSession: persistSession,
             appIsRefreshing: false,
             appSessionExpiredNotified: false,
           })),
-        updateAccessToken: ({ accessToken, expiresIn, refreshToken, session }) =>
+        updateAccessToken: ({ accessToken, expiresIn, accessTokenExpired, refreshToken, session }) =>
           set(() => ({
             appIsLoggedIn: true,
             appAccessToken: accessToken,
-            appAccessTokenExpired: getAccessTokenExpiredAt(expiresIn),
+            appAccessTokenExpired: accessTokenExpired ?? getAccessTokenExpiredAt(expiresIn),
             appRefreshToken: refreshToken ?? get().appRefreshToken,
             appSession: session ?? get().appSession,
             appIsRefreshing: false,
@@ -151,11 +231,14 @@ const useAuthStore = create<AuthStoreStateType>()(
         },
         setAppUserRemember: (username, password, remember) =>
           set(() => ({
-            appUserRemember: {
-              username,
-              password,
-              remember,
-            },
+            appPersistSession: remember,
+            appUserRemember: remember
+              ? {
+                  username,
+                  password,
+                  remember,
+                }
+              : null,
           })),
         resetStore: () => {
           const rememberedUser = get().appUserRemember;
@@ -164,27 +247,40 @@ const useAuthStore = create<AuthStoreStateType>()(
             appUserRemember: rememberedUser,
             _hasHydrated: true,
           }));
-
-          try {
-            localStorage.removeItem("app-auth-storage");
-          } catch {
-            // ignore
-          }
         },
       }),
       {
         name: "app-auth-storage",
+        storage: createJSONStorage(() => ({
+          getItem: (name) => localStorage.getItem(name),
+          setItem: (name, value) => {
+            if (shouldPersistAuthStorage(value)) {
+              localStorage.setItem(name, value);
+              return;
+            }
+
+            localStorage.removeItem(name);
+          },
+          removeItem: (name) => localStorage.removeItem(name),
+        })),
         partialize: (state) => ({
-          appIsLoggedIn: state.appIsLoggedIn,
-          appAccessToken: state.appAccessToken,
-          appAccessTokenExpired: state.appAccessTokenExpired,
-          appRefreshToken: state.appRefreshToken,
-          appSession: state.appSession,
-          appUser: state.appUser,
-          appSessionExpiredNotified: state.appSessionExpiredNotified,
+          appPersistSession: state.appPersistSession,
+          ...(state.appPersistSession
+            ? {
+                appIsLoggedIn: state.appIsLoggedIn,
+                appAccessToken: state.appAccessToken,
+                appAccessTokenExpired: state.appAccessTokenExpired,
+                appRefreshToken: state.appRefreshToken,
+                appSession: state.appSession,
+                appUser: state.appUser,
+                appSessionExpiredNotified: state.appSessionExpiredNotified,
+              }
+            : {}),
           appUserRemember: state.appUserRemember,
         }),
-        onRehydrateStorage: (state) => {
+        merge: (persistedState, currentState) =>
+          normalizePersistedAuthState(persistedState, currentState),
+        onRehydrateStorage: () => {
           return (state: AuthStoreStateType | undefined, error: unknown) => {
             if (error) {
               useAuthStore.persist.clearStorage();

@@ -15,7 +15,7 @@ function BusinessOpportunities() {
     "/xuc-tien-thuong-mai/co-hoi-kinh-doanh";
 
   return (
-    <section className="flex-1">
+    <section className="flex flex-1 flex-col">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
           <h2 className="client-section-title uppercase text-[#24469c]">
@@ -32,7 +32,7 @@ function BusinessOpportunities() {
         </Link>
       </div>
 
-      <div className="space-y-3">
+      <div className="flex min-h-[270px] flex-1 flex-col justify-between gap-3">
         {featuredItem ? (
           <Link
             href={featuredItem.externalLink}
@@ -52,13 +52,13 @@ function BusinessOpportunities() {
           </div>
         )}
 
-        <div className="space-y-2.5">
+        <div className="flex flex-col gap-2.5">
           {listSlots.map((item, index) =>
             item ? (
               <Link
                 key={item.id}
                 href={item.externalLink}
-                className="flex gap-3 rounded-[14px] px-0.5 py-1 transition-colors hover:bg-[#f8fafe]"
+                className="flex min-h-[58px] gap-3 rounded-[14px] px-0.5 py-1 transition-colors hover:bg-[#f8fafe]"
               >
                 <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500]" />
                 <div className="min-w-0">
@@ -73,7 +73,7 @@ function BusinessOpportunities() {
             ) : (
               <div
                 key={`business-placeholder-${index}`}
-                className="flex gap-3 rounded-[14px] px-0.5 py-1"
+                className="flex min-h-[58px] gap-3 rounded-[14px] px-0.5 py-1"
               >
                 <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500]/40" />
                 <div className="min-w-0 flex-1">
