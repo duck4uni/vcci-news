@@ -49,7 +49,7 @@ export interface AuthStoreStateType {
     remember: boolean;
   } | null;
   _hasHydrated: boolean;
-  setHasHydrated: (state: AuthStoreStateType) => void;
+  setHasHydrated: (hasHydrated?: boolean) => void;
   setAppIsLoggedIn: (isLoggedIn: boolean) => void;
   setAuthSession: (payload: AuthSessionPayload) => void;
   updateAccessToken: (payload: AuthRefreshPayload) => void;
@@ -94,9 +94,9 @@ const useAuthStore = create<AuthStoreStateType>()(
     persist(
       (set, get) => ({
         ...baseState,
-        setHasHydrated: (state: AuthStoreStateType) =>
+        setHasHydrated: (hasHydrated = true) =>
           set(() => ({
-            _hasHydrated: state != undefined,
+            _hasHydrated: hasHydrated,
           })),
         setAppIsLoggedIn: (isLoggedIn: boolean) =>
           set(() => ({
@@ -184,10 +184,13 @@ const useAuthStore = create<AuthStoreStateType>()(
           appSessionExpiredNotified: state.appSessionExpiredNotified,
           appUserRemember: state.appUserRemember,
         }),
-        onRehydrateStorage: () => {
+        onRehydrateStorage: (state) => {
           return (state: AuthStoreStateType | undefined, error: unknown) => {
-            if (error || state == undefined) return;
-            state.setHasHydrated(state);
+            if (error) {
+              useAuthStore.persist.clearStorage();
+            }
+
+            (state ?? useAuthStore.getState()).setHasHydrated(true);
           };
         },
       },

@@ -35,33 +35,34 @@ const navigation: NavItem[] = [
   { name: 'Quản lý bài viết', href: '/admin/news', icon: Newspaper },
   { name: 'Quản lý tag tìm kiếm', href: '/admin/tags', icon: Tags },
   { name: 'Quản lý video', href: '/admin/videos', icon: Video },
-  {
-    name: 'Quản lý hội viên',
-    icon: Users,
-    children: [
-      { name: 'Danh sách hội viên', href: '/admin/members' },
-      { name: 'Quản lý lĩnh vực', href: '/admin/members/fields' },
-      { name: 'Quản lý khu vực', href: '/admin/members/regions' },
-    ],
-  },
-  {
-    name: 'Quản lý liên hệ',
-    icon: Mail,
-    children: [
-      {
-        name: 'Quản lý Email đăng ký nhận thông tin',
-        href: '/admin/contact-management/newsletter-emails',
-      },
-      {
-        name: 'Quản lý Đơn liên hệ',
-        href: '/admin/contact-management/contact-requests',
-      },
-      {
-        name: 'Quản lý Đơn đăng ký hội viên',
-        href: '/admin/contact-management/membership-applications',
-      },
-    ],
-  },
+  // {
+  //   name: 'Quản lý hội viên',
+  //   icon: Users,
+  //   children: [
+  //     { name: 'Danh sách hội viên', href: '/admin/members' },
+  //     { name: 'Quản lý lĩnh vực', href: '/admin/members/fields' },
+  //     { name: 'Quản lý khu vực', href: '/admin/members/regions' },
+  //   ],
+  // },
+  // {
+  //   name: 'Quản lý liên hệ',
+  //   icon: Mail,
+  //   children: [
+  //     {
+  //       name: 'Quản lý Email đăng ký nhận thông tin',
+  //       href: '/admin/contact-management/newsletter-emails',
+  //     },
+  //     {
+  //       name: 'Quản lý Đơn liên hệ',
+  //       href: '/admin/contact-management/contact-requests',
+  //     },
+  //     {
+  //       name: 'Quản lý Đơn đăng ký hội viên',
+  //       href: '/admin/contact-management/membership-applications',
+  //     },
+  //   ],
+  // },
+  { name: 'Quản lý Email đăng ký', href: '/admin/contact-management/newsletter-emails', icon: Mail },
   { name: 'Quản lý ảnh', href: '/admin/media', icon: ImagePlus },
 ];
 

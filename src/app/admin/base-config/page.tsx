@@ -579,7 +579,7 @@ export default function AdminBaseConfigPage() {
             value="social"
             className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
           >
-            M?ng x? h?i
+            Mạng xã hội
           </TabsTrigger>
         </TabsList>
 
@@ -1022,9 +1022,9 @@ export default function AdminBaseConfigPage() {
             <CardHeader>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <CardTitle className="text-2xl text-[#163b73]">M?ng x? h?i</CardTitle>
+                  <CardTitle className="text-2xl text-[#163b73]">Mạng xã hội</CardTitle>
                   <CardDescription className="mt-2 text-sm text-slate-600">
-                    Qu?n l? link m?ng x? h?i v? th? t? hi?n th? tr?n website.
+                    Quản lý link mạng xã hội và thứ tự hiển thị trên website.
                   </CardDescription>
                 </div>
 
@@ -1034,7 +1034,7 @@ export default function AdminBaseConfigPage() {
                   className="rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Luu m?ng x? h?i
+                  Luu cấu hình
                 </Button>
               </div>
             </CardHeader>
