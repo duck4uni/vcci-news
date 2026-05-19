@@ -1,5 +1,5 @@
 import { EventItem } from '@/api/types/event'
-import BASE_URL from '@/links'
+import { resolveUploadUrl } from '@/links'
 import dayjs from 'dayjs';
 import AppEditorContent from '@/components/shared/editor-content';
 import Link from "next/link";
@@ -12,7 +12,7 @@ function CardEvent({ event }: { event: EventItem }) {
       className='flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3 p-2 sm:p-3 border border-gray-200 bg-white rounded-md'
     >
       <ImageNext
-        src={`${BASE_URL.imageEndpoint}${event.image}`}
+        src={resolveUploadUrl(event.image)}
         alt={event.name}
         className='aspect-3/2 object-cover'
         width={130}

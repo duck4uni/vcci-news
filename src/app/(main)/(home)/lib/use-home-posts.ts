@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useCustomClient } from "@/api/mutator/custom-client";
-import Links from "@/links";
+import Links, { resolveUploadUrl } from "@/links";
 
 type RawHomeCategory = {
   id?: string | null;
@@ -153,12 +153,8 @@ const resolveAssetUrl = (value?: string | null) => {
   const trimmed = value?.trim();
 
   if (!trimmed) return "/thumbnail.png";
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  if (trimmed.startsWith("/")) {
-    return `${Links.imageEndpoint.replace(/\/+$/, "")}${trimmed}`;
-  }
 
-  return `${Links.imageEndpoint}${trimmed.replace(/^\/+/, "")}`;
+  return resolveUploadUrl(trimmed);
 };
 
 const sortByPublishedDesc = (items: HomePostItem[]) =>

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCustomClient } from "@/api/mutator/custom-client";
+import { resolveUploadUrl } from "@/links";
 import { categoryFallbackRows } from "@/mockdata/categories";
 
 export type CmsHeaderCategoryType = "category" | "page" | "news";
@@ -350,7 +351,7 @@ const transformPost = (
           id: post.thumbnail.id,
           name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
           alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
-          url: post.thumbnail.path ?? "",
+          url: resolveUploadUrl(post.thumbnail.path),
         }
       : null,
     is_hidden: Boolean(post.is_hidden),

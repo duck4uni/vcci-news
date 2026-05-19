@@ -1,4 +1,5 @@
 import Axios, { AxiosError, AxiosHeaders, AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
+import links from "@/links";
 import {
   ensureValidAdminAccessToken,
   refreshAdminAccessToken,
@@ -10,7 +11,7 @@ interface RetriableAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 const createAxiosInstance = () => {
   const instance = Axios.create({
-    baseURL: `${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/v1.0`,
+    baseURL: links.apiEndpoint,
     withCredentials: true,
   });
 

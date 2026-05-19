@@ -1,6 +1,6 @@
 import type { Category } from "@/api/models/category";
 import { useCustomClient } from "@/api/mutator/custom-client";
-import Links from "@/links";
+import Links, { resolveUploadUrl } from "@/links";
 import { getCategoryFallbackResponse } from "@/mockdata/categories";
 import type {
   DynamicCategoryMenuItem,
@@ -293,10 +293,8 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
   const value = thumbnail?.path ?? thumbnail?.original ?? thumbnail?.url ?? "";
 
   if (!value) return "/thumbnail.png";
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  if (value.startsWith("/")) return `${Links.imageEndpoint.replace(/\/+$/, "")}${value}`;
 
-  return `${Links.imageEndpoint}${value.replace(/^\/+/, "")}`;
+  return resolveUploadUrl(value);
 }
 
 export function stripHtml(value?: string | null) {

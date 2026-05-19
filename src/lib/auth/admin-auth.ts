@@ -5,8 +5,9 @@ import useAuthStore, {
   type AuthenticatedAdminSession,
   type AuthenticatedAdminUser,
 } from "@/store/useAuthStore";
+import links from "@/links";
 
-const AUTH_BASE_URL = `${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/v1.0/auth`;
+const AUTH_BASE_URL = `${links.apiEndpoint}/auth`;
 const SESSION_EXPIRED_MESSAGE = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
 
 interface AuthEnvelope<T> {
