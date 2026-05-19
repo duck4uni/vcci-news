@@ -37,7 +37,7 @@ const frontendUrl = toUrl(frontendOrigin);
 const links = {
   analyticsGoogle: "G-C9TEK9BS4C",
   apiEndpoint: backendOrigin ? `${backendOrigin}/api/v1.0` : "/api/v1.0",
-  imageEndpoint: backendOrigin ? `${backendOrigin}/` : "/",
+  imageEndpoint: backendOrigin ? `${backendOrigin}/uploads/` : "/uploads/",
   backendHost: backendUrl?.hostname || "",
   backendProtocol: backendUrl?.protocol.replace(":", "") || "",
   backendPathname: backendUrl?.pathname.replace(/\/+$/, "") || "/",

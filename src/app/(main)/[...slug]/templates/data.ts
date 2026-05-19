@@ -294,7 +294,6 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
 
   if (!value) return "/thumbnail.png";
   if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  if (value.startsWith("/")) return `${Links.imageEndpoint.replace(/\/+$/, "")}${value}`;
 
   return `${Links.imageEndpoint}${value.replace(/^\/+/, "")}`;
 }

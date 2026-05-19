@@ -45,7 +45,6 @@ export const resolveCmsFileUrl = (path?: string | null) => {
 
   if (!value) return "/img-error.png";
   if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  if (value.startsWith("/")) return `${Links.imageEndpoint.replace(/\/+$/, "")}${value}`;
 
   return `${Links.imageEndpoint}${value.replace(/^\/+/, "")}`;
 };

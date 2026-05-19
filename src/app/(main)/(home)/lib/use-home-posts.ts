@@ -154,9 +154,6 @@ const resolveAssetUrl = (value?: string | null) => {
 
   if (!trimmed) return "/thumbnail.png";
   if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
-  if (trimmed.startsWith("/")) {
-    return `${Links.imageEndpoint.replace(/\/+$/, "")}${trimmed}`;
-  }
 
   return `${Links.imageEndpoint}${trimmed.replace(/^\/+/, "")}`;
 };

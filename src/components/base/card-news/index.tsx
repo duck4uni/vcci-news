@@ -22,8 +22,7 @@ const stripImagesAndHtml = (html?: string) => {
 const resolveThumbnail = (thumbnail?: string) => {
   if (!thumbnail) return "/img-error.png";
   if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  if (thumbnail.startsWith("/")) return `${Links.imageEndpoint.replace(/\/+$/, "")}${thumbnail}`;
-  return `${Links.imageEndpoint}${thumbnail}`;
+  return `${Links.imageEndpoint}${thumbnail.replace(/^\/+/, "")}`;
 };
 
 const CardNews = ({ news, link }: { news: NewsItem; link: string }) => {
