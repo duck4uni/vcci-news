@@ -1,10 +1,12 @@
 'use client';
 
-import { useHomePosts, type HomePostItem } from "@/app/(main)/(home)/lib/use-home-posts";
+import Link from "next/link";
 import { addMonths, format, getDay, startOfMonth, subMonths } from "date-fns";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useEventCalendarPosts, type HomePostItem } from "@/app/(main)/(home)/lib/use-home-posts";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 
 const weekDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
@@ -18,6 +20,16 @@ const isTrainingEvent = (item: HomePostItem) =>
     return key.includes("đào tạo") || key.includes("dao-tao");
   });
 
+const getDayVariant = (items: HomePostItem[]) => {
+  const hasTraining = items.some((item) => isTrainingEvent(item));
+  const hasEvent = items.some((item) => !isTrainingEvent(item));
+
+  if (hasTraining && hasEvent) return "mixed";
+  if (hasTraining) return "training";
+  if (hasEvent) return "event";
+  return "default";
+};
+
 function EventsCalendar({
   className,
   compact = false,
@@ -25,28 +37,14 @@ function EventsCalendar({
   className?: string;
   compact?: boolean;
 }) {
-  const { eventCalendarPosts } = useHomePosts();
-
-  const firstEventDate = eventCalendarPosts[0]?.registrationDeadline
-    ? new Date(eventCalendarPosts[0].registrationDeadline)
-    : new Date();
-
-  const [currentMonth, setCurrentMonth] = useState(
-    new Date(firstEventDate.getFullYear(), firstEventDate.getMonth(), 1),
-  );
+  const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
+  const eventCalendarQuery = useEventCalendarPosts(currentMonth);
+  const monthEvents = eventCalendarQuery.data ?? [];
 
-  const monthEvents = useMemo(
-    () =>
-      eventCalendarPosts.filter((item) => {
-        const date = new Date(item.registrationDeadline);
-        return (
-          date.getMonth() === currentMonth.getMonth() &&
-          date.getFullYear() === currentMonth.getFullYear()
-        );
-      }),
-    [currentMonth, eventCalendarPosts],
-  );
+  useEffect(() => {
+    setSelectedDateKey(null);
+  }, [currentMonth]);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
@@ -68,14 +66,21 @@ function EventsCalendar({
       const key = dayjs(item.registrationDeadline).format("YYYY-MM-DD");
       const existing = map.get(key) ?? [];
       existing.push(item);
-      map.set(key, existing);
+      map.set(
+        key,
+        existing.sort(
+          (left, right) =>
+            dayjs(left.registrationDeadline).valueOf() - dayjs(right.registrationDeadline).valueOf(),
+        ),
+      );
     });
 
     return map;
   }, [monthEvents]);
 
   const selectedEvents = selectedDateKey ? eventMap.get(selectedDateKey) ?? [] : [];
-  const highlightedEvent = selectedEvents[0] ?? monthEvents[0];
+  const highlightedEvents = selectedEvents.length > 0 ? selectedEvents : monthEvents.slice(0, 1);
+  const todayKey = dayjs().format("YYYY-MM-DD");
 
   return (
     <aside
@@ -112,6 +117,7 @@ function EventsCalendar({
             type="button"
             onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-[#dbe4f2] text-[#7f8eab] transition-colors hover:border-[#24469c] hover:text-[#24469c]"
+            aria-label="Tháng trước"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -119,64 +125,144 @@ function EventsCalendar({
             type="button"
             onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
             className="flex h-8 w-8 items-center justify-center rounded-full border border-[#dbe4f2] text-[#7f8eab] transition-colors hover:border-[#24469c] hover:text-[#24469c]"
+            aria-label="Tháng sau"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <div className={cn("h-[4px] w-[60px] rounded-full bg-[#f7b500]", compact ? "mt-2.5" : "mt-3")} />
-      <div className={cn("border-t border-[#ebf0f8] pt-3.5", compact ? "mt-3" : "mt-4")}>
+      <div className={cn("mt-3 h-[4px] w-[60px] rounded-full bg-[#f7b500]", compact && "mt-2.5")} />
+
+      <div className={cn("mt-4 border-t border-[#ebf0f8] pt-3.5", compact && "mt-3")}>
+        {eventCalendarQuery.isLoading ? (
+          <div className="mb-3 rounded-[16px] bg-[#f7f9fd] p-3 text-[12px] text-[#3d547f]">
+            Đang tải dữ liệu tháng này...
+          </div>
+        ) : null}
+
         <div className="grid grid-cols-7 gap-y-2.5 text-center text-[11px] font-semibold uppercase text-[#9aabc6]">
           {weekDays.map((day) => (
             <div key={day}>{day}</div>
           ))}
         </div>
 
-        <div className="mt-2.5 grid grid-cols-7 gap-y-2.5 text-center text-[13px] text-[#5e7090]">
+        <div className="mt-2.5 grid grid-cols-7 gap-y-3 text-center text-[13px] text-[#5e7090]">
           {days.map((day) => {
             const key = dayjs(day).format("YYYY-MM-DD");
             const items = eventMap.get(key) ?? [];
             const inMonth = day.getMonth() === currentMonth.getMonth();
-            const hasTraining = items.some((item) => isTrainingEvent(item));
-            const hasEvent = items.length > 0 && !hasTraining;
-            const tooltip = items.map((item) => item.title).join("\n");
             const selectable = inMonth && items.length > 0;
             const selected = selectable && selectedDateKey === key;
+            const isToday = key === todayKey;
+            const variant = getDayVariant(items);
+
+            const dayButton = (
+              <button
+                type="button"
+                disabled={!selectable}
+                onClick={() => setSelectedDateKey(key)}
+                aria-label={
+                  selectable
+                    ? `${format(day, "dd/MM/yyyy")} có ${items.length} hoạt động`
+                    : format(day, "dd/MM/yyyy")
+                }
+                className={cn(
+                  "relative flex h-8 w-8 items-center justify-center rounded-full text-[13px] transition-all sm:h-9 sm:w-9",
+                  !inMonth && "text-[#c9d2e2]",
+                  isToday && inMonth && !selectable && "bg-[#eef3fb] font-semibold text-[#24469c] ring-2 ring-[#d7e2f5]",
+                  variant === "training" && "bg-[#ffbc11] font-semibold text-[#163b73]",
+                  variant === "event" && "bg-[#1e3f9a] font-semibold text-white",
+                  variant === "mixed" &&
+                    "bg-[#1e3f9a] font-semibold text-white ring-2 ring-[#ffbc11] ring-offset-2 ring-offset-white",
+                  selectable
+                    ? "cursor-pointer hover:scale-[1.04] hover:shadow-[0_10px_20px_rgba(36,70,156,0.16)]"
+                    : "cursor-default",
+                  selected && variant !== "mixed" && "ring-2 ring-[#f7b500] ring-offset-2 ring-offset-white",
+                  isToday &&
+                    selectable &&
+                    !selected &&
+                    variant !== "mixed" &&
+                    "ring-2 ring-[#9fb3db] ring-offset-2 ring-offset-white",
+                )}
+              >
+                {format(day, "d")}
+                {items.length > 1 ? (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-[#f7b500] px-1 text-[10px] font-bold leading-none text-[#163b73] shadow-sm">
+                    {items.length}
+                  </span>
+                ) : null}
+                {isToday ? (
+                  <span className="absolute -bottom-5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.14em] text-[#7f8eab]"></span>
+                ) : null}
+              </button>
+            );
 
             return (
-              <div
-                key={key}
-                className="relative flex items-center justify-center"
-              >
-                <button
-                  type="button"
-                  title={tooltip || undefined}
-                  disabled={!selectable}
-                  onClick={() => setSelectedDateKey(key)}
-                  className={`relative flex h-7 w-7 items-center justify-center rounded-full transition-all ${
-                    !inMonth
-                      ? "text-[#c9d2e2]"
-                      : hasTraining
-                        ? "bg-[#ffbc11] font-semibold text-[#163b73]"
-                        : hasEvent
-                          ? "bg-[#1e3f9a] font-semibold text-white"
-                          : ""
-                  } ${
-                    selectable
-                      ? "cursor-pointer hover:ring-2 hover:ring-[#f7b500]/60"
-                      : "cursor-default"
-                  } ${selected ? "ring-2 ring-[#f7b500] ring-offset-2" : ""}`}
-                >
-                  {format(day, "d")}
-                </button>
+              <div key={key} className="relative flex items-center justify-center">
+                {selectable ? (
+                  <HoverCard openDelay={90} closeDelay={120}>
+                    <HoverCardTrigger asChild>{dayButton}</HoverCardTrigger>
+                    <HoverCardContent
+                      side="top"
+                      align="center"
+                      sideOffset={12}
+                      className="hidden w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-[20px] border border-[#d9e3f2] bg-white p-0 text-[#234171] shadow-[0_20px_45px_rgba(16,61,130,0.18)] lg:block"
+                    >
+                      <div className="flex items-center justify-between gap-3 border-b border-[#edf2f9] px-4 py-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f8eab]">
+                          {format(day, "dd/MM/yyyy")}
+                        </p>
+                        <p className="shrink-0 text-sm font-semibold text-[#24469c]">
+                          {items.length === 1 ? "1 hoạt động" : `${items.length} hoạt động`}
+                        </p>
+                      </div>
 
-                {items.length > 0 && !hasTraining && inMonth ? (
-                  <span className="absolute bottom-[-5px] h-1.5 w-1.5 rounded-full bg-[#1e3f9a]" />
-                ) : null}
+                      <div className="calendar-hover-scroll max-h-[260px] space-y-2.5 overflow-y-auto px-3 py-3">
+                        {items.map((item) => (
+                          <Link
+                            key={item.id}
+                            href={item.externalLink || "#"}
+                            className="block rounded-[16px] border border-[#e3ebf8] bg-[#fbfdff] px-3.5 py-3 transition-colors hover:border-[#c9d7ee] hover:bg-white"
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <span
+                                className={cn(
+                                  "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+                                  isTrainingEvent(item) ? "bg-[#ffbc11]" : "bg-[#1e3f9a]",
+                                )}
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="line-clamp-2 text-[13px] font-semibold leading-5 text-[#1f3768]">
+                                  {item.title}
+                                </p>
+                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6f84aa]">
+                                  <span>Hạn đăng ký: {formatDateTime(item.registrationDeadline)}</span>
+                                  <span>Chi phí: {item.participationFee || "Đang cập nhật"}</span>
+                                </div>
+                                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6f84aa]">
+                                  <span>Địa điểm: {item.location || "Đang cập nhật"}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </HoverCardContent>
+                  </HoverCard>
+                ) : (
+                  dayButton
+                )}
 
-                {items.length > 0 && hasTraining && inMonth ? (
-                  <span className="absolute bottom-[-5px] h-1.5 w-1.5 rounded-full bg-[#ffbc11]" />
+                {items.length > 0 && inMonth ? (
+                  <span
+                    className={cn(
+                      "absolute bottom-[-5px] h-1.5 w-1.5 rounded-full",
+                      variant === "training" && "bg-[#ffbc11]",
+                      variant === "event" && "bg-[#1e3f9a]",
+                      variant === "mixed" && "bg-[#24469c] shadow-[0_0_0_2px_#ffbc11]",
+                    )}
+                  />
                 ) : null}
               </div>
             );
@@ -184,35 +270,82 @@ function EventsCalendar({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12px] font-medium text-[#45608f]">
-        <div className="flex items-center gap-2">
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-[12px] font-medium text-[#45608f]">
+        <div className="flex items-center justify-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#1e3f9a]" />
           <span>Sự kiện</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#ffbc11]" />
           <span>Đào tạo</span>
         </div>
       </div>
 
-      {highlightedEvent ? (
-        <div className="mt-4 rounded-[16px] bg-[#f7f9fd] p-3.5 text-[12px] leading-5 text-[#3d547f]">
-          <div className="flex items-start gap-3">
-            <span
-              className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
-                isTrainingEvent(highlightedEvent) ? "bg-[#ffbc11]" : "bg-[#1e3f9a]"
-              }`}
-            />
-            <div className="min-w-0 space-y-1">
-              <p>
-                Hạn đăng ký: {formatDateTime(highlightedEvent.registrationDeadline)} · Chi phí:{" "}
-                {highlightedEvent.participationFee || "Đang cập nhật"}
+      {highlightedEvents.length > 0 ? (
+        <div className="mt-4 rounded-2xl bg-[#f7f9fd] p-3.5 text-[12px] leading-5 text-[#3d547f] lg:hidden">
+          {selectedEvents.length > 1 ? (
+            <div className="mb-3 flex items-center justify-between gap-3 border-b border-[#e5edf8] pb-2.5">
+              <p className="text-[12px] font-semibold text-[#24469c]">
+                {selectedEvents.length} hoạt động trong ngày này
               </p>
-              <p>Địa điểm: {highlightedEvent.location || "Đang cập nhật"}</p>
             </div>
+          ) : null}
+
+          <div className="space-y-3">
+            {highlightedEvents.map((item) => (
+              <div key={item.id} className="rounded-[14px] bg-white/70 px-3 py-2.5">
+                <div className="flex items-start gap-3">
+                  <span
+                    className={cn(
+                      "mt-1 h-2.5 w-2.5 shrink-0 rounded-full",
+                      isTrainingEvent(item) ? "bg-[#ffbc11]" : "bg-[#1e3f9a]",
+                    )}
+                  />
+                  <div className="min-w-0 space-y-1">
+                    <Link
+                      href={item.externalLink || "#"}
+                      className="line-clamp-2 text-[13px] font-semibold leading-5 text-[#1f3768] hover:text-[#24469c]"
+                    >
+                      {item.title}
+                    </Link>
+                    <p>
+                      Hạn đăng ký: {formatDateTime(item.registrationDeadline)} · Chi phí:{" "}
+                      {item.participationFee || "Đang cập nhật"}
+                    </p>
+                    <p>Địa điểm: {item.location || "Đang cập nhật"}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       ) : null}
+
+      <style jsx>{`
+        .calendar-hover-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: #9fb3db #eef3fb;
+        }
+
+        .calendar-hover-scroll::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .calendar-hover-scroll::-webkit-scrollbar-track {
+          border-radius: 9999px;
+          background: #eef3fb;
+        }
+
+        .calendar-hover-scroll::-webkit-scrollbar-thumb {
+          border: 2px solid #eef3fb;
+          border-radius: 9999px;
+          background: linear-gradient(180deg, #24469c 0%, #5a76bd 100%);
+        }
+
+        .calendar-hover-scroll::-webkit-scrollbar-thumb:hover {
+          background: linear-gradient(180deg, #1d3a86 0%, #4f6bb2 100%);
+        }
+      `}</style>
     </aside>
   );
 }

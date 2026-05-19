@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
 import { useCustomClient } from "@/api/mutator/custom-client";
 import Links, { resolveUploadUrl } from "@/links";
 
@@ -83,7 +84,7 @@ export type HomePostItem = {
   } | null;
 };
 
-const HOME_POSTS_QUERY_KEY = ["home-page-posts", "event-calendar-v1"] as const;
+const HOME_POSTS_QUERY_KEY = ["home-page-posts", "featured-page-size-3"] as const;
 
 const HOME_CATEGORY_NAMES = {
   tinVcci: "Tin VCCI",
@@ -251,10 +252,29 @@ function createCategoryPostsQuery(categoryId: string, pageSize: string) {
   });
 }
 
+function createEventCalendarQuery(currentMonth: Date) {
+  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  return new URLSearchParams({
+    sortField: "registration_deadline",
+    sortOrder: "asc",
+    filters: [
+      `category.id==(${HOME_CATEGORY_IDS.suKien}|${HOME_CATEGORY_IDS.daoTao})`,
+      `registration_deadline>=${dayjs(monthStart).format("YYYY-MM-DD HH:mm:ss")}`,
+      `registration_deadline<=${dayjs(monthEnd).format("YYYY-MM-DD HH:mm:ss")}`,
+      "is_hidden==false",
+      "is_active==true",
+      "status==published",
+      "type==news",
+    ].join(","),
+  });
+}
+
 async function fetchHomePosts() {
   const featuredQuery = new URLSearchParams({
     page: "1",
-    pageSize: "10",
+    pageSize: "3",
     sortField: "release_at",
     sortOrder: "desc",
     filters: [
@@ -516,4 +536,65 @@ export function useHomePosts() {
     categoryLinks,
     categoryNames: HOME_CATEGORY_NAMES,
   };
+}
+
+export function useEventCalendarPosts(currentMonth: Date) {
+  const query = useQuery({
+    queryKey: ["event-calendar-posts", currentMonth.getFullYear(), currentMonth.getMonth()],
+    queryFn: async () => {
+      const queryParams = createEventCalendarQuery(currentMonth);
+      const response = await useCustomClient<HomeEnvelope<HomePagedResult<RawHomePost>>>(
+        `/post?${queryParams.toString()}`,
+      );
+
+      return (response.responseData?.rows ?? []).map((item) => {
+        const categories = (item.categories ?? [])
+          .filter((category) => category?.id && category?.name)
+          .map((category) => ({
+            id: String(category.id),
+            name: String(category.name),
+            slug: String(category.slug ?? ""),
+            url: normalizeLink(category.url, "#"),
+            type: String(category.type ?? ""),
+          }));
+
+        const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
+        const title = String(item.title ?? "").trim();
+        const externalLink = normalizeLink(
+          item.external_link || (title ? `/${title}` : undefined),
+          "#",
+        );
+
+        return {
+          id: String(item.id ?? ""),
+          title,
+          externalLink,
+          summary: String(item.summary ?? item.content ?? ""),
+          createdAt: String(item.created_at ?? ""),
+          publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+          startedAt: String(item.started_at ?? ""),
+          endedAt: String(item.ended_at ?? ""),
+          registrationDeadline: String(item.registration_deadline ?? ""),
+          location: String(item.location ?? ""),
+          participationFee: String(item.participation_fee ?? ""),
+          expiredAt: String(item.expired_at ?? ""),
+          isFeatured: Boolean(item.is_featured),
+          isHidden: Boolean(item.is_hidden),
+          isActive: item.is_active !== false,
+          status: String(item.status ?? ""),
+          type: String(item.type ?? ""),
+          categories,
+          thumbnail: thumbnailPath
+            ? {
+                url: resolveAssetUrl(thumbnailPath),
+                alt: title,
+              }
+            : null,
+        } satisfies HomePostItem;
+      });
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  return query;
 }
