@@ -46,13 +46,37 @@ function StructuredImageSection({ section }: { section: DynamicPostContentSectio
   );
 }
 
+function normalizeCaptionShortcodes(html: string) {
+  return html.replace(/\[caption[^\]]*]([\s\S]*?)\[\/caption]/gi, (_match, innerContent: string) => {
+    const normalizedInnerContent = innerContent.trim();
+    const imageMatch = normalizedInnerContent.match(/(<img[\s\S]*?>)([\s\S]*)/i);
+
+    if (!imageMatch) {
+      return normalizedInnerContent;
+    }
+
+    const imageHtml = imageMatch[1]?.trim() ?? "";
+    const captionText = imageMatch[2]?.trim() ?? "";
+
+    if (!captionText) {
+      return imageHtml;
+    }
+
+    return `<figure>${imageHtml}<figcaption>${captionText}</figcaption></figure>`;
+  });
+}
+
+function renderStructuredHtml(html: string) {
+  return parse(normalizeCaptionShortcodes(html));
+}
+
 export default function StructuredPostContent({ post }: StructuredPostContentProps) {
   const sections = (post.content_structure?.post_content ?? [])
     .slice()
     .sort((left, right) => left.position - right.position);
 
   if (!sections.length) {
-    return <>{parse(getDynamicPostBodyHtml(post))}</>;
+    return <>{renderStructuredHtml(getDynamicPostBodyHtml(post))}</>;
   }
 
   const hasRenderableSection = sections.some(
@@ -60,7 +84,7 @@ export default function StructuredPostContent({ post }: StructuredPostContentPro
   );
 
   if (!hasRenderableSection) {
-    return <>{parse(getDynamicPostBodyHtml(post))}</>;
+    return <>{renderStructuredHtml(getDynamicPostBodyHtml(post))}</>;
   }
 
   return (
@@ -73,7 +97,7 @@ export default function StructuredPostContent({ post }: StructuredPostContentPro
         const content = section.content.trim();
         if (!content) return null;
 
-        return <div key={section.id}>{parse(content)}</div>;
+        return <div key={section.id}>{renderStructuredHtml(content)}</div>;
       })}
     </>
   );

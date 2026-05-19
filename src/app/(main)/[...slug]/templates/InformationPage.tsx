@@ -1,10 +1,23 @@
 'use client';
 
-import dayjs from "dayjs";
 import ListCategory from "@/components/base/list-category";
 import { buildDynamicCategoryMenu } from "./data";
-import StructuredPostContent from "./StructuredPostContent";
 import type { DynamicCategoryRouteItem, DynamicPostItem } from "./types";
+import {
+  ABOUT_VCCI_HCM_SLUG,
+  AboutVcciHcmPage,
+  DefaultInformationPage,
+  LEGAL_TRADE_PAGE_SLUG,
+  LegalTradePages,
+  MARKET_PROFILE_PAGE_SLUG,
+  MarketProfilePage,
+  MEMBER_REGISTRATION_PAGE_SLUG,
+  MEMBER_BENEFITS_PAGE_SLUG,
+  MemberRegistrationPage,
+  MemberBenefitsPage,
+  SERVICE_PAGE_SLUG,
+  ServicePage,
+} from "./information-pages";
 
 type InformationPageProps = {
   post: DynamicPostItem;
@@ -12,44 +25,118 @@ type InformationPageProps = {
   allCategories: DynamicCategoryRouteItem[];
 };
 
+const LEGAL_TRADE_CATEGORY_ID = "69b4c7e7-28ea-41f2-97f4-988fe702a8a3";
+const LEGAL_TRADE_CHILD_SLUGS = new Set([
+  "xuat-xu-hang-hoa-co",
+  "thu-tuc-cap-co",
+  "bieu-mau-co-va-cach-khai",
+  "phi-va-le-phi-cap-co",
+  "diem-cap-va-thoi-gian-cap-co",
+  "thong-tin-lien-he-co",
+]);
+
+function resolveInformationVariant(post: DynamicPostItem, category: DynamicCategoryRouteItem) {
+  if (
+    category.slug === ABOUT_VCCI_HCM_SLUG ||
+    post.slug === ABOUT_VCCI_HCM_SLUG ||
+    post.categories.some((item) => item.url === "/gioi-thieu/ve-vcci-hcm")
+  ) {
+    return "about-vcci-hcm" as const;
+  }
+
+  if (
+    category.slug === SERVICE_PAGE_SLUG ||
+    post.slug === SERVICE_PAGE_SLUG ||
+    post.categories.some((item) => item.url === "/gioi-thieu/dich-vu-cung-cap")
+  ) {
+    return "service" as const;
+  }
+
+  if (
+    category.slug === MEMBER_BENEFITS_PAGE_SLUG ||
+    post.slug === MEMBER_BENEFITS_PAGE_SLUG ||
+    post.categories.some((item) => item.url === "/hoi-vien/loi-ich-hoi-vien-vcci")
+  ) {
+    return "member-benefits" as const;
+  }
+
+  if (
+    category.slug === MEMBER_REGISTRATION_PAGE_SLUG ||
+    post.slug === MEMBER_REGISTRATION_PAGE_SLUG ||
+    post.categories.some((item) => item.url === "/hoi-vien/dang-ky-hoi-vien")
+  ) {
+    return "member-registration" as const;
+  }
+
+  if (
+    category.slug === MARKET_PROFILE_PAGE_SLUG ||
+    post.slug === MARKET_PROFILE_PAGE_SLUG ||
+    post.categories.some((item) => item.url === "/xuc-tien-thuong-mai/ho-so-thi-truong")
+  ) {
+    return "market-profile" as const;
+  }
+
+  if (
+    category.slug === LEGAL_TRADE_PAGE_SLUG ||
+    category.parent_id === LEGAL_TRADE_CATEGORY_ID ||
+    LEGAL_TRADE_CHILD_SLUGS.has(category.slug) ||
+    post.slug === LEGAL_TRADE_PAGE_SLUG ||
+    LEGAL_TRADE_CHILD_SLUGS.has(post.slug) ||
+    post.categories.some((item) => item.id === LEGAL_TRADE_CATEGORY_ID) ||
+    post.categories.some(
+      (item) =>
+        item.url === "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai" ||
+        item.url.startsWith("/xuat-xu-hang-hoa/"),
+    )
+  ) {
+    return "legal-trade" as const;
+  }
+
+  return "default" as const;
+}
+
+function hasRenderablePostData(post: DynamicPostItem) {
+  if (post.content.trim()) return true;
+
+  const sections = post.content_structure?.post_content ?? [];
+  return sections.some((section) => section.content.trim() || section.images.length > 0);
+}
+
 export default function InformationPage({
   post,
   category,
   allCategories,
 }: InformationPageProps) {
-  const publishedDate = dayjs(
-    post.release_at ?? post.published_at ?? post.created_at,
-  ).format("DD/MM/YYYY");
   const categoryMenu = buildDynamicCategoryMenu(category, allCategories);
+  const variant = resolveInformationVariant(post, category);
+  const useSpecialUi =
+    variant === "about-vcci-hcm" ||
+    (variant !== "default" && !hasRenderablePostData(post));
 
   return (
     <div className="min-h-screen bg-white">
       {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
-      <div className="container mx-auto px-4 py-4 lg:pb-6 sm:px-6 lg:px-10">
+      <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-10 lg:pb-6">
         <main className="w-full">
-          {/* <div className="mb-5 flex flex-wrap items-center gap-3 text-xs">
-            <span className="rounded-full bg-[#eaf0ff] px-2.5 py-1 font-semibold text-[#1f4fa3]">
-              {category.name}
-            </span>
-            <span className="text-[#9aa3ad]">{publishedDate}</span>
-          </div> */}
-
-          <h1 className="max-w-6xl text-3xl font-bold leading-tight text-[#111827] md:text-[38px] md:leading-[1.15]">
-            {post.title}
-          </h1>
-          <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
-
-          {post.summary ? (
-            <p className="mt-5 max-w-6xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
-              {post.summary}
-            </p>
-          ) : null}
-
-          <div className="mt-7 rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
-            <div className="page-detail-content prose tiptap max-w-none overflow-hidden">
-              <StructuredPostContent post={post} />
-            </div>
-          </div>
+          {useSpecialUi ? (
+            variant === "about-vcci-hcm" ? (
+              <AboutVcciHcmPage post={post} />
+            ) : variant === "service" ? (
+              <ServicePage post={post} />
+            ) : variant === "member-benefits" ? (
+              <MemberBenefitsPage />
+            ) : variant === "member-registration" ? (
+              <MemberRegistrationPage post={post} />
+            ) : variant === "market-profile" ? (
+              <MarketProfilePage post={post} />
+            ) : variant === "legal-trade" ? (
+              <LegalTradePages post={post} category={category} />
+            ) : (
+              <DefaultInformationPage post={post} />
+            )
+          ) : (
+            <DefaultInformationPage post={post} />
+          )}
 
           <div className="page-detail-styles">
             <style jsx global>{`
