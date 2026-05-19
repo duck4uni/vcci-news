@@ -40,7 +40,7 @@ export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; ac
       href={normalizedLink}
       className={menuItemTriggerClass(variant)}
     >
-      <span className="relative z-10 truncate">{menu.name}</span>
+      <span className={cn("relative z-10", variant === "main" ? "truncate" : "")}>{menu.name}</span>
       {variant === 'main' ? <span className="menu-item-underline" aria-hidden="true" /> : null}
     </Link>
   )
@@ -66,7 +66,7 @@ export function MenuItem(props: { variant?: 'main' | 'secondary'; menu: Menu; ac
 function menuItemTriggerClass(variant: 'main' | 'secondary') {
   if (variant === 'secondary') {
     return cn(
-      'inline-flex h-[36px] items-center justify-center rounded-full border border-[#d6dfeb] bg-white px-5 text-[13px] font-medium leading-none text-[#5f6b7d] shadow-none transition-colors duration-150',
+      'inline-flex min-h-[38px] max-w-[280px] items-center justify-center rounded-full border border-[#d6dfeb] bg-white px-5 py-2 text-center text-[13px] font-medium leading-[1.25] text-[#5f6b7d] shadow-none transition-colors duration-150 sm:max-w-none sm:whitespace-nowrap',
       'hover:border-[#c5d2e3] hover:bg-[#f7faff] hover:text-[#1b5aa1]',
       'aria-selected:border-[#16559d] aria-selected:bg-[#16559d] aria-selected:text-white',
       'focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0'

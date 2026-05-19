@@ -1,10 +1,11 @@
-'use client';
+﻿'use client';
 
 import dayjs from "dayjs";
-import parse from "html-react-parser";
 import ImageNext from "@/components/shared/image-next";
+import ListCategory from "@/components/base/list-category";
 import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
-import { getDynamicPostBodyHtml } from "./data";
+import { buildDynamicCategoryMenu } from "./data";
+import StructuredPostContent from "./StructuredPostContent";
 import type { DynamicCategoryRouteItem, DynamicPostItem } from "./types";
 
 type ArticleDetailPageProps = {
@@ -16,15 +17,18 @@ type ArticleDetailPageProps = {
 export default function ArticleDetailPage({
   post,
   category,
+  allCategories,
 }: ArticleDetailPageProps) {
   const publishedDate = dayjs(
     post.release_at ?? post.published_at ?? post.created_at,
   ).format("DD/MM/YYYY");
-  const primaryCategory = post.categories[0]?.name || category?.name || "Tin tức";
+  const primaryCategory = post.categories[0]?.name || category?.name || "Tin tá»©c";
+  const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
 
   return (
-    <div className="min-h-screen bg-[#fbfbfa]">
-      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+    <div className="min-h-screen bg-white">
+      {/* {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null} */}
+      <div className="container mx-auto px-4 py-4 lg:pb-6 sm:px-6 lg:px-10">
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:gap-12">
           <main className="min-w-0">
             <div className="mb-5 flex flex-wrap items-center gap-3 text-xs">
@@ -45,9 +49,9 @@ export default function ArticleDetailPage({
               </p>
             ) : null}
 
-            <div className="mt-7 rounded-[24px] bg-white px-4 py-5 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 sm:py-6 lg:px-10">
+            <div className="mt-7 rounded-3xl bg-white px-4 py-5 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 sm:py-6 lg:px-10">
               <div className="article-detail-content prose tiptap max-w-none overflow-hidden">
-                {parse(getDynamicPostBodyHtml(post))}
+                <StructuredPostContent post={post} />
               </div>
             </div>
 
@@ -116,7 +120,7 @@ export default function ArticleDetailPage({
             </div>
           </main>
 
-          <aside className="space-y-5">
+          <aside className="space-y-5 xl:pt-0">
             <EventsCalendar compact className="xl:w-full xl:min-w-0" />
             <div className="overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)]">
               <div className="relative min-h-[390px] bg-[#1f334f]">
@@ -127,13 +131,13 @@ export default function ArticleDetailPage({
                   height={760}
                   className="absolute inset-0 h-full w-full object-cover"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#14213d]/92 via-[#14213d]/28 to-transparent" />
+                <div className="absolute inset-0 bg-liner-to-t from-[#14213d]/92 via-[#14213d]/28 to-transparent" />
                 <div className="absolute bottom-8 left-7 right-7 text-white">
                   <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
                     Đối tác quảng bá
                   </div>
                   <div className="mt-3 text-2xl font-bold leading-tight">
-                    Business Combo cho doanh nghiệp hội viên
+                    Business Combo cho hội viên doanh nghiệp
                   </div>
                 </div>
               </div>
@@ -144,3 +148,4 @@ export default function ArticleDetailPage({
     </div>
   );
 }
+

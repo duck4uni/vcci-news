@@ -34,6 +34,19 @@ export type DynamicPostContentSection = {
   type: string;
   content: string;
   position: number;
+  image_rows: number;
+  image_columns: number;
+  images: Array<{
+    position: number;
+    image: {
+      id: string;
+      name: string;
+      alt: string;
+      url: string;
+      path?: string | null;
+      original?: string | null;
+    } | null;
+  }>;
 };
 
 export type DynamicPostItem = {

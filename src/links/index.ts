@@ -3,7 +3,11 @@ const DEFAULT_BACKEND_ORIGIN = "https://vietprodev.duckdns.org/gateway/vcci-news
 const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
 
 const readOrigin = (key: "NEXT_PUBLIC_BACKEND_HOST" | "NEXT_PUBLIC_FRONTEND_HOST") => {
-  const envOrigin = normalizeOrigin(process.env[key]);
+  const envOrigin = normalizeOrigin(
+    key === "NEXT_PUBLIC_BACKEND_HOST"
+      ? process.env.NEXT_PUBLIC_BACKEND_HOST
+      : process.env.NEXT_PUBLIC_FRONTEND_HOST,
+  );
   if (envOrigin) return envOrigin;
   if (key === "NEXT_PUBLIC_BACKEND_HOST" && process.env.NODE_ENV === "production") {
     return DEFAULT_BACKEND_ORIGIN;

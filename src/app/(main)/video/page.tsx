@@ -42,7 +42,7 @@ function VideoPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fbfbfa]">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
@@ -126,7 +126,7 @@ export default function Page() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#fbfbfa]">
+        <div className="flex min-h-screen items-center justify-center bg-white">
           <Spinner className="size-8" />
         </div>
       }

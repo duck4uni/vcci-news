@@ -140,7 +140,7 @@ function SearchContent() {
   const currentPage = Number(postsQuery.data?.page ?? page);
 
   return (
-    <div className="min-h-screen bg-[#fbfbfa]">
+    <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
@@ -197,9 +197,9 @@ function SearchContent() {
             )}
           </main>
 
-          <aside className="order-1 space-y-5 xl:order-2 xl:w-[320px] xl:pt-0">
+          <aside className="contents xl:order-2 xl:block xl:w-[320px] xl:space-y-5 xl:pt-0">
             <form
-              className="rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)]"
+              className="order-1 rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)] xl:order-none"
               onSubmit={(event) => {
                 event.preventDefault();
                 setPage(1);
@@ -235,7 +235,7 @@ function SearchContent() {
               </div>
             </form>
 
-            <div className="overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)]">
+            <div className="order-3 overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)] xl:order-none">
               <div className="relative min-h-[390px] bg-[#1f334f]">
                 <ImageNext
                   src="/banner.webp"
@@ -266,7 +266,7 @@ export default function Page() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-[#fbfbfa]">
+        <div className="flex min-h-screen items-center justify-center bg-white">
           <Spinner className="size-8" />
         </div>
       }
