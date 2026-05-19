@@ -6,7 +6,7 @@ import { notFound, useParams } from "next/navigation";
 
 import dayjs from "dayjs";
 import parse from "html-react-parser";
-import BASE_URL from "@/links";
+import { resolveUploadUrl } from "@/links";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -58,7 +58,7 @@ export default function EventDetailPage() {
                   {eventsDetail?.responseData?.rows[0].image ? (
                     <div className="w-full h-52 relative ">
                       <EventImage
-                        src={`${BASE_URL.imageEndpoint}${eventsDetail?.responseData?.rows[0].image}`}
+                        src={resolveUploadUrl(eventsDetail?.responseData?.rows[0].image)}
                         alt={eventsDetail?.responseData?.rows[0]?.name || "image"}
                       />
                     </div>

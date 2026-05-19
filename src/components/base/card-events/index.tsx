@@ -1,6 +1,6 @@
 
 import { EventItem } from '@/api/types/event';
-import Links from '@links/index'
+import { resolveUploadUrl } from '@links/index'
 import dayjs from 'dayjs';
 
 // Helper: remove <img> tags and extract plain text from HTML
@@ -27,7 +27,7 @@ const CardEvents = ({ event, link }: { event: EventItem, link: string }) => {
       className="flex flex-col hover:no-underline sm:flex-row gap-2 mb-6 bg-white rounded-lg shadow-sm p-4 border items-start min-w-0"
     >
       <img
-        src={`${Links.imageEndpoint}${event.image}`}
+        src={resolveUploadUrl(event.image)}
         alt={event.name}
         className="w-full sm:w-56 md:w-64 h-40 md:h-36 object-cover shrink-0"
         onError={(e) => {

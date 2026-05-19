@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import Links from "@links/index";
+import { resolveUploadUrl } from "@links/index";
 import { NewsItem } from "@/api/types/news";
 
 const stripImagesAndHtml = (html?: string) => {
@@ -21,8 +21,7 @@ const stripImagesAndHtml = (html?: string) => {
 
 const resolveThumbnail = (thumbnail?: string) => {
   if (!thumbnail) return "/img-error.png";
-  if (thumbnail.startsWith("http://") || thumbnail.startsWith("https://")) return thumbnail;
-  return `${Links.imageEndpoint}${thumbnail.replace(/^\/+/, "")}`;
+  return resolveUploadUrl(thumbnail);
 };
 
 const CardNews = ({ news, link }: { news: NewsItem; link: string }) => {

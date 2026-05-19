@@ -19,6 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+import links from "@/links";
 import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
 
@@ -85,7 +86,7 @@ function getAuthErrorMessage(error: unknown, fallback: string) {
 }
 
 async function postAuthJson<TResponse, TBody>(path: string, body: TBody) {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_HOST}/api/v1.0${path}`, {
+  const response = await fetch(`${links.apiEndpoint}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

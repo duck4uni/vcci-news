@@ -1,7 +1,7 @@
 "use client";
 
 import { useCustomClient } from "@/api/mutator/custom-client";
-import Links from "@/links";
+import { resolveUploadUrl } from "@/links";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 
 export type CmsFileItem = {
@@ -44,9 +44,7 @@ export const resolveCmsFileUrl = (path?: string | null) => {
   const value = path?.trim();
 
   if (!value) return "/img-error.png";
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
-
-  return `${Links.imageEndpoint}${value.replace(/^\/+/, "")}`;
+  return resolveUploadUrl(value);
 };
 
 export const toAdminMediaItem = (item: CmsFileItem): AdminMediaItem => ({
