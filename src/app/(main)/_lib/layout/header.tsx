@@ -126,6 +126,14 @@ function Header() {
     };
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = toggleMenu ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [toggleMenu]);
+
   return (
     <header className="sticky top-0 z-50 shadow-[0_1px_0_rgba(15,23,42,0.05)]">
       <div
@@ -252,53 +260,73 @@ function Header() {
       </div>
 
       <div
-        className={`fixed left-0 right-0 top-[80px] z-40 border-t border-slate-200 bg-white transition-all duration-300 lg:hidden ${
+        className={`fixed inset-0 z-[60] bg-white transition-all duration-300 lg:hidden ${
           toggleMenu
-            ? "pointer-events-auto h-[calc(100dvh-80px)] translate-y-0 opacity-100"
-            : "pointer-events-none h-[calc(100dvh-80px)] -translate-y-2 opacity-0"
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-2 opacity-0"
         }`}
       >
-        <div className="flex h-full flex-col overflow-y-auto overscroll-contain px-4 py-3">
-          <input
-            className="h-11 w-full shrink-0 rounded-md border border-slate-200 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-[#2f57ff]"
-            type="text"
-            placeholder={"T\u00ecm ki\u1ebfm"}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                const value = (e.currentTarget as HTMLInputElement).value || "";
-                const encoded = encodeURIComponent(value);
-                router.push(`/search?q=${encoded}&page=1`);
-                setToggleMenu(false);
-              }
-            }}
-          />
+        <div className="flex h-full flex-col overflow-hidden">
+          <div className="sticky top-0 z-10 flex h-[78px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+            <Link href="/" className="flex w-[136px] shrink-0 items-center" onClick={() => setToggleMenu(false)}>
+              <Image
+                className="h-auto w-[108px] object-contain"
+                src={logo}
+                alt="VCCI-HCM"
+                priority
+              />
+            </Link>
+            <button
+              onClick={() => setToggleMenu(false)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-[#163b73] transition hover:bg-slate-50"
+              aria-label={"Đ\u00f3ng menu"}
+            >
+              <X size={18} />
+            </button>
+          </div>
 
-          <div className="pb-6">
-            {menuItems.map((category) => (
-              <div key={category.id} className="border-t border-slate-100 first:border-t-0">
-                <Link
-                  href={category.url || "#"}
-                  className="block px-5 py-3 text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#2f57ff]"
-                  onClick={() => setToggleMenu(false)}
-                >
-                  {category.name}
-                </Link>
-                {category.children.length > 0 ? (
-                  <div className="pb-2 pl-8 pr-5">
-                    {category.children.map((child) => (
-                      <Link
-                        key={child.id}
-                        href={child.url || "#"}
-                        className="block py-2 text-sm text-slate-500 transition hover:text-[#2f57ff]"
-                        onClick={() => setToggleMenu(false)}
-                      >
-                        {child.name}
-                      </Link>
-                    ))}
-                  </div>
-                ) : null}
-              </div>
-            ))}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+            <input
+              className="h-11 w-full shrink-0 rounded-md border border-slate-200 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-[#2f57ff]"
+              type="text"
+              placeholder={"T\u00ecm ki\u1ebfm"}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const value = (e.currentTarget as HTMLInputElement).value || "";
+                  const encoded = encodeURIComponent(value);
+                  router.push(`/search?q=${encoded}&page=1`);
+                  setToggleMenu(false);
+                }
+              }}
+            />
+
+            <div className="pb-6">
+              {menuItems.map((category) => (
+                <div key={category.id} className="border-t border-slate-100 first:border-t-0">
+                  <Link
+                    href={category.url || "#"}
+                    className="block px-5 py-3 text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#2f57ff]"
+                    onClick={() => setToggleMenu(false)}
+                  >
+                    {category.name}
+                  </Link>
+                  {category.children.length > 0 ? (
+                    <div className="pb-2 pl-8 pr-5">
+                      {category.children.map((child) => (
+                        <Link
+                          key={child.id}
+                          href={child.url || "#"}
+                          className="block py-2 text-sm text-slate-500 transition hover:text-[#2f57ff]"
+                          onClick={() => setToggleMenu(false)}
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

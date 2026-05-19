@@ -1,8 +1,9 @@
 'use client';
 
 import dayjs from "dayjs";
-import parse from "html-react-parser";
-import { getDynamicPostBodyHtml } from "./data";
+import ListCategory from "@/components/base/list-category";
+import { buildDynamicCategoryMenu } from "./data";
+import StructuredPostContent from "./StructuredPostContent";
 import type { DynamicCategoryRouteItem, DynamicPostItem } from "./types";
 
 type InformationPageProps = {
@@ -14,21 +15,24 @@ type InformationPageProps = {
 export default function InformationPage({
   post,
   category,
+  allCategories,
 }: InformationPageProps) {
   const publishedDate = dayjs(
     post.release_at ?? post.published_at ?? post.created_at,
   ).format("DD/MM/YYYY");
+  const categoryMenu = buildDynamicCategoryMenu(category, allCategories);
 
   return (
-    <div className="min-h-screen bg-[#fbfbfa]">
-      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+    <div className="min-h-screen bg-white">
+      {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
+      <div className="container mx-auto px-4 py-4 lg:pb-6 sm:px-6 lg:px-10">
         <main className="w-full">
-          <div className="mb-5 flex flex-wrap items-center gap-3 text-xs">
+          {/* <div className="mb-5 flex flex-wrap items-center gap-3 text-xs">
             <span className="rounded-full bg-[#eaf0ff] px-2.5 py-1 font-semibold text-[#1f4fa3]">
               {category.name}
             </span>
             <span className="text-[#9aa3ad]">{publishedDate}</span>
-          </div>
+          </div> */}
 
           <h1 className="max-w-6xl text-3xl font-bold leading-tight text-[#111827] md:text-[38px] md:leading-[1.15]">
             {post.title}
@@ -41,9 +45,9 @@ export default function InformationPage({
             </p>
           ) : null}
 
-          <div className="mt-7 rounded-[24px] bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
+          <div className="mt-7 rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
             <div className="page-detail-content prose tiptap max-w-none overflow-hidden">
-              {parse(getDynamicPostBodyHtml(post))}
+              <StructuredPostContent post={post} />
             </div>
           </div>
 

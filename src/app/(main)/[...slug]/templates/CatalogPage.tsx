@@ -9,7 +9,9 @@ import { Pagination } from "@/components/base/pagination";
 import ImageNext from "@/components/shared/image-next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ListCategory from "@/components/base/list-category";
 import {
+  buildDynamicCategoryMenu,
   buildPostFilters,
   fetchDynamicPostList,
   resolveDynamicPostImage,
@@ -81,15 +83,17 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
   const totalPages = postsQuery.data?.totalPages ?? 1;
   const currentPage = Math.min(page, totalPages);
   const paginatedPosts = postsQuery.data?.rows ?? [];
+  const categoryMenu = buildDynamicCategoryMenu(category, allCategories);
 
   return (
-    <div className="min-h-screen bg-[#fbfbfa]">
+    <div className="min-h-screen bg-white">
+      {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
       {postsQuery.isLoading ? (
         <div className="flex h-64 w-full items-center justify-center">
           <Spinner />
         </div>
       ) : (
-        <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
+        <div className="container mx-auto px-4 py-4 lg:pb-6 sm:px-6 lg:px-10">
           <div className="mb-8">
             <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
               {category.name}
@@ -109,7 +113,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                         className="group block"
                       >
                         <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">
-                          <div className="relative aspect-[3/4] overflow-hidden bg-white">
+                          <div className="relative aspect-3/4 overflow-hidden bg-white">
                             <ImageNext
                               src={resolveDynamicPostImage(item.thumbnail)}
                               alt={item.title}
@@ -131,7 +135,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                 </div>
               ) : (
                 <div className="rounded-2xl border border-[#edf1f5] bg-white px-6 py-12 text-center text-gray-600">
-                  {"Ch\u01b0a c\u00f3 b\u00e0i vi\u1ebft ph\u00f9 h\u1ee3p trong danh m\u1ee5c n\u00e0y."}
+                  Chưa có tài liệu trong danh mục.
                 </div>
               )}
 
@@ -146,9 +150,9 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
               </div>
             </main>
 
-            <aside className="order-1 space-y-5 xl:order-2 xl:w-[320px] xl:pt-0">
+            <aside className="contents xl:order-2 xl:block xl:w-[320px] xl:space-y-5 xl:pt-0">
               <form
-                className="rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)]"
+                className="order-1 rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)] xl:order-none"
                 onSubmit={(event) => {
                   event.preventDefault();
                   setPage(1);
@@ -184,7 +188,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                 </div>
               </form>
 
-              <div className="overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)]">
+              <div className="order-3 overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)] xl:order-0">
                 <div className="relative min-h-[390px] bg-[#1f334f]">
                   <ImageNext
                     src="/banner.webp"
@@ -193,13 +197,13 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                     height={760}
                     className="absolute inset-0 h-full w-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#14213d]/92 via-[#14213d]/28 to-transparent" />
+                  <div className="absolute inset-0 bg-liner-to-t from-[#14213d]/92 via-[#14213d]/28 to-transparent" />
                   <div className="absolute bottom-8 left-7 right-7 text-white">
                     <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
                       Đối tác quảng bá
                     </div>
                     <div className="mt-3 text-2xl font-bold leading-tight">
-                      Business Combo cho doanh nghiệp hội viên
+                      Business Combo cho hội viên doanh nghiệp
                     </div>
                   </div>
                 </div>

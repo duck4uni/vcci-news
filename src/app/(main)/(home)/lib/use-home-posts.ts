@@ -135,6 +135,9 @@ const HOME_CATEGORY_IDS = {
   tinKinhTe: "755106b6-1aca-47dc-9a9c-d434736c33a1",
   chuyenDe: "8e7090e5-bfc3-4128-81a5-37ec78c33bad",
   suKien: "b85f6710-bcbc-4c0b-8b3a-09fff0e5e51a",
+  daoTao: "36df7021-9a74-43d6-9084-0d5ed347b7f4",
+  coHoiKinhDoanh: "0a460499-89c1-4f52-8592-1fb7bb69c4a2",
+  ketNoiHoiVien: "a37b8a02-e8b3-42ce-9225-6dae460fed99",
   chinhSachPhapLuat: "cc448be9-b9ea-46a8-aa7b-0584803330e8",
   lienKetNhanh: "d7f05384-b1b4-428e-b9b3-37e0e1b0cecd",
 } as const;
@@ -232,33 +235,6 @@ async function fetchHomePostRows(path: string) {
   return response.responseData?.rows ?? [];
 }
 
-async function fetchHomeCategoryRows() {
-  const response = await useCustomClient<HomeEnvelope<HomePagedResult<RawHomeCategory>>>(
-    "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
-  );
-  return response.responseData?.rows ?? [];
-}
-
-function findCategoryIdByAliases(
-  categories: RawHomeCategory[],
-  aliases: readonly string[],
-) {
-  const aliasKeys = new Set(aliases.map(normalizeSearchText));
-  const aliasSlugs = new Set(aliases.map(normalizeSlug));
-
-  return categories.find((category) => {
-    const categoryNameKey = normalizeSearchText(category.name);
-    const categorySlugKey = normalizeSlug(category.slug || category.name);
-    const categoryUrlKey = normalizeSlug(category.url);
-
-    return (
-      aliasKeys.has(categoryNameKey) ||
-      aliasSlugs.has(categorySlugKey) ||
-      Array.from(aliasSlugs).some((slug) => categoryUrlKey.endsWith(slug))
-    );
-  })?.id ?? null;
-}
-
 function createCategoryPostsQuery(categoryId: string, pageSize: string) {
   return new URLSearchParams({
     page: "1",
@@ -276,19 +252,6 @@ function createCategoryPostsQuery(categoryId: string, pageSize: string) {
 }
 
 async function fetchHomePosts() {
-  const categoryRows = await fetchHomeCategoryRows().catch(() => []);
-  const trainingCategoryId = findCategoryIdByAliases(
-    categoryRows,
-    HOME_CATEGORY_ALIASES.daoTao,
-  );
-  const businessCategoryId = findCategoryIdByAliases(
-    categoryRows,
-    HOME_CATEGORY_ALIASES.coHoiKinhDoanh,
-  );
-  const memberConnectionCategoryId = findCategoryIdByAliases(
-    categoryRows,
-    HOME_CATEGORY_ALIASES.ketNoiHoiVien,
-  );
   const featuredQuery = new URLSearchParams({
     page: "1",
     pageSize: "10",
@@ -308,15 +271,9 @@ async function fetchHomePosts() {
   const eventQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.suKien, "5");
   const policyQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chinhSachPhapLuat, "6");
   const quickLinksQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.lienKetNhanh, "6");
-  const trainingQuery = trainingCategoryId
-    ? createCategoryPostsQuery(String(trainingCategoryId), "10")
-    : null;
-  const businessQuery = businessCategoryId
-    ? createCategoryPostsQuery(String(businessCategoryId), "10")
-    : null;
-  const memberConnectionQuery = memberConnectionCategoryId
-    ? createCategoryPostsQuery(String(memberConnectionCategoryId), "10")
-    : null;
+  const trainingQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.daoTao, "10");
+  const businessQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.coHoiKinhDoanh, "10");
+  const memberConnectionQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.ketNoiHoiVien, "10");
 
   const [
     featuredRows,
@@ -337,9 +294,9 @@ async function fetchHomePosts() {
     fetchHomePostRows(`/post?${policyQuery.toString()}`),
     fetchHomePostRows(`/post?${eventQuery.toString()}`),
     fetchHomePostRows(`/post?${quickLinksQuery.toString()}`),
-    trainingQuery ? fetchHomePostRows(`/post?${trainingQuery.toString()}`) : [],
-    businessQuery ? fetchHomePostRows(`/post?${businessQuery.toString()}`) : [],
-    memberConnectionQuery ? fetchHomePostRows(`/post?${memberConnectionQuery.toString()}`) : [],
+    fetchHomePostRows(`/post?${trainingQuery.toString()}`),
+    fetchHomePostRows(`/post?${businessQuery.toString()}`),
+    fetchHomePostRows(`/post?${memberConnectionQuery.toString()}`),
   ]);
 
   const rows = [

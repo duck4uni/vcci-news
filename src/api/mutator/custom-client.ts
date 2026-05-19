@@ -12,14 +12,16 @@ interface RetriableAxiosRequestConfig extends InternalAxiosRequestConfig {
 const createAxiosInstance = () => {
   const instance = Axios.create({
     baseURL: links.apiEndpoint,
-    withCredentials: true,
+    withCredentials: false,
   });
 
   instance.interceptors.request.use(async (config) => {
-    if (shouldSkipAuthHandling(config.url)) {
+    if (shouldSkipAuthHandling(config.url) || !shouldHandleAdminAuth()) {
+      config.withCredentials = false;
       return config;
     }
 
+    config.withCredentials = true;
     const token = await ensureValidAdminAccessToken().catch(() => null);
 
     if (token) {
@@ -40,7 +42,8 @@ const createAxiosInstance = () => {
         error.response?.status !== 401 ||
         !originalRequest ||
         originalRequest._retry ||
-        shouldSkipAuthHandling(originalRequest.url)
+        shouldSkipAuthHandling(originalRequest.url) ||
+        !shouldHandleAdminAuth()
       ) {
         return Promise.reject(error);
       }
@@ -87,6 +90,11 @@ const cachedGetResponses = new Map<string, CachedGetResponse>();
 const shouldSkipAuthHandling = (url?: string | null) => {
   if (!url) return false;
   return /\/auth\/(login|refresh|logout)(\?|$)/.test(url);
+};
+
+const shouldHandleAdminAuth = () => {
+  if (typeof window === "undefined") return false;
+  return window.location.pathname.startsWith("/admin");
 };
 
 const convertHeaders = (headers?: HeadersInit): Record<string, string> | undefined => {

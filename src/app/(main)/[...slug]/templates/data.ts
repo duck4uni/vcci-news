@@ -30,6 +30,18 @@ type RawPostThumbnail = {
   url?: string | null;
 };
 
+type RawPostSectionImage = {
+  position?: number | null;
+  image?: {
+    id?: string | null;
+    name?: string | null;
+    alt?: string | null;
+    url?: string | null;
+    path?: string | null;
+    original?: string | null;
+  } | null;
+};
+
 type RawPostItem = {
   id?: string | null;
   title?: string | null;
@@ -57,6 +69,9 @@ type RawPostItem = {
       type?: string | null;
       content?: string | null;
       position?: number | null;
+      image_rows?: number | null;
+      image_columns?: number | null;
+      images?: RawPostSectionImage[] | null;
     }> | null;
   } | null;
 };
@@ -111,6 +126,33 @@ const mapPostContentSections = (item: RawPostItem): DynamicPostContentSection[] 
       typeof section?.position === "number"
         ? section.position
         : index + 1,
+    image_rows:
+      typeof section?.image_rows === "number" && section.image_rows > 0
+        ? section.image_rows
+        : 1,
+    image_columns:
+      typeof section?.image_columns === "number" && section.image_columns > 0
+        ? section.image_columns
+        : 1,
+    images: (section?.images ?? [])
+      .map((item, imageIndex) => ({
+        position:
+          typeof item?.position === "number"
+            ? item.position
+            : imageIndex + 1,
+        image: item?.image
+          ? {
+              id: String(item.image.id ?? ""),
+              name: String(item.image.name ?? item.image.original ?? ""),
+              alt: String(item.image.alt ?? item.image.name ?? ""),
+              url: resolveUploadUrl(item.image.url ?? item.image.path ?? item.image.original ?? ""),
+              path: item.image.path ?? null,
+              original: item.image.original ?? null,
+            }
+          : null,
+      }))
+      .filter((item) => Boolean(item.image?.url))
+      .sort((left, right) => left.position - right.position),
   }));
 };
 
