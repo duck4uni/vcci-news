@@ -124,11 +124,8 @@ const normalizePersistedAuthState = (
   const persistSession = persisted.appPersistSession === true;
   const refreshTokenExpiredAt = getRefreshTokenExpiredAt(persisted.appSession ?? null);
   const hasUsableSession =
-    persistSession &&
     Boolean(persisted.appRefreshToken) &&
-    (!refreshTokenExpiredAt || refreshTokenExpiredAt > Date.now()) &&
-    (!persisted.appAccessTokenExpired ||
-      typeof persisted.appAccessTokenExpired === "number");
+    (!refreshTokenExpiredAt || refreshTokenExpiredAt > Date.now());
 
   if (!hasUsableSession) {
     return {
@@ -141,23 +138,10 @@ const normalizePersistedAuthState = (
   return {
     ...currentState,
     ...persisted,
-    appPersistSession: true,
+    appPersistSession: persistSession,
     appUserRemember: rememberState,
     appIsRefreshing: false,
   };
-};
-
-const shouldPersistAuthStorage = (value: string) => {
-  try {
-    const parsed = JSON.parse(value) as {
-      state?: Partial<AuthStoreStateType>;
-    };
-    const state = parsed.state ?? {};
-
-    return state.appPersistSession === true || state.appUserRemember?.remember === true;
-  } catch {
-    return true;
-  }
 };
 
 const useAuthStore = create<AuthStoreStateType>()(
@@ -252,30 +236,44 @@ const useAuthStore = create<AuthStoreStateType>()(
       {
         name: "app-auth-storage",
         storage: createJSONStorage(() => ({
-          getItem: (name) => localStorage.getItem(name),
-          setItem: (name, value) => {
-            if (shouldPersistAuthStorage(value)) {
-              localStorage.setItem(name, value);
-              return;
-            }
-
-            localStorage.removeItem(name);
+          getItem: (name) => {
+            if (typeof window === "undefined") return null;
+            return localStorage.getItem(name) ?? sessionStorage.getItem(name);
           },
-          removeItem: (name) => localStorage.removeItem(name),
+          setItem: (name, value) => {
+            if (typeof window === "undefined") return;
+            try {
+              const parsed = JSON.parse(value) as {
+                state?: Partial<AuthStoreStateType>;
+              };
+              const state = parsed.state ?? {};
+
+              if (state.appPersistSession === true) {
+                localStorage.setItem(name, value);
+                sessionStorage.removeItem(name);
+              } else {
+                sessionStorage.setItem(name, value);
+                localStorage.removeItem(name);
+              }
+            } catch {
+              localStorage.setItem(name, value);
+            }
+          },
+          removeItem: (name) => {
+            if (typeof window === "undefined") return;
+            localStorage.removeItem(name);
+            sessionStorage.removeItem(name);
+          },
         })),
         partialize: (state) => ({
           appPersistSession: state.appPersistSession,
-          ...(state.appPersistSession
-            ? {
-                appIsLoggedIn: state.appIsLoggedIn,
-                appAccessToken: state.appAccessToken,
-                appAccessTokenExpired: state.appAccessTokenExpired,
-                appRefreshToken: state.appRefreshToken,
-                appSession: state.appSession,
-                appUser: state.appUser,
-                appSessionExpiredNotified: state.appSessionExpiredNotified,
-              }
-            : {}),
+          appIsLoggedIn: state.appIsLoggedIn,
+          appAccessToken: state.appAccessToken,
+          appAccessTokenExpired: state.appAccessTokenExpired,
+          appRefreshToken: state.appRefreshToken,
+          appSession: state.appSession,
+          appUser: state.appUser,
+          appSessionExpiredNotified: state.appSessionExpiredNotified,
           appUserRemember: state.appUserRemember,
         }),
         merge: (persistedState, currentState) =>
