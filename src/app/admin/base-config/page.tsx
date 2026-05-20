@@ -44,7 +44,10 @@ import {
   putSiteInformation,
 } from "@/api/endpoints/site-information";
 import { deleteLogoId, postLogo, putLogoId } from "@/api/endpoints/logo";
+import { deleteBannerId, getBanner, postBanner, putBannerId } from "@/api/endpoints/banner";
 import type {
+  Banner,
+  BannerMutate,
   SiteInformationBranch,
   SiteInformationBranchMutate,
   SiteInformationData,
@@ -52,6 +55,7 @@ import type {
   SiteInformationSocialMutate,
 } from "@/api/models";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
+import { fetchCmsFileById, toAdminMediaItem } from "@/lib/api/files";
 import {
   type BaseConfigBannerItem,
   type BaseConfigBranchItem,
@@ -81,6 +85,13 @@ type ApiEnvelope<T> = {
 
 type LogoMediaItem = AdminMediaItem & {
   logoId?: string;
+};
+
+type PageEnvelope<T> = {
+  rows?: T[];
+  count?: number;
+  page?: number;
+  pageSize?: number;
 };
 
 type ConfigItemForm = {
@@ -155,6 +166,27 @@ function mapConfigSocialToApi(social: BaseConfigSocialItem): SiteInformationSoci
     url: social.url.trim() || null,
     sort_order: social.sortOrder,
     is_active: social.isVisible,
+  };
+}
+
+function mapApiBannerToConfig(banner: Banner): BaseConfigBannerItem {
+  return {
+    id: banner.id ?? createBaseConfigItemId("banner"),
+    name: banner.banner_name ?? "",
+    imageId: banner.file_id ?? "",
+    isActive: banner.status !== "INACTIVE",
+    displayTimeSeconds: banner.display_time ?? 5,
+    sortOrder: banner.display_order ?? 1,
+  };
+}
+
+function mapConfigBannerToApi(banner: BaseConfigBannerItem): BannerMutate {
+  return {
+    banner_name: banner.name.trim(),
+    file_id: banner.imageId,
+    display_order: banner.sortOrder,
+    display_time: Math.max(1, banner.displayTimeSeconds || 1),
+    status: banner.isActive ? "ACTIVE" : "INACTIVE",
   };
 }
 
@@ -493,6 +525,56 @@ export default function AdminBaseConfigPage() {
 
     void loadSiteInformation();
 
+    const loadBanners = async () => {
+      try {
+        const response = await getBanner({
+          page: 1,
+          pageSize: 100,
+          sortField: "display_order",
+          sortOrder: "asc",
+        });
+        const pageData = getEnvelopeData<PageEnvelope<Banner>>(response);
+        const bannerRows = pageData?.rows ?? [];
+
+        const mediaRows = await Promise.all(
+          bannerRows
+            .map((banner) => banner.file_id)
+            .filter((fileId): fileId is string => Boolean(fileId))
+            .map(async (fileId) => {
+              const file = await fetchCmsFileById(fileId).catch(() => null);
+              return file ? toAdminMediaItem(file) : null;
+            }),
+        );
+
+        if (!mounted) return;
+
+        const nextBanners = bannerRows.map(mapApiBannerToConfig);
+        setMediaItems((previous) => {
+          const nextMap = new Map(previous.map((entry) => [entry.id, entry]));
+          mediaRows.forEach((item) => {
+            if (item) nextMap.set(item.id, item);
+          });
+          return Array.from(nextMap.values());
+        });
+        setConfig((previous) =>
+          previous
+            ? {
+                ...previous,
+                banners: nextBanners,
+              }
+            : previous,
+        );
+        setCurrentBannerIndex(0);
+      } catch (error) {
+        console.error(error);
+        if (mounted) {
+          toast.error("KhÃ´ng thá»ƒ táº£i danh sÃ¡ch banner");
+        }
+      }
+    };
+
+    void loadBanners();
+
     return () => {
       mounted = false;
     };
@@ -609,7 +691,44 @@ export default function AdminBaseConfigPage() {
       return;
     }
 
-    const nextConfig = cloneBaseConfigData(config);
+    const bannerDraft: BaseConfigBannerItem = {
+      id: editingItemId || createBaseConfigItemId("banner"),
+      name: trimmedName,
+      imageId: itemForm.imageId,
+      isActive: itemForm.isActive,
+      displayTimeSeconds: itemForm.displayTimeSeconds,
+      sortOrder: itemForm.sortOrder,
+    };
+
+    try {
+      const response = editingItemId
+        ? await putBannerId(editingItemId, mapConfigBannerToApi(bannerDraft))
+        : await postBanner(mapConfigBannerToApi(bannerDraft));
+      const savedBanner = getEnvelopeData<Banner>(response);
+      const nextBanner = savedBanner ? mapApiBannerToConfig(savedBanner) : bannerDraft;
+      const nextConfig = cloneBaseConfigData(config);
+
+      if (editingItemId) {
+        nextConfig.banners = nextConfig.banners.map((item) =>
+          item.id === editingItemId ? nextBanner : item,
+        );
+      } else {
+        nextConfig.banners.push(nextBanner);
+        setCurrentBannerIndex(Math.max(nextConfig.banners.length - 1, 0));
+      }
+
+      setConfig(nextConfig);
+      setSavingItem(false);
+      setItemDialogOpen(false);
+      toast.success("Đã lưu cấu hình banner");
+    } catch (error) {
+      console.error(error);
+      setSavingItem(false);
+      toast.error("Không thể lưu cấu hình banner");
+    }
+    return;
+
+    const nextConfig = cloneBaseConfigData(config!);
 
     if (editingItemId) {
         nextConfig.banners = nextConfig.banners.map((item) =>
@@ -663,6 +782,7 @@ export default function AdminBaseConfigPage() {
         return;
       }
     } else {
+      await deleteBannerId(deleteTarget.id);
       nextConfig.banners = nextConfig.banners.filter((item) => item.id !== deleteTarget.id);
       setCurrentBannerIndex((previous) =>
         Math.max(0, Math.min(previous, nextConfig.banners.length - 1)),

@@ -127,6 +127,7 @@ const orvalConfig = async () => {
             'NewsletterSubscription',
             'SiteInformation',
             'Logo',
+            'Banner',
           ],
         },
       },
