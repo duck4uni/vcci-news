@@ -35,6 +35,22 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  deleteSiteInformationBranchesId,
+  getSiteInformation,
+  patchSiteInformationBranchesId,
+  patchSiteInformationSocialsId,
+  postSiteInformationBranches,
+  putSiteInformation,
+} from "@/api/endpoints/site-information";
+import { deleteLogoId, postLogo, putLogoId } from "@/api/endpoints/logo";
+import type {
+  SiteInformationBranch,
+  SiteInformationBranchMutate,
+  SiteInformationData,
+  SiteInformationSocialLink,
+  SiteInformationSocialMutate,
+} from "@/api/models";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import {
   type BaseConfigBannerItem,
@@ -48,6 +64,7 @@ import {
   persistBaseConfig,
   readBaseConfig,
   sortBaseConfigBanners,
+  sortBaseConfigBranches,
   sortBaseConfigSocials,
 } from "@/mockdata/base-config";
 
@@ -55,6 +72,17 @@ const fieldClassName =
   "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 type ConfigItemMode = "logo" | "banner";
+type ApiEnvelope<T> = {
+  responseData?: T;
+  data?: {
+    responseData?: T;
+  };
+};
+
+type LogoMediaItem = AdminMediaItem & {
+  logoId?: string;
+};
+
 type ConfigItemForm = {
   name: string;
   imageId: string;
@@ -75,6 +103,110 @@ function emptyItemForm(): ConfigItemForm {
 
 function resolveMediaItem(mediaMap: Map<string, AdminMediaItem>, imageId: string) {
   return mediaMap.get(imageId) ?? null;
+}
+
+function getEnvelopeData<T>(payload: unknown): T | undefined {
+  const root = payload as ApiEnvelope<T>;
+  return root.responseData ?? root.data?.responseData;
+}
+
+function mapApiBranchToConfig(branch: SiteInformationBranch): BaseConfigBranchItem {
+  return {
+    id: branch.id ?? createBaseConfigItemId("branch"),
+    branchName: branch.branch_name ?? "",
+    address: branch.address ?? "",
+    hotline: branch.hotline ?? branch.telephone ?? "",
+    email: branch.email ?? "",
+    fax: branch.fax ?? "",
+    mapsEmbedUrl: branch.googlemap_link ?? "",
+    sortOrder: branch.sort_order ?? 1,
+    isVisible: branch.is_active ?? true,
+  };
+}
+
+function mapConfigBranchToApi(
+  branch: BaseConfigBranchItem,
+  index: number,
+): SiteInformationBranchMutate {
+  return {
+    branch_name: branch.branchName.trim() || null,
+    address: branch.address.trim() || null,
+    hotline: branch.hotline.trim() || null,
+    email: branch.email.trim() || null,
+    fax: branch.fax.trim() || null,
+    googlemap_link: branch.mapsEmbedUrl.trim() || null,
+    sort_order: Number.isFinite(branch.sortOrder) ? branch.sortOrder : index + 1,
+    is_active: branch.isVisible,
+  };
+}
+
+function mapApiSocialToConfig(social: SiteInformationSocialLink): BaseConfigSocialItem {
+  return {
+    id: social.id,
+    label: social.label,
+    url: social.url ?? "",
+    isVisible: social.is_active,
+    sortOrder: social.sort_order,
+  };
+}
+
+function mapConfigSocialToApi(social: BaseConfigSocialItem): SiteInformationSocialMutate {
+  return {
+    url: social.url.trim() || null,
+    sort_order: social.sortOrder,
+    is_active: social.isVisible,
+  };
+}
+
+function mapSiteLogoToConfig(siteInformation: SiteInformationData): {
+  logo: BaseConfigLogoItem | null;
+  media: LogoMediaItem | null;
+} | null {
+  const logo = siteInformation.logo;
+  if (!logo) return null;
+
+  const media: LogoMediaItem = {
+    id: logo.file_id,
+    logoId: logo.id,
+    name: logo.logo_name,
+    alt: logo.logo_name,
+    url: logo.logo_url || "/img-error.png",
+    mime: "image/*",
+    size: 0,
+    created_at: logo.created_at,
+    updated_at: logo.updated_at,
+    source: "upload",
+  };
+
+  return {
+    logo: {
+      id: logo.id,
+      name: logo.logo_name,
+      imageId: logo.file_id,
+      isActive: true,
+    },
+    media,
+  };
+}
+
+function applySiteInformationToConfig(
+  baseConfig: BaseConfigData,
+  siteInformation: SiteInformationData,
+): BaseConfigData {
+  const logoConfig = mapSiteLogoToConfig(siteInformation);
+
+  return {
+    ...baseConfig,
+    logo: logoConfig?.logo ?? baseConfig.logo,
+    websiteName: siteInformation.website_name ?? baseConfig.websiteName,
+    websiteLink: siteInformation.website_link ?? baseConfig.websiteLink,
+    branches: Array.isArray(siteInformation.branches)
+      ? siteInformation.branches.map(mapApiBranchToConfig)
+      : baseConfig.branches,
+    socials: Array.isArray(siteInformation.socials)
+      ? siteInformation.socials.map(mapApiSocialToConfig)
+      : baseConfig.socials,
+  };
 }
 
 function ConfigItemPreview({
@@ -309,6 +441,7 @@ export default function AdminBaseConfigPage() {
   const [mediaItems, setMediaItems] = React.useState<AdminMediaItem[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
   const [currentBranchIndex, setCurrentBranchIndex] = React.useState(0);
+  const [currentBranchId, setCurrentBranchId] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState("branding");
   const [itemDialogOpen, setItemDialogOpen] = React.useState(false);
   const [itemDialogMode, setItemDialogMode] = React.useState<ConfigItemMode>("logo");
@@ -316,7 +449,9 @@ export default function AdminBaseConfigPage() {
   const [itemForm, setItemForm] = React.useState<ConfigItemForm>(emptyItemForm());
   const [imagePickerOpen, setImagePickerOpen] = React.useState(false);
   const [savingItem, setSavingItem] = React.useState(false);
+  const [savingWebsiteInfo, setSavingWebsiteInfo] = React.useState(false);
   const [savingContact, setSavingContact] = React.useState(false);
+  const [savingSocials, setSavingSocials] = React.useState(false);
   const [deleteTarget, setDeleteTarget] = React.useState<{
     mode: ConfigItemMode;
     id: string;
@@ -324,7 +459,43 @@ export default function AdminBaseConfigPage() {
   } | null>(null);
 
   React.useEffect(() => {
-    setConfig(readBaseConfig());
+    let mounted = true;
+    const baseConfig = readBaseConfig();
+    setConfig(baseConfig);
+
+    const loadSiteInformation = async () => {
+      try {
+        const response = await getSiteInformation();
+        const siteInformation = getEnvelopeData<SiteInformationData>(response);
+
+        if (!mounted || !siteInformation) return;
+
+        const logoConfig = mapSiteLogoToConfig(siteInformation);
+        if (logoConfig?.media) {
+          const logoMedia = logoConfig.media;
+          setMediaItems((previous) => {
+            const nextMap = new Map(previous.map((entry) => [entry.id, entry]));
+            nextMap.set(logoMedia.id, logoMedia);
+            return Array.from(nextMap.values());
+          });
+        }
+
+        setConfig((previous) =>
+          applySiteInformationToConfig(previous ?? baseConfig, siteInformation),
+        );
+      } catch (error) {
+        console.error(error);
+        if (mounted) {
+          toast.error("Không thể tải thông tin liên hệ website");
+        }
+      }
+    };
+
+    void loadSiteInformation();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const mediaMap = React.useMemo(
@@ -339,10 +510,17 @@ export default function AdminBaseConfigPage() {
     () => (config ? sortBaseConfigSocials(config.socials) : []),
     [config],
   );
+  const sortedBranches = React.useMemo(
+    () => (config ? sortBaseConfigBranches(config.branches) : []),
+    [config],
+  );
 
   const currentLogo = config?.logo ?? null;
   const currentBanner = sortedBanners[currentBannerIndex] ?? null;
-  const currentBranch = config?.branches[currentBranchIndex] ?? null;
+  const currentBranch =
+    (currentBranchId ? sortedBranches.find((branch) => branch.id === currentBranchId) : null) ??
+    sortedBranches[currentBranchIndex] ??
+    null;
   const currentLogoMedia = currentLogo ? resolveMediaItem(mediaMap, currentLogo.imageId) : null;
   const currentBannerMedia = currentBanner
     ? resolveMediaItem(mediaMap, currentBanner.imageId)
@@ -377,7 +555,7 @@ export default function AdminBaseConfigPage() {
     setItemDialogOpen(true);
   };
 
-  const handleSubmitItem = () => {
+  const handleSubmitItem = async () => {
     if (!config) return;
 
     const trimmedName = itemForm.name.trim();
@@ -393,17 +571,47 @@ export default function AdminBaseConfigPage() {
 
     setSavingItem(true);
 
+    if (itemDialogMode === "logo") {
+      const selectedMedia = resolveMediaItem(mediaMap, itemForm.imageId);
+      const currentLogoId = editingItemId || currentLogo?.id || null;
+
+      try {
+        const response = currentLogoId
+          ? await putLogoId(currentLogoId, {
+              logo_name: trimmedName,
+              logo_url: selectedMedia?.url ?? null,
+              file_id: itemForm.imageId,
+            })
+          : await postLogo({
+              logo_name: trimmedName,
+              logo_url: selectedMedia?.url ?? null,
+              file_id: itemForm.imageId,
+            });
+        const savedLogo = getEnvelopeData<NonNullable<SiteInformationData["logo"]>>(response);
+        const nextConfig = cloneBaseConfigData(config);
+
+        nextConfig.logo = {
+          id: savedLogo?.id ?? currentLogoId ?? createBaseConfigItemId("logo"),
+          name: savedLogo?.logo_name ?? trimmedName,
+          imageId: savedLogo?.file_id ?? itemForm.imageId,
+          isActive: true,
+        };
+
+        saveConfig(nextConfig);
+        setSavingItem(false);
+        setItemDialogOpen(false);
+        toast.success("Đã lưu cấu hình logo");
+      } catch (error) {
+        console.error(error);
+        setSavingItem(false);
+        toast.error("Không thể lưu cấu hình logo");
+      }
+      return;
+    }
+
     const nextConfig = cloneBaseConfigData(config);
 
-    if (itemDialogMode === "logo") {
-      nextConfig.logo = {
-        id: editingItemId || currentLogo?.id || createBaseConfigItemId("logo"),
-        name: trimmedName,
-        imageId: itemForm.imageId,
-        isActive: true,
-      };
-    } else {
-      if (editingItemId) {
+    if (editingItemId) {
         nextConfig.banners = nextConfig.banners.map((item) =>
           item.id === editingItemId
             ? {
@@ -416,7 +624,7 @@ export default function AdminBaseConfigPage() {
               }
             : item,
         );
-      } else {
+    } else {
         nextConfig.banners.push({
           id: createBaseConfigItemId("banner"),
           name: trimmedName,
@@ -426,26 +634,33 @@ export default function AdminBaseConfigPage() {
           sortOrder: itemForm.sortOrder,
         });
         setCurrentBannerIndex(Math.max(nextConfig.banners.length - 1, 0));
-      }
     }
 
     saveConfig(nextConfig);
     setSavingItem(false);
     setItemDialogOpen(false);
     toast.success(
-      itemDialogMode === "logo"
+      false
         ? "Đã lưu cấu hình logo"
         : "Đã lưu cấu hình banner",
     );
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
     if (!config || !deleteTarget) return;
 
     const nextConfig = cloneBaseConfigData(config);
 
     if (deleteTarget.mode === "logo") {
-      nextConfig.logo = null;
+      try {
+        await deleteLogoId(deleteTarget.id);
+        nextConfig.logo = null;
+      } catch (error) {
+        console.error(error);
+        toast.error("Không thể xóa cấu hình logo");
+        setDeleteTarget(null);
+        return;
+      }
     } else {
       nextConfig.banners = nextConfig.banners.filter((item) => item.id !== deleteTarget.id);
       setCurrentBannerIndex((previous) =>
@@ -468,8 +683,8 @@ export default function AdminBaseConfigPage() {
       previous
         ? {
             ...previous,
-            branches: previous.branches.map((branch, index) =>
-              index === currentBranchIndex ? { ...branch, [key]: value } : branch,
+            branches: previous.branches.map((branch) =>
+              branch.id === currentBranch.id ? { ...branch, [key]: value } : branch,
             ),
           }
         : previous,
@@ -512,14 +727,120 @@ export default function AdminBaseConfigPage() {
     toast.success("Đã lưu danh sách chi nhánh liên hệ");
   };
 
+  const handleAddBranchApi = async () => {
+    if (!config) return;
+
+    setSavingContact(true);
+
+    try {
+      const response = await postSiteInformationBranches({
+        branch_name: `Chi nhánh ${config.branches.length + 1}`,
+        sort_order: config.branches.length + 1,
+        is_active: true,
+      });
+      const createdBranch = getEnvelopeData<SiteInformationBranch>(response);
+      const nextBranch = createdBranch
+        ? mapApiBranchToConfig(createdBranch)
+        : {
+            id: createBaseConfigItemId("branch"),
+            branchName: `Chi nhánh ${config.branches.length + 1}`,
+            address: "",
+            hotline: "",
+            email: "",
+            fax: "",
+            mapsEmbedUrl: "",
+            sortOrder: config.branches.length + 1,
+            isVisible: true,
+          };
+
+      const nextConfig = cloneBaseConfigData(config);
+      nextConfig.branches.push(nextBranch);
+      setConfig(nextConfig);
+      setCurrentBranchIndex(nextConfig.branches.length - 1);
+      setCurrentBranchId(nextBranch.id);
+      toast.success("Đã thêm chi nhánh mới");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể thêm chi nhánh");
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleDeleteBranchApi = async (branchId: string) => {
+    if (!config) return;
+
+    setSavingContact(true);
+
+    try {
+      await deleteSiteInformationBranchesId(branchId);
+
+      const nextConfig = cloneBaseConfigData(config);
+      nextConfig.branches = nextConfig.branches.filter((branch) => branch.id !== branchId);
+      setConfig(nextConfig);
+      setCurrentBranchIndex((previous) =>
+        Math.max(0, Math.min(previous, Math.max(nextConfig.branches.length - 1, 0))),
+      );
+      setCurrentBranchId(null);
+      toast.success("Đã xóa chi nhánh");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể xóa chi nhánh");
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleSaveBranchesApi = async () => {
+    if (!config) return;
+    setSavingContact(true);
+
+    try {
+      await Promise.all(
+        sortBaseConfigBranches(config.branches).map((branch, index) =>
+          patchSiteInformationBranchesId(branch.id, mapConfigBranchToApi(branch, index)),
+        ),
+      );
+      setConfig(config);
+      toast.success("Đã lưu danh sách chi nhánh liên hệ");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể lưu danh sách chi nhánh");
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
   const handleWebsiteInfoChange = (key: "websiteName" | "websiteLink", value: string) => {
     setConfig((previous) => (previous ? { ...previous, [key]: value } : previous));
   };
 
-  const handleSaveWebsiteInfo = () => {
+  const handleSaveWebsiteInfo = async () => {
     if (!config) return;
-    saveConfig(config);
-    toast.success("Đã lưu thông tin website");
+    setSavingWebsiteInfo(true);
+
+    try {
+      const response = await putSiteInformation({
+        website_name: config.websiteName.trim() || null,
+        website_link: config.websiteLink.trim() || null,
+      });
+      const siteInformation = getEnvelopeData<SiteInformationData>(response);
+
+      if (siteInformation) {
+        setConfig((previous) =>
+          applySiteInformationToConfig(previous ?? config, siteInformation),
+        );
+      } else {
+        setConfig(config);
+      }
+
+      toast.success("Đã lưu thông tin website");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể lưu thông tin website");
+    } finally {
+      setSavingWebsiteInfo(false);
+    }
   };
 
   const handleSocialChange = <K extends keyof BaseConfigSocialItem>(
@@ -543,6 +864,26 @@ export default function AdminBaseConfigPage() {
     if (!config) return;
     saveConfig(config);
     toast.success("Đã lưu cấu hình mạng xã hội");
+  };
+
+  const handleSaveSocialsApi = async () => {
+    if (!config) return;
+    setSavingSocials(true);
+
+    try {
+      await Promise.all(
+        config.socials.map((social) =>
+          patchSiteInformationSocialsId(social.id, mapConfigSocialToApi(social)),
+        ),
+      );
+      setConfig(config);
+      toast.success("Đã lưu cấu hình mạng xã hội");
+    } catch (error) {
+      console.error(error);
+      toast.error("Không thể lưu cấu hình mạng xã hội");
+    } finally {
+      setSavingSocials(false);
+    }
   };
 
   if (!config) {
@@ -698,10 +1039,11 @@ export default function AdminBaseConfigPage() {
                       <Button
                         type="button"
                         onClick={handleSaveWebsiteInfo}
+                        disabled={savingWebsiteInfo}
                         className="w-full rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                       >
                         <Save className="mr-2 h-4 w-4" />
-                        Lưu thông tin website
+                        {savingWebsiteInfo ? "Đang lưu..." : "Lưu thông tin website"}
                       </Button>
                     </div>
                   ) : (
@@ -882,7 +1224,7 @@ export default function AdminBaseConfigPage() {
                 <div className="flex flex-wrap gap-3">
                   <Button
                     type="button"
-                    onClick={handleAddBranch}
+                    onClick={handleAddBranchApi}
                     className="rounded-xl bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
                   >
                     <Plus className="mr-2 h-4 w-4" />
@@ -890,7 +1232,7 @@ export default function AdminBaseConfigPage() {
                   </Button>
                   <Button
                     type="button"
-                    onClick={handleSaveBranches}
+                    onClick={handleSaveBranchesApi}
                     disabled={savingContact}
                     className="rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                   >
@@ -907,13 +1249,16 @@ export default function AdminBaseConfigPage() {
                   Danh sách chi nhánh
                 </div>
                 <div className="space-y-3">
-                  {config.branches.map((branch, index) => (
+                  {sortedBranches.map((branch, index) => (
                     <BranchCard
                       key={branch.id}
                       branch={branch}
-                      current={index === currentBranchIndex}
-                      onSelect={() => setCurrentBranchIndex(index)}
-                      onDelete={() => handleDeleteBranch(branch.id)}
+                      current={currentBranch?.id === branch.id}
+                      onSelect={() => {
+                        setCurrentBranchIndex(index);
+                        setCurrentBranchId(branch.id);
+                      }}
+                      onDelete={() => handleDeleteBranchApi(branch.id)}
                     />
                   ))}
                 </div>
@@ -977,6 +1322,33 @@ export default function AdminBaseConfigPage() {
                         />
                       </div>
                     </div>
+
+                    <div className="grid gap-5 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label className="text-gray-700">Thứ tự hiển thị</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          value={currentBranch.sortOrder}
+                          onChange={(event) =>
+                            handleBranchChange("sortOrder", Number(event.target.value || 1))
+                          }
+                          className={fieldClassName}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-3">
+                        <div>
+                          <div className="text-sm font-medium text-[#163b73]">Trạng thái hiển thị</div>
+                          <div className="text-xs text-gray-500">
+                            {currentBranch.isVisible ? "Đang hiển thị" : "Đang ẩn"}
+                          </div>
+                        </div>
+                        <Switch
+                          checked={currentBranch.isVisible}
+                          onCheckedChange={(value) => handleBranchChange("isVisible", value)}
+                        />
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <div className="rounded-3xl border border-dashed border-[#063e8e]/15 bg-white px-5 py-10 text-center text-sm text-gray-500">
@@ -1001,7 +1373,8 @@ export default function AdminBaseConfigPage() {
 
                 <Button
                   type="button"
-                  onClick={handleSaveSocials}
+                  onClick={handleSaveSocialsApi}
+                  disabled={savingSocials}
                   className="rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                 >
                   <Save className="mr-2 h-4 w-4" />

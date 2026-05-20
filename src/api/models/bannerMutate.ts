@@ -6,10 +6,10 @@
  * OpenAPI spec version: 1.0.0
  */
 
-export interface LogoCreate {
-  /** @maxLength 255 */
-  logo_name: string;
-  /** @nullable */
-  logo_url?: string | null;
-  file_id: string;
+export interface BannerMutate {
+  banner_name?: string;
+  display_order?: number;
+  status?: string;
+  file_id?: string;
+  display_time?: number;
 }

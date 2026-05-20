@@ -10,6 +10,6 @@ export interface LogoUpdate {
   /** @maxLength 255 */
   logo_name?: string;
   /** @nullable */
-  description?: string | null;
+  logo_url?: string | null;
   file_id?: string;
 }

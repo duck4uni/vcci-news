@@ -7,6 +7,6 @@
  */
 import type { SiteInformationData } from './siteInformationData';
 
-export type SiteInformationResponseAllOf = {
+export type GetSiteInformation200AllOf = {
   responseData?: SiteInformationData;
 };

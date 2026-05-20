@@ -6,6 +6,6 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { ApiResponse } from './apiResponse';
-import type { SiteInformationResponseAllOf } from './siteInformationResponseAllOf';
+import type { PostLogo200AllOf } from './postLogo200AllOf';
 
-export type SiteInformationResponse = ApiResponse & SiteInformationResponseAllOf;
+export type PostLogo200 = ApiResponse & PostLogo200AllOf;

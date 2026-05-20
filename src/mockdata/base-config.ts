@@ -29,6 +29,8 @@ export interface BaseConfigBranchItem {
   email: string;
   fax: string;
   mapsEmbedUrl: string;
+  sortOrder: number;
+  isVisible: boolean;
 }
 
 export interface BaseConfigSocialItem {
@@ -56,6 +58,8 @@ export const EMPTY_BASE_CONFIG_BRANCH: BaseConfigBranchItem = {
   email: "",
   fax: "",
   mapsEmbedUrl: "",
+  sortOrder: 1,
+  isVisible: true,
 };
 
 export const BASE_CONFIG_SOCIAL_SEED: BaseConfigSocialItem[] = [
@@ -147,6 +151,8 @@ const BASE_CONFIG_SEED: BaseConfigData = {
       email: "info@vccinews.vn",
       fax: "028 3932 5789",
       mapsEmbedUrl: "https://maps.google.com/?q=171+Vo+Thi+Sau+Quan+3+TPHCM",
+      sortOrder: 1,
+      isVisible: true,
     },
     {
       id: "base-branch-002",
@@ -156,6 +162,8 @@ const BASE_CONFIG_SEED: BaseConfigData = {
       email: "hanoi@vccinews.vn",
       fax: "024 3574 2020",
       mapsEmbedUrl: "https://maps.google.com/?q=9+Dao+Duy+Anh+Dong+Da+Ha+Noi",
+      sortOrder: 2,
+      isVisible: true,
     },
   ],
 };
@@ -201,6 +209,8 @@ export function readBaseConfig(): BaseConfigData {
               email: parsed.contactInfo.email || "",
               fax: parsed.contactInfo.fax || "",
               mapsEmbedUrl: parsed.contactInfo.mapsEmbedUrl || "",
+              sortOrder: 1,
+              isVisible: true,
             },
           ]
         : BASE_CONFIG_SEED.branches;
@@ -253,13 +263,21 @@ export function readBaseConfig(): BaseConfigData {
           })
         : BASE_CONFIG_SOCIAL_SEED.map((item) => ({ ...item })),
       branches: Array.isArray(parsed.branches)
-        ? parsed.branches.map((item) => ({
+        ? parsed.branches.map((item, index) => ({
             ...EMPTY_BASE_CONFIG_BRANCH,
             ...item,
             fax:
               typeof (item as BaseConfigBranchItem & { fax?: string }).fax === "string"
                 ? (item as BaseConfigBranchItem & { fax?: string }).fax ?? ""
                 : "",
+            sortOrder:
+              typeof (item as BaseConfigBranchItem & { sortOrder?: number }).sortOrder === "number"
+                ? (item as BaseConfigBranchItem & { sortOrder?: number }).sortOrder ?? index + 1
+                : index + 1,
+            isVisible:
+              typeof (item as BaseConfigBranchItem & { isVisible?: boolean }).isVisible === "boolean"
+                ? (item as BaseConfigBranchItem & { isVisible?: boolean }).isVisible
+                : true,
           }))
         : fallbackBranchFromLegacyContact,
     };
@@ -289,5 +307,12 @@ export function sortBaseConfigSocials(items: BaseConfigSocialItem[]) {
   return [...items].sort((first, second) => {
     if (first.sortOrder !== second.sortOrder) return first.sortOrder - second.sortOrder;
     return first.label.localeCompare(second.label, "vi");
+  });
+}
+
+export function sortBaseConfigBranches(items: BaseConfigBranchItem[]) {
+  return [...items].sort((first, second) => {
+    if (first.sortOrder !== second.sortOrder) return first.sortOrder - second.sortOrder;
+    return first.branchName.localeCompare(second.branchName, "vi");
   });
 }

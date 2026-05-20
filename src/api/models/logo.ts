@@ -5,15 +5,14 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
-import type { LogoFile } from './logoFile';
 
 export interface Logo {
   id: string;
   /** @maxLength 255 */
   logo_name: string;
   /** @nullable */
-  description?: string | null;
-  file_id: LogoFile;
+  logo_url?: string | null;
+  file_id: string;
   created_at: string;
   /** @nullable */
   created_by?: string | null;

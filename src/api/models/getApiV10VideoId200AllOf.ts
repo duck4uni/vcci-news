@@ -5,11 +5,8 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
+import type { Video } from './video';
 
-export interface LogoCreate {
-  /** @maxLength 255 */
-  logo_name: string;
-  /** @nullable */
-  logo_url?: string | null;
-  file_id: string;
-}
+export type GetApiV10VideoId200AllOf = {
+  responseData?: Video;
+};
