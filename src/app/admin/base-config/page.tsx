@@ -649,7 +649,8 @@ export default function AdminBaseConfigPage() {
   const handleDeleteItem = async () => {
     if (!config || !deleteTarget) return;
 
-    const nextConfig = cloneBaseConfigData(config);
+    try {
+      const nextConfig = cloneBaseConfigData(config);
 
     if (deleteTarget.mode === "logo") {
       try {
@@ -668,9 +669,13 @@ export default function AdminBaseConfigPage() {
       );
     }
 
-    saveConfig(nextConfig);
-    toast.success("Đã xóa cấu hình");
-    setDeleteTarget(null);
+      saveConfig(nextConfig);
+      toast.success("Đã xóa cấu hình");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không thể xóa cấu hình");
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   const handleBranchChange = <K extends keyof BaseConfigBranchItem>(
