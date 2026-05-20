@@ -37,6 +37,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import {
+  fetchCmsLogos,
+  createCmsLogo,
+  updateCmsLogo,
+  deleteCmsLogo,
+  type LogoItem,
+} from "@/lib/api/logo";
+import { fetchCmsFileById, toAdminMediaItem } from "@/lib/api/files";
+import {
   type BaseConfigBannerItem,
   type BaseConfigBranchItem,
   type BaseConfigData,
@@ -324,7 +332,60 @@ export default function AdminBaseConfigPage() {
   } | null>(null);
 
   React.useEffect(() => {
-    setConfig(readBaseConfig());
+    const init = async () => {
+      // 1. Read base config from local storage as initial state
+      const localConfig = readBaseConfig();
+      setConfig(localConfig);
+
+      // 2. Fetch active logo from API
+      try {
+        const logoData = await fetchCmsLogos();
+        const activeLogo = logoData.rows?.[0] ?? null;
+
+        if (activeLogo) {
+          // Construct the LogoItem config structure
+          const apiLogo: BaseConfigLogoItem = {
+            id: activeLogo.id,
+            name: activeLogo.logo_name,
+            imageId: activeLogo.file_id,
+            isActive: true,
+          };
+
+          // Fetch the file details to construct the image preview URL
+          try {
+            const fileInfo = await fetchCmsFileById(activeLogo.file_id);
+            if (fileInfo) {
+              const mediaItem = toAdminMediaItem(fileInfo);
+              setMediaItems((prev) => {
+                const nextMap = new Map(prev.map((e) => [e.id, e]));
+                nextMap.set(mediaItem.id, mediaItem);
+                return Array.from(nextMap.values());
+              });
+            }
+          } catch (fileErr) {
+            console.error("Error fetching file info for logo:", fileErr);
+          }
+
+          // Update config state with backend data
+          setConfig((prev) => {
+            if (!prev) return prev;
+            const updatedConfig = {
+              ...prev,
+              logo: apiLogo,
+              websiteName: activeLogo.logo_name || prev.websiteName,
+              websiteLink: activeLogo.logo_url || prev.websiteLink,
+            };
+            // Also persist to local storage as fallback for other pages (like dashboard)
+            persistBaseConfig(updatedConfig);
+            return updatedConfig;
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching active logo:", err);
+      }
+    };
+
+    void init();
   }, []);
 
   const mediaMap = React.useMemo(
@@ -377,7 +438,7 @@ export default function AdminBaseConfigPage() {
     setItemDialogOpen(true);
   };
 
-  const handleSubmitItem = () => {
+  const handleSubmitItem = async () => {
     if (!config) return;
 
     const trimmedName = itemForm.name.trim();
@@ -393,69 +454,113 @@ export default function AdminBaseConfigPage() {
 
     setSavingItem(true);
 
-    const nextConfig = cloneBaseConfigData(config);
+    try {
+      if (itemDialogMode === "logo") {
+        let savedLogo: LogoItem;
+        if (currentLogo?.id) {
+          savedLogo = await updateCmsLogo(currentLogo.id, {
+            logo_name: trimmedName,
+            file_id: itemForm.imageId,
+            logo_url: config.websiteLink || "",
+          });
+        } else {
+          savedLogo = await createCmsLogo({
+            logo_name: trimmedName,
+            file_id: itemForm.imageId,
+            logo_url: config.websiteLink || "",
+          });
+        }
 
-    if (itemDialogMode === "logo") {
-      nextConfig.logo = {
-        id: editingItemId || currentLogo?.id || createBaseConfigItemId("logo"),
-        name: trimmedName,
-        imageId: itemForm.imageId,
-        isActive: true,
-      };
-    } else {
-      if (editingItemId) {
-        nextConfig.banners = nextConfig.banners.map((item) =>
-          item.id === editingItemId
-            ? {
-                ...item,
-                name: trimmedName,
-                imageId: itemForm.imageId,
-                isActive: itemForm.isActive,
-                displayTimeSeconds: itemForm.displayTimeSeconds,
-                sortOrder: itemForm.sortOrder,
-              }
-            : item,
-        );
+        // Fetch file details for preview if needed
+        try {
+          const fileInfo = await fetchCmsFileById(savedLogo.file_id);
+          if (fileInfo) {
+            const mediaItem = toAdminMediaItem(fileInfo);
+            setMediaItems((prev) => {
+              const nextMap = new Map(prev.map((e) => [e.id, e]));
+              nextMap.set(mediaItem.id, mediaItem);
+              return Array.from(nextMap.values());
+            });
+          }
+        } catch (fileErr) {
+          console.error("Error fetching file info after saving logo:", fileErr);
+        }
+
+        const nextConfig = cloneBaseConfigData(config);
+        nextConfig.logo = {
+          id: savedLogo.id,
+          name: savedLogo.logo_name,
+          imageId: savedLogo.file_id,
+          isActive: true,
+        };
+        nextConfig.websiteName = savedLogo.logo_name;
+        if (savedLogo.logo_url) {
+          nextConfig.websiteLink = savedLogo.logo_url;
+        }
+
+        saveConfig(nextConfig);
+        setItemDialogOpen(false);
+        toast.success("Đã lưu cấu hình logo");
       } else {
-        nextConfig.banners.push({
-          id: createBaseConfigItemId("banner"),
-          name: trimmedName,
-          imageId: itemForm.imageId,
-          isActive: itemForm.isActive,
-          displayTimeSeconds: itemForm.displayTimeSeconds,
-          sortOrder: itemForm.sortOrder,
-        });
-        setCurrentBannerIndex(Math.max(nextConfig.banners.length - 1, 0));
+        const nextConfig = cloneBaseConfigData(config);
+        if (editingItemId) {
+          nextConfig.banners = nextConfig.banners.map((item) =>
+            item.id === editingItemId
+              ? {
+                  ...item,
+                  name: trimmedName,
+                  imageId: itemForm.imageId,
+                  isActive: itemForm.isActive,
+                  displayTimeSeconds: itemForm.displayTimeSeconds,
+                  sortOrder: itemForm.sortOrder,
+                }
+              : item,
+          );
+        } else {
+          nextConfig.banners.push({
+            id: createBaseConfigItemId("banner"),
+            name: trimmedName,
+            imageId: itemForm.imageId,
+            isActive: itemForm.isActive,
+            displayTimeSeconds: itemForm.displayTimeSeconds,
+            sortOrder: itemForm.sortOrder,
+          });
+          setCurrentBannerIndex(Math.max(nextConfig.banners.length - 1, 0));
+        }
+        saveConfig(nextConfig);
+        setItemDialogOpen(false);
+        toast.success("Đã lưu cấu hình banner");
       }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không thể lưu cấu hình");
+    } finally {
+      setSavingItem(false);
     }
-
-    saveConfig(nextConfig);
-    setSavingItem(false);
-    setItemDialogOpen(false);
-    toast.success(
-      itemDialogMode === "logo"
-        ? "Đã lưu cấu hình logo"
-        : "Đã lưu cấu hình banner",
-    );
   };
 
-  const handleDeleteItem = () => {
+  const handleDeleteItem = async () => {
     if (!config || !deleteTarget) return;
 
-    const nextConfig = cloneBaseConfigData(config);
+    try {
+      const nextConfig = cloneBaseConfigData(config);
 
-    if (deleteTarget.mode === "logo") {
-      nextConfig.logo = null;
-    } else {
-      nextConfig.banners = nextConfig.banners.filter((item) => item.id !== deleteTarget.id);
-      setCurrentBannerIndex((previous) =>
-        Math.max(0, Math.min(previous, nextConfig.banners.length - 1)),
-      );
+      if (deleteTarget.mode === "logo") {
+        await deleteCmsLogo(deleteTarget.id);
+        nextConfig.logo = null;
+      } else {
+        nextConfig.banners = nextConfig.banners.filter((item) => item.id !== deleteTarget.id);
+        setCurrentBannerIndex((previous) =>
+          Math.max(0, Math.min(previous, nextConfig.banners.length - 1)),
+        );
+      }
+
+      saveConfig(nextConfig);
+      toast.success("Đã xóa cấu hình");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không thể xóa cấu hình");
+    } finally {
+      setDeleteTarget(null);
     }
-
-    saveConfig(nextConfig);
-    toast.success("Đã xóa cấu hình");
-    setDeleteTarget(null);
   };
 
   const handleBranchChange = <K extends keyof BaseConfigBranchItem>(
@@ -516,10 +621,39 @@ export default function AdminBaseConfigPage() {
     setConfig((previous) => (previous ? { ...previous, [key]: value } : previous));
   };
 
-  const handleSaveWebsiteInfo = () => {
+  const handleSaveWebsiteInfo = async () => {
     if (!config) return;
-    saveConfig(config);
-    toast.success("Đã lưu thông tin website");
+
+    setSavingItem(true);
+    try {
+      if (currentLogo?.id) {
+        const updated = await updateCmsLogo(currentLogo.id, {
+          logo_name: config.websiteName,
+          file_id: currentLogo.imageId,
+          logo_url: config.websiteLink,
+        });
+
+        const nextConfig = cloneBaseConfigData(config);
+        nextConfig.logo = {
+          id: updated.id,
+          name: updated.logo_name,
+          imageId: updated.file_id,
+          isActive: true,
+        };
+        nextConfig.websiteName = updated.logo_name;
+        if (updated.logo_url) {
+          nextConfig.websiteLink = updated.logo_url;
+        }
+        saveConfig(nextConfig);
+      } else {
+        saveConfig(config);
+      }
+      toast.success("Đã lưu thông tin website");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Không thể lưu thông tin website");
+    } finally {
+      setSavingItem(false);
+    }
   };
 
   const handleSocialChange = <K extends keyof BaseConfigSocialItem>(
