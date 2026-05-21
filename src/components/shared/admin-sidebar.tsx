@@ -17,9 +17,10 @@ import {
   Video,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { getLogo } from "@/api/endpoints/logo";
+import { useGetLogo } from "@/api/endpoints/logo";
 import type { Logo } from "@/api/models/logo";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+import { resolveUploadUrl } from "@/links";
 
 type LogoListEnvelope = {
   data?: {
@@ -89,12 +90,22 @@ export function AdminSidebar() {
     Record<string, boolean>
   >({});
 
-  const { data: logoData } = useQuery({
-    queryKey: ["logo", { page: 1, pageSize: 1, sortOrder: "desc" }],
-    queryFn: () => getLogo({ page: 1, pageSize: 1, sortOrder: "desc" }),
-    select: (response) =>
-      (response as LogoListEnvelope)?.data?.responseData?.rows?.[0],
-  });
+  const { data: logoData } = useGetLogo(
+    {
+      page: 1,
+      pageSize: 1,
+      sortField: "updated_at",
+      sortOrder: "desc",
+    },
+    {
+      query: {
+        select: (response: any) => {
+          const responseData = response?.responseData ?? response?.data?.responseData;
+          return (responseData?.rows?.[0] as Logo | undefined) ?? null;
+        },
+      },
+    }
+  );
 
   const isItemActive = React.useCallback(
     (href: string) => {
@@ -146,7 +157,7 @@ export function AdminSidebar() {
           >
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff] shadow-sm">
               <Image
-                src={logoData?.logo_url || logo}
+                src={logoData?.logo_url ? resolveUploadUrl(logoData.logo_url) : logo}
                 alt={logoData?.logo_name || "VCCI HCM"}
                 width={40}
                 height={40}
@@ -194,8 +205,8 @@ export function AdminSidebar() {
                   className={cn(
                     "rounded-[26px] border border-transparent transition-all duration-200",
                     isOpen &&
-                      expanded &&
-                      "border-[#063e8e]/10 bg-white/70 p-2 shadow-sm",
+                    expanded &&
+                    "border-[#063e8e]/10 bg-white/70 p-2 shadow-sm",
                   )}
                 >
                   <button

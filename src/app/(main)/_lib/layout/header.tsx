@@ -7,8 +7,9 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
-import { getLogo } from "@/api/endpoints/logo";
+import { useGetLogo } from "@/api/endpoints/logo";
 import { getSiteInformation } from "@/api/endpoints/site-information";
+import { resolveUploadUrl } from "@/links";
 import type { Logo } from "@/api/models/logo";
 import type {
   SiteInformationData,
@@ -176,20 +177,23 @@ function Header() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: currentLogo = null } = useQuery({
-    queryKey: ["header-logo"],
-    queryFn: () =>
-      getLogo({
-        page: 1,
-        pageSize: 1,
-        sortField: "updated_at",
-        sortOrder: "desc",
-      }).catch(() => null),
-    select: (response) =>
-      (response as LogoListEnvelope | null)?.data?.responseData?.rows?.[0] ??
-      null,
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: currentLogo = null } = useGetLogo(
+    {
+      page: 1,
+      pageSize: 1,
+      sortField: "updated_at",
+      sortOrder: "desc",
+    },
+    {
+      query: {
+        select: (response: any) => {
+          const responseData = response?.responseData ?? response?.data?.responseData;
+          return (responseData?.rows?.[0] as Logo | undefined) ?? null;
+        },
+        staleTime: 5 * 60 * 1000,
+      },
+    }
+  );
 
   const { data: siteInformationResponse } =
     useQuery<ApiEnvelope<SiteInformationData> | null>({
@@ -252,9 +256,8 @@ function Header() {
   return (
     <header className="sticky top-0 z-50 shadow-[0_1px_0_rgba(15,23,42,0.05)]">
       <div
-        className={`hidden w-full items-center justify-center overflow-hidden bg-[#25439a] ${
-          isTopBarHidden ? "lg:hidden" : "h-10 lg:flex"
-        }`}
+        className={`hidden w-full items-center justify-center overflow-hidden bg-[#25439a] ${isTopBarHidden ? "lg:hidden" : "h-10 lg:flex"
+          }`}
       >
         <div className="mx-auto flex h-full w-full max-w-[1460px] items-center justify-between gap-6 px-6 xl:px-8">
           <div className="flex items-center gap-2">
@@ -321,8 +324,8 @@ function Header() {
             <Image
               width={108}
               height={40}
-              className="h-auto w-[108px] object-contain"
-              src={currentLogo?.logo_url || logo}
+              className="h-auto max-h-10 w-[108px] object-contain"
+              src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : logo}
               alt={currentLogo?.logo_name || "VCCI-HCM"}
               priority
             />
@@ -360,11 +363,10 @@ function Header() {
       </div>
 
       <div
-        className={`fixed inset-0 z-60 bg-white transition-all duration-300 lg:hidden ${
-          toggleMenu
+        className={`fixed inset-0 z-60 bg-white transition-all duration-300 lg:hidden ${toggleMenu
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-2 opacity-0"
-        }`}
+          }`}
       >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="sticky top-0 z-10 flex h-[78px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
@@ -376,8 +378,8 @@ function Header() {
               <Image
                 width={108}
                 height={40}
-                className="h-auto w-[108px] object-contain"
-                src={currentLogo?.logo_url || logo}
+                className="h-auto max-h-10 w-[108px] object-contain"
+                src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : logo}
                 alt={currentLogo?.logo_name || "VCCI-HCM"}
                 priority
               />

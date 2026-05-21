@@ -109,6 +109,7 @@ function Footer() {
 
   const contactInfo = {
     name:
+      primaryBranch?.branch_name ??
       siteInformation?.website_name ??
       "LIÊN ĐOÀN THƯƠNG MẠI & CÔNG NGHIỆP VIỆT NAM - CHI NHÁNH KHU VỰC THÀNH PHỐ HỒ CHÍ MINH",
     address:
@@ -285,7 +286,7 @@ function Footer() {
               {extraBranches.length > 0 ? (
                 <div className="pt-4">
                   <p className="text-[14px] font-semibold uppercase text-[#dce7ff]">
-                    Chi nhánh khác
+                    Các chi nhánh khác
                   </p>
                   <div className="mt-3 space-y-3 text-[14px] text-[#c7d8ff]">
                     {extraBranches.map((branch) => (
@@ -294,32 +295,6 @@ function Footer() {
                           <p className="font-semibold text-[#dce7ff]">
                             {branch.branch_name}
                           </p>
-                        ) : null}
-                        {branch.address ? (
-                          <div className="flex items-start gap-2">
-                            <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#f7b500]" />
-                            <span>{branch.address}</span>
-                          </div>
-                        ) : null}
-                        {branch.telephone || branch.hotline ? (
-                          <div className="flex items-center gap-2">
-                            <Phone className="h-3.5 w-3.5 shrink-0 text-[#f7b500]" />
-                            <span>{branch.telephone || branch.hotline}</span>
-                          </div>
-                        ) : null}
-                        {branch.fax ? (
-                          <div className="flex items-center gap-2">
-                            <Printer className="h-3.5 w-3.5 shrink-0 text-[#f7b500]" />
-                            <span>{branch.fax}</span>
-                          </div>
-                        ) : null}
-                        {branch.email ? (
-                          <div className="flex items-center gap-2">
-                            <Mail className="h-3.5 w-3.5 shrink-0 text-[#f7b500]" />
-                            <a href={`mailto:${branch.email}`}>
-                              {branch.email}
-                            </a>
-                          </div>
                         ) : null}
                       </div>
                     ))}

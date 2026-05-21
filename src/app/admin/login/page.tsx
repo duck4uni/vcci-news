@@ -15,14 +15,14 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { getLogo } from "@/api/endpoints/logo";
+import { useGetLogo } from "@/api/endpoints/logo";
 import type { Logo } from "@/api/models/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
-import links from "@/links";
+import links, { resolveUploadUrl } from "@/links";
 import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
 
@@ -131,12 +131,22 @@ function AuthShell({
   mode: AuthMode;
   children: React.ReactNode;
 }) {
-  const { data: logoData } = useQuery({
-    queryKey: ["logo", { page: 1, pageSize: 1, sortOrder: "desc" }],
-    queryFn: () => getLogo({ page: 1, pageSize: 1, sortOrder: "desc" }),
-    select: (response) =>
-      (response as LogoListEnvelope)?.data?.responseData?.rows?.[0],
-  });
+  const { data: logoData } = useGetLogo(
+    {
+      page: 1,
+      pageSize: 1,
+      sortField: "updated_at",
+      sortOrder: "desc",
+    },
+    {
+      query: {
+        select: (response: any) => {
+          const responseData = response?.responseData ?? response?.data?.responseData;
+          return (responseData?.rows?.[0] as Logo | undefined) ?? null;
+        },
+      },
+    }
+  );
 
   const title =
     mode === "login"
@@ -163,7 +173,7 @@ function AuthShell({
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-white shadow-sm">
                     <Image
-                      src={logoData?.logo_url || logo}
+                      src={logoData?.logo_url ? resolveUploadUrl(logoData.logo_url) : logo}
                       alt={logoData?.logo_name || "VCCI HCM"}
                       width={48}
                       height={48}
@@ -217,7 +227,7 @@ function AuthShell({
               <div className="mb-8 flex items-center gap-3 lg:hidden">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff]">
                   <Image
-                    src={logoData?.logo_url || logo}
+                    src={logoData?.logo_url ? resolveUploadUrl(logoData.logo_url) : logo}
                     alt={logoData?.logo_name || "VCCI HCM"}
                     width={36}
                     height={36}
