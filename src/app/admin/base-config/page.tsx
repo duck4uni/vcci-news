@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
@@ -531,6 +532,7 @@ function BranchCard({
 }
 
 export default function AdminBaseConfigPage() {
+  const queryClient = useQueryClient();
   const [config, setConfig] = React.useState<BaseConfigData | null>(null);
   const [mediaItems, setMediaItems] = React.useState<AdminMediaItem[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
@@ -797,6 +799,7 @@ export default function AdminBaseConfigPage() {
         saveConfig(nextConfig);
         setSavingItem(false);
         setItemDialogOpen(false);
+        queryClient.invalidateQueries({ queryKey: ["/logo"] });
         toast.success("Đã lưu cấu hình logo");
       } catch (error) {
         console.error(error);
@@ -888,6 +891,7 @@ export default function AdminBaseConfigPage() {
         try {
           await deleteLogoId(deleteTarget.id);
           nextConfig.logo = null;
+          queryClient.invalidateQueries({ queryKey: ["/logo"] });
         } catch (error) {
           console.error(error);
           toast.error("Không thể xóa cấu hình logo");
