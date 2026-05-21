@@ -215,7 +215,7 @@ function normalizeSeedMediaLabels(item: AdminMediaItem): AdminMediaItem {
 const newsSeed: AdminNewsItem[] = [
   {
     id: "admin-news-01",
-    title: "VCCI th�c d?y k?t n?i doanh nghi?p h?i vi�n khu v?c ph�a Nam",
+    title: "VCCI th�c d?y kết n?i doanh nghi?p h?i vi�n khu v?c ph�a Nam",
     slug: "vcci-thuc-day-ket-noi-doanh-nghiep-hoi-vien-khu-vuc-phia-nam",
     summary:
       "<p>B?n tin t?ng h?p c�c ho?t d?ng k?t n?i doanh nghi?p, m? r?ng th? tru?ng v� n�ng cao nang l?c qu?n tr? cho h?i vi�n VCCI.</p>",
