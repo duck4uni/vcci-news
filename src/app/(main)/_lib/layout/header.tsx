@@ -19,6 +19,7 @@ import MenuItem from "@/components/base/menu-item";
 import { useCustomClient as customClient } from "@/api/mutator/custom-client";
 import type { Category } from "@/api/models/category";
 import { getCategoryFallbackResponse } from "@/mockdata/categories";
+import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
 
 type HeaderMenuItem = {
   id: string;
@@ -58,40 +59,47 @@ type SocialItem = {
 const getEnvelopeData = <T,>(payload?: ApiEnvelope<T> | null) =>
   payload?.responseData ?? payload?.data?.responseData;
 
+
 const fallbackSocials: SocialItem[] = [
   {
     key: "facebook",
     url: "https://www.facebook.com/VCCIHCMC/",
-    icon: <Facebook size={12} fill="currentColor" />,
+    icon: <Facebook size={13} />,
   },
   {
     key: "twitter",
     url: "https://twitter.com/VCCI_HCM",
-    icon: <Twitter size={12} fill="currentColor" />,
+    icon: <Twitter size={13} />,
   },
   {
     key: "youtube",
     url: "https://www.youtube.com/user/VCCIHCMC",
-    icon: <Youtube size={12} fill="currentColor" />,
+    icon: <Youtube size={13} />,
   },
   {
     key: "linkedin",
     url: "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym",
-    icon: <Linkedin size={12} fill="currentColor" />,
+    icon: <Linkedin size={13} />,
   },
 ];
 
 const getSocialIcon = (key: string) => {
   const normalized = key.toLowerCase();
   if (normalized.includes("facebook"))
-    return <Facebook size={12} fill="currentColor" />;
+    return <Facebook size={13} />;
   if (normalized.includes("twitter") || normalized === "x") {
-    return <Twitter size={12} fill="currentColor" />;
+    return <Twitter size={13} />;
   }
   if (normalized.includes("youtube"))
-    return <Youtube size={12} fill="currentColor" />;
+    return <Youtube size={13} />;
   if (normalized.includes("linkedin"))
-    return <Linkedin size={12} fill="currentColor" />;
+    return <Linkedin size={13} />;
+  if (normalized.includes("zalo")) {
+    return <ZaloIcon size={13} />;
+  }
+  if (normalized.includes("tiktok")) {
+    return <TiktokIcon size={13} />;
+  }
   return null;
 };
 

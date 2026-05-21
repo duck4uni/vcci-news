@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { subscribeNewsletterEmail } from "@/lib/api/newsletter-subscriptions";
 import { getSiteInformation } from "@/api/endpoints/site-information";
 import type { SiteInformationData } from "@/api/models";
+import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
 
 type ApiEnvelope<T> = {
   responseData?: T;
@@ -30,6 +31,7 @@ type SocialItem = {
   url: string;
   icon: React.ReactNode;
 };
+
 
 const fallbackSocials: SocialItem[] = [
   {
@@ -65,6 +67,8 @@ const getSocialIcon = (key: string): React.ReactNode => {
   }
   if (normalized.includes("youtube")) return <Youtube className="h-5 w-5" />;
   if (normalized.includes("linkedin")) return <Linkedin className="h-5 w-5" />;
+  if (normalized.includes("zalo")) return <ZaloIcon className="h-5 w-5" />;
+  if (normalized.includes("tiktok")) return <TiktokIcon className="h-5 w-5" />;
   return null;
 };
 
