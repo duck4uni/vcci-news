@@ -15,7 +15,7 @@ export const ZaloIcon = ({ size = 20, className = "" }: { size?: number; classNa
   </svg>
 );
 
-const TiktokIcon = ({ size = 20, className = "" }: { size?: number; className?: string }) => (
+export const TiktokIcon = ({ size = 20, className = "" }: { size?: number; className?: string }) => (
   <svg
     viewBox="0 0 24 24"
     width={size}
