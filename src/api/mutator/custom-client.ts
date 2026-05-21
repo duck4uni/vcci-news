@@ -198,8 +198,8 @@ const useCustomClient = <T>(url: string, options?: RequestInit): Promise<T> => {
     method,
     headers: convertHeaders(options?.headers),
     data: options?.body,
-    signal: options?.signal || undefined,
-    cancelToken: source.token,
+    signal: shouldCacheGet ? undefined : (options?.signal || undefined),
+    cancelToken: shouldCacheGet ? undefined : source.token,
   };
 
   const promise = AXIOS_INSTANCE(axiosConfig)
