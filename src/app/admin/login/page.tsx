@@ -14,6 +14,9 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { getLogo } from "@/api/endpoints/logo";
+import type { Logo } from "@/api/models/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -33,6 +36,14 @@ type ApiEnvelope<T = unknown> = {
   };
   message?: string | null;
   message_en?: string | null;
+};
+
+type LogoListEnvelope = {
+  data?: {
+    responseData?: {
+      rows?: Logo[];
+    };
+  };
 };
 
 type VerifyOtpPayload = {
@@ -58,7 +69,11 @@ const authButtonClassName =
   "h-11 rounded-xl bg-[#063e8e] text-white shadow-[0_12px_24px_rgba(6,62,142,0.16)] hover:bg-[#052f6c]";
 
 function normalizeRedirectPath(redirect: string | null) {
-  if (!redirect || !redirect.startsWith("/admin") || redirect === "/admin/login") {
+  if (
+    !redirect ||
+    !redirect.startsWith("/admin") ||
+    redirect === "/admin/login"
+  ) {
     return DEFAULT_REDIRECT;
   }
 
@@ -95,7 +110,8 @@ async function postAuthJson<TResponse, TBody>(path: string, body: TBody) {
     body: JSON.stringify(body),
   });
 
-  const data = (await response.json().catch(() => ({}))) as TResponse & ErrorResponse;
+  const data = (await response.json().catch(() => ({}))) as TResponse &
+    ErrorResponse;
 
   if (!response.ok) {
     throw {
@@ -115,6 +131,13 @@ function AuthShell({
   mode: AuthMode;
   children: React.ReactNode;
 }) {
+  const { data: logoData } = useQuery({
+    queryKey: ["logo", { page: 1, pageSize: 1, sortOrder: "desc" }],
+    queryFn: () => getLogo({ page: 1, pageSize: 1, sortOrder: "desc" }),
+    select: (response) =>
+      (response as LogoListEnvelope)?.data?.responseData?.rows?.[0],
+  });
+
   const title =
     mode === "login"
       ? "Đăng nhập quản trị"
@@ -139,13 +162,22 @@ function AuthShell({
               <div>
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-white shadow-sm">
-                    <Image src={logo} alt="VCCI HCM" className="h-12 w-12 object-contain" priority />
+                    <Image
+                      src={logoData?.logo_url || logo}
+                      alt={logoData?.logo_name || "VCCI HCM"}
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 object-contain"
+                      priority
+                    />
                   </div>
                   <div>
                     <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#063e8e]">
-                      VCCI News
+                      {logoData?.logo_name || "VCCI News"}
                     </div>
-                    <div className="mt-1 text-sm text-gray-700">Trang quản trị website</div>
+                    <div className="mt-1 text-sm text-gray-700">
+                      Trang quản trị website
+                    </div>
                   </div>
                 </div>
 
@@ -158,16 +190,21 @@ function AuthShell({
                     Quản lý nội dung với giao diện riêng cho admin.
                   </h1>
                   <p className="mt-5 text-base leading-7 text-gray-700">
-                    Hệ thống sử dụng tài khoản quản trị để bảo vệ cấu hình website, bài viết,
-                    media và các dữ liệu vận hành.
+                    Hệ thống sử dụng tài khoản quản trị để bảo vệ cấu hình
+                    website, bài viết, media và các dữ liệu vận hành.
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-3 gap-3">
                 {["Cấu hình", "Bài viết", "Liên hệ"].map((item) => (
-                  <div key={item} className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-3">
-                    <div className="text-sm font-semibold text-[#063e8e]">{item}</div>
+                  <div
+                    key={item}
+                    className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-3"
+                  >
+                    <div className="text-sm font-semibold text-[#063e8e]">
+                      {item}
+                    </div>
                     <div className="mt-1 h-1.5 rounded-full bg-[#dbe8ff]" />
                   </div>
                 ))}
@@ -179,13 +216,22 @@ function AuthShell({
             <div className="mx-auto w-full max-w-md">
               <div className="mb-8 flex items-center gap-3 lg:hidden">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff]">
-                  <Image src={logo} alt="VCCI HCM" className="h-9 w-9 object-contain" priority />
+                  <Image
+                    src={logoData?.logo_url || logo}
+                    alt={logoData?.logo_name || "VCCI HCM"}
+                    width={36}
+                    height={36}
+                    className="h-9 w-9 object-contain"
+                    priority
+                  />
                 </div>
                 <div>
                   <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#063e8e]">
-                    VCCI News
+                    {logoData?.logo_name || "VCCI News"}
                   </div>
-                  <div className="text-sm text-gray-700">Trang quản trị website</div>
+                  <div className="text-sm text-gray-700">
+                    Trang quản trị website
+                  </div>
                 </div>
               </div>
 
@@ -193,8 +239,12 @@ function AuthShell({
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#063e8e]">
                   <LockKeyhole className="h-6 w-6" />
                 </div>
-                <h2 className="mt-5 text-2xl font-bold text-gray-900">{title}</h2>
-                <p className="mt-2 text-sm leading-6 text-gray-700">{description}</p>
+                <h2 className="mt-5 text-2xl font-bold text-gray-900">
+                  {title}
+                </h2>
+                <p className="mt-2 text-sm leading-6 text-gray-700">
+                  {description}
+                </p>
               </div>
 
               {children}
@@ -263,7 +313,9 @@ function InlineMessage({
       }
     >
       <div className="flex items-start gap-2">
-        {type === "success" ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> : null}
+        {type === "success" ? (
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+        ) : null}
         <span>{message}</span>
       </div>
     </div>
@@ -314,12 +366,18 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
 
     try {
       await loginAdmin(email.trim(), password, { persistSession: remember });
-      setAppUserRemember(remember ? email.trim() : "", remember ? password : "", remember);
+      setAppUserRemember(
+        remember ? email.trim() : "",
+        remember ? password : "",
+        remember,
+      );
 
       toast.success("Đăng nhập quản trị thành công");
       router.replace(redirect);
     } catch (error) {
-      setLoginError(getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."));
+      setLoginError(
+        getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."),
+      );
     } finally {
       setLoginLoading(false);
     }
@@ -332,15 +390,20 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     setResetLoading(true);
 
     try {
-      await postAuthJson<ApiEnvelope, { email: string }>("/auth/forgot-password/send-otp", {
-        email: email.trim(),
-      });
+      await postAuthJson<ApiEnvelope, { email: string }>(
+        "/auth/forgot-password/send-otp",
+        {
+          email: email.trim(),
+        },
+      );
 
       setResetStep("verify");
       setMode("reset");
       setResetMessage("M? OTP d? du?c g?i d?n email qu?n tr?.");
     } catch (error) {
-      setResetError(getAuthErrorMessage(error, "Kh?ng th? g?i m? OTP. Vui l?ng th? l?i."));
+      setResetError(
+        getAuthErrorMessage(error, "Kh?ng th? g?i m? OTP. Vui l?ng th? l?i."),
+      );
     } finally {
       setResetLoading(false);
     }
@@ -353,13 +416,13 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     setResetLoading(true);
 
     try {
-      const response = await postAuthJson<ApiEnvelope<VerifyOtpPayload>, { email: string; otp: string }>(
-        "/auth/forgot-password/verify-otp",
-        {
-          email: email.trim(),
-          otp: otp.trim(),
-        },
-      );
+      const response = await postAuthJson<
+        ApiEnvelope<VerifyOtpPayload>,
+        { email: string; otp: string }
+      >("/auth/forgot-password/verify-otp", {
+        email: email.trim(),
+        otp: otp.trim(),
+      });
       const payload = getResponseData<VerifyOtpPayload>(response);
 
       if (!payload?.reset_token) {
@@ -370,7 +433,9 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
       setResetStep("password");
       setResetMessage("OTP hợp lệ. Bạn có thể tạo mật khẩu mới.");
     } catch (error) {
-      setResetError(getAuthErrorMessage(error, "OTP kh?ng h?p l? ho?c d? h?t h?n."));
+      setResetError(
+        getAuthErrorMessage(error, "OTP kh?ng h?p l? ho?c d? h?t h?n."),
+      );
     } finally {
       setResetLoading(false);
     }
@@ -394,22 +459,29 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     setResetLoading(true);
 
     try {
-      await postAuthJson<ApiEnvelope, { reset_token: string; new_password: string }>(
-        "/auth/forgot-password/reset",
-        {
-          reset_token: resetToken,
-          new_password: newPassword,
-        },
-      );
+      await postAuthJson<
+        ApiEnvelope,
+        { reset_token: string; new_password: string }
+      >("/auth/forgot-password/reset", {
+        reset_token: resetToken,
+        new_password: newPassword,
+      });
 
       setResetStep("done");
-      setResetMessage("Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.");
+      setResetMessage(
+        "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
+      );
       setPassword("");
       setNewPassword("");
       setConfirmPassword("");
       toast.success("Đặt lại mật khẩu thành công");
     } catch (error) {
-      setResetError(getAuthErrorMessage(error, "Không thể đặt lại mật khẩu. Vui lòng thử lại."));
+      setResetError(
+        getAuthErrorMessage(
+          error,
+          "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
+        ),
+      );
     } finally {
       setResetLoading(false);
     }
@@ -442,7 +514,9 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     <AuthShell mode={mode}>
       {mode === "login" ? (
         <form className="space-y-5" onSubmit={handleLogin}>
-          {loginError ? <InlineMessage type="error" message={loginError} /> : null}
+          {loginError ? (
+            <InlineMessage type="error" message={loginError} />
+          ) : null}
 
           <div className="space-y-2">
             <Label htmlFor="admin-email" className="text-gray-700">
@@ -500,7 +574,11 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             </Button>
           </div>
 
-          <Button type="submit" className={authButtonClassName} disabled={loginLoading}>
+          <Button
+            type="submit"
+            className={authButtonClassName}
+            disabled={loginLoading}
+          >
             {loginLoading ? (
               <>
                 <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -515,8 +593,12 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
 
       {mode === "forgot" ? (
         <form className="space-y-5" onSubmit={handleSendOtp}>
-          {resetError ? <InlineMessage type="error" message={resetError} /> : null}
-          {resetMessage ? <InlineMessage type="success" message={resetMessage} /> : null}
+          {resetError ? (
+            <InlineMessage type="error" message={resetError} />
+          ) : null}
+          {resetMessage ? (
+            <InlineMessage type="success" message={resetMessage} />
+          ) : null}
 
           <div className="space-y-2">
             <Label htmlFor="forgot-email" className="text-gray-700">
@@ -537,7 +619,11 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             </div>
           </div>
 
-          <Button type="submit" className={authButtonClassName} disabled={resetLoading}>
+          <Button
+            type="submit"
+            className={authButtonClassName}
+            disabled={resetLoading}
+          >
             {resetLoading ? (
               <>
                 <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -569,7 +655,9 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
               ["done", "Hoàn tất"],
             ].map(([step, label]) => {
               const stepIndex = ["verify", "password", "done"].indexOf(step);
-              const currentIndex = ["verify", "password", "done"].indexOf(resetStep);
+              const currentIndex = ["verify", "password", "done"].indexOf(
+                resetStep,
+              );
               const active = currentIndex >= stepIndex;
 
               return (
@@ -587,8 +675,12 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             })}
           </div>
 
-          {resetError ? <InlineMessage type="error" message={resetError} /> : null}
-          {resetMessage ? <InlineMessage type="success" message={resetMessage} /> : null}
+          {resetError ? (
+            <InlineMessage type="error" message={resetError} />
+          ) : null}
+          {resetMessage ? (
+            <InlineMessage type="success" message={resetMessage} />
+          ) : null}
 
           {resetStep === "verify" ? (
             <form className="space-y-5" onSubmit={handleVerifyOtp}>
@@ -601,13 +693,19 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   value={otp}
-                  onChange={(event) => setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                  onChange={(event) =>
+                    setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
                   placeholder="Nhập 6 chữ số"
                   className={`${authFieldClassName} text-center text-lg font-semibold tracking-[0.35em]`}
                   required
                 />
               </div>
-              <Button type="submit" className={authButtonClassName} disabled={resetLoading}>
+              <Button
+                type="submit"
+                className={authButtonClassName}
+                disabled={resetLoading}
+              >
                 {resetLoading ? (
                   <>
                     <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -656,7 +754,11 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
                 />
               </div>
 
-              <Button type="submit" className={authButtonClassName} disabled={resetLoading}>
+              <Button
+                type="submit"
+                className={authButtonClassName}
+                disabled={resetLoading}
+              >
                 {resetLoading ? (
                   <>
                     <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -673,12 +775,19 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             <div className="space-y-5">
               <div className="rounded-2xl border border-[#063e8e]/15 bg-[#f8fbff] p-5 text-center">
                 <CheckCircle2 className="mx-auto h-10 w-10 text-[#063e8e]" />
-                <div className="mt-3 text-base font-semibold text-gray-900">M?t kh?u d? du?c c?p nh?t</div>
+                <div className="mt-3 text-base font-semibold text-gray-900">
+                  M?t kh?u d? du?c c?p nh?t
+                </div>
                 <p className="mt-2 text-sm leading-6 text-gray-700">
-                  Quay lại màn đăng nhập để vào khu vực quản trị bằng mật khẩu mới.
+                  Quay lại màn đăng nhập để vào khu vực quản trị bằng mật khẩu
+                  mới.
                 </p>
               </div>
-              <Button type="button" className={authButtonClassName} onClick={switchToLogin}>
+              <Button
+                type="button"
+                className={authButtonClassName}
+                onClick={switchToLogin}
+              >
                 Đăng nhập ngay
               </Button>
             </div>

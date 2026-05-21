@@ -20,7 +20,13 @@ import { AdminImagePicker } from "@/components/admin/image-picker";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -43,11 +49,22 @@ import {
   postSiteInformationBranches,
   putSiteInformation,
 } from "@/api/endpoints/site-information";
-import { deleteLogoId, postLogo, putLogoId } from "@/api/endpoints/logo";
-import { deleteBannerId, getBanner, postBanner, putBannerId } from "@/api/endpoints/banner";
+import {
+  deleteLogoId,
+  getLogo,
+  postLogo,
+  putLogoId,
+} from "@/api/endpoints/logo";
+import {
+  deleteBannerId,
+  getBanner,
+  postBanner,
+  putBannerId,
+} from "@/api/endpoints/banner";
 import type {
   Banner,
   BannerMutate,
+  Logo,
   SiteInformationBranch,
   SiteInformationBranchMutate,
   SiteInformationData,
@@ -87,6 +104,10 @@ type LogoMediaItem = AdminMediaItem & {
   logoId?: string;
 };
 
+type LogoListResponse = {
+  rows?: Logo[];
+};
+
 type PageEnvelope<T> = {
   rows?: T[];
   count?: number;
@@ -112,7 +133,10 @@ function emptyItemForm(): ConfigItemForm {
   };
 }
 
-function resolveMediaItem(mediaMap: Map<string, AdminMediaItem>, imageId: string) {
+function resolveMediaItem(
+  mediaMap: Map<string, AdminMediaItem>,
+  imageId: string,
+) {
   return mediaMap.get(imageId) ?? null;
 }
 
@@ -121,7 +145,9 @@ function getEnvelopeData<T>(payload: unknown): T | undefined {
   return root.responseData ?? root.data?.responseData;
 }
 
-function mapApiBranchToConfig(branch: SiteInformationBranch): BaseConfigBranchItem {
+function mapApiBranchToConfig(
+  branch: SiteInformationBranch,
+): BaseConfigBranchItem {
   return {
     id: branch.id ?? createBaseConfigItemId("branch"),
     branchName: branch.branch_name ?? "",
@@ -146,12 +172,16 @@ function mapConfigBranchToApi(
     email: branch.email.trim() || null,
     fax: branch.fax.trim() || null,
     googlemap_link: branch.mapsEmbedUrl.trim() || null,
-    sort_order: Number.isFinite(branch.sortOrder) ? branch.sortOrder : index + 1,
+    sort_order: Number.isFinite(branch.sortOrder)
+      ? branch.sortOrder
+      : index + 1,
     is_active: branch.isVisible,
   };
 }
 
-function mapApiSocialToConfig(social: SiteInformationSocialLink): BaseConfigSocialItem {
+function mapApiSocialToConfig(
+  social: SiteInformationSocialLink,
+): BaseConfigSocialItem {
   return {
     id: social.id,
     label: social.label,
@@ -161,7 +191,9 @@ function mapApiSocialToConfig(social: SiteInformationSocialLink): BaseConfigSoci
   };
 }
 
-function mapConfigSocialToApi(social: BaseConfigSocialItem): SiteInformationSocialMutate {
+function mapConfigSocialToApi(
+  social: BaseConfigSocialItem,
+): SiteInformationSocialMutate {
   return {
     url: social.url.trim() || null,
     sort_order: social.sortOrder,
@@ -190,13 +222,10 @@ function mapConfigBannerToApi(banner: BaseConfigBannerItem): BannerMutate {
   };
 }
 
-function mapSiteLogoToConfig(siteInformation: SiteInformationData): {
+function mapApiLogoToConfig(logo: Logo): {
   logo: BaseConfigLogoItem | null;
   media: LogoMediaItem | null;
 } | null {
-  const logo = siteInformation.logo;
-  if (!logo) return null;
-
   const media: LogoMediaItem = {
     id: logo.file_id,
     logoId: logo.id,
@@ -224,8 +253,9 @@ function mapSiteLogoToConfig(siteInformation: SiteInformationData): {
 function applySiteInformationToConfig(
   baseConfig: BaseConfigData,
   siteInformation: SiteInformationData,
+  logo?: Logo | null,
 ): BaseConfigData {
-  const logoConfig = mapSiteLogoToConfig(siteInformation);
+  const logoConfig = logo ? mapApiLogoToConfig(logo) : null;
 
   return {
     ...baseConfig,
@@ -266,7 +296,12 @@ function ConfigItemPreview({
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[#eef4ff]">
         {media ? (
-          <SafeNextImage src={media.url} alt={media.alt || media.name} fill className="object-cover" />
+          <SafeNextImage
+            src={media.url}
+            alt={media.alt || media.name}
+            fill
+            className="object-cover"
+          />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-gray-500">
             Chưa chọn hình ảnh
@@ -274,7 +309,9 @@ function ConfigItemPreview({
         )}
       </div>
       <div className="space-y-2 px-4 py-3">
-        <div className="line-clamp-1 text-sm font-semibold text-[#163b73]">{title}</div>
+        <div className="line-clamp-1 text-sm font-semibold text-[#163b73]">
+          {title}
+        </div>
         <div className="line-clamp-2 text-sm text-gray-600">{item.name}</div>
       </div>
     </button>
@@ -302,7 +339,10 @@ function ConfigItemDialog({
   title: string;
   description: string;
   onOpenChange: (open: boolean) => void;
-  onChange: <K extends keyof ConfigItemForm>(key: K, value: ConfigItemForm[K]) => void;
+  onChange: <K extends keyof ConfigItemForm>(
+    key: K,
+    value: ConfigItemForm[K],
+  ) => void;
   onPickImage: () => void;
   onSubmit: () => void;
 }) {
@@ -311,8 +351,12 @@ function ConfigItemDialog({
       <DialogContent className="flex max-h-[88vh] max-w-xl flex-col overflow-hidden rounded-3xl border-[#063e8e]/15 bg-white p-0">
         <DialogHeader>
           <div className="border-b border-[#063e8e]/10 px-6 py-5">
-            <DialogTitle className="text-xl text-[#063e8e]">{title}</DialogTitle>
-            <DialogDescription className="mt-2 text-sm text-gray-600">{description}</DialogDescription>
+            <DialogTitle className="text-xl text-[#063e8e]">
+              {title}
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-sm text-gray-600">
+              {description}
+            </DialogDescription>
           </div>
         </DialogHeader>
 
@@ -323,21 +367,28 @@ function ConfigItemDialog({
               <Input
                 value={form.name}
                 onChange={(event) => onChange("name", event.target.value)}
-                placeholder={mode === "logo" ? "Nhập tên logo..." : "Nhập tên banner..."}
+                placeholder={
+                  mode === "logo" ? "Nhập tên logo..." : "Nhập tên banner..."
+                }
                 className={fieldClassName}
               />
             </div>
 
             {mode === "banner" ? (
               <div className="space-y-2">
-                <Label className="text-gray-700">Thời gian hiển thị (giây)</Label>
+                <Label className="text-gray-700">
+                  Thời gian hiển thị (giây)
+                </Label>
                 <Input
                   type="number"
                   min={1}
                   max={60}
                   value={form.displayTimeSeconds}
                   onChange={(event) =>
-                    onChange("displayTimeSeconds", Number(event.target.value || 1))
+                    onChange(
+                      "displayTimeSeconds",
+                      Number(event.target.value || 1),
+                    )
                   }
                   className={fieldClassName}
                 />
@@ -351,7 +402,9 @@ function ConfigItemDialog({
                   type="number"
                   min={1}
                   value={form.sortOrder}
-                  onChange={(event) => onChange("sortOrder", Number(event.target.value || 1))}
+                  onChange={(event) =>
+                    onChange("sortOrder", Number(event.target.value || 1))
+                  }
                   className={fieldClassName}
                 />
               </div>
@@ -388,13 +441,18 @@ function ConfigItemDialog({
 
             {mode === "banner" ? (
               <div className="flex items-center justify-between rounded-2xl border border-[#063e8e]/10 bg-[#f7faff] px-4 py-3">
-              <div>
-                <div className="text-sm font-medium text-[#163b73]">Trạng thái hiển thị</div>
-                <div className="text-xs text-gray-500">
-                  {form.isActive ? "Đang bật hiển thị" : "Đang tắt hiển thị"}
+                <div>
+                  <div className="text-sm font-medium text-[#163b73]">
+                    Trạng thái hiển thị
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {form.isActive ? "Đang bật hiển thị" : "Đang tắt hiển thị"}
+                  </div>
                 </div>
-              </div>
-                <Switch checked={form.isActive} onCheckedChange={(value) => onChange("isActive", value)} />
+                <Switch
+                  checked={form.isActive}
+                  onCheckedChange={(value) => onChange("isActive", value)}
+                />
               </div>
             ) : null}
           </div>
@@ -446,14 +504,18 @@ function BranchCard({
       }`}
     >
       <button type="button" onClick={onSelect} className="w-full text-left">
-        <div className="text-sm font-semibold text-[#163b73]">{branch.branchName || "Chi nhánh mới"}</div>
+        <div className="text-sm font-semibold text-[#163b73]">
+          {branch.branchName || "Chi nhánh mới"}
+        </div>
         <div className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
           {branch.address || "Chưa cập nhật địa chỉ"}
         </div>
       </button>
 
       <div className="mt-4 flex items-center justify-between">
-        <div className="text-xs text-slate-500">{branch.hotline || "Chưa có hotline"}</div>
+        <div className="text-xs text-slate-500">
+          {branch.hotline || "Chưa có hotline"}
+        </div>
         <Button
           type="button"
           variant="ghost"
@@ -473,12 +535,16 @@ export default function AdminBaseConfigPage() {
   const [mediaItems, setMediaItems] = React.useState<AdminMediaItem[]>([]);
   const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
   const [currentBranchIndex, setCurrentBranchIndex] = React.useState(0);
-  const [currentBranchId, setCurrentBranchId] = React.useState<string | null>(null);
+  const [currentBranchId, setCurrentBranchId] = React.useState<string | null>(
+    null,
+  );
   const [activeTab, setActiveTab] = React.useState("branding");
   const [itemDialogOpen, setItemDialogOpen] = React.useState(false);
-  const [itemDialogMode, setItemDialogMode] = React.useState<ConfigItemMode>("logo");
+  const [itemDialogMode, setItemDialogMode] =
+    React.useState<ConfigItemMode>("logo");
   const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
-  const [itemForm, setItemForm] = React.useState<ConfigItemForm>(emptyItemForm());
+  const [itemForm, setItemForm] =
+    React.useState<ConfigItemForm>(emptyItemForm());
   const [imagePickerOpen, setImagePickerOpen] = React.useState(false);
   const [savingItem, setSavingItem] = React.useState(false);
   const [savingWebsiteInfo, setSavingWebsiteInfo] = React.useState(false);
@@ -497,24 +563,63 @@ export default function AdminBaseConfigPage() {
 
     const loadSiteInformation = async () => {
       try {
-        const response = await getSiteInformation();
-        const siteInformation = getEnvelopeData<SiteInformationData>(response);
+        const [siteInformationResponse, logoResponse] = await Promise.all([
+          getSiteInformation(),
+          getLogo({
+            page: 1,
+            pageSize: 1,
+            sortField: "updated_at",
+            sortOrder: "desc",
+          }),
+        ]);
 
-        if (!mounted || !siteInformation) return;
+        const siteInformation = getEnvelopeData<SiteInformationData>(
+          siteInformationResponse,
+        );
+        const logoPage = getEnvelopeData<LogoListResponse>(logoResponse);
+        const currentLogo = logoPage?.rows?.[0] ?? null;
 
-        const logoConfig = mapSiteLogoToConfig(siteInformation);
-        if (logoConfig?.media) {
-          const logoMedia = logoConfig.media;
-          setMediaItems((previous) => {
-            const nextMap = new Map(previous.map((entry) => [entry.id, entry]));
-            nextMap.set(logoMedia.id, logoMedia);
-            return Array.from(nextMap.values());
-          });
+        if (!mounted) return;
+
+        if (currentLogo) {
+          const logoConfig = mapApiLogoToConfig(currentLogo);
+          if (logoConfig?.media) {
+            const logoMedia = logoConfig.media;
+            setMediaItems((previous) => {
+              const nextMap = new Map(
+                previous.map((entry) => [entry.id, entry]),
+              );
+              nextMap.set(logoMedia.id, logoMedia);
+              return Array.from(nextMap.values());
+            });
+          }
         }
 
-        setConfig((previous) =>
-          applySiteInformationToConfig(previous ?? baseConfig, siteInformation),
-        );
+        if (siteInformation) {
+          setConfig((previous) =>
+            applySiteInformationToConfig(
+              previous ?? baseConfig,
+              siteInformation,
+              currentLogo,
+            ),
+          );
+          return;
+        }
+
+        if (currentLogo) {
+          const logoConfig = mapApiLogoToConfig(currentLogo);
+          setConfig((previous) =>
+            previous
+              ? {
+                  ...previous,
+                  logo: logoConfig?.logo ?? previous.logo,
+                }
+              : {
+                  ...baseConfig,
+                  logo: logoConfig?.logo ?? baseConfig.logo,
+                },
+          );
+        }
       } catch (error) {
         console.error(error);
         if (mounted) {
@@ -600,10 +705,14 @@ export default function AdminBaseConfigPage() {
   const currentLogo = config?.logo ?? null;
   const currentBanner = sortedBanners[currentBannerIndex] ?? null;
   const currentBranch =
-    (currentBranchId ? sortedBranches.find((branch) => branch.id === currentBranchId) : null) ??
+    (currentBranchId
+      ? sortedBranches.find((branch) => branch.id === currentBranchId)
+      : null) ??
     sortedBranches[currentBranchIndex] ??
     null;
-  const currentLogoMedia = currentLogo ? resolveMediaItem(mediaMap, currentLogo.imageId) : null;
+  const currentLogoMedia = currentLogo
+    ? resolveMediaItem(mediaMap, currentLogo.imageId)
+    : null;
   const currentBannerMedia = currentBanner
     ? resolveMediaItem(mediaMap, currentBanner.imageId)
     : null;
@@ -619,19 +728,24 @@ export default function AdminBaseConfigPage() {
     setEditingItemId(null);
     setItemForm({
       ...emptyItemForm(),
-      sortOrder: mode === "banner" ? (config ? config.banners.length + 1 : 1) : 1,
+      sortOrder:
+        mode === "banner" ? (config ? config.banners.length + 1 : 1) : 1,
     });
     setItemDialogOpen(true);
   };
 
-  const openEditDialog = (mode: ConfigItemMode, item: BaseConfigLogoItem | BaseConfigBannerItem) => {
+  const openEditDialog = (
+    mode: ConfigItemMode,
+    item: BaseConfigLogoItem | BaseConfigBannerItem,
+  ) => {
     setItemDialogMode(mode);
     setEditingItemId(item.id);
     setItemForm({
       name: item.name,
       imageId: item.imageId,
       isActive: item.isActive,
-      displayTimeSeconds: "displayTimeSeconds" in item ? item.displayTimeSeconds : 5,
+      displayTimeSeconds:
+        "displayTimeSeconds" in item ? item.displayTimeSeconds : 5,
       sortOrder: "sortOrder" in item ? item.sortOrder : 1,
     });
     setItemDialogOpen(true);
@@ -669,7 +783,8 @@ export default function AdminBaseConfigPage() {
               logo_url: selectedMedia?.url ?? null,
               file_id: itemForm.imageId,
             });
-        const savedLogo = getEnvelopeData<NonNullable<SiteInformationData["logo"]>>(response);
+        const savedLogo =
+          getEnvelopeData<NonNullable<SiteInformationData["logo"]>>(response);
         const nextConfig = cloneBaseConfigData(config);
 
         nextConfig.logo = {
@@ -705,7 +820,9 @@ export default function AdminBaseConfigPage() {
         ? await putBannerId(editingItemId, mapConfigBannerToApi(bannerDraft))
         : await postBanner(mapConfigBannerToApi(bannerDraft));
       const savedBanner = getEnvelopeData<Banner>(response);
-      const nextBanner = savedBanner ? mapApiBannerToConfig(savedBanner) : bannerDraft;
+      const nextBanner = savedBanner
+        ? mapApiBannerToConfig(savedBanner)
+        : bannerDraft;
       const nextConfig = cloneBaseConfigData(config);
 
       if (editingItemId) {
@@ -731,38 +848,34 @@ export default function AdminBaseConfigPage() {
     const nextConfig = cloneBaseConfigData(config!);
 
     if (editingItemId) {
-        nextConfig.banners = nextConfig.banners.map((item) =>
-          item.id === editingItemId
-            ? {
-                ...item,
-                name: trimmedName,
-                imageId: itemForm.imageId,
-                isActive: itemForm.isActive,
-                displayTimeSeconds: itemForm.displayTimeSeconds,
-                sortOrder: itemForm.sortOrder,
-              }
-            : item,
-        );
+      nextConfig.banners = nextConfig.banners.map((item) =>
+        item.id === editingItemId
+          ? {
+              ...item,
+              name: trimmedName,
+              imageId: itemForm.imageId,
+              isActive: itemForm.isActive,
+              displayTimeSeconds: itemForm.displayTimeSeconds,
+              sortOrder: itemForm.sortOrder,
+            }
+          : item,
+      );
     } else {
-        nextConfig.banners.push({
-          id: createBaseConfigItemId("banner"),
-          name: trimmedName,
-          imageId: itemForm.imageId,
-          isActive: itemForm.isActive,
-          displayTimeSeconds: itemForm.displayTimeSeconds,
-          sortOrder: itemForm.sortOrder,
-        });
-        setCurrentBannerIndex(Math.max(nextConfig.banners.length - 1, 0));
+      nextConfig.banners.push({
+        id: createBaseConfigItemId("banner"),
+        name: trimmedName,
+        imageId: itemForm.imageId,
+        isActive: itemForm.isActive,
+        displayTimeSeconds: itemForm.displayTimeSeconds,
+        sortOrder: itemForm.sortOrder,
+      });
+      setCurrentBannerIndex(Math.max(nextConfig.banners.length - 1, 0));
     }
 
     saveConfig(nextConfig);
     setSavingItem(false);
     setItemDialogOpen(false);
-    toast.success(
-      false
-        ? "Đã lưu cấu hình logo"
-        : "Đã lưu cấu hình banner",
-    );
+    toast.success(false ? "Đã lưu cấu hình logo" : "Đã lưu cấu hình banner");
   };
 
   const handleDeleteItem = async () => {
@@ -771,28 +884,32 @@ export default function AdminBaseConfigPage() {
     try {
       const nextConfig = cloneBaseConfigData(config);
 
-    if (deleteTarget.mode === "logo") {
-      try {
-        await deleteLogoId(deleteTarget.id);
-        nextConfig.logo = null;
-      } catch (error) {
-        console.error(error);
-        toast.error("Không thể xóa cấu hình logo");
-        setDeleteTarget(null);
-        return;
+      if (deleteTarget.mode === "logo") {
+        try {
+          await deleteLogoId(deleteTarget.id);
+          nextConfig.logo = null;
+        } catch (error) {
+          console.error(error);
+          toast.error("Không thể xóa cấu hình logo");
+          setDeleteTarget(null);
+          return;
+        }
+      } else {
+        await deleteBannerId(deleteTarget.id);
+        nextConfig.banners = nextConfig.banners.filter(
+          (item) => item.id !== deleteTarget.id,
+        );
+        setCurrentBannerIndex((previous) =>
+          Math.max(0, Math.min(previous, nextConfig.banners.length - 1)),
+        );
       }
-    } else {
-      await deleteBannerId(deleteTarget.id);
-      nextConfig.banners = nextConfig.banners.filter((item) => item.id !== deleteTarget.id);
-      setCurrentBannerIndex((previous) =>
-        Math.max(0, Math.min(previous, nextConfig.banners.length - 1)),
-      );
-    }
 
       saveConfig(nextConfig);
       toast.success("Đã xóa cấu hình");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Không thể xóa cấu hình");
+      toast.error(
+        err instanceof Error ? err.message : "Không thể xóa cấu hình",
+      );
     } finally {
       setDeleteTarget(null);
     }
@@ -809,7 +926,9 @@ export default function AdminBaseConfigPage() {
         ? {
             ...previous,
             branches: previous.branches.map((branch) =>
-              branch.id === currentBranch.id ? { ...branch, [key]: value } : branch,
+              branch.id === currentBranch.id
+                ? { ...branch, [key]: value }
+                : branch,
             ),
           }
         : previous,
@@ -836,10 +955,15 @@ export default function AdminBaseConfigPage() {
     if (!config) return;
 
     const nextConfig = cloneBaseConfigData(config);
-    nextConfig.branches = nextConfig.branches.filter((branch) => branch.id !== branchId);
+    nextConfig.branches = nextConfig.branches.filter(
+      (branch) => branch.id !== branchId,
+    );
     saveConfig(nextConfig);
     setCurrentBranchIndex((previous) =>
-      Math.max(0, Math.min(previous, Math.max(nextConfig.branches.length - 1, 0))),
+      Math.max(
+        0,
+        Math.min(previous, Math.max(nextConfig.branches.length - 1, 0)),
+      ),
     );
     toast.success("Đã xóa chi nhánh");
   };
@@ -901,10 +1025,15 @@ export default function AdminBaseConfigPage() {
       await deleteSiteInformationBranchesId(branchId);
 
       const nextConfig = cloneBaseConfigData(config);
-      nextConfig.branches = nextConfig.branches.filter((branch) => branch.id !== branchId);
+      nextConfig.branches = nextConfig.branches.filter(
+        (branch) => branch.id !== branchId,
+      );
       setConfig(nextConfig);
       setCurrentBranchIndex((previous) =>
-        Math.max(0, Math.min(previous, Math.max(nextConfig.branches.length - 1, 0))),
+        Math.max(
+          0,
+          Math.min(previous, Math.max(nextConfig.branches.length - 1, 0)),
+        ),
       );
       setCurrentBranchId(null);
       toast.success("Đã xóa chi nhánh");
@@ -923,7 +1052,10 @@ export default function AdminBaseConfigPage() {
     try {
       await Promise.all(
         sortBaseConfigBranches(config.branches).map((branch, index) =>
-          patchSiteInformationBranchesId(branch.id, mapConfigBranchToApi(branch, index)),
+          patchSiteInformationBranchesId(
+            branch.id,
+            mapConfigBranchToApi(branch, index),
+          ),
         ),
       );
       setConfig(config);
@@ -936,8 +1068,13 @@ export default function AdminBaseConfigPage() {
     }
   };
 
-  const handleWebsiteInfoChange = (key: "websiteName" | "websiteLink", value: string) => {
-    setConfig((previous) => (previous ? { ...previous, [key]: value } : previous));
+  const handleWebsiteInfoChange = (
+    key: "websiteName" | "websiteLink",
+    value: string,
+  ) => {
+    setConfig((previous) =>
+      previous ? { ...previous, [key]: value } : previous,
+    );
   };
 
   const handleSaveWebsiteInfo = async () => {
@@ -998,7 +1135,10 @@ export default function AdminBaseConfigPage() {
     try {
       await Promise.all(
         config.socials.map((social) =>
-          patchSiteInformationSocialsId(social.id, mapConfigSocialToApi(social)),
+          patchSiteInformationSocialsId(
+            social.id,
+            mapConfigSocialToApi(social),
+          ),
         ),
       );
       setConfig(config);
@@ -1021,33 +1161,37 @@ export default function AdminBaseConfigPage() {
 
   return (
     <div className="space-y-8">
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-5"
+      >
         <div className="overflow-x-auto pb-1">
           <TabsList className="h-auto min-w-max rounded-2xl bg-[#eaf2ff] p-1.5">
-          <TabsTrigger
-            value="branding"
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
-          >
-            Nhận diện thương hiệu
-          </TabsTrigger>
-          <TabsTrigger
-            value="banner"
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
-          >
-            Banner trang chủ
-          </TabsTrigger>
-          <TabsTrigger
-            value="contact"
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
-          >
-            Thông tin liên hệ
-          </TabsTrigger>
-          <TabsTrigger
-            value="social"
-            className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
-          >
-            Mạng xã hội
-          </TabsTrigger>
+            <TabsTrigger
+              value="branding"
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
+            >
+              Nhận diện thương hiệu
+            </TabsTrigger>
+            <TabsTrigger
+              value="banner"
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
+            >
+              Banner trang chủ
+            </TabsTrigger>
+            <TabsTrigger
+              value="contact"
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
+            >
+              Thông tin liên hệ
+            </TabsTrigger>
+            <TabsTrigger
+              value="social"
+              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
+            >
+              Mạng xã hội
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -1056,7 +1200,9 @@ export default function AdminBaseConfigPage() {
             <CardHeader className="pb-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <CardTitle className="text-2xl text-[#163b73]">Nhận diện thương hiệu</CardTitle>
+                  <CardTitle className="text-2xl text-[#163b73]">
+                    Nhận diện thương hiệu
+                  </CardTitle>
                   <CardDescription className="mt-2 text-sm text-slate-600">
                     Quản lý logo hiển thị trên website.
                   </CardDescription>
@@ -1133,13 +1279,20 @@ export default function AdminBaseConfigPage() {
                         <div className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4b74b8]">
                           Logo website
                         </div>
-                        <div className="mt-3 font-semibold text-[#163b73]">{currentLogo.name}</div>
+                        <div className="mt-3 font-semibold text-[#163b73]">
+                          {currentLogo.name}
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-gray-700">Tên website</Label>
                         <Input
                           value={config.websiteName}
-                          onChange={(event) => handleWebsiteInfoChange("websiteName", event.target.value)}
+                          onChange={(event) =>
+                            handleWebsiteInfoChange(
+                              "websiteName",
+                              event.target.value,
+                            )
+                          }
                           className={fieldClassName}
                         />
                       </div>
@@ -1147,7 +1300,12 @@ export default function AdminBaseConfigPage() {
                         <Label className="text-gray-700">Link website</Label>
                         <Input
                           value={config.websiteLink}
-                          onChange={(event) => handleWebsiteInfoChange("websiteLink", event.target.value)}
+                          onChange={(event) =>
+                            handleWebsiteInfoChange(
+                              "websiteLink",
+                              event.target.value,
+                            )
+                          }
                           className={fieldClassName}
                         />
                       </div>
@@ -1156,7 +1314,10 @@ export default function AdminBaseConfigPage() {
                           Trạng thái
                         </div>
                         <div className="mt-2 flex items-center gap-2">
-                          <Badge variant="outline" className="border-[#063e8e]/20 text-[#063e8e]">
+                          <Badge
+                            variant="outline"
+                            className="border-[#063e8e]/20 text-[#063e8e]"
+                          >
                             {currentLogo.isActive ? "Đang hiển thị" : "Đang ẩn"}
                           </Badge>
                         </div>
@@ -1168,7 +1329,9 @@ export default function AdminBaseConfigPage() {
                         className="w-full rounded-xl bg-[#163b73] text-white hover:bg-[#163b73]/90"
                       >
                         <Save className="mr-2 h-4 w-4" />
-                        {savingWebsiteInfo ? "Đang lưu..." : "Lưu thông tin website"}
+                        {savingWebsiteInfo
+                          ? "Đang lưu..."
+                          : "Lưu thông tin website"}
                       </Button>
                     </div>
                   ) : (
@@ -1187,9 +1350,12 @@ export default function AdminBaseConfigPage() {
             <CardHeader className="pb-5">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <CardTitle className="text-2xl text-[#163b73]">Banner trang chủ</CardTitle>
+                  <CardTitle className="text-2xl text-[#163b73]">
+                    Banner trang chủ
+                  </CardTitle>
                   <CardDescription className="mt-2 text-sm text-slate-600">
-                    Quản lý hình ảnh slider chỉ dùng cho khu vực banner trang chủ của website.
+                    Quản lý hình ảnh slider chỉ dùng cho khu vực banner trang
+                    chủ của website.
                   </CardDescription>
                 </div>
 
@@ -1264,7 +1430,9 @@ export default function AdminBaseConfigPage() {
                     className="rounded-xl border-[#063e8e]/15"
                     onClick={() =>
                       setCurrentBannerIndex((previous) =>
-                        previous <= 0 ? Math.max(sortedBanners.length - 1, 0) : previous - 1,
+                        previous <= 0
+                          ? Math.max(sortedBanners.length - 1, 0)
+                          : previous - 1,
                       )
                     }
                     disabled={sortedBanners.length <= 1}
@@ -1278,7 +1446,9 @@ export default function AdminBaseConfigPage() {
                     className="rounded-xl border-[#063e8e]/15"
                     onClick={() =>
                       setCurrentBannerIndex((previous) =>
-                        sortedBanners.length === 0 ? 0 : (previous + 1) % sortedBanners.length,
+                        sortedBanners.length === 0
+                          ? 0
+                          : (previous + 1) % sortedBanners.length,
                       )
                     }
                     disabled={sortedBanners.length <= 1}
@@ -1304,14 +1474,20 @@ export default function AdminBaseConfigPage() {
               {currentBanner ? (
                 <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-4">
-                    <div className="text-xs uppercase tracking-[0.14em] text-gray-500">Tên banner</div>
-                    <div className="mt-2 font-semibold text-[#163b73]">{currentBanner.name}</div>
+                    <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                      Tên banner
+                    </div>
+                    <div className="mt-2 font-semibold text-[#163b73]">
+                      {currentBanner.name}
+                    </div>
                   </div>
                   <div className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-4">
                     <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
                       Thứ tự hiển thị
                     </div>
-                    <div className="mt-2 font-semibold text-[#163b73]">{currentBanner.sortOrder}</div>
+                    <div className="mt-2 font-semibold text-[#163b73]">
+                      {currentBanner.sortOrder}
+                    </div>
                   </div>
                   <div className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-4">
                     <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
@@ -1322,9 +1498,14 @@ export default function AdminBaseConfigPage() {
                     </div>
                   </div>
                   <div className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-4">
-                    <div className="text-xs uppercase tracking-[0.14em] text-gray-500">Trạng thái</div>
+                    <div className="text-xs uppercase tracking-[0.14em] text-gray-500">
+                      Trạng thái
+                    </div>
                     <div className="mt-2">
-                      <Badge variant="outline" className="border-[#063e8e]/20 text-[#063e8e]">
+                      <Badge
+                        variant="outline"
+                        className="border-[#063e8e]/20 text-[#063e8e]"
+                      >
                         {currentBanner.isActive ? "Đang hiển thị" : "Đang ẩn"}
                       </Badge>
                     </div>
@@ -1340,7 +1521,9 @@ export default function AdminBaseConfigPage() {
             <CardHeader>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <CardTitle className="text-2xl text-[#163b73]">Thông tin liên hệ website</CardTitle>
+                  <CardTitle className="text-2xl text-[#163b73]">
+                    Thông tin liên hệ website
+                  </CardTitle>
                   <CardDescription className="mt-2 text-sm text-slate-600">
                     Quản lý nhiều địa chỉ chi nhánh để hiển thị trên website.
                   </CardDescription>
@@ -1396,7 +1579,9 @@ export default function AdminBaseConfigPage() {
                       <Label className="text-gray-700">Tên chi nhánh</Label>
                       <Input
                         value={currentBranch.branchName}
-                        onChange={(event) => handleBranchChange("branchName", event.target.value)}
+                        onChange={(event) =>
+                          handleBranchChange("branchName", event.target.value)
+                        }
                         className={fieldClassName}
                       />
                     </div>
@@ -1405,7 +1590,9 @@ export default function AdminBaseConfigPage() {
                       <Label className="text-gray-700">Địa chỉ</Label>
                       <Textarea
                         value={currentBranch.address}
-                        onChange={(event) => handleBranchChange("address", event.target.value)}
+                        onChange={(event) =>
+                          handleBranchChange("address", event.target.value)
+                        }
                         className={`${fieldClassName} min-h-[110px]`}
                       />
                     </div>
@@ -1415,7 +1602,9 @@ export default function AdminBaseConfigPage() {
                         <Label className="text-gray-700">Hotline</Label>
                         <Input
                           value={currentBranch.hotline}
-                          onChange={(event) => handleBranchChange("hotline", event.target.value)}
+                          onChange={(event) =>
+                            handleBranchChange("hotline", event.target.value)
+                          }
                           className={fieldClassName}
                         />
                       </div>
@@ -1423,7 +1612,9 @@ export default function AdminBaseConfigPage() {
                         <Label className="text-gray-700">Email</Label>
                         <Input
                           value={currentBranch.email}
-                          onChange={(event) => handleBranchChange("email", event.target.value)}
+                          onChange={(event) =>
+                            handleBranchChange("email", event.target.value)
+                          }
                           className={fieldClassName}
                         />
                       </div>
@@ -1434,7 +1625,9 @@ export default function AdminBaseConfigPage() {
                         <Label className="text-gray-700">Fax</Label>
                         <Input
                           value={currentBranch.fax}
-                          onChange={(event) => handleBranchChange("fax", event.target.value)}
+                          onChange={(event) =>
+                            handleBranchChange("fax", event.target.value)
+                          }
                           className={fieldClassName}
                         />
                       </div>
@@ -1442,7 +1635,12 @@ export default function AdminBaseConfigPage() {
                         <Label className="text-gray-700">Google Maps</Label>
                         <Input
                           value={currentBranch.mapsEmbedUrl}
-                          onChange={(event) => handleBranchChange("mapsEmbedUrl", event.target.value)}
+                          onChange={(event) =>
+                            handleBranchChange(
+                              "mapsEmbedUrl",
+                              event.target.value,
+                            )
+                          }
                           className={fieldClassName}
                         />
                       </div>
@@ -1456,28 +1654,38 @@ export default function AdminBaseConfigPage() {
                           min={1}
                           value={currentBranch.sortOrder}
                           onChange={(event) =>
-                            handleBranchChange("sortOrder", Number(event.target.value || 1))
+                            handleBranchChange(
+                              "sortOrder",
+                              Number(event.target.value || 1),
+                            )
                           }
                           className={fieldClassName}
                         />
                       </div>
                       <div className="flex items-center justify-between rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-3">
                         <div>
-                          <div className="text-sm font-medium text-[#163b73]">Trạng thái hiển thị</div>
+                          <div className="text-sm font-medium text-[#163b73]">
+                            Trạng thái hiển thị
+                          </div>
                           <div className="text-xs text-gray-500">
-                            {currentBranch.isVisible ? "Đang hiển thị" : "Đang ẩn"}
+                            {currentBranch.isVisible
+                              ? "Đang hiển thị"
+                              : "Đang ẩn"}
                           </div>
                         </div>
                         <Switch
                           checked={currentBranch.isVisible}
-                          onCheckedChange={(value) => handleBranchChange("isVisible", value)}
+                          onCheckedChange={(value) =>
+                            handleBranchChange("isVisible", value)
+                          }
                         />
                       </div>
                     </div>
                   </>
                 ) : (
                   <div className="rounded-3xl border border-dashed border-[#063e8e]/15 bg-white px-5 py-10 text-center text-sm text-gray-500">
-                    Chưa có chi nhánh nào. Hãy thêm chi nhánh để bắt đầu cấu hình
+                    Chưa có chi nhánh nào. Hãy thêm chi nhánh để bắt đầu cấu
+                    hình
                   </div>
                 )}
               </div>
@@ -1490,7 +1698,9 @@ export default function AdminBaseConfigPage() {
             <CardHeader>
               <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <CardTitle className="text-2xl text-[#163b73]">Mạng xã hội</CardTitle>
+                  <CardTitle className="text-2xl text-[#163b73]">
+                    Mạng xã hội
+                  </CardTitle>
                   <CardDescription className="mt-2 text-sm text-slate-600">
                     Quản lý link mạng xã hội và thứ tự hiển thị trên website.
                   </CardDescription>
@@ -1519,11 +1729,17 @@ export default function AdminBaseConfigPage() {
                       <Checkbox
                         checked={item.isVisible}
                         onCheckedChange={(checked) =>
-                          handleSocialChange(item.id, "isVisible", checked === true)
+                          handleSocialChange(
+                            item.id,
+                            "isVisible",
+                            checked === true,
+                          )
                         }
                       />
                       <div>
-                        <div className="font-semibold text-[#163b73]">{item.label}</div>
+                        <div className="font-semibold text-[#163b73]">
+                          {item.label}
+                        </div>
                         <div className="text-sm text-slate-500">
                           {item.isVisible ? "Đang hiển thị" : "Đang ẩn"}
                         </div>
@@ -1534,7 +1750,9 @@ export default function AdminBaseConfigPage() {
                       <Label className="text-gray-700">Link URL</Label>
                       <Input
                         value={item.url}
-                        onChange={(event) => handleSocialChange(item.id, "url", event.target.value)}
+                        onChange={(event) =>
+                          handleSocialChange(item.id, "url", event.target.value)
+                        }
                         placeholder={`Nhập link ${item.label}...`}
                         className={fieldClassName}
                       />
@@ -1547,7 +1765,11 @@ export default function AdminBaseConfigPage() {
                         min={1}
                         value={item.sortOrder}
                         onChange={(event) =>
-                          handleSocialChange(item.id, "sortOrder", Number(event.target.value || 1))
+                          handleSocialChange(
+                            item.id,
+                            "sortOrder",
+                            Number(event.target.value || 1),
+                          )
                         }
                         className={fieldClassName}
                       />
@@ -1581,7 +1803,9 @@ export default function AdminBaseConfigPage() {
             : "Thiết lập banner hiển thị cho trang chủ."
         }
         onOpenChange={setItemDialogOpen}
-        onChange={(key, value) => setItemForm((previous) => ({ ...previous, [key]: value }))}
+        onChange={(key, value) =>
+          setItemForm((previous) => ({ ...previous, [key]: value }))
+        }
         onPickImage={() => setImagePickerOpen(true)}
         onSubmit={handleSubmitItem}
       />
@@ -1605,7 +1829,8 @@ export default function AdminBaseConfigPage() {
         title="Xóa cấu hình"
         description={
           <>
-            Bạn có chắc muốn xóa <span className="font-semibold">{deleteTarget?.name}</span>? Hành
+            Bạn có chắc muốn xóa{" "}
+            <span className="font-semibold">{deleteTarget?.name}</span>? Hành
             động này không thể hoàn tác.
           </>
         }

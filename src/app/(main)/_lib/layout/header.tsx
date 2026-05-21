@@ -7,8 +7,15 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+import { getLogo } from "@/api/endpoints/logo";
+import { getSiteInformation } from "@/api/endpoints/site-information";
+import type { Logo } from "@/api/models/logo";
+import type {
+  SiteInformationData,
+  SiteInformationSocialLink,
+} from "@/api/models";
 import MenuItem from "@/components/base/menu-item";
-import { useCustomClient } from "@/api/mutator/custom-client";
+import { useCustomClient as customClient } from "@/api/mutator/custom-client";
 import type { Category } from "@/api/models/category";
 import { getCategoryFallbackResponse } from "@/mockdata/categories";
 
@@ -24,6 +31,67 @@ type CategoryListResponse = {
   responseData?: {
     rows?: Category[];
   };
+};
+
+type LogoListEnvelope = {
+  data?: {
+    responseData?: {
+      rows?: Logo[];
+    };
+  };
+};
+
+type ApiEnvelope<T> = {
+  responseData?: T;
+  data?: {
+    responseData?: T;
+  };
+};
+
+type SocialItem = {
+  key: string;
+  url: string;
+  icon: React.ReactNode;
+};
+
+const getEnvelopeData = <T,>(payload?: ApiEnvelope<T> | null) =>
+  payload?.responseData ?? payload?.data?.responseData;
+
+const fallbackSocials: SocialItem[] = [
+  {
+    key: "facebook",
+    url: "https://www.facebook.com/VCCIHCMC/",
+    icon: <Facebook size={12} fill="currentColor" />,
+  },
+  {
+    key: "twitter",
+    url: "https://twitter.com/VCCI_HCM",
+    icon: <Twitter size={12} fill="currentColor" />,
+  },
+  {
+    key: "youtube",
+    url: "https://www.youtube.com/user/VCCIHCMC",
+    icon: <Youtube size={12} fill="currentColor" />,
+  },
+  {
+    key: "linkedin",
+    url: "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym",
+    icon: <Linkedin size={12} fill="currentColor" />,
+  },
+];
+
+const getSocialIcon = (key: string) => {
+  const normalized = key.toLowerCase();
+  if (normalized.includes("facebook"))
+    return <Facebook size={12} fill="currentColor" />;
+  if (normalized.includes("twitter") || normalized === "x") {
+    return <Twitter size={12} fill="currentColor" />;
+  }
+  if (normalized.includes("youtube"))
+    return <Youtube size={12} fill="currentColor" />;
+  if (normalized.includes("linkedin"))
+    return <Linkedin size={12} fill="currentColor" />;
+  return null;
 };
 
 function normalizeCategoryUrl(url?: string | null) {
@@ -102,16 +170,63 @@ function Header() {
   const { data: categoriesResponse } = useQuery({
     queryKey: ["header-categories"],
     queryFn: () =>
-      useCustomClient<CategoryListResponse>(
+      customClient<CategoryListResponse>(
         "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
       ).catch(() => getCategoryFallbackResponse()),
     staleTime: 5 * 60 * 1000,
   });
 
+  const { data: currentLogo = null } = useQuery({
+    queryKey: ["header-logo"],
+    queryFn: () =>
+      getLogo({
+        page: 1,
+        pageSize: 1,
+        sortField: "updated_at",
+        sortOrder: "desc",
+      }).catch(() => null),
+    select: (response) =>
+      (response as LogoListEnvelope | null)?.data?.responseData?.rows?.[0] ??
+      null,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: siteInformationResponse } =
+    useQuery<ApiEnvelope<SiteInformationData> | null>({
+      queryKey: ["site-information"],
+      queryFn: () => getSiteInformation().catch(() => null),
+      staleTime: 5 * 60 * 1000,
+    });
+
   const menuItems = useMemo(
     () => buildHeaderMenuTree(categoriesResponse?.responseData?.rows),
     [categoriesResponse?.responseData?.rows],
   );
+  const siteInformation = getEnvelopeData<SiteInformationData>(
+    siteInformationResponse,
+  );
+  const socialLinks = useMemo(() => {
+    const socials =
+      siteInformation?.socials ?? siteInformation?.link_socials ?? [];
+
+    const active = socials
+      .filter((item) => item?.is_active && item?.url)
+      .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))
+      .map((item): SocialItem | null => {
+        const key = item.icon_key || item.platform || item.label || "";
+        const icon = getSocialIcon(key);
+        if (!icon || !item.url) return null;
+
+        return {
+          key: item.id || key,
+          url: item.url,
+          icon,
+        };
+      })
+      .filter((item): item is SocialItem => Boolean(item));
+
+    return active.length ? active : fallbackSocials;
+  }, [siteInformation?.socials, siteInformation?.link_socials]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -167,12 +282,13 @@ function Header() {
 
           <div className="flex items-center gap-4">
             <input
-              className="h-[28px] w-[176px] rounded-[4px] border border-[#3a57b4] bg-[#3554b7] px-3 text-[13px] text-white outline-none placeholder:text-[13px] placeholder:text-[#b5c4ff]"
+              className="h-7 w-44 rounded-[4px] border border-[#3a57b4] bg-[#3554b7] px-3 text-[13px] text-white outline-none placeholder:text-[13px] placeholder:text-[#b5c4ff]"
               type="text"
               placeholder={"T\u00ecm ki\u1ebfm"}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  const value = (e.currentTarget as HTMLInputElement).value || "";
+                  const value =
+                    (e.currentTarget as HTMLInputElement).value || "";
                   const encoded = encodeURIComponent(value);
                   router.push(`/search?q=${encoded}&page=1`);
                 }
@@ -180,50 +296,34 @@ function Header() {
             />
 
             <div className="flex items-center gap-2">
-              <a
-                href="https://www.facebook.com/VCCIHCMC/"
-                target="_blank"
-                rel="noreferrer"
-                className="flex size-[22px] items-center justify-center rounded-full bg-white text-[#2f57ff] transition hover:opacity-80"
-              >
-                <Facebook size={12} fill="currentColor" />
-              </a>
-              <a
-                href="https://twitter.com/VCCI_HCM"
-                target="_blank"
-                rel="noreferrer"
-                className="flex size-[22px] items-center justify-center rounded-full bg-white text-[#2f57ff] transition hover:opacity-80"
-              >
-                <Twitter size={12} fill="currentColor" />
-              </a>
-              <a
-                href="https://www.youtube.com/user/VCCIHCMC"
-                target="_blank"
-                rel="noreferrer"
-                className="flex size-[22px] items-center justify-center rounded-full bg-white text-[#2f57ff] transition hover:opacity-80"
-              >
-                <Youtube size={12} fill="currentColor" />
-              </a>
-              <a
-                href="https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym"
-                target="_blank"
-                rel="noreferrer"
-                className="flex size-[22px] items-center justify-center rounded-full bg-white text-[#2f57ff] transition hover:opacity-80"
-              >
-                <Linkedin size={12} fill="currentColor" />
-              </a>
+              {socialLinks.map((item) => (
+                <a
+                  key={item.key}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex size-[22px] items-center justify-center rounded-full bg-white text-[#2f57ff] transition hover:opacity-80"
+                >
+                  {item.icon}
+                </a>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
       <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex h-[80px] w-full max-w-[1460px] items-center justify-between gap-10 px-6 xl:px-8">
-          <Link href="/" className="flex w-[136px] shrink-0 items-center xl:w-[152px]">
+        <div className="mx-auto flex h-20 w-full max-w-[1460px] items-center justify-between gap-10 px-6 xl:px-8">
+          <Link
+            href="/"
+            className="flex w-[136px] shrink-0 items-center xl:w-[152px]"
+          >
             <Image
+              width={108}
+              height={40}
               className="h-auto w-[108px] object-contain"
-              src={logo}
-              alt="VCCI-HCM"
+              src={currentLogo?.logo_url || logo}
+              alt={currentLogo?.logo_name || "VCCI-HCM"}
               priority
             />
           </Link>
@@ -248,7 +348,7 @@ function Header() {
               </div>
             </nav>
           </div>
-          
+
           <button
             onClick={() => setToggleMenu((prev) => !prev)}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-[#163b73] transition hover:bg-slate-50 lg:hidden"
@@ -260,7 +360,7 @@ function Header() {
       </div>
 
       <div
-        className={`fixed inset-0 z-[60] bg-white transition-all duration-300 lg:hidden ${
+        className={`fixed inset-0 z-60 bg-white transition-all duration-300 lg:hidden ${
           toggleMenu
             ? "pointer-events-auto translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-2 opacity-0"
@@ -268,11 +368,17 @@ function Header() {
       >
         <div className="flex h-full flex-col overflow-hidden">
           <div className="sticky top-0 z-10 flex h-[78px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
-            <Link href="/" className="flex w-[136px] shrink-0 items-center" onClick={() => setToggleMenu(false)}>
+            <Link
+              href="/"
+              className="flex w-[136px] shrink-0 items-center"
+              onClick={() => setToggleMenu(false)}
+            >
               <Image
+                width={108}
+                height={40}
                 className="h-auto w-[108px] object-contain"
-                src={logo}
-                alt="VCCI-HCM"
+                src={currentLogo?.logo_url || logo}
+                alt={currentLogo?.logo_name || "VCCI-HCM"}
                 priority
               />
             </Link>
@@ -292,7 +398,8 @@ function Header() {
               placeholder={"T\u00ecm ki\u1ebfm"}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  const value = (e.currentTarget as HTMLInputElement).value || "";
+                  const value =
+                    (e.currentTarget as HTMLInputElement).value || "";
                   const encoded = encodeURIComponent(value);
                   router.push(`/search?q=${encoded}&page=1`);
                   setToggleMenu(false);
@@ -302,7 +409,10 @@ function Header() {
 
             <div className="pb-6">
               {menuItems.map((category) => (
-                <div key={category.id} className="border-t border-slate-100 first:border-t-0">
+                <div
+                  key={category.id}
+                  className="border-t border-slate-100 first:border-t-0"
+                >
                   <Link
                     href={category.url || "#"}
                     className="block px-5 py-3 text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#2f57ff]"
