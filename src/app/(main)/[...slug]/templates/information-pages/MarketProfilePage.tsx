@@ -234,8 +234,7 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
           </p>
 
           <div className="mt-7 overflow-hidden rounded-[30px] border border-[#dce7f7] bg-white shadow-[0_18px_42px_rgba(17,24,39,0.06)]">
-            <div className="grid gap-0 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
-              <div className="relative min-h-[320px] bg-[#f3f7ff] p-4 sm:p-6">
+            <div className="relative min-h-[280px] bg-[#f3f7ff] p-4 sm:p-5">
                 <div className="absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2 sm:inset-x-6 sm:top-6">
                   {activeRegion.markets.map((item) => (
                     <a
@@ -256,60 +255,10 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
                   alt={activeRegion.imageAlt}
                   width={1200}
                   height={900}
-                  className="h-full min-h-[320px] w-full rounded-[24px] object-cover transition-all duration-300"
+                  className="h-full min-h-[280px] w-full rounded-[24px] object-cover object-center transition-all duration-300"
                 />
               </div>
-
-              <div className="flex flex-col justify-between bg-linear-to-br from-[#0f418f] to-[#1a2f65] p-6 text-white">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/72">
-                    Tài liệu tham khảo
-                  </p>
-                  <h2 className="mt-3 text-[28px] font-bold leading-tight">
-                    Tra cứu nhanh theo từng thị trường
-                  </h2>
-                  <p className="mt-4 text-sm leading-7 text-white/82">
-                    Dữ liệu mẫu được dựng từ nguồn website bạn gửi, cho phép chuyển nhanh giữa các khu vực để thay đổi phần hình ảnh và nhóm thị trường đang hiển thị.
-                  </p>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  {activeRegion.featuredDocument ? (
-                    <a
-                      href={activeRegion.featuredDocument.href}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between rounded-[22px] bg-white/10 px-4 py-3 transition-colors hover:bg-white/16"
-                    >
-                      <div>
-                        <p className="text-sm font-semibold text-white">
-                          {activeRegion.featuredDocument.title}
-                        </p>
-                        <p className="mt-1 text-xs text-white/70">
-                          {activeRegion.featuredDocument.description}
-                        </p>
-                      </div>
-                      <ArrowDownToLine className="h-5 w-5 shrink-0 text-[#ffca4f]" />
-                    </a>
-                  ) : (
-                    <div className="rounded-[22px] bg-white/10 px-4 py-3">
-                      <p className="text-sm font-semibold text-white">Nguồn tài liệu</p>
-                      <p className="mt-1 text-xs leading-6 text-white/74">
-                        Khu vực này hiện đã có khối chuyển hình ảnh và danh sách thị trường; tài liệu chi tiết sẽ được bổ sung khi có nguồn riêng tương ứng.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="rounded-[22px] border border-white/12 bg-white/8 px-4 py-3">
-                    <p className="text-sm font-semibold text-white">Gợi ý sử dụng</p>
-                    <p className="mt-1 text-xs leading-6 text-white/74">
-                      Khi API của trang có nội dung thật, phần UI mẫu này sẽ tự nhường chỗ cho dữ liệu bài viết từ hệ thống.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
         </div>
 
         <aside className="rounded-[28px] border border-[#e6eefb] bg-[#fbfcff] p-6 shadow-[0_18px_42px_rgba(17,24,39,0.05)] xl:sticky xl:top-24">

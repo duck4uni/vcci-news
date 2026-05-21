@@ -37,14 +37,21 @@ function EventsCalendar({
   className?: string;
   compact?: boolean;
 }) {
+  const today = dayjs();
+  const todayKey = today.format("YYYY-MM-DD");
+  const todayMonth = today.month();
+  const todayYear = today.year();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const eventCalendarQuery = useEventCalendarPosts(currentMonth);
   const monthEvents = eventCalendarQuery.data ?? [];
 
   useEffect(() => {
-    setSelectedDateKey(null);
-  }, [currentMonth]);
+    const viewingCurrentMonth =
+      currentMonth.getMonth() === todayMonth && currentMonth.getFullYear() === todayYear;
+
+    setSelectedDateKey(viewingCurrentMonth ? todayKey : null);
+  }, [currentMonth, todayKey, todayMonth, todayYear]);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
@@ -80,7 +87,6 @@ function EventsCalendar({
 
   const selectedEvents = selectedDateKey ? eventMap.get(selectedDateKey) ?? [] : [];
   const highlightedEvents = selectedEvents.length > 0 ? selectedEvents : monthEvents.slice(0, 1);
-  const todayKey = dayjs().format("YYYY-MM-DD");
 
   return (
     <aside
@@ -173,16 +179,14 @@ function EventsCalendar({
                   isToday && inMonth && !selectable && "bg-[#eef3fb] font-semibold text-[#24469c] ring-2 ring-[#d7e2f5]",
                   variant === "training" && "bg-[#ffbc11] font-semibold text-[#163b73]",
                   variant === "event" && "bg-[#1e3f9a] font-semibold text-white",
-                  variant === "mixed" &&
-                    "bg-[#1e3f9a] font-semibold text-white ring-2 ring-[#ffbc11] ring-offset-2 ring-offset-white",
+                  variant === "mixed" && "bg-[#1e3f9a] font-semibold text-white",
                   selectable
                     ? "cursor-pointer hover:scale-[1.04] hover:shadow-[0_10px_20px_rgba(36,70,156,0.16)]"
                     : "cursor-default",
-                  selected && variant !== "mixed" && "ring-2 ring-[#f7b500] ring-offset-2 ring-offset-white",
+                  selected && "ring-2 ring-[#f7b500] ring-offset-2 ring-offset-white",
                   isToday &&
                     selectable &&
                     !selected &&
-                    variant !== "mixed" &&
                     "ring-2 ring-[#9fb3db] ring-offset-2 ring-offset-white",
                 )}
               >

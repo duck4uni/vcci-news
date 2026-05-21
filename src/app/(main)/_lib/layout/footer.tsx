@@ -70,9 +70,9 @@ const getSocialIcon = (key: string): React.ReactNode => {
 
 const quickLinks = [
   { label: "Giới thiệu", href: "/gioi-thieu" },
-  { label: "Hội viên", href: "/danh-ba-hoi-vien" },
-  { label: "Hoạt động", href: "/hoat-dong/tin-tuc" },
-  { label: "Xúc tiến Thương mại", href: "/xuc-tien-thuong-mai/co-hoi/" },
+  { label: "Hội viên", href: "/hoi-vien/loi-ich-hoi-vien-vcci" },
+  { label: "Hoạt động", href: "/hoat-dong/su-kien" },
+  { label: "Xúc tiến Thương mại", href: "/xuc-tien-thuong-mai/ho-so-thi-truong" },
 ];
 
 const isValidEmail = (value: string) =>
