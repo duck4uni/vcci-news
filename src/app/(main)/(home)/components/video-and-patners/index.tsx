@@ -6,6 +6,44 @@ import partnerImages from "@/constants/partnerImages";
 import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
 import { fetchClientVideos } from "@/lib/api/videos";
+import { Autoplay } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
+import "swiper/css";
+
+type Partner = {
+  id: string;
+  name: string;
+  avatar?: string | null;
+  website?: string | null;
+};
+
+type PartnerResponse = {
+  responseData?: {
+    rows?: Partner[];
+  };
+};
+
+const PARTNER_API_URL = "/api/partners";
+const VCCI_HCM_ORIGIN = "https://vccihcm.vn";
+
+const resolvePartnerImage = (avatar: string | null | undefined, index: number) => {
+  if (avatar?.startsWith("http://") || avatar?.startsWith("https://")) {
+    return avatar;
+  }
+
+  if (avatar?.startsWith("/")) {
+    return `${VCCI_HCM_ORIGIN}${avatar}`;
+  }
+
+  return partnerImages[index % partnerImages.length] ?? "/img-error.png";
+};
+
+const fallbackPartners: Partner[] = Array.from({ length: 6 }, (_, index) => ({
+  id: `fallback-partner-${index}`,
+  name: `Đối tác ${index + 1}`,
+  avatar: partnerImages[index % partnerImages.length],
+  website: null,
+}));
 
 function VideoAndPartners() {
   const videosQuery = useQuery({
@@ -14,7 +52,25 @@ function VideoAndPartners() {
     staleTime: 60 * 1000,
   });
 
+  const partnersQuery = useQuery({
+    queryKey: ["home-partners"],
+    queryFn: async () => {
+      const response = await fetch(PARTNER_API_URL, {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        throw new Error(`Cannot load partners: ${response.status}`);
+      }
+
+      return (await response.json()) as PartnerResponse;
+    },
+    staleTime: 60 * 1000,
+  });
+
   const videos = videosQuery.data?.rows ?? [];
+  const partners = partnersQuery.data?.responseData?.rows?.slice(0, 12) ?? [];
+  const displayPartners = partners.length > 0 ? partners : fallbackPartners;
 
   return (
     <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
@@ -93,22 +149,52 @@ function VideoAndPartners() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:h-[318px] xl:grid-rows-2">
-          {partnerImages.slice(0, 6).map((src, index) => (
-            <div
-              key={src}
-              className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-auto"
+        <Swiper
+          modules={[Autoplay]}
+          autoplay={{ delay: 4200, disableOnInteraction: false }}
+          observer
+          observeParents
+          updateOnWindowResize
+          slidesPerView="auto"
+          spaceBetween={16}
+          className="w-full"
+        >
+          {displayPartners.map((partner, index) => (
+            <SwiperSlide
+              key={partner.id}
+              className="!h-auto !w-full sm:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
             >
-              <ImageNext
-                src={src}
-                alt={`Đối tác ${index + 1}`}
-                width={140}
-                height={72}
-                className="max-h-full w-full object-contain"
-              />
-            </div>
+              {partner.website ? (
+                <a
+                  href={partner.website}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block"
+                >
+                  <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(31,59,124,0.1)] xl:h-[151px]">
+                    <ImageNext
+                      src={resolvePartnerImage(partner.avatar, index)}
+                      alt={partner.name}
+                      width={140}
+                      height={72}
+                      className="max-h-full w-full object-contain"
+                    />
+                  </div>
+                </a>
+              ) : (
+                <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-[151px]">
+                  <ImageNext
+                    src={resolvePartnerImage(partner.avatar, index)}
+                    alt={partner.name}
+                    width={140}
+                    height={72}
+                    className="max-h-full w-full object-contain"
+                  />
+                </div>
+              )}
+            </SwiperSlide>
           ))}
-        </div>
+        </Swiper>
       </aside>
     </section>
   );
