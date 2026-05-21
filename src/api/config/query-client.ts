@@ -27,8 +27,10 @@ const handleCheckBaseRetryLogical = (failureCount: number, error: Error) => {
 
   // Expired token error
   if (error.response?.status === EXPIRED_TOKEN_ERROR) {
-    handleUnAuthorizationError()
-    return false
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
+      handleUnAuthorizationError();
+    }
+    return false;
   }
 
   // Denied permission error
