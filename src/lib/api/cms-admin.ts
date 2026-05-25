@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useCustomClient } from "@/api/mutator/custom-client";
+import { toCmsSlug } from "@/lib/utils/cms-slug";
 import { resolveUploadUrl } from "@/links";
 import { categoryFallbackRows } from "@/mockdata/categories";
 
@@ -510,17 +511,7 @@ const toCategoryApiType = (type: CmsHeaderCategoryType) => {
   return "page";
 };
 
-const toTagSlug = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+const toTagSlug = (value: string) => toCmsSlug(value);
 
 export async function fetchCmsCategories() {
   const result = await cmsRequest<CmsPagedResult<CmsCategoryItem>>(

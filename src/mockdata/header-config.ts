@@ -1,5 +1,7 @@
 "use client";
 
+import { toCmsSlug } from "@/lib/utils/cms-slug";
+
 export type HeaderCategoryType = "category" | "page" | "news";
 
 export interface HeaderCategoryItem {
@@ -194,16 +196,7 @@ export const headerArticleCategoryOptions: HeaderArticleCategoryOption[] = [
 ];
 
 export function toSlug(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+  return toCmsSlug(value);
 }
 
 function normalizeTagsearchValues(values?: string[]) {

@@ -35,6 +35,7 @@ import {
   fetchCmsTagsPage,
   updateCmsTag,
 } from "@/lib/api/cms-admin";
+import { toCmsSlug } from "@/lib/utils/cms-slug";
 
 interface TagFormValues {
   id?: string;
@@ -52,17 +53,7 @@ const EMPTY_FORM: TagFormValues = {
 const fieldClassName =
   "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
-const slugifyTag = (value: string) =>
-  value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+const slugifyTag = (value: string) => toCmsSlug(value);
 
 export default function AdminTagsPage() {
   const [items, setItems] = React.useState<CmsTagItem[]>([]);

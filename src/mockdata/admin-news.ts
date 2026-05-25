@@ -1,5 +1,7 @@
 "use client";
 
+import { toCmsSlug } from "@/lib/utils/cms-slug";
+
 export const ADMIN_NEWS_STORAGE_KEY = "vcci-news.admin-news.data.v3";
 export const ADMIN_MEDIA_STORAGE_KEY = "vcci-news.admin-media-library.data.v1";
 
@@ -1252,16 +1254,7 @@ const newsSeed: AdminNewsItem[] = [
 ];
 
 export function slugifyAdminNews(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/d/g, "d")
-    .replace(/�/g, "D")
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+  return toCmsSlug(value);
 }
 
 export function resolveAdminNewsType(value?: string | null): AdminNewsType | undefined {
