@@ -483,11 +483,51 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
 
 export function stripHtml(value?: string | null) {
   if (!value) return "";
+
   return value
+    .replace(/\[caption[^\]]*]/gi, " ")
+    .replace(/\[\/caption]/gi, " ")
+    .replace(/\[[^[\]]+]/g, " ")
     .replace(/<img[^>]*>/gi, " ")
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+export function getDynamicPostExcerpt(post: DynamicPostItem | null) {
+  if (!post) return "";
+
+  const structuredContentText = (post.content_structure?.post_content ?? [])
+    .map((section) => stripHtml(section.content))
+    .filter(Boolean)
+    .join(" ");
+
+  const candidates = [
+    stripHtml(post.summary),
+    stripHtml(post.content),
+    structuredContentText,
+  ].filter(Boolean);
+
+  const parts: string[] = [];
+
+  for (const candidate of candidates) {
+    const normalizedCandidate = candidate.trim();
+    if (!normalizedCandidate) continue;
+
+    const isDuplicated = parts.some((part) => {
+      return (
+        part === normalizedCandidate ||
+        part.includes(normalizedCandidate) ||
+        normalizedCandidate.includes(part)
+      );
+    });
+
+    if (!isDuplicated) {
+      parts.push(normalizedCandidate);
+    }
+  }
+
+  return parts.join(" ").replace(/\s+/g, " ").trim();
 }
 
 export function getDynamicPostBodyHtml(post: DynamicPostItem | null) {

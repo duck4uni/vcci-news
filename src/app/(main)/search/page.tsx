@@ -13,8 +13,8 @@ import {
   buildDynamicPostHref,
   buildVisibleNewsFilters,
   fetchDynamicPostList,
+  getDynamicPostExcerpt,
   resolveDynamicPostImage,
-  stripHtml,
 } from "@/app/(main)/[...slug]/templates/data";
 import type { DynamicPostItem } from "@/app/(main)/[...slug]/templates/types";
 
@@ -43,11 +43,7 @@ const getTagClassName = (index: number) => {
 };
 
 function SearchResultItem({ item, index }: { item: DynamicPostItem; index: number }) {
-  const fallbackDescription = item.content_structure?.post_content
-    ?.map((section) => section.content)
-    .join(" ");
-  const description =
-    stripHtml(item.summary) || stripHtml(item.content) || stripHtml(fallbackDescription);
+  const description = getDynamicPostExcerpt(item);
   const date = formatPostDate(item.release_at || item.published_at || item.created_at);
   const categoryName = item.categories[0]?.name || "Tin tức";
 

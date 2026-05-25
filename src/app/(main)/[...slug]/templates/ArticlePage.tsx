@@ -16,8 +16,8 @@ import {
   buildVisibleNewsFilters,
   fetchDynamicPostList,
   findDisplayCategoryForPost,
+  getDynamicPostExcerpt,
   resolveDynamicPostImage,
-  stripHtml,
 } from "./data";
 import type { DynamicCategoryRouteItem } from "./types";
 
@@ -128,13 +128,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
               <div className="space-y-9">
                 {paginatedPosts.length ? (
                   paginatedPosts.map((item, index) => {
-                    const fallbackDescription = item.content_structure?.post_content
-                      ?.map((section) => section.content)
-                      .join(" ");
-                    const description =
-                      stripHtml(item.summary) ||
-                      stripHtml(item.content) ||
-                      stripHtml(fallbackDescription);
+                    const description = getDynamicPostExcerpt(item);
                     const primaryCategory = findDisplayCategoryForPost(
                       item,
                       category,
@@ -152,7 +146,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
                       >
                         <Link
                           href={buildDynamicPostHref(item.external_link, item.id, category.id)}
-                          className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
+                          className="group grid items-center gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
                         >
                           <div className="relative overflow-hidden rounded-md bg-[#edf1f5] aspect-[25/15] sm:aspect-[5/3]">
                             <ImageNext
@@ -164,7 +158,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
                             />
                           </div>
 
-                          <div className="min-w-0 pt-1">
+                          <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-3 text-xs">
                               <span
                                 className={`rounded-full px-2.5 py-1 font-semibold ${getTagClassName(tagIndex)}`}
