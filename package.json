@@ -73,6 +73,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "axios": "^1.13.1",
+    "baseline-browser-mapping": "^2.10.32",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "orval": "8.0.0-rc.0",

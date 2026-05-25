@@ -66,8 +66,101 @@ function normalizeCaptionShortcodes(html: string) {
   });
 }
 
+function normalizeImportedLayout(html: string) {
+  if (typeof window === "undefined" || !html.trim()) return html;
+
+  const parser = new DOMParser();
+  const document = parser.parseFromString(html, "text/html");
+  const mediaLayoutSelectors = [
+    ".article-content",
+    ".article-content_toc",
+    "figure",
+    "figcaption",
+    "img",
+    "table",
+    "iframe",
+  ];
+
+  document.body.querySelectorAll<HTMLElement>(mediaLayoutSelectors.join(",")).forEach((element) => {
+    element.style.removeProperty("width");
+    element.style.removeProperty("max-width");
+    element.style.removeProperty("min-width");
+
+    if (element.tagName === "IMG") {
+      element.style.removeProperty("height");
+      element.style.removeProperty("max-height");
+      element.style.removeProperty("min-height");
+      element.style.removeProperty("aspect-ratio");
+      element.style.setProperty("display", "block");
+      element.style.setProperty("width", "100%");
+      element.style.setProperty("max-width", "100%");
+      element.style.setProperty("height", "auto");
+      element.removeAttribute("width");
+      element.removeAttribute("height");
+    }
+
+    if (element.tagName === "FIGURE") {
+      element.style.setProperty("display", "block");
+      element.style.setProperty("margin", "1.75rem 0");
+      element.style.setProperty("width", "100%");
+      element.style.setProperty("max-width", "100%");
+      element.style.setProperty("text-align", "center");
+    }
+
+    if (element.classList.contains("article-content") || element.classList.contains("article-content_toc")) {
+      element.style.setProperty("display", "block");
+      element.style.setProperty("width", "100%");
+      element.style.setProperty("max-width", "100%");
+      element.style.setProperty("overflow", "hidden");
+    }
+  });
+
+  document.body.querySelectorAll<HTMLImageElement>("img").forEach((image) => {
+    let current = image.parentElement;
+
+    while (
+      current &&
+      current !== document.body &&
+      !current.classList.contains("article-content") &&
+      !current.classList.contains("article-content_toc")
+    ) {
+      current.style.removeProperty("width");
+      current.style.removeProperty("max-width");
+      current.style.removeProperty("min-width");
+      current.style.removeProperty("height");
+      current.style.removeProperty("max-height");
+      current.style.removeProperty("min-height");
+      current.style.removeProperty("float");
+      current.style.removeProperty("left");
+      current.style.removeProperty("right");
+
+      if (current.tagName !== "FIGCAPTION") {
+        current.style.setProperty("max-width", "100%");
+        current.style.setProperty("box-sizing", "border-box");
+      }
+
+      if (current.tagName === "DIV" || current.tagName === "P" || current.tagName === "FIGURE") {
+        current.style.setProperty("display", "block");
+        current.style.setProperty("width", "100%");
+      }
+
+      current = current.parentElement;
+    }
+  });
+
+  document.body
+    .querySelectorAll<HTMLElement>(".article-content, .article-content_toc, figure, img, table, iframe")
+    .forEach((element) => {
+      element.style.removeProperty("float");
+      element.style.removeProperty("left");
+      element.style.removeProperty("right");
+    });
+
+  return document.body.innerHTML;
+}
+
 function renderStructuredHtml(html: string) {
-  return parse(normalizeCaptionShortcodes(html));
+  return parse(normalizeImportedLayout(normalizeCaptionShortcodes(html)));
 }
 
 export default function StructuredPostContent({ post }: StructuredPostContentProps) {

@@ -142,13 +142,16 @@ export default function InformationPage({
             <style jsx global>{`
               .page-detail-content {
                 color: #1f2937;
-                font-size: 16px;
                 line-height: 1.85;
+                width: 100%;
+                max-width: 100%;
               }
 
               .page-detail-content p,
               .page-detail-content div {
                 margin: 0 0 18px;
+                max-width: 100% !important;
+                box-sizing: border-box;
               }
 
               .page-detail-content h1,
@@ -163,17 +166,39 @@ export default function InformationPage({
                 line-height: 1.45;
               }
 
+              .page-detail-content :is(p, div, span, li, a, strong, em, u, s) {
+                font-family: inherit;
+              }
+
               .page-detail-content img {
                 display: block;
-                width: 100%;
-                max-width: 100%;
-                height: auto;
+                width: 100% !important;
+                max-width: 100% !important;
+                height: auto !important;
                 margin: 24px auto 10px;
                 border-radius: 14px;
               }
 
               .page-detail-content figure {
+                display: block !important;
+                width: 100% !important;
+                max-width: 100% !important;
                 margin: 28px 0;
+                text-align: center;
+              }
+
+              .page-detail-content .article-content,
+              .page-detail-content .article-content_toc,
+              .page-detail-content table,
+              .page-detail-content iframe {
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+              }
+
+              .page-detail-content table {
+                display: table;
+                table-layout: fixed;
               }
 
               .page-detail-content figcaption,

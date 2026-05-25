@@ -22,6 +22,79 @@ interface AdminRichTextEditorProps {
   readOnly?: boolean;
 }
 
+const FONT_FAMILY_OPTIONS = {
+  "Arial, Helvetica, sans-serif": "Arial",
+  "Tahoma, Geneva, sans-serif": "Tahoma",
+  "Verdana, Geneva, sans-serif": "Verdana",
+  "'Times New Roman', Times, serif": "Times New Roman",
+  "Georgia, serif": "Georgia",
+  "'Courier New', Courier, monospace": "Courier New",
+  "'Trebuchet MS', Helvetica, sans-serif": "Trebuchet MS",
+} as const;
+
+const FONT_SIZE_OPTIONS = {
+  "12px": "12",
+  "14px": "14",
+  "16px": "16",
+  "18px": "18",
+  "20px": "20",
+  "24px": "24",
+  "28px": "28",
+  "32px": "32",
+  "36px": "36",
+  "42px": "42",
+} as const;
+
+const IMPORTED_LAYOUT_SELECTORS = [
+  ".article-content",
+  ".article-content_toc",
+  "figure",
+  "figcaption",
+  "img",
+  "table",
+  "iframe",
+];
+
+function normalizeImportedHtml(value: string) {
+  if (typeof window === "undefined" || !value.trim()) return value;
+
+  const parser = new DOMParser();
+  const document = parser.parseFromString(value, "text/html");
+
+  document.body.querySelectorAll<HTMLElement>(IMPORTED_LAYOUT_SELECTORS.join(",")).forEach((element) => {
+    element.style.removeProperty("width");
+    element.style.removeProperty("max-width");
+    element.style.removeProperty("min-width");
+    element.style.removeProperty("float");
+    element.style.removeProperty("left");
+    element.style.removeProperty("right");
+
+    if (element.tagName === "IMG") {
+      element.style.setProperty("display", "block");
+      element.style.setProperty("width", "100%");
+      element.style.setProperty("max-width", "100%");
+      element.style.setProperty("height", "auto");
+      element.removeAttribute("width");
+      element.removeAttribute("height");
+    }
+
+    if (element.tagName === "FIGURE") {
+      element.style.setProperty("display", "block");
+      element.style.setProperty("margin", "1.5rem 0");
+      element.style.setProperty("width", "100%");
+      element.style.setProperty("max-width", "100%");
+    }
+
+    if (element.classList.contains("article-content") || element.classList.contains("article-content_toc")) {
+      element.style.setProperty("width", "100%");
+      element.style.setProperty("max-width", "100%");
+      element.style.setProperty("overflow", "hidden");
+    }
+  });
+
+  return document.body.innerHTML;
+}
+
 export function AdminRichTextEditor({
   value,
   onChange,
@@ -97,6 +170,17 @@ export function AdminRichTextEditor({
       defaultActionOnPaste: "insert_as_html",
       enter: "p",
       showPlaceholder: false,
+      toolbarAdaptive: false,
+      toolbarInlineForSelection: true,
+      showXPathInStatusbar: false,
+      controls: {
+        font: {
+          list: FONT_FAMILY_OPTIONS,
+        },
+        fontsize: {
+          list: FONT_SIZE_OPTIONS,
+        },
+      },
     }),
     [minHeight, placeholder, readOnly],
   );
@@ -117,6 +201,17 @@ export function AdminRichTextEditor({
           padding: 10px;
         }
 
+        .admin-rich-text-editor .jodit-toolbar-editor-collection {
+          border-radius: 0.9rem;
+          border: 1px solid rgba(6, 62, 142, 0.15);
+          box-shadow: 0 18px 34px rgba(17, 24, 39, 0.12);
+          overflow: hidden;
+        }
+
+        .admin-rich-text-editor .jodit-toolbar-editor-collection .jodit-toolbar__box {
+          padding: 8px;
+        }
+
         .admin-rich-text-editor .jodit-workplace {
           min-height: ${minHeight}px;
         }
@@ -134,9 +229,26 @@ export function AdminRichTextEditor({
         }
 
         .admin-rich-text-editor .jodit-wysiwyg img {
-          max-width: 100%;
+          display: block;
+          width: 100% !important;
+          max-width: 100% !important;
           height: auto;
           border-radius: 0.75rem;
+        }
+
+        .admin-rich-text-editor .jodit-wysiwyg .article-content,
+        .admin-rich-text-editor .jodit-wysiwyg .article-content_toc,
+        .admin-rich-text-editor .jodit-wysiwyg figure,
+        .admin-rich-text-editor .jodit-wysiwyg table,
+        .admin-rich-text-editor .jodit-wysiwyg iframe {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box;
+        }
+
+        .admin-rich-text-editor .jodit-wysiwyg figure {
+          display: block !important;
+          margin: 1.5rem 0 !important;
         }
 
         .admin-rich-text-editor .jodit-placeholder {
@@ -149,7 +261,7 @@ export function AdminRichTextEditor({
           ref={editor}
           value={value}
           config={config}
-          onBlur={(nextContent) => onChange(nextContent)}
+          onBlur={(nextContent) => onChange(normalizeImportedHtml(nextContent))}
           onChange={() => undefined}
         />
       </div>

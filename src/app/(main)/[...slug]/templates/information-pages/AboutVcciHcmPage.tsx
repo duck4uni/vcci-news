@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useCustomClient } from "@/api/mutator/custom-client";
 import ImageNext from "@/components/shared/image-next";
 import { fetchClientVideos } from "@/lib/api/videos";
+import { buildDynamicPostHref, buildVisibleNewsFilters } from "../data";
 import StructuredPostContent from "../StructuredPostContent";
 import type { DynamicPostItem } from "../types";
 
@@ -87,13 +88,7 @@ export default function AboutVcciHcmPage({
         pageSize: "3",
         sortField: "release_at",
         sortOrder: "desc",
-        filters: [
-          `category.id==${TIN_VCCI_CATEGORY_ID}`,
-          "is_hidden==false",
-          "is_active==true",
-          "status==published",
-          "type==news",
-        ].join(","),
+        filters: buildVisibleNewsFilters([`category.id==${TIN_VCCI_CATEGORY_ID}`]),
       });
 
       const response = await useCustomClient<TinVcciApiEnvelope>(`/post?${query.toString()}`);
@@ -101,7 +96,7 @@ export default function AboutVcciHcmPage({
       return (response.responseData?.rows ?? []).map((item) => ({
         id: String(item.id ?? ""),
         title: String(item.title ?? "").trim(),
-        externalLink: item.external_link?.trim() || "#",
+        externalLink: buildDynamicPostHref(item.external_link?.trim() || "#", item.id ? String(item.id) : ""),
         publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
         thumbnailUrl:
           item.thumbnail?.url?.trim() ||
@@ -133,7 +128,7 @@ export default function AboutVcciHcmPage({
           ) : null}
 
           <div className="mt-7 rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
-            <div className="page-detail-content prose tiptap max-w-none overflow-hidden">
+            <div className="about-vcci-page-content page-detail-content prose tiptap max-w-none overflow-hidden">
               <StructuredPostContent post={post} />
             </div>
           </div>
@@ -153,6 +148,24 @@ export default function AboutVcciHcmPage({
           </div>
         </aside>
       </section>
+
+      <style jsx global>{`
+        .about-vcci-page-content figure {
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 28px 0 !important;
+          text-align: center;
+        }
+
+        .about-vcci-page-content img {
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          margin-left: auto !important;
+          margin-right: auto !important;
+          object-fit: contain;
+        }
+      `}</style>
 
       <section className="mt-10 space-y-10 md:mt-12 md:space-y-12">
         <div>
@@ -303,7 +316,7 @@ export default function AboutVcciHcmPage({
             </Link>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid pb-6 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {tinVcciItems.map((item) => (
               <Link
                 key={item.id}

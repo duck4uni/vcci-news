@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import { notFound, useParams, useRouter } from "next/navigation";
+import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui";
 import ArticlePage from "./templates/ArticlePage";
@@ -10,6 +10,7 @@ import CatalogPage from "./templates/CatalogPage";
 import InformationPage from "./templates/InformationPage";
 import {
   fetchDynamicCategories,
+  fetchDynamicPostById,
   fetchDynamicPostByExternalLink,
   fetchDynamicSinglePagePost,
   findDynamicCategoryByPath,
@@ -23,6 +24,9 @@ export default function DynamicPage() {
   const path = slug.join("/");
   const routePath = `/${path}`;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const postId = searchParams.get("id")?.trim() ?? "";
+  const preferredCategoryId = searchParams.get("categoryId")?.trim() ?? "";
 
   const categoryQuery = useQuery({
     queryKey: ["dynamic-categories"],
@@ -30,21 +34,32 @@ export default function DynamicPage() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const detailQuery = useQuery({
-    queryKey: ["dynamic-post-detail", routePath],
-    queryFn: () => fetchDynamicPostByExternalLink(routePath),
-    enabled: Boolean(routePath),
-    staleTime: 60 * 1000,
-  });
-
   const matchedCategory = useMemo(
     () => findDynamicCategoryByPath(categoryQuery.data ?? [], routePath),
     [categoryQuery.data, routePath],
   );
 
+  const detailQuery = useQuery({
+    queryKey: ["dynamic-post-detail", postId || routePath],
+    queryFn: () =>
+      postId
+        ? fetchDynamicPostById(postId)
+        : fetchDynamicPostByExternalLink(routePath),
+    enabled:
+      (Boolean(postId) || Boolean(routePath)) &&
+      !categoryQuery.isLoading &&
+      (Boolean(postId) || !matchedCategory),
+    staleTime: 60 * 1000,
+  });
+
   const resolvedCategory = useMemo(
-    () => matchedCategory ?? findMenuCategoryForPost(detailQuery.data ?? null, categoryQuery.data ?? []),
-    [matchedCategory, detailQuery.data, categoryQuery.data],
+    () =>
+      (preferredCategoryId
+        ? categoryQuery.data?.find((item) => item.id === preferredCategoryId) ?? null
+        : null) ??
+      matchedCategory ??
+      findMenuCategoryForPost(detailQuery.data ?? null, categoryQuery.data ?? []),
+    [preferredCategoryId, matchedCategory, detailQuery.data, categoryQuery.data],
   );
 
   const singlePageQuery = useQuery({

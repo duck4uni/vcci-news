@@ -85,6 +85,14 @@ type PostListResponse = {
   };
 };
 
+type PostDetailResponse = RawPostItem;
+type PostDetailEnvelope = {
+  responseData?: RawPostItem | null;
+  data?: {
+    responseData?: RawPostItem | null;
+  } | null;
+};
+
 export type DynamicPostListResult = {
   count: number;
   page: number;
@@ -97,6 +105,44 @@ const normalizePath = (value?: string | null) => {
   const trimmed = value?.trim() ?? "";
   if (!trimmed || trimmed === "/") return "/";
   return `/${trimmed.replace(/^\/+|\/+$/g, "")}`;
+};
+
+export const buildDynamicPostHref = (
+  path?: string | null,
+  id?: string | null,
+  categoryId?: string | null,
+) => {
+  const normalizedPath = normalizePath(path);
+  const trimmedId = id?.trim() ?? "";
+  const trimmedCategoryId = categoryId?.trim() ?? "";
+
+  if ((!trimmedId && !trimmedCategoryId) || normalizedPath === "/") {
+    return normalizedPath;
+  }
+
+  const params = new URLSearchParams();
+  if (trimmedId) {
+    params.set("id", trimmedId);
+  }
+  if (trimmedCategoryId) {
+    params.set("categoryId", trimmedCategoryId);
+  }
+
+  return `${normalizedPath}?${params.toString()}`;
+};
+
+const getSlugFromPath = (value?: string | null) => {
+  const normalizedPath = normalizePath(value);
+  const segments = normalizedPath.split("/").filter(Boolean);
+  const lastSegment = segments.at(-1);
+
+  if (!lastSegment) return "";
+
+  try {
+    return decodeURIComponent(lastSegment).trim();
+  } catch {
+    return lastSegment.trim();
+  }
 };
 
 const normalizeCategoryType = (value?: string | null): DynamicCategoryType | null => {
@@ -195,6 +241,16 @@ const buildPostFilters = (filters: Array<string | null | undefined>) =>
     .filter(Boolean)
     .join(",");
 
+export const buildVisibleNewsFilters = (
+  filters: Array<string | null | undefined> = [],
+) =>
+  buildPostFilters([
+    ...filters,
+    "is_hidden==false",
+    "is_active==true",
+    "type==news",
+  ]);
+
 export async function fetchDynamicCategories(): Promise<DynamicCategoryRouteItem[]> {
   const response = await useCustomClient<CategoryListResponse>(
     "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
@@ -255,16 +311,57 @@ export async function fetchDynamicPostList(params: {
   };
 }
 
+export async function fetchDynamicPostById(id: string) {
+  const normalizedId = id.trim();
+
+  if (!normalizedId) return null;
+
+  const listResult = await fetchDynamicPostList({
+    page: 1,
+    pageSize: 1,
+    filters: buildVisibleNewsFilters([`id==${normalizedId}`]),
+  }).catch(() => null);
+
+  if (listResult?.rows[0]) {
+    return listResult.rows[0];
+  }
+
+  const newsResponse = await useCustomClient<PostDetailEnvelope>(`/news/${normalizedId}`).catch(() => null);
+  const newsItem = newsResponse?.responseData ?? newsResponse?.data?.responseData ?? null;
+
+  if (newsItem) {
+    const post = mapPost(newsItem);
+    return post.id && post.title ? post : null;
+  }
+
+  const postResponse = await useCustomClient<PostDetailResponse>(`/post/${normalizedId}`).catch(() => null);
+
+  if (!postResponse) return null;
+
+  const post = mapPost(postResponse);
+  return post.id && post.title ? post : null;
+}
+
 export async function fetchDynamicPostByExternalLink(path: string) {
+  const normalizedPath = normalizePath(path);
+  const slug = getSlugFromPath(normalizedPath);
+
+  if (slug) {
+    const slugResult = await fetchDynamicPostList({
+      page: 1,
+      pageSize: 1,
+      filters: buildVisibleNewsFilters([`slug==${slug}`]),
+    });
+
+    if (slugResult.rows[0]) {
+      return slugResult.rows[0];
+    }
+  }
+
   const result = await fetchDynamicPostList({
     page: 1,
     pageSize: 1,
-    filters: buildPostFilters([
-      `external_link==${normalizePath(path)}`,
-      "is_hidden==false",
-      "is_active==true",
-      "status==published",
-    ]),
+    filters: buildVisibleNewsFilters([`external_link==${normalizedPath}`]),
   });
 
   return result.rows[0] ?? null;
@@ -302,6 +399,51 @@ export function findMenuCategoryForPost(
   for (const category of post.categories) {
     const matched = categories.find((item) => item.id === category.id);
     if (matched) return matched;
+  }
+
+  return null;
+}
+
+export function findDisplayCategoryForPost(
+  post: DynamicPostItem | null,
+  activeCategory: DynamicCategoryRouteItem | null,
+  categories: DynamicCategoryRouteItem[] = [],
+) {
+  if (!post) return null;
+
+  if (activeCategory) {
+    const matchedPostCategory =
+      post.categories.find((item) => item.id === activeCategory.id) ??
+      post.categories.find((item) => normalizePath(item.url) === normalizePath(activeCategory.url));
+
+    if (matchedPostCategory) {
+      return {
+        id: matchedPostCategory.id,
+        name: matchedPostCategory.name,
+        url: normalizePath(matchedPostCategory.url),
+        type: matchedPostCategory.type,
+      };
+    }
+
+    const matchedTreeCategory = categories.find((item) => item.id === activeCategory.id);
+    if (matchedTreeCategory) {
+      return {
+        id: matchedTreeCategory.id,
+        name: matchedTreeCategory.name,
+        url: normalizePath(matchedTreeCategory.url),
+        type: matchedTreeCategory.type,
+      };
+    }
+  }
+
+  const firstCategory = post.categories[0];
+  if (firstCategory) {
+    return {
+      id: firstCategory.id,
+      name: firstCategory.name,
+      url: normalizePath(firstCategory.url),
+      type: firstCategory.type,
+    };
   }
 
   return null;

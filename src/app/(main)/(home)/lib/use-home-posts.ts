@@ -153,6 +153,16 @@ const normalizeLink = (value?: string | null, fallback = "/") => {
   return `/${trimmed}`;
 };
 
+const buildPostLink = (path?: string | null, id?: string | null, fallback = "#") => {
+  const normalizedPath = normalizeLink(path, fallback);
+  const trimmedId = id?.trim() ?? "";
+
+  if (!trimmedId || normalizedPath === "#") return normalizedPath;
+
+  const params = new URLSearchParams({ id: trimmedId });
+  return `${normalizedPath}?${params.toString()}`;
+};
+
 const resolveAssetUrl = (value?: string | null) => {
   const trimmed = value?.trim();
 
@@ -224,7 +234,6 @@ const isVisibleNewsPost = (item: HomePostItem) => {
   if (item.type && item.type !== "news") return false;
   if (item.isHidden) return false;
   if (!item.isActive) return false;
-  if (item.status && item.status !== "published") return false;
   return true;
 };
 
@@ -246,7 +255,6 @@ function createCategoryPostsQuery(categoryId: string, pageSize: string) {
       `category.id==${categoryId}`,
       "is_hidden==false",
       "is_active==true",
-      "status==published",
       "type==news",
     ].join(","),
   });
@@ -265,7 +273,6 @@ function createEventCalendarQuery(currentMonth: Date) {
       `registration_deadline<=${dayjs(monthEnd).format("YYYY-MM-DD HH:mm:ss")}`,
       "is_hidden==false",
       "is_active==true",
-      "status==published",
       "type==news",
     ].join(","),
   });
@@ -281,7 +288,6 @@ async function fetchHomePosts() {
       "is_featured==true",
       "is_hidden==false",
       "is_active==true",
-      "status==published",
       "type==news",
     ].join(","),
   });
@@ -346,8 +352,9 @@ async function fetchHomePosts() {
 
       const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
       const title = String(item.title ?? "").trim();
-      const externalLink = normalizeLink(
+      const externalLink = buildPostLink(
         item.external_link || (title ? `/${title}` : undefined),
+        item.id ? String(item.id) : "",
         "#",
       );
 
@@ -560,8 +567,9 @@ export function useEventCalendarPosts(currentMonth: Date) {
 
         const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
         const title = String(item.title ?? "").trim();
-        const externalLink = normalizeLink(
+        const externalLink = buildPostLink(
           item.external_link || (title ? `/${title}` : undefined),
+          item.id ? String(item.id) : "",
           "#",
         );
 

@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@components/ui/spinner";
 import {
-  buildPostFilters,
+  buildDynamicPostHref,
+  buildVisibleNewsFilters,
   fetchDynamicPostList,
   resolveDynamicPostImage,
   stripHtml,
@@ -46,14 +47,14 @@ function SearchResultItem({ item, index }: { item: DynamicPostItem; index: numbe
     ?.map((section) => section.content)
     .join(" ");
   const description =
-    item.summary || stripHtml(item.content) || stripHtml(fallbackDescription);
+    stripHtml(item.summary) || stripHtml(item.content) || stripHtml(fallbackDescription);
   const date = formatPostDate(item.release_at || item.published_at || item.created_at);
   const categoryName = item.categories[0]?.name || "Tin tức";
 
   return (
     <article className="border-b border-[#eceff3] pb-8 last:border-b-0">
       <Link
-        href={item.external_link || "#"}
+        href={buildDynamicPostHref(item.external_link, item.id)}
         className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
       >
         <div className="overflow-hidden rounded-md bg-[#edf1f5]">
@@ -104,11 +105,7 @@ function SearchContent() {
       fetchDynamicPostList({
         page,
         pageSize,
-        filters: buildPostFilters([
-          "is_hidden==false",
-          "is_active==true",
-          "status==published",
-          "type==news",
+        filters: buildVisibleNewsFilters([
           query ? `title@=${query}` : null,
         ]),
       }),

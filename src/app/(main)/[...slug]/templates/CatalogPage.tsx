@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ListCategory from "@/components/base/list-category";
 import {
+  buildDynamicPostHref,
   buildDynamicCategoryMenu,
-  buildPostFilters,
+  buildVisibleNewsFilters,
   fetchDynamicPostList,
   resolveDynamicPostImage,
 } from "./data";
@@ -22,15 +23,6 @@ type CatalogPageProps = {
   category: DynamicCategoryRouteItem;
   allCategories: DynamicCategoryRouteItem[];
 };
-
-const getCatalogImageClassName = (index: number) =>
-  index % 4 === 0
-    ? "object-cover"
-    : index % 4 === 1
-      ? "object-contain bg-[#f0f3f8]"
-      : index % 4 === 2
-        ? "object-cover object-center"
-        : "object-contain bg-[#eef4fb]";
 
 export default function CatalogPage({ category, allCategories }: CatalogPageProps) {
   const searchParams = useSearchParams();
@@ -68,12 +60,8 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
       fetchDynamicPostList({
         page,
         pageSize,
-        filters: buildPostFilters([
+        filters: buildVisibleNewsFilters([
           `category.id==${category.id}`,
-          "is_hidden==false",
-          "is_active==true",
-          "status==published",
-          "type==news",
           keyword ? `title@=${keyword}` : null,
         ]),
       }),
@@ -105,11 +93,11 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
             <main className="order-2 min-w-0 xl:order-1 xl:flex-1">
               {paginatedPosts.length ? (
                 <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 xl:grid-cols-4 xl:gap-6">
-                  {paginatedPosts.map((item, index) => {
+                  {paginatedPosts.map((item) => {
                     return (
                       <Link
                         key={item.id}
-                        href={item.external_link}
+                        href={buildDynamicPostHref(item.external_link, item.id, category.id)}
                         className="group block"
                       >
                         <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">
@@ -119,7 +107,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                               alt={item.title}
                               width={520}
                               height={693}
-                              className={`h-full w-full transition-transform duration-500 group-hover:scale-[1.03] ${getCatalogImageClassName(index)}`}
+                              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                             />
                           </div>
                         </div>

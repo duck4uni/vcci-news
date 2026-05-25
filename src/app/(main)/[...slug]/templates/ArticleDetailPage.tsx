@@ -2,9 +2,10 @@
 
 import dayjs from "dayjs";
 import ImageNext from "@/components/shared/image-next";
+import AppEditorContent from "@/components/shared/editor-content";
 import ListCategory from "@/components/base/list-category";
 import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
-import { buildDynamicCategoryMenu } from "./data";
+import { buildDynamicCategoryMenu, findDisplayCategoryForPost } from "./data";
 import StructuredPostContent from "./StructuredPostContent";
 import type { DynamicCategoryRouteItem, DynamicPostItem } from "./types";
 
@@ -22,7 +23,10 @@ export default function ArticleDetailPage({
   const publishedDate = dayjs(
     post.release_at ?? post.published_at ?? post.created_at,
   ).format("DD/MM/YYYY");
-  const primaryCategory = post.categories[0]?.name || category?.name || "Tin tá»©c";
+  const primaryCategory =
+    findDisplayCategoryForPost(post, category, allCategories)?.name ||
+    category?.name ||
+    "Tin tá»©c";
   const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
 
   return (
@@ -44,9 +48,9 @@ export default function ArticleDetailPage({
             <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
 
             {post.summary ? (
-              <p className="mt-5 max-w-4xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
-                {post.summary}
-              </p>
+              <div className="mt-5 max-w-4xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
+                <AppEditorContent value={post.summary} />
+              </div>
             ) : null}
 
             <div className="mt-7 rounded-3xl bg-white px-4 py-5 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 sm:py-6 lg:px-10">
@@ -59,13 +63,16 @@ export default function ArticleDetailPage({
               <style jsx global>{`
                 .article-detail-content {
                   color: #1f2937;
-                  font-size: 16px;
                   line-height: 1.85;
+                  width: 100%;
+                  max-width: 100%;
                 }
 
                 .article-detail-content p,
                 .article-detail-content div {
                   margin: 0 0 18px;
+                  max-width: 100% !important;
+                  box-sizing: border-box;
                 }
 
                 .article-detail-content h1,
@@ -80,17 +87,39 @@ export default function ArticleDetailPage({
                   line-height: 1.45;
                 }
 
+                .article-detail-content :is(p, div, span, li, a, strong, em, u, s) {
+                  font-family: inherit;
+                }
+
                 .article-detail-content img {
                   display: block;
-                  width: 100%;
-                  max-width: 100%;
-                  height: auto;
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  height: auto !important;
                   margin: 24px auto 10px;
                   border-radius: 14px;
                 }
 
                 .article-detail-content figure {
+                  display: block !important;
+                  width: 100% !important;
+                  max-width: 100% !important;
                   margin: 28px 0;
+                  text-align: center;
+                }
+
+                .article-detail-content .article-content,
+                .article-detail-content .article-content_toc,
+                .article-detail-content table,
+                .article-detail-content iframe {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                  box-sizing: border-box;
+                }
+
+                .article-detail-content table {
+                  display: table;
+                  table-layout: fixed;
                 }
 
                 .article-detail-content figcaption,

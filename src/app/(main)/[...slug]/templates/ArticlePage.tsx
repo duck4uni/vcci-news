@@ -11,9 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ListCategory from "@/components/base/list-category";
 import {
+  buildDynamicPostHref,
   buildDynamicCategoryMenu,
-  buildPostFilters,
+  buildVisibleNewsFilters,
   fetchDynamicPostList,
+  findDisplayCategoryForPost,
   resolveDynamicPostImage,
   stripHtml,
 } from "./data";
@@ -84,12 +86,8 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
       fetchDynamicPostList({
         page,
         pageSize,
-        filters: buildPostFilters([
+        filters: buildVisibleNewsFilters([
           `category.id==${category.id}`,
-          "is_hidden==false",
-          "is_active==true",
-          "status==published",
-          "type==news",
           keyword ? `title@=${keyword}` : null,
         ]),
       }),
@@ -134,10 +132,14 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
                       ?.map((section) => section.content)
                       .join(" ");
                     const description =
-                      item.summary ||
+                      stripHtml(item.summary) ||
                       stripHtml(item.content) ||
                       stripHtml(fallbackDescription);
-                    const primaryCategory = item.categories[0];
+                    const primaryCategory = findDisplayCategoryForPost(
+                      item,
+                      category,
+                      allCategories,
+                    );
                     const tagIndex = categoryIndexMap.get(primaryCategory?.id ?? "") ?? index;
                     const date = formatPostDate(
                       item.release_at ?? item.published_at ?? item.created_at,
@@ -149,16 +151,16 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
                         className="border-b border-[#eceff3] pb-8 last:border-b-0"
                       >
                         <Link
-                          href={item.external_link}
+                          href={buildDynamicPostHref(item.external_link, item.id, category.id)}
                           className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
                         >
-                          <div className="overflow-hidden rounded-md bg-[#edf1f5]">
+                          <div className="relative overflow-hidden rounded-md bg-[#edf1f5] aspect-[25/15] sm:aspect-[5/3]">
                             <ImageNext
                               src={resolveDynamicPostImage(item.thumbnail)}
                               alt={item.title}
                               width={520}
                               height={360}
-                              className="h-[170px] w-full object-cover transition-transform duration-500 group-hover:scale-[1.03] sm:h-[150px]"
+                              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                             />
                           </div>
 
