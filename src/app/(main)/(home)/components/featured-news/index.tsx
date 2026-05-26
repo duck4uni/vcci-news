@@ -148,7 +148,7 @@ function FeaturedNews() {
                   </div>
                   <div className="mt-2 flex items-center gap-3 text-sm font-medium">
                     <Phone className="h-5 w-5 shrink-0" />
-                    <span>+84-28-3932 5171</span>
+                    <span>+84 28 3932 6598</span>
                   </div>
                 </div>
               </div>

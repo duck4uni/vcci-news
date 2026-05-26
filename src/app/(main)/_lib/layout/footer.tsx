@@ -276,7 +276,7 @@ function Footer() {
                   <span>{contactInfo.telephone}</span>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Printer className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                  <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
                   <span>{contactInfo.fax}</span>
                 </div>
                 <div className="flex items-center gap-3">

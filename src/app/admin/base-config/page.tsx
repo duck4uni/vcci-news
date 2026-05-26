@@ -1626,7 +1626,7 @@ export default function AdminBaseConfigPage() {
 
                     <div className="grid gap-5 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label className="text-gray-700">Fax</Label>
+                        <Label className="text-gray-700">Hotline 2</Label>
                         <Input
                           value={currentBranch.fax}
                           onChange={(event) =>
