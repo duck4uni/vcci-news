@@ -1,4 +1,5 @@
 const DEFAULT_BACKEND_ORIGIN = "https://vietprodev.duckdns.org/gateway/vcci-news-backend";
+const DEFAULT_FRONTEND_ORIGIN = "https://vccihcm.vn";
 
 const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
 
@@ -11,6 +12,9 @@ const readOrigin = (key: "NEXT_PUBLIC_BACKEND_HOST" | "NEXT_PUBLIC_FRONTEND_HOST
   if (envOrigin) return envOrigin;
   if (key === "NEXT_PUBLIC_BACKEND_HOST" && process.env.NODE_ENV === "production") {
     return DEFAULT_BACKEND_ORIGIN;
+  }
+  if (key === "NEXT_PUBLIC_FRONTEND_HOST" && process.env.NODE_ENV === "production") {
+    return DEFAULT_FRONTEND_ORIGIN;
   }
 
   if (typeof window !== "undefined" && key === "NEXT_PUBLIC_FRONTEND_HOST") {
