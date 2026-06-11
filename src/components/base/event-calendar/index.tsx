@@ -41,7 +41,6 @@ export default function EventCalendar() {
   const getEventForDay = (date: Date) =>
     events.filter((e) => isSameDay(new Date(e.start_time), date));
 
-  // Month title formatting (Vietnamese)
   const formatMonthTitle = () => `THÁNG ${format(currentMonth, "M/yyyy")}`.toUpperCase();
 
   return (
