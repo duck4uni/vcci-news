@@ -22,7 +22,6 @@ export default function EventCalendar() {
   const { data } = useGetEvents<EventApiResponse>();
   const events = data?.responseData.rows ?? [];
 
-  // Calculate the days to display in the current month grid
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
