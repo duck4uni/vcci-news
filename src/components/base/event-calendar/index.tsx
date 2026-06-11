@@ -19,11 +19,9 @@ export default function EventCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const today = new Date();
 
-  // Fetch event data from API
   const { data } = useGetEvents<EventApiResponse>();
   const events = data?.responseData.rows ?? [];
 
-  // Calculate the days to display in the current month grid
   const days = useMemo(() => {
     const start = startOfMonth(currentMonth);
     const end = endOfMonth(currentMonth);
@@ -40,7 +38,6 @@ export default function EventCalendar() {
     return result;
   }, [currentMonth]);
 
-  // Helper: get all events for a specific day
   const getEventForDay = (date: Date) =>
     events.filter((e) => isSameDay(new Date(e.start_time), date));
 
