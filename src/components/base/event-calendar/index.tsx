@@ -38,7 +38,6 @@ export default function EventCalendar() {
     return result;
   }, [currentMonth]);
 
-  // Helper: get all events for a specific day
   const getEventForDay = (date: Date) =>
     events.filter((e) => isSameDay(new Date(e.start_time), date));
 
