@@ -19,7 +19,6 @@ export default function EventCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const today = new Date();
 
-  // Fetch event data from API
   const { data } = useGetEvents<EventApiResponse>();
   const events = data?.responseData.rows ?? [];
 
