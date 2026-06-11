@@ -6,7 +6,7 @@ import { notFound, useParams } from "next/navigation";
 
 import dayjs from "dayjs";
 import parse from "html-react-parser";
-import BASE_URL from "@/links";
+import { resolveUploadUrl } from "@/links";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -37,28 +37,28 @@ export default function EventDetailPage() {
     return notFound();
   }
   return (
-    <div className='container w-full flex justify-center items-center pb-10'>
+    <div className='container flex w-full items-center justify-center px-4 pb-10 sm:px-6 lg:px-10'>
       {isLoading ? (
         <div className="flex justify-center items-center w-full h-64">
           <Spinner />
         </div>
       ) : (
-        <div className='flex flex-col gap-5 w-full'>
+        <div className='flex w-full flex-col gap-5'>
           <ListCategory categories={category?.responseData?.children} />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-            <main className="lg:col-span-2 bg-white border rounded-md py-10 px-5 md:px-20">
+          <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
+            <main className="min-w-0 rounded-md border bg-white px-4 py-6 sm:px-6 md:px-10 lg:px-14 lg:py-10">
               <div className='pb-5 text-primary text-2xl leading-normal font-medium'>
                 {eventsDetail?.responseData?.rows[0]?.name}
               </div>
               <hr className="py-2" />
 
               {/* Top summary with image + details */}
-              <div className="flex flex-col md:flex-row gap-6 my-6">
-                <div className="w-full lg:w-1/2 bg-gray-50 rounded-md overflow-hidden">
+              <div className="my-6 flex flex-col gap-6 md:flex-row">
+                <div className="w-full overflow-hidden rounded-md bg-gray-50 md:w-1/2">
                   {eventsDetail?.responseData?.rows[0].image ? (
                     <div className="w-full h-52 relative ">
                       <EventImage
-                        src={`${BASE_URL.imageEndpoint}${eventsDetail?.responseData?.rows[0].image}`}
+                        src={resolveUploadUrl(eventsDetail?.responseData?.rows[0].image)}
                         alt={eventsDetail?.responseData?.rows[0]?.name || "image"}
                       />
                     </div>
@@ -67,7 +67,7 @@ export default function EventDetailPage() {
                   )}
                 </div>
 
-                <div className="w-full lg:w-1/2 bg-white border rounded-md p-3 md:p-6">
+                <div className="w-full rounded-md border bg-white p-3 md:w-1/2 md:p-6">
                   <div className="flex flex-col gap-3">
                     <div className="text-sm text-gray-500 flex flex-row items-center gap-2">
                       <Clock className="h-5 w-5 text-yellow-500" />
@@ -112,13 +112,13 @@ export default function EventDetailPage() {
               </div>
 
               {/* Full description */}
-              <div className="prose tiptap overflow-hidden">
+              <div className="prose tiptap max-w-none overflow-hidden">
                 {parse(eventsDetail?.responseData?.rows[0]?.description ?? "")}
               </div>
             </main>
 
             {/* Sidebar */}
-            <aside className="space-y-6">
+            <aside className="min-w-0 space-y-6">
               <EventCalendar />
               <div className="bg-white border rounded-md overflow-hidden">
                 <div className="w-full h-75 relative bg-gray-100">

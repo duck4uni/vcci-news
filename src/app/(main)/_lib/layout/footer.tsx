@@ -1,194 +1,350 @@
 "use client";
-import React, { useRef, useState } from "react";
+
+import React, { useState } from "react";
 import {
   Facebook,
   Linkedin,
   Mail,
-  MailCheck,
   MapPin,
   Phone,
   Printer,
+  SendHorizontal,
   Twitter,
   Youtube,
 } from "lucide-react";
-import Image from "next/image";
-import vietnamMap from "@/assets/vietnam-map-white.png";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import { subscribeNewsletterEmail } from "@/lib/api/newsletter-subscriptions";
+import { getSiteInformation } from "@/api/endpoints/site-information";
+import type { SiteInformationData } from "@/api/models";
+import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
+
+type ApiEnvelope<T> = {
+  responseData?: T;
+  data?: {
+    responseData?: T;
+  };
+};
+
+type SocialItem = {
+  key: string;
+  url: string;
+  icon: React.ReactNode;
+};
+
+
+const fallbackSocials: SocialItem[] = [
+  {
+    key: "facebook",
+    url: "https://www.facebook.com/VCCIHCMC/",
+    icon: <Facebook className="h-5 w-5" />,
+  },
+  {
+    key: "twitter",
+    url: "https://twitter.com/VCCI_HCM",
+    icon: <Twitter className="h-5 w-5" />,
+  },
+  {
+    key: "youtube",
+    url: "https://www.youtube.com/user/VCCIHCMC",
+    icon: <Youtube className="h-5 w-5" />,
+  },
+  {
+    key: "linkedin",
+    url: "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym",
+    icon: <Linkedin className="h-5 w-5" />,
+  },
+];
+
+const getEnvelopeData = <T,>(payload?: ApiEnvelope<T> | null) =>
+  payload?.responseData ?? payload?.data?.responseData;
+
+const getSocialIcon = (key: string): React.ReactNode => {
+  const normalized = key.toLowerCase();
+  if (normalized.includes("facebook")) return <Facebook className="h-5 w-5" />;
+  if (normalized.includes("twitter") || normalized === "x") {
+    return <Twitter className="h-5 w-5" />;
+  }
+  if (normalized.includes("youtube")) return <Youtube className="h-5 w-5" />;
+  if (normalized.includes("linkedin")) return <Linkedin className="h-5 w-5" />;
+  if (normalized.includes("zalo")) return <ZaloIcon className="h-5 w-5" />;
+  if (normalized.includes("tiktok")) return <TiktokIcon className="h-5 w-5" />;
+  return null;
+};
+
+const quickLinks = [
+  { label: "Giới thiệu", href: "/gioi-thieu" },
+  { label: "Hội viên", href: "/hoi-vien/loi-ich-hoi-vien-vcci" },
+  { label: "Hoạt động", href: "/hoat-dong/su-kien" },
+  { label: "Xúc tiến Thương mại", href: "/xuc-tien-thuong-mai/ho-so-thi-truong" },
+];
+
+const isValidEmail = (value: string) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 function Footer() {
-  const emailRef = useRef<HTMLInputElement>(null);
-  const checkBoxRef = useRef<HTMLInputElement>(null);
-  const [emailError, setEmailError] = useState(false);
-  const [chechError, setCheckError] = useState(false);
+  const [email, setEmail] = useState("");
+  const [accepted, setAccepted] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [checkError, setCheckError] = useState(false);
+  const [message, setMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
-    if (!checkBoxRef.current?.checked) setCheckError(true);
-    else setCheckError(false);
+  const { data: siteInformationResponse } =
+    useQuery<ApiEnvelope<SiteInformationData> | null>({
+      queryKey: ["site-information"],
+      queryFn: () => getSiteInformation().catch(() => null),
+      staleTime: 5 * 60 * 1000,
+    });
 
-    if (emailRef.current?.value === "") setEmailError(true);
-    else setEmailError(false);
+  const siteInformation = getEnvelopeData<SiteInformationData>(
+    siteInformationResponse,
+  );
+  const primaryBranch =
+    siteInformation?.branches?.find((branch) => branch?.is_active) ??
+    siteInformation?.branches?.[0] ??
+    null;
+  const branches = (siteInformation?.branches ?? [])
+    .filter((branch) => branch?.is_active ?? true)
+    .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0));
+  const extraBranches = branches.filter(
+    (branch) => branch?.id && branch?.id !== primaryBranch?.id,
+  );
+
+  const contactInfo = {
+    name:
+      primaryBranch?.branch_name ??
+      siteInformation?.website_name ??
+      "LIÊN ĐOÀN THƯƠNG MẠI & CÔNG NGHIỆP VIỆT NAM - CHI NHÁNH KHU VỰC THÀNH PHỐ HỒ CHÍ MINH",
+    address:
+      siteInformation?.address ??
+      primaryBranch?.address ??
+      "171 Võ Thị Sáu, Phường Xuân Hòa, TP. HCM",
+    telephone:
+      siteInformation?.telephone ??
+      primaryBranch?.telephone ??
+      primaryBranch?.hotline ??
+      "+84 28 3932 6598",
+    fax: primaryBranch?.fax ?? "+84 28 3932 5472",
+    email:
+      siteInformation?.email ?? primaryBranch?.email ?? "info@vcci-hcm.org.vn",
+  };
+
+  const socialLinks = (() => {
+    const socials =
+      siteInformation?.socials ?? siteInformation?.link_socials ?? [];
+    const active = socials
+      .filter((item) => item?.is_active && item?.url)
+      .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))
+      .map((item) => {
+        const key = item.icon_key || item.platform || item.label || "";
+        const icon = getSocialIcon(key);
+        if (!icon || !item.url) return null;
+
+        return {
+          key: item.id || key,
+          url: item.url,
+          icon,
+        } as SocialItem;
+      })
+      .filter((item): item is SocialItem => item !== null);
+
+    return active.length ? active : fallbackSocials;
+  })();
+
+  const handleSubmit = async () => {
+    const trimmedEmail = email.trim();
+    let hasError = false;
+
+    setMessage("");
+
+    if (!trimmedEmail) {
+      setEmailError("Thông tin bắt buộc");
+      hasError = true;
+    } else if (!isValidEmail(trimmedEmail)) {
+      setEmailError("Email không hợp lệ");
+      hasError = true;
+    } else {
+      setEmailError("");
+    }
+
+    if (!accepted) {
+      setCheckError(true);
+      hasError = true;
+    } else {
+      setCheckError(false);
+    }
+
+    if (hasError) return;
+
+    setSubmitting(true);
+
+    try {
+      await subscribeNewsletterEmail(trimmedEmail);
+      setEmail("");
+      setAccepted(false);
+      setMessage("Đăng ký nhận thông tin thành công.");
+    } catch (error) {
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Không thể đăng ký nhận thông tin.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="overflow-hidden w-full">
-      <div className="py-5 xl:p-5 bg-[#e3e3e3]">
-        <div className="container w-full flex flex-col lg:flex-row m-auto lg:flex-nowrap flex-wrap relative gap-10">
-          <div className="z-10 w-full lg:w-1/3 flex flex-col gap-5 p-3 sm:p-5">
-            <h2 className="text-[#063E8E] text-[20px] font-bold text-left">
-              ĐĂNG KÝ NHẬN THÔNG TIN VCCI
+    <footer className="w-full bg-[#202f67] text-white">
+      <div className="container mx-auto px-5 py-10 sm:px-6 lg:px-10 lg:py-12">
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_1.05fr_0.9fr]">
+          <div>
+            <h2 className="client-footer-title uppercase">
+              Đăng ký nhận thông tin VCCI
             </h2>
-            <div className="h-0.5 w-14 bg-[#063e8e] mx-0"></div>
+            <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />
 
-            <div className="flex flex-col gap-2">
-              <div className="flex gap-2 items-center w-full">
+            <div className="mt-5">
+              <div className="flex w-full max-w-[350px] gap-2">
                 <input
-                  ref={emailRef}
-                  className="h-12 flex-1 px-3 outline-hidden bg-white rounded-sm text-[14px] w-full"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  className="h-12 flex-1 rounded-[4px] border border-[#31458d] bg-[#29418f] px-4 text-[15px] text-white placeholder:text-[#84a1ef] outline-hidden"
                   type="email"
                   placeholder="Nhập email của bạn"
                 />
                 <button
+                  type="button"
                   onClick={handleSubmit}
-                  className="group w-14 h-12 flex items-center justify-center cursor-pointer bg-white rounded-sm text-[#063e8e]"
+                  disabled={submitting}
+                  className="flex h-12 w-12 items-center justify-center rounded-[4px] bg-[#f7b500] text-[#203067] transition-colors hover:bg-[#ffca30] disabled:cursor-not-allowed disabled:opacity-70"
+                  aria-label="Đăng ký nhận thông tin"
                 >
-                  <Mail size={20} className="group-hover:hidden" />
-                  <MailCheck size={20} className="group-hover:block hidden" />
+                  <SendHorizontal className="h-5 w-5" />
                 </button>
               </div>
-              {emailError && (
-                <p className="text-[#F56C6C] text-[12px]">
-                  Thông tin bắt buộc
-                </p>
-              )}
-              <div className="flex items-center gap-2">
-                <input ref={checkBoxRef} type="checkbox" id="check" />
-                <label className="text-[14px] text-[#636363]" htmlFor="check">
+
+              {emailError ? (
+                <p className="mt-2 text-[12px] text-[#ff9b9b]">{emailError}</p>
+              ) : null}
+
+              <div className="mt-3 flex items-center gap-2">
+                <input
+                  checked={accepted}
+                  onChange={(event) => setAccepted(event.target.checked)}
+                  type="checkbox"
+                  id="footer-check"
+                  className="h-4 w-4 rounded border-white/30 bg-transparent accent-[#f7b500]"
+                />
+                <label
+                  className="text-[13px] text-[#86b8ff]"
+                  htmlFor="footer-check"
+                >
                   Đồng ý với Điều khoản nhận email
                 </label>
               </div>
-              {chechError && (
-                <p className="text-[#F56C6C] text-[12px]">
+
+              {checkError ? (
+                <p className="mt-2 text-[12px] text-[#ff9b9b]">
                   Bạn cần đồng ý với Điều khoản nhận email
                 </p>
-              )}
+              ) : null}
+
+              {message ? (
+                <p className="mt-2 text-[12px] text-[#b8d8ff]">{message}</p>
+              ) : null}
             </div>
           </div>
 
-          <div className="w-full lg:w-1/3 flex flex-col gap-5 p-3 sm:p-5">
-            <h2 className="text-[#063E8E] text-[20px] font-bold text-left">
-              LIÊN HỆ
-            </h2>
-            <div className="h-0.5 w-14 bg-[#063e8e] mx-0"></div>
+          <div>
+            <h2 className="client-footer-title uppercase">Liên hệ</h2>
+            <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />
 
-            <p className="text-[14px] font-semibold text-justify text-[#363636]">
-              LIÊN ĐOÀN THƯƠNG MẠI & CÔNG NGHIỆP VIỆT NAM - CHI NHÁNH KHU VỰC THÀNH PHỐ HỒ CHÍ MINH
-            </p>
+            <div className="mt-5 space-y-4">
+              <p className="max-w-[420px] text-[16px] font-semibold leading-[1.5] text-[#dce7ff]">
+                {contactInfo.name}
+              </p>
 
-            <div className="flex flex-col items-start gap-3">
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
-                <MapPin size={16} className="text-[#124588]" />
-                <span>171 Võ Thị Sáu, Phường Xuân Hoà, TP. HCM</span>
+              <div className="space-y-2.5 text-[15px] text-[#c7d8ff]">
+                <div className="flex items-start gap-3">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#f7b500]" />
+                  <span>{contactInfo.address}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                  <span>{contactInfo.telephone}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                  <span>{contactInfo.fax}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Mail className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                  <a href={`mailto:${contactInfo.email}`}>
+                    {contactInfo.email}
+                  </a>
+                </div>
               </div>
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
-                <Phone size={16} className="text-[#124588]" />
-                <span>+84 28 3932 6598</span>
-              </div>
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
-                <Printer size={16} className="text-[#124588]" />
-                <span>+84 28 3932 5472</span>
-              </div>
-              <div className="flex items-center gap-2 text-[15px] text-[#363636] font-[500]">
-                <Mail size={16} className="text-[#124588]" />
-                <a href="mailto:info@vcci-hcm.org.vn">
-                  info@vcci-hcm.org.vn
-                </a>
-              </div>
+
+              {extraBranches.length > 0 ? (
+                <div className="pt-4">
+                  <p className="text-[14px] font-semibold uppercase text-[#dce7ff]">
+                    Các chi nhánh khác
+                  </p>
+                  <div className="mt-3 space-y-3 text-[14px] text-[#c7d8ff]">
+                    {extraBranches.map((branch) => (
+                      <div key={branch.id} className="space-y-1">
+                        {branch.branch_name ? (
+                          <p className="font-semibold text-[#dce7ff]">
+                            {branch.branch_name}
+                          </p>
+                        ) : null}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
-          <div className="w-full lg:w-1/3 flex flex-col gap-5 p-3 sm:p-5">
-            <h2 className="text-[#063E8E] text-[20px] font-bold text-left">
-              KẾT NỐI
-            </h2>
-            <div className="h-[2px] w-14 bg-[#063e8e] mx-0"></div>
-            <div className="w-full overflow-hidden rounded-md">
-              <iframe
-                className="w-full sm:h-[140px]"
-                src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2FVCCIHCMC%3Fref%3Dembed_page&tabs=&width=340&height=130&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false"
-                style={{ border: "none", overflow: "hidden" }}
-                scrolling="no"
-                frameBorder="0"
-                allowFullScreen={true}
-                allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-              ></iframe>
-            </div>
+          <div>
+            <h2 className="client-footer-title uppercase">Kết nối</h2>
+            <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />
 
-            <div className="flex gap-3 justify-start">
-              {[
-                { icon: <Facebook size={20} />, link: "https://www.facebook.com/VCCIHCMC/" },
-                { icon: <Twitter size={20} />, link: "https://twitter.com/VCCI_HCM" },
-                { icon: <Youtube size={20} />, link: "https://www.youtube.com/user/VCCIHCMC" },
-                { icon: <Linkedin size={20} />, link: "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym" },
-              ].map((s, i) => (
+            <div className="mt-5 flex flex-wrap gap-3">
+              {socialLinks.map((item) => (
                 <a
-                  key={i}
-                  href={s.link}
+                  key={item.key}
+                  href={item.url}
                   target="_blank"
-                  className="h-[38px] w-[38px] sm:h-[42px] sm:w-[42px] bg-[#124588] text-white rounded-full flex items-center justify-center hover:opacity-90 transition"
+                  rel="noreferrer"
+                  className="flex h-11 w-11 items-center justify-center rounded-full bg-[#2a4ec4] text-white transition-colors hover:bg-[#3b60da]"
                 >
-                  {s.icon}
+                  {item.icon}
                 </a>
               ))}
             </div>
-          </div>
-          <div className="z-0 absolute -left-20 -top-20 hidden xl:block">
-            <Image className="size-[500px] object-contain" src={vietnamMap} alt="" />
-            <div className="footer-bg-pin" style={{ top: "144px", left: "145px" }}></div>
-            <div className="footer-bg-pin" style={{ top: "238px", left: "260px" }}></div>
-            <div className="footer-bg-pin" style={{ top: "342px", left: "162px" }}></div>
-            <div className="footer-bg-pin" style={{ top: "395px", left: "215px" }}></div>
+
+            <div className="mt-5 space-y-2 text-[15px] text-[#c7d8ff]">
+              {quickLinks.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block transition-colors hover:text-white"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="bg-[#032248] h-20 flex items-center justify-center">
-        <div className="container w-full p-5 text-left">
-          <p className="text-[14px] text-white text-center lg:text-left">
-            © Bản quyền VCCI-HCM | All rights reserved
-          </p>
+        <div className="mt-10 border-t border-[#2946a3] pt-5 text-center text-[14px] text-[#62a7ff]">
+          © Bản quyền VCCI-HCM | All rights reserved
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes newpulse {
-          0% {
-            transform: scale(1);
-            opacity: 0.8;
-          }
-          100% {
-            transform: scale(10);
-            opacity: 0;
-          }
-        }
-        .footer-bg-pin {
-          position: absolute;
-          z-index: 2;
-          width: 6px;
-          height: 6px;
-          background-color: #facc15;
-          border-radius: 50%;
-        }
-        .footer-bg-pin::before {
-          content: "";
-          position: absolute;
-          inset: 0;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.4);
-          transform-origin: center;
-          animation: newpulse 2s infinite ease-in-out;
-          z-index: -1;
-        }
-      `}</style>
-    </div>
+    </footer>
   );
 }
 

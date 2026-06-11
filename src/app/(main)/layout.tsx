@@ -9,7 +9,7 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   return (
-    <main className="flex flex-col min-h-screen bg-background">
+    <main className="flex flex-col min-h-screen bg-white">
       <Header />
       <div className="flex-1">{children}</div>
       <ScrollToTopButton />

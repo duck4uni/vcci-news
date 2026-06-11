@@ -128,86 +128,6 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Create bulk approvals and send invitation emails with Word document attachments
- */
-export type postApprovalResponse200 = {
-  data: Response
-  status: 200
-}
-    
-export type postApprovalResponseSuccess = (postApprovalResponse200) & {
-  headers: Headers;
-};
-;
-
-export type postApprovalResponse = (postApprovalResponseSuccess)
-
-export const getPostApprovalUrl = () => {
-
-
-  
-
-  return `/approval`
-}
-
-export const postApproval = async (approvalRequest: ApprovalRequest, options?: RequestInit): Promise<postApprovalResponse> => {
-  
-  return useCustomClient<postApprovalResponse>(getPostApprovalUrl(),
-  {      
-    ...options,
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...options?.headers },
-    body: JSON.stringify(
-      approvalRequest,)
-  }
-);}
-
-
-
-
-export const getPostApprovalMutationOptions = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApproval>>, TError,{data: BodyType<ApprovalRequest>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApproval>>, TError,{data: BodyType<ApprovalRequest>}, TContext> => {
-
-const mutationKey = ['postApproval'];
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-      
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApproval>>, {data: BodyType<ApprovalRequest>}> = (props) => {
-          const {data} = props ?? {};
-
-          return  postApproval(data,requestOptions)
-        }
-
-        
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type PostApprovalMutationResult = NonNullable<Awaited<ReturnType<typeof postApproval>>>
-    export type PostApprovalMutationBody = BodyType<ApprovalRequest>
-    export type PostApprovalMutationError = ErrorType<unknown>
-
-    export const usePostApproval = <TError = ErrorType<unknown>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApproval>>, TError,{data: BodyType<ApprovalRequest>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
- , queryClient?: QueryClient): UseMutationResult<
-        Awaited<ReturnType<typeof postApproval>>,
-        TError,
-        {data: BodyType<ApprovalRequest>},
-        TContext
-      > => {
-
-      const mutationOptions = getPostApprovalMutationOptions(options);
-
-      return useMutation(mutationOptions, queryClient);
-    }
-    /**
  * Get
  */
 export type getApprovalResponse200 = {
@@ -416,6 +336,86 @@ export const prefetchGetApprovalQuery = async <TData = Awaited<ReturnType<typeof
 
 
 /**
+ * Create bulk approvals and send invitation emails with Word document attachments
+ */
+export type postApprovalResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type postApprovalResponseSuccess = (postApprovalResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postApprovalResponse = (postApprovalResponseSuccess)
+
+export const getPostApprovalUrl = () => {
+
+
+  
+
+  return `/approval`
+}
+
+export const postApproval = async (approvalRequest: ApprovalRequest, options?: RequestInit): Promise<postApprovalResponse> => {
+  
+  return useCustomClient<postApprovalResponse>(getPostApprovalUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      approvalRequest,)
+  }
+);}
+
+
+
+
+export const getPostApprovalMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApproval>>, TError,{data: BodyType<ApprovalRequest>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApproval>>, TError,{data: BodyType<ApprovalRequest>}, TContext> => {
+
+const mutationKey = ['postApproval'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApproval>>, {data: BodyType<ApprovalRequest>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApproval(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApprovalMutationResult = NonNullable<Awaited<ReturnType<typeof postApproval>>>
+    export type PostApprovalMutationBody = BodyType<ApprovalRequest>
+    export type PostApprovalMutationError = ErrorType<unknown>
+
+    export const usePostApproval = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApproval>>, TError,{data: BodyType<ApprovalRequest>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApproval>>,
+        TError,
+        {data: BodyType<ApprovalRequest>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApprovalMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
  * Delete
  */
 export type deleteApprovalResponse200 = {

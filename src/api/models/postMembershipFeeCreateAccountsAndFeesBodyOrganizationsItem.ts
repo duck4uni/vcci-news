@@ -14,4 +14,10 @@ export type PostMembershipFeeCreateAccountsAndFeesBodyOrganizationsItem = {
   amount_paid?: number;
   invoice_number?: string;
   invoice_date?: string;
+  /** Năm đóng hội phí */
+  membership_year?: number;
+  /** Tên cán bộ phụ trách */
+  assigned_user_name?: string;
+  /** Địa chỉ doanh nghiệp */
+  address?: string;
 };

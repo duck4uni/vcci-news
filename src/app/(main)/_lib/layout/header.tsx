@@ -1,52 +1,301 @@
 "use client";
-import React, { useState } from "react";
+
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, X, Facebook, Linkedin, Twitter, Youtube } from "lucide-react";
-import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+import { Facebook, Linkedin, Menu, Twitter, X, Youtube } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
-import MenuItem from "@/components/base/menu-item";
 import Link from "next/link";
-import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
-import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
+import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+import { useGetLogo } from "@/api/endpoints/logo";
+import { getSiteInformation } from "@/api/endpoints/site-information";
+import { resolveUploadUrl } from "@/links";
+import type { Logo } from "@/api/models/logo";
+import type {
+  SiteInformationData,
+  SiteInformationSocialLink,
+} from "@/api/models";
+import MenuItem from "@/components/base/menu-item";
+import { useCustomClient as customClient } from "@/api/mutator/custom-client";
+import type { Category } from "@/api/models/category";
+import { getCategoryFallbackResponse } from "@/mockdata/categories";
+import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
+
+type HeaderMenuItem = {
+  id: string;
+  name: string;
+  url: string;
+  sort_order: number | null;
+  children: HeaderMenuItem[];
+};
+
+type CategoryListResponse = {
+  responseData?: {
+    rows?: Category[];
+  };
+};
+
+type LogoListEnvelope = {
+  data?: {
+    responseData?: {
+      rows?: Logo[];
+    };
+  };
+};
+
+type ApiEnvelope<T> = {
+  responseData?: T;
+  data?: {
+    responseData?: T;
+  };
+};
+
+type SocialItem = {
+  key: string;
+  url: string;
+  icon: React.ReactNode;
+};
+
+const getEnvelopeData = <T,>(payload?: ApiEnvelope<T> | null) =>
+  payload?.responseData ?? payload?.data?.responseData;
+
+
+const fallbackSocials: SocialItem[] = [
+  {
+    key: "facebook",
+    url: "https://www.facebook.com/VCCIHCMC/",
+    icon: <Facebook size={13} />,
+  },
+  {
+    key: "twitter",
+    url: "https://twitter.com/VCCI_HCM",
+    icon: <Twitter size={13} />,
+  },
+  {
+    key: "youtube",
+    url: "https://www.youtube.com/user/VCCIHCMC",
+    icon: <Youtube size={13} />,
+  },
+  {
+    key: "linkedin",
+    url: "https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym",
+    icon: <Linkedin size={13} />,
+  },
+];
+
+const getSocialIcon = (key: string) => {
+  const normalized = key.toLowerCase();
+  if (normalized.includes("facebook"))
+    return <Facebook size={13} />;
+  if (normalized.includes("twitter") || normalized === "x") {
+    return <Twitter size={13} />;
+  }
+  if (normalized.includes("youtube"))
+    return <Youtube size={13} />;
+  if (normalized.includes("linkedin"))
+    return <Linkedin size={13} />;
+  if (normalized.includes("zalo")) {
+    return <ZaloIcon size={13} />;
+  }
+  if (normalized.includes("tiktok")) {
+    return <TiktokIcon size={13} />;
+  }
+  return null;
+};
+
+function normalizeCategoryUrl(url?: string | null) {
+  if (!url) return "#";
+  return url.startsWith("/") ? url : `/${url}`;
+}
+
+function buildHeaderMenuTree(rows?: Category[]) {
+  if (!rows?.length) return [];
+
+  const itemMap = new Map<string, HeaderMenuItem>();
+  const sortMenuItems = (items: HeaderMenuItem[]) => {
+    items.sort((left, right) => {
+      const leftOrder = left.sort_order ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = right.sort_order ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return left.name.localeCompare(right.name, "vi");
+    });
+  };
+
+  rows.forEach((item) => {
+    if (!item.id || !item.name) return;
+
+    itemMap.set(item.id, {
+      id: item.id,
+      name: item.name,
+      url: normalizeCategoryUrl(item.url),
+      sort_order: item.sort_order ?? null,
+      children: [],
+    });
+  });
+
+  const roots: HeaderMenuItem[] = [];
+
+  rows.forEach((item) => {
+    if (!item.id || !item.name) return;
+
+    const current = itemMap.get(item.id);
+    if (!current) return;
+
+    if (item.parent_id && itemMap.has(item.parent_id)) {
+      const parent = itemMap.get(item.parent_id);
+      parent?.children.push(current);
+      if (parent) sortMenuItems(parent.children);
+      return;
+    }
+
+    if ((item.type ?? "") === "category") {
+      roots.push(current);
+    }
+  });
+
+  sortMenuItems(roots);
+  return roots;
+}
 
 function Header() {
-  const [toggleMenu, setToggleMenu] = useState<boolean>(false);
+  const [toggleMenu, setToggleMenu] = useState(false);
+  const [isTopBarHidden, setIsTopBarHidden] = useState(false);
   const router = useRouter();
 
-  const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>();
+  const handleDesktopMenuWheel = useCallback(
+    (event: React.WheelEvent<HTMLElement>) => {
+      const element = event.currentTarget;
+
+      if (element.scrollWidth <= element.clientWidth) return;
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+
+      event.preventDefault();
+      element.scrollLeft += event.deltaY;
+    },
+    [],
+  );
+
+  const { data: categoriesResponse } = useQuery({
+    queryKey: ["header-categories"],
+    queryFn: () =>
+      customClient<CategoryListResponse>(
+        "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
+      ).catch(() => getCategoryFallbackResponse()),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: currentLogo = null } = useGetLogo(
+    {
+      page: 1,
+      pageSize: 1,
+      sortField: "updated_at",
+      sortOrder: "desc",
+    },
+    {
+      query: {
+        select: (response: any) => {
+          const responseData = response?.responseData ?? response?.data?.responseData;
+          return (responseData?.rows?.[0] as Logo | undefined) ?? null;
+        },
+        staleTime: 5 * 60 * 1000,
+      },
+    }
+  );
+
+  const { data: siteInformationResponse } =
+    useQuery<ApiEnvelope<SiteInformationData> | null>({
+      queryKey: ["site-information"],
+      queryFn: () => getSiteInformation().catch(() => null),
+      staleTime: 5 * 60 * 1000,
+    });
+
+  const menuItems = useMemo(
+    () => buildHeaderMenuTree(categoriesResponse?.responseData?.rows),
+    [categoriesResponse?.responseData?.rows],
+  );
+  const siteInformation = getEnvelopeData<SiteInformationData>(
+    siteInformationResponse,
+  );
+  const socialLinks = useMemo(() => {
+    const socials =
+      siteInformation?.socials ?? siteInformation?.link_socials ?? [];
+
+    const active = socials
+      .filter((item) => item?.is_active && item?.url)
+      .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0))
+      .map((item): SocialItem | null => {
+        const key = item.icon_key || item.platform || item.label || "";
+        const icon = getSocialIcon(key);
+        if (!icon || !item.url) return null;
+
+        return {
+          key: item.id || key,
+          url: item.url,
+          icon,
+        };
+      })
+      .filter((item): item is SocialItem => Boolean(item));
+
+    return active.length ? active : fallbackSocials;
+  }, [siteInformation?.socials, siteInformation?.link_socials]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsTopBarHidden(window.scrollY > 0);
+    };
+
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  useEffect(() => {
+    document.body.style.overflow = toggleMenu ? "hidden" : "";
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [toggleMenu]);
 
   return (
-    <>
-      <div className="sticky top-0 w-full h-14 hidden lg:flex items-center justify-center bg-[#063e8e]">
-        <div className="container w-full px-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-35 h-9 bg-[#e8c518] flex items-center justify-center border-3 rounded-sm border-[#647792]">
+    <header className="sticky top-0 z-50 shadow-[0_1px_0_rgba(15,23,42,0.05)]">
+      <div
+        className={`hidden w-full items-center justify-center overflow-hidden bg-[#25439a] ${isTopBarHidden ? "lg:hidden" : "h-10 lg:flex"
+          }`}
+      >
+        <div className="mx-auto flex h-full w-full max-w-[1460px] items-center justify-between gap-6 px-6 xl:px-8">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 items-center justify-center rounded-[4px] bg-[#f2b500] px-4 shadow-[inset_0_-1px_0_rgba(0,0,0,0.15)]">
               <Link
-                className="font-bold text-[14px] text-primary hover:text-white transition"
+                className="text-[13px] font-semibold leading-none text-[#15357a] transition hover:opacity-85"
                 href="https://vccihcm.vn/dang-ky"
               >
-                Đăng Ký Hội Viên
+                {"\u0110\u0103ng K\u00fd H\u1ed9i Vi\u00ean"}
               </Link>
             </div>
-            <Link
-              className="px-3 py-2 text-[14px] text-white hover:opacity-80"
+            {/* <Link
+              className="px-3 py-1 text-[13px] font-medium text-white transition hover:opacity-80"
               href="/site-map"
             >
               Sitemap
-            </Link>
+            </Link> */}
             <Link
-              className="px-3 py-2 text-[14px] text-white hover:opacity-80"
+              className="px-3 py-1 text-[13px] font-medium text-white transition hover:opacity-80"
               href="https://vccihcm.vn/lien-he"
             >
-              Liên hệ
+              {"Li\u00ean h\u1ec7"}
             </Link>
           </div>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-4">
             <input
-              className="bg-white h-10 rounded-sm outline-none px-4 w-64 placeholder:text-sm"
+              className="h-7 w-44 rounded-[4px] border border-[#3a57b4] bg-[#3554b7] px-3 text-[13px] text-white outline-none placeholder:text-[13px] placeholder:text-[#b5c4ff]"
               type="text"
-              placeholder="Tìm kiếm"
+              placeholder={"T\u00ecm ki\u1ebfm"}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const value =
@@ -56,98 +305,152 @@ function Header() {
                 }
               }}
             />
-            <div className="flex gap-2">
-              <a
-                href="https://www.facebook.com/VCCIHCMC/"
-                target="_blank"
-                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
-              >
-                <Facebook size={16} />
-              </a>
-              <a
-                href="https://twitter.com/VCCI_HCM"
-                target="_blank"
-                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
-              >
-                <Twitter size={16} />
-              </a>
-              <a
-                href="https://www.youtube.com/user/VCCIHCMC"
-                target="_blank"
-                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
-              >
-                <Youtube size={16} />
-              </a>
-              <a
-                href="https://www.linkedin.com/company/vietnam-chamber-of-commerce-and-industry-ho-chi-minh-city-branch-vcci-hcm-?trk=biz-companies-cym"
-                target="_blank"
-                className="bg-white size-7 rounded-full flex items-center justify-center text-[#063e8e] hover:opacity-80 transition"
-              >
-                <Linkedin size={16} />
-              </a>
+
+            <div className="flex items-center gap-2">
+              {socialLinks.map((item) => (
+                <a
+                  key={item.key}
+                  href={item.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex size-[22px] items-center justify-center rounded-full bg-white text-[#2f57ff] transition hover:opacity-80"
+                >
+                  {item.icon}
+                </a>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      <div className="sticky top-0 z-50 bg-[#ededed] shadow-md py-2">
-        <div className="container m-auto">
-          <div className="w-full flex justify-between items-center">
-            {/* Logo */}
-            <Link href="/">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto flex h-20 w-full max-w-[1460px] items-center justify-between gap-10 px-6 xl:px-8">
+          <Link
+            href="/"
+            className="flex w-[136px] shrink-0 items-center xl:w-[152px]"
+          >
+            <Image
+              width={108}
+              height={40}
+              className="h-auto max-h-10 w-[108px] object-contain"
+              src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : logo}
+              alt={currentLogo?.logo_name || "VCCI-HCM"}
+              priority
+            />
+          </Link>
+
+          <div className="hidden min-w-0 flex-1 justify-end pl-6 lg:flex xl:pl-10">
+            <nav
+              className="header-menu-scroll min-w-0 max-w-full overflow-x-auto overflow-y-hidden"
+              onWheel={handleDesktopMenuWheel}
+            >
+              <div className="flex w-max min-w-full items-center justify-end gap-4 whitespace-nowrap pr-1 xl:gap-6">
+                {menuItems.map((category) => (
+                  <MenuItem
+                    key={category.id}
+                    title={category.name}
+                    link={category.url}
+                    items={category.children.map((child) => ({
+                      title: child.name,
+                      link: child.url,
+                    }))}
+                  />
+                ))}
+              </div>
+            </nav>
+          </div>
+
+          <button
+            onClick={() => setToggleMenu((prev) => !prev)}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-[#163b73] transition hover:bg-slate-50 lg:hidden"
+            aria-label={"M\u1edf menu"}
+          >
+            {toggleMenu ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+      </div>
+
+      <div
+        className={`fixed inset-0 z-60 bg-white transition-all duration-300 lg:hidden ${toggleMenu
+            ? "pointer-events-auto translate-y-0 opacity-100"
+            : "pointer-events-none -translate-y-2 opacity-0"
+          }`}
+      >
+        <div className="flex h-full flex-col overflow-hidden">
+          <div className="sticky top-0 z-10 flex h-[78px] shrink-0 items-center justify-between border-b border-slate-100 bg-white px-6 shadow-[0_1px_0_rgba(15,23,42,0.04)]">
+            <Link
+              href="/"
+              className="flex w-[136px] shrink-0 items-center"
+              onClick={() => setToggleMenu(false)}
+            >
               <Image
-                className="w-[140px] object-contain"
-                src={logo}
-                alt="VCCI-HCM"
+                width={108}
+                height={40}
+                className="h-auto max-h-10 w-[108px] object-contain"
+                src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : logo}
+                alt={currentLogo?.logo_name || "VCCI-HCM"}
+                priority
               />
             </Link>
-
-            {/* Desktop Menu */}
-            <nav className="hidden lg:flex items-center">
-              {categoriesPage?.responseData?.children?.map((category) => (
-                <MenuItem
-                  key={category.id}
-                  title={category.name}
-                  link={category.static_link}
-                  items={[
-                    ...category.children.map((child) => ({
-                      title: child.name,
-                      link: child.static_link,
-                    })),
-                  ]}
-                />
-              ))}
-            </nav>
-
-            {/* Mobile Button */}
             <button
-              onClick={() => setToggleMenu((prev) => !prev)}
-              className="lg:hidden h-10 p-2 bg-[#063e8e] text-white rounded-sm mr-5"
+              onClick={() => setToggleMenu(false)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-300 bg-white text-[#163b73] transition hover:bg-slate-50"
+              aria-label={"Đ\u00f3ng menu"}
             >
-              {toggleMenu ? <X size={20} /> : <Menu size={20} />}
+              <X size={18} />
             </button>
           </div>
-        </div>
 
-        {/* Mobile Menu */}
-        <div
-          className={`lg:hidden bg-white shadow-lg transition-all duration-300 overflow-hidden ${toggleMenu ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"
-            }`}
-        >
-          {categoriesPage?.responseData?.children?.map((category) => (
-            <div key={category.id} className="border-b border-gray-200">
-              <Link
-                href={category.static_link || "#"}
-                className="block py-3 text-center hover:bg-[#124588] hover:text-white text-[16px] font-medium"
-                onClick={() => setToggleMenu(false)}
-              >
-                {category.name}
-              </Link>
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">
+            <input
+              className="h-11 w-full shrink-0 rounded-md border border-slate-200 px-4 text-sm outline-none placeholder:text-slate-400 focus:border-[#2f57ff]"
+              type="text"
+              placeholder={"T\u00ecm ki\u1ebfm"}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const value =
+                    (e.currentTarget as HTMLInputElement).value || "";
+                  const encoded = encodeURIComponent(value);
+                  router.push(`/search?q=${encoded}&page=1`);
+                  setToggleMenu(false);
+                }
+              }}
+            />
+
+            <div className="pb-6">
+              {menuItems.map((category) => (
+                <div
+                  key={category.id}
+                  className="border-t border-slate-100 first:border-t-0"
+                >
+                  <Link
+                    href={category.url || "#"}
+                    className="block px-5 py-3 text-[15px] font-medium text-slate-700 transition hover:bg-slate-50 hover:text-[#2f57ff]"
+                    onClick={() => setToggleMenu(false)}
+                  >
+                    {category.name}
+                  </Link>
+                  {category.children.length > 0 ? (
+                    <div className="pb-2 pl-8 pr-5">
+                      {category.children.map((child) => (
+                        <Link
+                          key={child.id}
+                          href={child.url || "#"}
+                          className="block py-2 text-sm text-slate-500 transition hover:text-[#2f57ff]"
+                          onClick={() => setToggleMenu(false)}
+                        >
+                          {child.name}
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
-    </>
+    </header>
   );
 }
 

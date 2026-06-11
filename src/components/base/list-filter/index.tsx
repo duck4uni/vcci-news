@@ -1,42 +1,46 @@
-"use client"
-import React, { useState, useEffect } from 'react'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+"use client";
 
-type Category = { id: string; title: string; count: number }
+import React, { useEffect, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+type Category = { id: string; title: string; count: number };
 
 export const ListFilter: React.FC<{
-  categories?: Category[]
-  onSearch?: (q: string) => void
-  onReset?: () => void
+  categories?: Category[];
+  onSearch?: (q: string) => void;
+  onReset?: () => void;
 }> = ({ categories, onSearch, onReset }) => {
-  const [query, setQuery] = useState('')
-  const [visibleCount, setVisibleCount] = useState(5)
+  const [query, setQuery] = useState("");
+  const [visibleCount, setVisibleCount] = useState(5);
   const [selected, setSelected] = useState<Record<string, boolean>>(() => {
-    const map: Record<string, boolean> = {}
-    if (categories && categories.length) {
-      categories.forEach((c: Category) => (map[c.id] = false))
+    const map: Record<string, boolean> = {};
+    if (categories?.length) {
+      categories.forEach((category) => {
+        map[category.id] = false;
+      });
     }
-    return map
-  })
+    return map;
+  });
 
-  // Keep selected map in sync when categories prop changes.
-  // Defer setSelected to avoid calling setState synchronously inside the effect.
   useEffect(() => {
     const timer = setTimeout(() => {
       setSelected((prev) => {
-        const map: Record<string, boolean> = {}
-        if (categories && categories.length) {
-          categories.forEach((c: Category) => (map[c.id] = !!prev[c.id]))
+        const map: Record<string, boolean> = {};
+        if (categories?.length) {
+          categories.forEach((category) => {
+            map[category.id] = Boolean(prev[category.id]);
+          });
         }
-        return map
-      })
-    }, 0)
-    return () => clearTimeout(timer)
-  }, [categories])
+        return map;
+      });
+    }, 0);
 
-  const toggle = (id: string) => setSelected((s) => ({ ...s, [id]: !s[id] }))
+    return () => clearTimeout(timer);
+  }, [categories]);
+
+  const toggle = (id: string) => setSelected((current) => ({ ...current, [id]: !current[id] }));
 
   return (
     <aside className="p-6 bg-white border rounded-md">
@@ -44,74 +48,82 @@ export const ListFilter: React.FC<{
 
       <div className="mb-4">
         <Input
-          placeholder="Tên văn bản ..."
+          placeholder="Tên văn bản..."
           value={query}
-          className='text-black placeholder:text-gray-400 rounded-none py-2.5 px-2'
+          className="text-black placeholder:text-gray-400 rounded-none py-2.5 px-2"
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              onSearch?.(query)
+            if (e.key === "Enter") {
+              onSearch?.(query);
             }
           }}
         />
       </div>
 
       <div className="flex flex-col gap-3">
-        {categories && categories.length > 0 ? (
-          categories.slice(0, visibleCount).map((c) => (
-            <label key={c.id} className="flex items-center gap-3">
-              <Checkbox checked={!!selected[c.id]} onCheckedChange={() => toggle(c.id)} />
-              <div className="flex justify-between w-full items-center">
-                <span className="text-sm">{c.title}</span>
-                <span className="text-sm text-gray-400">({c.count})</span>
-              </div>
-            </label>
-          ))
-        ) : null}
+        {categories?.length
+          ? categories.slice(0, visibleCount).map((category) => (
+              <label key={category.id} className="flex items-center gap-3">
+                <Checkbox
+                  checked={Boolean(selected[category.id])}
+                  onCheckedChange={() => toggle(category.id)}
+                />
+                <div className="flex justify-between w-full items-center">
+                  <span className="text-sm">{category.title}</span>
+                  <span className="text-sm text-gray-400">({category.count})</span>
+                </div>
+              </label>
+            ))
+          : null}
+
         <div className="mt-2 flex items-center gap-3">
-          {(categories?.length ?? 0) > visibleCount && (
+          {(categories?.length ?? 0) > visibleCount ? (
             <button
               className="text-sm text-primary self-start"
-              onClick={() => setVisibleCount((v) => v + 5)}
+              onClick={() => setVisibleCount((current) => current + 5)}
             >
               Xem thêm
             </button>
-          )}
+          ) : null}
 
-          {visibleCount > 5 && (
+          {visibleCount > 5 ? (
             <button
               className="text-sm text-gray-500 self-start"
               onClick={() => setVisibleCount(5)}
             >
               Thu gọn
             </button>
-          )}
+          ) : null}
         </div>
       </div>
 
       <div className="flex gap-3">
-        <Button className="flex-1 rounded-none font-medium text-lg text-white hover:bg-muted-foreground hover:outline-1 outline-primary hover:text-primary" onClick={() => onSearch?.(query)}>
+        <Button
+          className="flex-1 rounded-none font-medium text-lg text-white hover:bg-muted-foreground hover:outline-1 outline-primary hover:text-primary"
+          onClick={() => onSearch?.(query)}
+        >
           Tìm kiếm
         </Button>
         <Button
           className="flex-1 rounded-none font-medium text-lg text-white hover:bg-muted-foreground hover:outline-1 outline-primary hover:text-primary"
-            onClick={() => {
-              setQuery('')
-              // restore initial map
-              const map: Record<string, boolean> = {}
-              if (categories && categories.length) {
-                categories.forEach((c) => (map[c.id] = false))
-              }
-              setSelected(map)
-              setVisibleCount(5)
-              onReset?.()
-            }}
+          onClick={() => {
+            setQuery("");
+            const map: Record<string, boolean> = {};
+            if (categories?.length) {
+              categories.forEach((category) => {
+                map[category.id] = false;
+              });
+            }
+            setSelected(map);
+            setVisibleCount(5);
+            onReset?.();
+          }}
         >
           Bỏ tìm
         </Button>
       </div>
     </aside>
-  )
-}
+  );
+};
 
-export default ListFilter
+export default ListFilter;

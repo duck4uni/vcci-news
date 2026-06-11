@@ -1,72 +1,80 @@
-import { useGetNews } from "@/api/endpoints/news";
-import { GetNewsResponseType, NewsItem } from "@/api/types/news";
-import ImageNext from "@/components/shared/image-next";
-import { Spinner } from "@/components/ui/spinner";
-import { ChevronsRight } from "lucide-react";
-import Link from "next/link";
-import BASE_URL from "@/links/index";
-import CardNews from "./card-news";
+'use client';
 
-const PolicyAndLaws = () => {
-  const { data, isLoading } = useGetNews<GetNewsResponseType>(
-    {
-      pageSize: '5',
-      filters: `page_config.code @=phap-luat`,
-    }
-  );
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
+import dayjs from "dayjs";
+import { ChevronRight } from "lucide-react";
+import Link from "next/link";
+
+function PolicyAndLaws() {
+  const { policyPosts, categoryLinks, categoryNames } = useHomePosts();
+  const listSlots = Array.from({ length: 4 }, (_, index) => policyPosts[index] ?? null);
+  const sectionLink =
+    categoryLinks.get(categoryNames.chinhSachPhapLuat.toLowerCase()) ??
+    "/thong-tin-truyen-thong/thong-tin-chinh-sach-va-phap-luat";
 
   return (
-    <div className="flex-1">
-      <div className="flex justify-between items-center">
+    <section className="flex flex-1 flex-col">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="client-section-title uppercase text-[#24469c]">
+            Chính sách & pháp luật
+          </h2>
+          <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />
+        </div>
+
         <Link
-          href="/thong-tin-truyen-thong/phap-luat"
-          className="text-[18px] sm:text-[20px] font-bold uppercase text-[#063e8e]"
+          href={sectionLink}
+          className="text-[#24469c] transition-colors hover:text-[#1b55a1]"
         >
-          Chính sách & pháp luật
-        </Link>
-        <Link
-          href="/thong-tin-truyen-thong/phap-luat"
-          className="text-[#063e8e] text-sm sm:text-base"
-        >
-          <ChevronsRight />
+          <ChevronRight className="h-5 w-5" />
         </Link>
       </div>
-      <hr className="border-[#063e8e] mb-4" />
-      <div className="pt-2">
-        {isLoading ? (
-          <div className="container w-full h-[80vh] flex justify-center items-center">
-            <Spinner />
-          </div>
-        ) : (
-          <>
-            {data?.responseData.rows
-              .slice(0, 1)
-              .map((news: NewsItem) => (
-                <Link key={news.id} href={`${news.external_link}`}>
-                  <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
-                    <ImageNext
-                      src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
-                      alt={news.title}
-                      width={600}
-                      height={400}
-                      sizes="(max-width:768px) 100vw,50vw"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bg-white opacity-80 bottom-5 left-5 right-5 p-5">
-                      <p className="text-[#063e8e] font-semibold text-sm sm:text-base z-10 line-clamp-3">
-                        {news.title}
-                      </p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            {data?.responseData.rows.slice(0, 3).map((news) => (
-              <CardNews key={news.id} news={news} />
-            ))}
-          </>
+
+      <div className="flex min-h-[270px] flex-1 flex-col gap-2.5">
+        {listSlots.map((item, index) =>
+          item ? (
+            <Link
+              key={item.id}
+              href={item.externalLink}
+              className={`group flex min-h-[58px] gap-3 rounded-[18px] px-4 py-3 transition-all duration-200 hover:bg-[#f5f7fb] hover:shadow-[0_10px_24px_rgba(36,70,156,0.08)] ${
+                index === 0 ? "pt-3.5" : ""
+              }`}
+            >
+              <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500] transition-opacity duration-200 group-hover:opacity-0" />
+
+              <div className="hidden min-w-0 group-hover:block">
+                <h3 className="line-clamp-2 text-[16px] font-bold leading-[1.45] text-[#264798] md:text-[17px]">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-[13px] text-[#9aa8c1]">
+                  {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
+                </p>
+              </div>
+
+              <div className="min-w-0 group-hover:hidden">
+                <h3 className="line-clamp-2 text-[15px] leading-[1.45] text-[#264798] md:text-[16px]">
+                  {item.title}
+                </h3>
+                <p className="mt-1.5 text-[13px] text-[#9aa8c1]">
+                  {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
+                </p>
+              </div>
+            </Link>
+          ) : (
+            <div
+              key={`policy-placeholder-${index}`}
+              className={`flex min-h-[58px] gap-3 rounded-[14px] px-0.5 py-1 ${index === 0 ? "pt-0.5" : ""}`}
+            >
+              <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500]/40" />
+              <div className="min-w-0 flex-1">
+                <div className="h-5 w-5/6 rounded bg-[#eef3fb]" />
+                <div className="mt-1.5 h-4 w-24 rounded bg-[#f4f7fb]" />
+              </div>
+            </div>
+          ),
         )}
       </div>
-    </div>
+    </section>
   );
 }
 

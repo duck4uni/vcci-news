@@ -36,6 +36,7 @@ import type {
   MembershipFee,
   MembershipFeeBody,
   PostMembershipFeeCreateAccountsAndFeesBody,
+  PostMembershipFeeSendUpdateReminderBody,
   PutMembershipFeeParams,
   Response
 } from '../models';
@@ -1361,3 +1362,84 @@ export const prefetchGetMembershipFeePrintQuery = async <TData = Awaited<ReturnT
 
 
 
+/**
+ * Send email notification to PDN staff about organizations with incomplete documents
+ */
+export type postMembershipFeeSendUpdateReminderResponse200 = {
+  data: Response
+  status: 200
+}
+    
+export type postMembershipFeeSendUpdateReminderResponseSuccess = (postMembershipFeeSendUpdateReminderResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postMembershipFeeSendUpdateReminderResponse = (postMembershipFeeSendUpdateReminderResponseSuccess)
+
+export const getPostMembershipFeeSendUpdateReminderUrl = () => {
+
+
+  
+
+  return `/membershipFee/send-update-reminder`
+}
+
+export const postMembershipFeeSendUpdateReminder = async (postMembershipFeeSendUpdateReminderBody: PostMembershipFeeSendUpdateReminderBody, options?: RequestInit): Promise<postMembershipFeeSendUpdateReminderResponse> => {
+  
+  return useCustomClient<postMembershipFeeSendUpdateReminderResponse>(getPostMembershipFeeSendUpdateReminderUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postMembershipFeeSendUpdateReminderBody,)
+  }
+);}
+
+
+
+
+export const getPostMembershipFeeSendUpdateReminderMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMembershipFeeSendUpdateReminder>>, TError,{data: BodyType<PostMembershipFeeSendUpdateReminderBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postMembershipFeeSendUpdateReminder>>, TError,{data: BodyType<PostMembershipFeeSendUpdateReminderBody>}, TContext> => {
+
+const mutationKey = ['postMembershipFeeSendUpdateReminder'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postMembershipFeeSendUpdateReminder>>, {data: BodyType<PostMembershipFeeSendUpdateReminderBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postMembershipFeeSendUpdateReminder(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostMembershipFeeSendUpdateReminderMutationResult = NonNullable<Awaited<ReturnType<typeof postMembershipFeeSendUpdateReminder>>>
+    export type PostMembershipFeeSendUpdateReminderMutationBody = BodyType<PostMembershipFeeSendUpdateReminderBody>
+    export type PostMembershipFeeSendUpdateReminderMutationError = ErrorType<unknown>
+
+    export const usePostMembershipFeeSendUpdateReminder = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postMembershipFeeSendUpdateReminder>>, TError,{data: BodyType<PostMembershipFeeSendUpdateReminderBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postMembershipFeeSendUpdateReminder>>,
+        TError,
+        {data: BodyType<PostMembershipFeeSendUpdateReminderBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostMembershipFeeSendUpdateReminderMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    

@@ -18,6 +18,7 @@ export interface MembershipFee {
   is_approved?: boolean;
   invoice_number?: string;
   invoice_date?: string;
+  membership_year?: number;
   updated_at?: string;
   updated_by?: string;
 }

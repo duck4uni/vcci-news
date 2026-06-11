@@ -4,7 +4,7 @@ import { QueryClient } from '@tanstack/react-query'
 
 // App
 // import router from '@/router'
-import useAuthStore from '@/store/useAuthStore'
+import { handleAdminUnauthorized } from '@/lib/auth/admin-auth'
 // import useProfileStore from '@stores/profile'
 import { QueryData } from '@/lib/types/base-api'
 // import { BASE_PATHS } from '@/constants/path'
@@ -14,6 +14,8 @@ const RETRY_COUNT = 3
 const EXPIRED_TOKEN_ERROR = 401
 const DENIED_PERMISSION_ERROR = 403
 const INTERNAL_SERVER_ERROR = 500
+const API_QUERY_STALE_TIME = 2 * 60 * 1000
+const API_QUERY_GC_TIME = 10 * 60 * 1000
 
 // Utils
 // Handle check base retry logical
@@ -25,8 +27,10 @@ const handleCheckBaseRetryLogical = (failureCount: number, error: Error) => {
 
   // Expired token error
   if (error.response?.status === EXPIRED_TOKEN_ERROR) {
-    handleUnAuthorizationError()
-    return false
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
+      handleUnAuthorizationError();
+    }
+    return false;
   }
 
   // Denied permission error
@@ -41,14 +45,13 @@ const handleCheckBaseRetryLogical = (failureCount: number, error: Error) => {
 
 // Handle un authorization error
 const handleUnAuthorizationError = () => {
-  useAuthStore.getState().resetStore()
+  void handleAdminUnauthorized()
   // useProfileStore.getState().resetStore()
 
   // const languageAwarePath = addLanguageToPath({
   //   path: BASE_PATHS.authSignIn
   // })
   // router.navigate('')
-  window.location.href = process ? '/' : '/admin'
 }
 
 // Handle delay value
@@ -58,7 +61,11 @@ const handleDelayRetry = (failureCount: number) => failureCount * 1000 + Math.ra
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      staleTime: API_QUERY_STALE_TIME,
+      gcTime: API_QUERY_GC_TIME,
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
       placeholderData: (previousData: unknown) => previousData,
       retry(failureCount, error) {
         if (!handleCheckBaseRetryLogical(failureCount, error)) return false

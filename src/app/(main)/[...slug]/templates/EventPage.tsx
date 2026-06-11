@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from "react";
-import { notFound, useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useParams, usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { useGetEvents } from "@/api/endpoints/event";
 import { EventApiResponse } from "@/api/types/event";
@@ -23,6 +23,7 @@ export default function EventPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParamsString = searchParams.toString();
 
   // states
   const initialPage = Number(searchParams.get("page") ?? "1");
@@ -31,15 +32,20 @@ export default function EventPage() {
   const pageSize = 5;
 
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParamsString);
     if (page > 1) {
       params.set("page", String(page));
     } else {
       params.delete("page");
     }
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [page]);
+    const nextUrl = qs ? `${pathname}?${qs}` : pathname;
+    const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
+
+    if (nextUrl !== currentUrl) {
+      router.replace(nextUrl, { scroll: false });
+    }
+  }, [page, pathname, router, searchParamsString]);
 
   // query
   const { data: categoriesPage } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
@@ -47,7 +53,7 @@ export default function EventPage() {
   });
 
   const { data: events, isLoading: eventsLoading } = useGetEvents<EventApiResponse>({
-    filters: `name@=${submitSearch ? `title@=${submitSearch}` : ""}`,
+    filters: submitSearch.trim() ? `name@=${submitSearch.trim()}` : undefined,
     pageSize: String(pageSize),
     currentPage: String(page),
   });
@@ -55,17 +61,17 @@ export default function EventPage() {
   //template
   return (
     <>
-      <div className="min-h-screen container mx-auto">
+      <div className="container mx-auto min-h-screen px-4 py-6 sm:px-6 lg:px-10">
         {eventsLoading ? (
           <div className="flex justify-center items-center w-full h-64">
             <Spinner />
           </div>
         ) : (
-          <div className="w-full flex flex-col gap-5">
+          <div className="flex w-full flex-col gap-5">
             <ListCategory categories={categoriesPage?.responseData?.children} />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <main className="lg:col-span-2 bg-background">
-                <div className="pb-5 overflow-hidden">
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+              <main className="min-w-0 bg-background">
+                <div className="overflow-hidden pb-5">
                   {events?.responseData?.rows?.map((item) => (
                     <CardEvents
                       key={item.id}
@@ -86,7 +92,7 @@ export default function EventPage() {
                   </div>
                 </div>
               </main>
-              <aside className="space-y-6">
+              <aside className="min-w-0 space-y-6">
                 <ListFilter onSearch={setSubmitSearch} />
                 <EventCalendar />
               </aside>

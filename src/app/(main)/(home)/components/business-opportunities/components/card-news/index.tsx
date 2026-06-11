@@ -1,5 +1,5 @@
 import { NewsItem } from "@/api/types/news";
-import BASE_URL from "@/links";
+import { resolveUploadUrl } from "@/links";
 import dayjs from "dayjs";
 import AppEditorContent from "@/components/shared/editor-content";
 import Link from "next/link";
@@ -12,7 +12,7 @@ function CardNews({ news }: { news: NewsItem }) {
       className="flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3"
     >
       <ImageNext
-        src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
+        src={resolveUploadUrl(news.thumbnail)}
         alt={news.title}
         className="aspect-3/2 object-cover"
         width={130}

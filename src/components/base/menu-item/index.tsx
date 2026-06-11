@@ -1,45 +1,115 @@
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+'use client'
+
+import { buttonVariants } from '@components/ui/button'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '@components/ui/hover-card'
+import { cn } from '@lib/utils'
+import { cva } from 'class-variance-authority'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { useCallback, useMemo } from 'react'
 
 type MenuItemProps = {
-  title: string;
-  link?: string;
-  items: { title: string; link: string }[];
-};
+  title: string
+  link?: string
+  items: { title: string; link: string }[]
+}
 
 const MenuItem = ({ title, link, items }: MenuItemProps) => {
-  const pathname = usePathname();
-  const isActive = !!link && (pathname === link || (link !== "/" && pathname.startsWith(link)));
+  const pathname = usePathname()
+  const normalizedLink = link && link !== '#' ? link : '/'
+  const hasChildren = items.length > 0
+  const isRoot = normalizedLink === '/'
+  const isActive = isRoot ? pathname === '/' : pathname === normalizedLink || pathname.startsWith(normalizedLink)
+  const linkId = useMemo(() => `header-trigger-${title}`, [title])
+
+  const hoverCardRef = useCallback(
+    (element: HTMLDivElement) => {
+      if (!element) return
+      const triggerWidth = document.getElementById(linkId)?.offsetWidth ?? 220
+      element.style.minWidth = `${Math.max(triggerWidth, 320)}px`
+      element.style.maxWidth = '420px'
+    },
+    [linkId]
+  )
+
+  const trigger = (
+    <Link
+      id={linkId}
+      href={normalizedLink}
+      aria-selected={isActive}
+      className={menuItemTriggerVariant()}
+    >
+      <span className="relative z-10 whitespace-nowrap">{title}</span>
+      <span
+        className={`absolute bottom-[11px] left-1/2 h-[2px] -translate-x-1/2 rounded-full bg-[#2f57ff] transition-all duration-200 ${
+          isActive ? 'w-[44px]' : 'w-0 group-hover:w-[44px]'
+        }`}
+        aria-hidden="true"
+      />
+    </Link>
+  )
+
+  if (!hasChildren) {
+    return <div className="relative shrink-0">{trigger}</div>
+  }
 
   return (
-    <div className="group relative">
-      <Link
-        href={link ?? "#"}
-        className={`px-3 py-5 text-[16px] font-semibold transition block
-            ${isActive ? "text-[#E8C518]" : "text-[#124588] hover:text-[#E8C518]"}
-      `}
+    <HoverCard openDelay={0} closeDelay={90}>
+      <HoverCardTrigger asChild>{trigger}</HoverCardTrigger>
+      <HoverCardContent
+        ref={hoverCardRef}
+        align="start"
+        sideOffset={0}
+        className={menuItemHoverBoxVariant()}
       >
-        {title}
-      </Link>
+        {items.map((item) => {
+          const isItemActive = pathname === item.link
 
-      {/* Dropdown */}
-      <div className="absolute left-0 top-full hidden group-hover:block bg-[#124588]/98 text-white text-[14px] font-medium min-w-[220px] shadow-lg">
-        {items.map((item, i) => {
-          const isItemActive = pathname === item.link;
           return (
             <Link
-              key={i}
+              key={item.link}
               href={item.link}
-              className={`block px-5 py-3 cursor-pointer whitespace-nowrap transition ${isItemActive ? "bg-[#e8c518]/80" : "hover:bg-[#e8c518]/80"
-                }`}
+              className={menuItemChildVariant({ active: isItemActive })}
             >
               {item.title}
             </Link>
-          );
+          )
         })}
-      </div>
-    </div>
-  );
-};
+      </HoverCardContent>
+    </HoverCard>
+  )
+}
 
-export default MenuItem;
+const menuItemTriggerVariant = cva(
+  cn(
+    buttonVariants({ variant: 'ghost' }),
+    'group relative inline-flex h-[58px] shrink-0 items-center whitespace-nowrap rounded-none bg-transparent px-[4px] py-0 text-[14px] font-semibold leading-none tracking-normal text-[#43506a] shadow-none transition',
+    'hover:bg-transparent hover:text-[#2f57ff]',
+    'aria-selected:bg-transparent aria-selected:text-[#2f57ff]',
+    'focus-visible:ring-0 focus-visible:ring-offset-0'
+  )
+)
+
+const menuItemHoverBoxVariant = cva(
+  'z-[80] flex w-auto flex-col gap-1 rounded-b-md rounded-t-none border border-slate-200 bg-white p-2 text-[13px] font-medium text-slate-600 shadow-[0_18px_36px_rgba(15,23,42,0.16)]'
+)
+
+const menuItemChildVariant = cva(
+  cn(
+    buttonVariants({ variant: 'ghost' }),
+    'h-auto min-h-10 justify-start rounded-md px-3 py-2.5 text-left text-sm font-medium leading-6 whitespace-normal break-words transition'
+  ),
+  {
+    variants: {
+      active: {
+        true: 'bg-[#eef3ff] text-[#2f57ff]',
+        false: 'text-slate-600 hover:bg-[#eef3ff] hover:text-[#2f57ff]'
+      }
+    },
+    defaultVariants: {
+      active: false
+    }
+  }
+)
+
+export default MenuItem

@@ -13,13 +13,43 @@
     @apply fixed top-0 right-0 left-0;
   }
 
+  .header-menu-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .header-menu-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .menu-item-underline {
+    @apply absolute bottom-0 left-1/2 h-[2px] w-0 -translate-x-1/2 rounded-full bg-[#2f57ff] transition-all duration-200;
+  }
+
+  [aria-selected="true"] > .menu-item-underline,
+  a:hover > .menu-item-underline {
+    @apply w-[44px];
+  }
+
   /* Scrollbar */
   .scrollbar {
-    @apply [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-neutral-400/60 hover:[&::-webkit-scrollbar-thumb]:bg-neutral-400 [&::-webkit-scrollbar-track]:bg-transparent;
+    scrollbar-color: rgba(6, 62, 142, 0.38) rgba(219, 232, 255, 0.38);
+    scrollbar-width: thin;
+    @apply [&::-webkit-scrollbar]:h-2.5 [&::-webkit-scrollbar]:w-2.5 [&::-webkit-scrollbar-corner]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:border-[2px] [&::-webkit-scrollbar-thumb]:border-transparent [&::-webkit-scrollbar-thumb]:bg-[#063e8e]/35 [&::-webkit-scrollbar-thumb]:bg-clip-padding hover:[&::-webkit-scrollbar-thumb]:bg-[#063e8e]/50 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-[#dbe8ff]/55;
   }
 
   .list-screen-filter-container {
     @apply flex flex-col items-stretch justify-between gap-6 xl:flex-row xl:items-start;
+  }
+
+  .client-section-title {
+    @apply text-[28px] font-bold tracking-normal md:text-[34px];
+    font-family: var(--default-font-family);
+  }
+
+  .client-footer-title {
+    @apply text-xl font-bold tracking-normal md:text-2xl;
+    font-family: var(--default-font-family);
   }
 
   /* Typography */
