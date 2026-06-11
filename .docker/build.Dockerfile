@@ -2,7 +2,7 @@ FROM registry.gitlab.com/meusolutions/vcci-news:base AS builder
 
 COPY . .
 
-RUN npm run generate:api
+RUN node scripts/generate-api.mjs
 RUN npm run build
 
 FROM node:22-alpine AS production
