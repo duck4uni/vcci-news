@@ -1,7 +1,26 @@
 const DEFAULT_BACKEND_ORIGIN = "https://news.vccihcm.vn";
 const DEFAULT_FRONTEND_ORIGIN = "https://news.vccihcm.vn";
+const LEGACY_MEDIA_HOSTS = new Set([
+  "vietprodev.duckdns.org",
+  "vcci-hcm.org.vn",
+  "vccihcm.vn",
+]);
 
 const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
+
+const extractUploadPath = (pathname: string) => {
+  const markers = ["/api/uploads/", "/uploads/", "/wp-content/uploads/"];
+
+  for (const marker of markers) {
+    const index = pathname.indexOf(marker);
+    if (index >= 0) {
+      const cleanPath = pathname.slice(index).replace(/^\/api\/uploads\//, "/uploads/");
+      return cleanPath;
+    }
+  }
+
+  return null;
+};
 
 const readOrigin = (key: "NEXT_PUBLIC_BACKEND_HOST" | "NEXT_PUBLIC_FRONTEND_HOST") => {
   const envOrigin = normalizeOrigin(
@@ -58,6 +77,22 @@ export const resolveUploadUrl = (value?: string | null) => {
     trimmed.startsWith("blob:") ||
     trimmed.startsWith("data:")
   ) {
+    return trimmed;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      if (LEGACY_MEDIA_HOSTS.has(url.hostname)) {
+        const uploadPath = extractUploadPath(url.pathname);
+        if (uploadPath) {
+          return backendOrigin ? `${backendOrigin}${uploadPath}` : uploadPath;
+        }
+      }
+    } catch {
+      return trimmed;
+    }
+
     return trimmed;
   }
 
