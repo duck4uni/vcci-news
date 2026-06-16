@@ -1,16 +1,8 @@
 "use client";
 
-// ---------------------------------------------------------------------------
-// Storage keys
-// ---------------------------------------------------------------------------
-
 export const MEMBER_STORAGE_KEY = "vcci-news.admin-members.data.v1";
 export const MEMBER_FIELD_STORAGE_KEY = "vcci-news.admin-member-fields.data.v1";
 export const MEMBER_REGION_STORAGE_KEY = "vcci-news.admin-member-regions.data.v1";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
 
 export interface MemberField {
   id: string;
