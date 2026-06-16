@@ -69,4 +69,4 @@ deploy:
     refs:
       - release
   tags:
-    - runner-inet
+    - runner-inet-149

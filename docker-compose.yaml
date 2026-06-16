@@ -1,3 +1,5 @@
+name: ENVIRONMENT-NAME-PROJECT-NAME
+
 services:
   app:
     container_name: ENVIRONMENT-NAME-PROJECT-NAME
@@ -8,7 +10,6 @@ services:
     pull_policy: always
     networks:
       meu-solutions-product-alpha-net:
-        ipv4_address: 192.167.12.25
 
 networks:
   meu-solutions-product-alpha-net:
