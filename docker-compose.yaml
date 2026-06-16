@@ -1,5 +1,3 @@
-name: ENVIRONMENT-NAME-PROJECT-NAME
-
 services:
   app:
     container_name: ENVIRONMENT-NAME-PROJECT-NAME
