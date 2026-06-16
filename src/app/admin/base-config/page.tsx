@@ -1341,7 +1341,7 @@ export default function AdminBaseConfigPage() {
                     </div>
                   ) : (
                     <div className="rounded-3xl border border-dashed border-[#063e8e]/15 bg-white px-5 py-8 text-center text-sm text-gray-500">
-                      Chua c? logo n?o. H?y thi?t l?p logo cho website.
+                      Chưa có logo nào, hãy thiết lập logo cho website.
                     </div>
                   )}
                 </div>
