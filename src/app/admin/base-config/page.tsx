@@ -74,6 +74,7 @@ import type {
 } from "@/api/models";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import { fetchCmsFileById, toAdminMediaItem } from "@/lib/api/files";
+import { resolveUploadUrl } from "@/links";
 import {
   type BaseConfigBannerItem,
   type BaseConfigBranchItem,
@@ -232,7 +233,7 @@ function mapApiLogoToConfig(logo: Logo): {
     logoId: logo.id,
     name: logo.logo_name,
     alt: logo.logo_name,
-    url: logo.logo_url || "/img-error.png",
+    url: resolveUploadUrl(logo.logo_url) || "/img-error.png",
     mime: "image/*",
     size: 0,
     created_at: logo.created_at,
