@@ -9,7 +9,7 @@ const LEGACY_MEDIA_HOSTS = new Set([
 const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
 
 const extractUploadPath = (pathname: string) => {
-  const markers = ["/api/uploads/", "/uploads/", "/wp-content/uploads/"];
+  const markers = ["/api/uploads/", "/uploads/", "/images/", "/wp-content/uploads/"];
 
   for (const marker of markers) {
     const index = pathname.indexOf(marker);
@@ -97,7 +97,11 @@ export const resolveUploadUrl = (value?: string | null) => {
   }
 
   if (trimmed.startsWith("/")) {
-    if (trimmed.startsWith("/uploads/") || trimmed.startsWith("/api/uploads/")) {
+    if (
+      trimmed.startsWith("/uploads/") ||
+      trimmed.startsWith("/api/uploads/") ||
+      trimmed.startsWith("/images/")
+    ) {
       const cleanPath = trimmed.replace(/^\/+/, "").replace(/^api\/uploads\//, "uploads/");
       return backendOrigin ? `${backendOrigin}/${cleanPath}` : `/${cleanPath}`;
     }
@@ -106,7 +110,7 @@ export const resolveUploadUrl = (value?: string | null) => {
   }
 
   const cleanPath = trimmed.replace(/^\/+/, "").replace(/^api\/uploads\//, "uploads/");
-  if (cleanPath.startsWith("uploads/")) {
+  if (cleanPath.startsWith("uploads/") || cleanPath.startsWith("images/")) {
     return backendOrigin ? `${backendOrigin}/${cleanPath}` : `/${cleanPath}`;
   }
 
