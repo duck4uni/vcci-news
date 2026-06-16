@@ -31,8 +31,16 @@ const normalizeUploadPath = (pathname: string) => {
     return pathname.replace(/^.*\/images\//, "/uploads/images/");
   }
 
+  if (pathname.startsWith("images/")) {
+    return pathname.replace(/^images\//, "/uploads/images/");
+  }
+
   if (pathname.includes("/uploads/")) {
     return pathname.replace(/^.*\/uploads\//, "/uploads/");
+  }
+
+  if (pathname.startsWith("uploads/")) {
+    return pathname.replace(/^uploads\//, "/uploads/");
   }
 
   if (pathname.includes("/wp-content/uploads/")) {
