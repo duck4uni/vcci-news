@@ -1,5 +1,4 @@
-const DEFAULT_BACKEND_ORIGIN = "https://vietprodev.duckdns.org/gateway/vcci-news-backend";
-const DEFAULT_FRONTEND_ORIGIN = "https://vccihcm.vn";
+const DEFAULT_BACKEND_ORIGIN = "https://news.vccihcm.vn";
 
 const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
 

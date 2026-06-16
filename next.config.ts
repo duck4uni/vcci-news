@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
         port: "",
         pathname: "/images/**",
       },
+      {
+        protocol: "https",
+        hostname: "news.vccihcm.vn",
+        port: "",
+        pathname: "/uploads/**",
+      },
     ],
   },
 };
