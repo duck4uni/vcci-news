@@ -3,7 +3,6 @@
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import ImageNext from "@/components/shared/image-next";
 import memberImages from "@/constants/memberImages";
-import links from "@/links";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Autoplay } from "swiper/modules";
@@ -11,7 +10,8 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
 const MEMBER_CONNECTION_FALLBACK_IMAGE = "/home/20-2048x1365.webp";
-const FEATURED_MEMBER_API_URL = `${links.siteURL}api/featured-members`;
+const FEATURED_MEMBER_API_URL =
+  "https://vccihcm.vn/api/v1.0/organizations?pageSize=12&filters=users.status_id%3D%3D36ca1cc5-7b6e-4f9f-b973-69c5207deb62&sortField=created_at&sortOrder=ASC";
 const FEATURED_MEMBER_MORE_URL =
   "https://vccihcm.vn/giao-thuong-b2b?filters=users.status_id+%3D%3D+36ca1cc5-7b6e-4f9f-b973-69c5207deb62&sortField=created_at&sortOrder=ASC";
 const VCCI_HCM_ORIGIN = "https://vccihcm.vn";
@@ -75,7 +75,7 @@ function Members() {
         const rows = data.responseData?.rows ?? [];
 
         if (isMounted) {
-          setFeaturedMembers(rows.slice(0, 9));
+          setFeaturedMembers(rows.slice(0, 12));
         }
       } catch (error) {
         console.error(error);
