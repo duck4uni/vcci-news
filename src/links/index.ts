@@ -22,6 +22,26 @@ const extractUploadPath = (pathname: string) => {
   return null;
 };
 
+const normalizeUploadPath = (pathname: string) => {
+  if (pathname.includes("/api/uploads/")) {
+    return pathname.replace(/^.*\/api\/uploads\//, "/uploads/");
+  }
+
+  if (pathname.includes("/images/")) {
+    return pathname.replace(/^.*\/images\//, "/uploads/images/");
+  }
+
+  if (pathname.includes("/uploads/")) {
+    return pathname.replace(/^.*\/uploads\//, "/uploads/");
+  }
+
+  if (pathname.includes("/wp-content/uploads/")) {
+    return pathname.replace(/^.*\/wp-content\/uploads\//, "/uploads/");
+  }
+
+  return pathname;
+};
+
 const readOrigin = (key: "NEXT_PUBLIC_BACKEND_HOST" | "NEXT_PUBLIC_FRONTEND_HOST") => {
   const envOrigin = normalizeOrigin(
     key === "NEXT_PUBLIC_BACKEND_HOST"
@@ -71,18 +91,19 @@ export const resolveUploadUrl = (value?: string | null) => {
   const trimmed = value?.trim();
 
   if (!trimmed) return "";
-  if (
-    trimmed.startsWith("http://") ||
-    trimmed.startsWith("https://") ||
-    trimmed.startsWith("blob:") ||
-    trimmed.startsWith("data:")
-  ) {
+  if (trimmed.startsWith("blob:") || trimmed.startsWith("data:")) {
     return trimmed;
   }
 
   if (/^https?:\/\//i.test(trimmed)) {
     try {
       const url = new URL(trimmed);
+      const normalizedPath = normalizeUploadPath(url.pathname);
+
+      if (normalizedPath !== url.pathname) {
+        return backendOrigin ? `${backendOrigin}${normalizedPath}` : normalizedPath;
+      }
+
       if (LEGACY_MEDIA_HOSTS.has(url.hostname)) {
         const uploadPath = extractUploadPath(url.pathname);
         if (uploadPath) {
@@ -100,17 +121,22 @@ export const resolveUploadUrl = (value?: string | null) => {
     if (
       trimmed.startsWith("/uploads/") ||
       trimmed.startsWith("/api/uploads/") ||
-      trimmed.startsWith("/images/")
+      trimmed.startsWith("/images/") ||
+      trimmed.startsWith("/wp-content/uploads/")
     ) {
-      const cleanPath = trimmed.replace(/^\/+/, "").replace(/^api\/uploads\//, "uploads/");
+      const cleanPath = normalizeUploadPath(trimmed).replace(/^\/+/, "");
       return backendOrigin ? `${backendOrigin}/${cleanPath}` : `/${cleanPath}`;
     }
 
     return trimmed;
   }
 
-  const cleanPath = trimmed.replace(/^\/+/, "").replace(/^api\/uploads\//, "uploads/");
-  if (cleanPath.startsWith("uploads/") || cleanPath.startsWith("images/")) {
+  const cleanPath = normalizeUploadPath(trimmed).replace(/^\/+/, "");
+  if (
+    cleanPath.startsWith("uploads/") ||
+    cleanPath.startsWith("images/") ||
+    cleanPath.startsWith("wp-content/uploads/")
+  ) {
     return backendOrigin ? `${backendOrigin}/${cleanPath}` : `/${cleanPath}`;
   }
 

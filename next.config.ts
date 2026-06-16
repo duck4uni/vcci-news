@@ -22,15 +22,15 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "vccihcm.vn",
-        port: "",
-        pathname: "/images/**",
-      },
-      {
-        protocol: "https",
         hostname: "news.vccihcm.vn",
         port: "",
         pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "vccihcm.vn",
+        port: "",
+        pathname: "/images/**",
       },
     ],
   },
