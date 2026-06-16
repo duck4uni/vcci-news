@@ -1,4 +1,5 @@
 const DEFAULT_BACKEND_ORIGIN = "https://news.vccihcm.vn";
+const DEFAULT_FRONTEND_ORIGIN = "https://news.vccihcm.vn";
 
 const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
 
@@ -51,7 +52,23 @@ export const resolveUploadUrl = (value?: string | null) => {
   const trimmed = value?.trim();
 
   if (!trimmed) return "";
-  if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+  if (
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("blob:") ||
+    trimmed.startsWith("data:")
+  ) {
+    return trimmed;
+  }
+
+  if (trimmed.startsWith("/")) {
+    if (trimmed.startsWith("/uploads/") || trimmed.startsWith("/api/uploads/")) {
+      const cleanPath = trimmed.replace(/^\/+/, "").replace(/^api\/uploads\//, "uploads/");
+      return backendOrigin ? `${backendOrigin}/${cleanPath}` : `/${cleanPath}`;
+    }
+
+    return trimmed;
+  }
 
   const cleanPath = trimmed.replace(/^\/+/, "").replace(/^api\/uploads\//, "uploads/");
   if (cleanPath.startsWith("uploads/")) {
