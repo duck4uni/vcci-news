@@ -2,12 +2,12 @@
 
 import dayjs from "dayjs";
 import { useQuery } from "@tanstack/react-query";
-import { Play, ShieldCheck, Target, Zap } from "lucide-react";
+import { ShieldCheck, Target, Zap } from "lucide-react";
+import parse from "html-react-parser";
 import Link from "next/link";
 import { useCustomClient } from "@/api/mutator/custom-client";
 import ImageNext from "@/components/shared/image-next";
-import { fetchClientVideos } from "@/lib/api/videos";
-import { buildDynamicPostHref, buildVisibleNewsFilters } from "../data";
+import { buildDynamicPostHref, buildVisibleNewsFilters, stripHtml } from "../data";
 import StructuredPostContent from "../StructuredPostContent";
 import type { DynamicPostItem } from "../types";
 
@@ -38,15 +38,43 @@ const ABOUT_HIGHLIGHTS = [
 ] as const;
 
 const ACTIVITY_AREAS = [
-  "TP. Hồ Chí Minh",
-  "Bình Dương",
-  "Bình Phước",
-  "Đồng Nai",
-  "Lâm Đồng",
-  "Tây Ninh",
+  {
+    name: "TP. Hồ Chí Minh",
+    description:
+      "Trung tâm điều phối, kết nối doanh nghiệp và lan tỏa các chương trình hỗ trợ hội viên trên toàn khu vực.",
+    toneClass: "from-[#f59e0b] to-[#ef4444]",
+  },
+  {
+    name: "Đồng Nai",
+    description:
+      "Địa bàn công nghiệp trọng điểm, gắn với nhu cầu xúc tiến thương mại và hỗ trợ sản xuất - xuất khẩu.",
+    toneClass: "from-[#2563eb] to-[#60a5fa]",
+  },
+  {
+    name: "Lâm Đồng",
+    description:
+      "Khu vực phát triển nông nghiệp công nghệ cao, du lịch và các mô hình kinh tế xanh, bền vững.",
+    toneClass: "from-[#16a34a] to-[#86efac]",
+  },
+  {
+    name: "Tây Ninh",
+    description:
+      "Cửa ngõ giao thương quan trọng, thuận lợi cho kết nối chuỗi cung ứng, logistics và thương mại biên giới.",
+    toneClass: "from-[#7c3aed] to-[#c4b5fd]",
+  },
 ] as const;
 
 const TIN_VCCI_CATEGORY_ID = "b89b2ba6-a699-47cb-87e4-0643aea549a9";
+
+function renderSummary(summary?: string) {
+  const value = summary?.trim() ?? "";
+
+  if (!value || !stripHtml(value)) {
+    return null;
+  }
+
+  return parse(value);
+}
 
 type TinVcciApiRow = {
   id?: string | null;
@@ -75,11 +103,6 @@ type AboutVcciHcmPageProps = {
 export default function AboutVcciHcmPage({
   post,
 }: AboutVcciHcmPageProps) {
-  const videosQuery = useQuery({
-    queryKey: ["about-vcci-hcm-video"],
-    queryFn: () => fetchClientVideos({ page: 1, pageSize: 1 }),
-    staleTime: 60 * 1000,
-  });
   const tinVcciQuery = useQuery({
     queryKey: ["about-vcci-hcm-tin-vcci"],
     queryFn: async () => {
@@ -109,8 +132,8 @@ export default function AboutVcciHcmPage({
     staleTime: 60 * 1000,
   });
 
-  const introVideo = videosQuery.data?.rows[0] ?? null;
   const tinVcciItems = tinVcciQuery.data ?? [];
+  const summaryContent = renderSummary(post.summary);
 
   return (
     <>
@@ -121,10 +144,10 @@ export default function AboutVcciHcmPage({
           </h1>
           <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
 
-          {post.summary ? (
-            <p className="mt-5 max-w-6xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
-              {post.summary}
-            </p>
+          {summaryContent ? (
+            <div className="mt-5 max-w-6xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
+              {summaryContent}
+            </div>
           ) : null}
 
           <div className="mt-7 rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
@@ -140,9 +163,9 @@ export default function AboutVcciHcmPage({
           </h2>
           <div className="mt-6 space-y-4">
             {ACTIVITY_AREAS.map((item) => (
-              <div key={item} className="flex items-center gap-3 text-[18px] text-[#58667d]">
+              <div key={item.name} className="flex items-center gap-3 text-[18px] text-[#58667d]">
                 <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#2f6ce5]" />
-                <span>{item}</span>
+                <span>{item.name}</span>
               </div>
             ))}
           </div>
@@ -234,68 +257,44 @@ export default function AboutVcciHcmPage({
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] lg:items-center">
-          <div className="space-y-5">
-            <div>
-              <h2 className="text-[28px] font-bold leading-tight text-[#1f2a44] md:text-[34px]">
-                Video về <span className="text-[#2f57ff]">VCCI-HCM</span>
+        <div className="rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
+          <div className="flex items-start justify-between gap-4">
+            <div className="min-w-0">
+              <h2 className="text-[30px] font-bold leading-tight text-[#1f2a44]">
+                Khu vực hoạt động
               </h2>
-              <div className="mt-3 h-1 w-16 rounded-full bg-[#f5a400]" />
+              <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
+              <p className="mt-4 max-w-3xl text-[16px] leading-8 text-[#5f6f86]">
+                VCCI-HCM hoạt động tại 4 khu vực trọng điểm, bảo đảm hỗ trợ doanh nghiệp theo từng địa bàn cụ thể.
+              </p>
             </div>
 
-            <p className="max-w-xl text-[15px] leading-7 text-[#66758d]">
-              Khám phá hoạt động của Liên đoàn Thương mại và Công nghiệp Việt Nam - Chi nhánh TP. Hồ Chí Minh qua video giới thiệu chính thức.
-            </p>
-
-            <div className="grid max-w-md grid-cols-3 gap-3">
-              {[
-                { value: "20+", label: "Năm hoạt động" },
-                { value: "5000+", label: "Hội viên" },
-                { value: "6", label: "Tỉnh thành" },
-              ].map((stat) => (
-                <div
-                  key={stat.label}
-                  className="rounded-[18px] border border-[#edf1f6] bg-white px-4 py-3 text-center shadow-[0_12px_28px_rgba(17,24,39,0.04)]"
-                >
-                  <div className="text-[28px] font-bold leading-none text-[#2450b5]">
-                    {stat.value}
-                  </div>
-                  <div className="mt-2 text-[13px] text-[#6b7a91]">{stat.label}</div>
-                </div>
-              ))}
+            <div className="hidden rounded-[18px] border border-[#edf1f6] bg-[#f8fbff] px-4 py-3 text-sm font-medium text-[#2450b5] md:block">
+              4 điểm hoạt động chính
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] bg-[#dde6f5] shadow-[0_20px_44px_rgba(29,65,138,0.18)]">
-            {introVideo ? (
-              <a
-                href={introVideo.watchUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="group relative block aspect-video"
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {ACTIVITY_AREAS.map((item, index) => (
+              <article
+                key={item.name}
+                className="rounded-[22px] border border-[#edf1f6] bg-[#fbfcff] px-5 py-5 shadow-[0_10px_26px_rgba(17,24,39,0.04)]"
               >
-                <ImageNext
-                  src={introVideo.thumbnail}
-                  alt={introVideo.name}
-                  width={1200}
-                  height={675}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                />
-                <div className="absolute inset-0 bg-linear-to-r from-[#183b78]/78 via-[#365f9d]/38 to-[#183b78]/24" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-18 w-18 items-center justify-center rounded-full bg-white/90 text-[#24469c] shadow-[0_18px_38px_rgba(0,0,0,0.18)]">
-                    <Play className="ml-1 h-8 w-8 fill-current" />
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#eff4ff] text-lg font-bold text-[#2450b5]">
+                    {index + 1}
                   </span>
+                  <div className="min-w-0">
+                    <h3 className="text-[20px] font-bold leading-tight text-[#1f2a44]">
+                      {item.name}
+                    </h3>
+                  </div>
                 </div>
-                <div className="absolute bottom-4 left-4 rounded-full bg-[#1b2e4f]/72 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
-                  {introVideo.name}
-                </div>
-              </a>
-            ) : (
-              <div className="flex aspect-video items-center justify-center bg-[#eef3fb] px-6 text-center text-[#6b7a91]">
-                Đang cập nhật video giới thiệu VCCI-HCM.
-              </div>
-            )}
+                <p className="mt-4 text-[15px] leading-7 text-[#5f6f86]">
+                  {item.description}
+                </p>
+              </article>
+            ))}
           </div>
         </div>
 
@@ -316,7 +315,7 @@ export default function AboutVcciHcmPage({
             </Link>
           </div>
 
-          <div className="grid pb-6 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-5 pb-6 md:grid-cols-2 xl:grid-cols-3">
             {tinVcciItems.map((item) => (
               <Link
                 key={item.id}

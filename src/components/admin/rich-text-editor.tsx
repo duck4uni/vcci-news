@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { useMemo, useRef } from "react";
 import type { JoditEditorProps } from "jodit-react";
+import useAuthStore from "@/store/useAuthStore";
+import links from "@/links";
 
 const JoditEditor = dynamic(() => import("jodit-react").then((mod) => mod.default), {
   ssr: false,
@@ -104,6 +106,7 @@ export function AdminRichTextEditor({
   readOnly = false,
 }: AdminRichTextEditorProps) {
   const editor = useRef(null);
+  const accessToken = useAuthStore((state) => state.appAccessToken);
 
   const config: JoditEditorProps["config"] = useMemo(
     () => ({
@@ -113,7 +116,52 @@ export function AdminRichTextEditor({
       language: "vi",
       toolbarButtonSize: "middle",
       uploader: {
-        insertImageAsBase64URI: true,
+        url: `${links.apiEndpoint}/files`,
+        method: "POST",
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        format: "json",
+        buildData: (data: FormData) => {
+          const next = new FormData();
+          data.forEach((value, key) => {
+            if (key === "files[]" && value instanceof File) {
+              next.append("file", value);
+            } else {
+              next.append(key, value);
+            }
+          });
+          return next;
+        },
+        isSuccess: (resp: unknown) => {
+          if (typeof resp !== "object" || resp === null) return false;
+          const r = resp as Record<string, unknown>;
+          return (
+            r.status === "success" ||
+            r.status === "200" ||
+            (!r.violation && !!r.responseData)
+          );
+        },
+        process: (resp: unknown) => {
+          if (typeof resp !== "object" || resp === null) {
+            return { files: [], error: "Invalid response" };
+          }
+          const r = resp as Record<string, unknown>;
+          const responseData = r.responseData as Record<string, unknown> | undefined;
+          const url =
+            (typeof responseData?.url === "string" && responseData.url) ||
+            (typeof responseData?.fileUrl === "string" && responseData.fileUrl) ||
+            (typeof responseData?.path === "string" && responseData.path) ||
+            (typeof responseData?.link === "string" && responseData.link) ||
+            (typeof responseData?.src === "string" && responseData.src) ||
+            "";
+          return {
+            files: url ? [url] : [],
+            baseurl: "",
+            error: url ? undefined : (r.message as string) || "Upload failed",
+            msg: (r.message as string) || "",
+          };
+        },
       },
       buttons: [
         "bold",
@@ -182,7 +230,7 @@ export function AdminRichTextEditor({
         },
       },
     }),
-    [minHeight, placeholder, readOnly],
+    [minHeight, placeholder, readOnly, accessToken],
   );
 
   return (

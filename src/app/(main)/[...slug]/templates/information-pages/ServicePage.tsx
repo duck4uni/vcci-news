@@ -47,7 +47,7 @@ const SERVICE_SUPPORT_ITEMS = [
   },
   {
     key: "certificate",
-    title: "Cấp C/O và xác nhận các chứng từ thương mại",
+    title: "Xác nhận các chứng từ thương mại (Bỏ cấp C/O)",
     icon: FileBadge2,
   },
   {

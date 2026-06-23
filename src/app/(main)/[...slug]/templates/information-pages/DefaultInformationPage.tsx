@@ -2,7 +2,7 @@
 
 import StructuredPostContent from "../StructuredPostContent";
 import type { DynamicPostItem } from "../types";
-
+import parse from "html-react-parser";
 type DefaultInformationPageProps = {
   post: DynamicPostItem;
 };
@@ -20,7 +20,7 @@ export default function DefaultInformationPage({
 
         {post.summary ? (
           <p className="mt-5 max-w-6xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
-            {post.summary}
+            {parse(post.summary)}
           </p>
         ) : null}
 
