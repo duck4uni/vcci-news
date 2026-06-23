@@ -39,8 +39,8 @@ const ABOUT_HIGHLIGHTS = [
 
 const ACTIVITY_AREAS = [
   "TP. Hồ Chí Minh",
-  "Bình Dương",
-  "Bình Phước",
+  // "Bình Dương",
+  // "Bình Phước",
   "Đồng Nai",
   "Lâm Đồng",
   "Tây Ninh",
