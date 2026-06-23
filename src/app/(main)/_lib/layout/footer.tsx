@@ -32,7 +32,6 @@ type SocialItem = {
   icon: React.ReactNode;
 };
 
-
 const fallbackSocials: SocialItem[] = [
   {
     key: "facebook",
@@ -341,7 +340,27 @@ function Footer() {
         </div>
 
         <div className="mt-10 border-t border-[#2946a3] pt-5 text-center text-[14px] text-[#62a7ff]">
-          © Bản quyền VCCI-HCM | All rights reserved
+          <div className="mb-1">
+            Thiết kế và phát triển bởi{" "}
+            <a
+              href="https://vcci-hcm.org.vn/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-white transition-colors hover:text-[#f7b500]"
+            >
+              VCCI-HCM
+            </a>
+            {" "}và{" "}
+            <a
+              href="https://meu.com.vn/"
+              target="_blank"
+              rel="noreferrer"
+              className="font-semibold text-white transition-colors hover:text-[#f7b500]"
+            >
+              MEU Solutions
+            </a>
+          </div>
+          <div>© Bản quyền VCCI-HCM | All rights reserved</div>
         </div>
       </div>
     </footer>
