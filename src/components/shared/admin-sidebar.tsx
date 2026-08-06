@@ -17,7 +17,7 @@ import {
   Video,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useGetLogo } from "@/api/endpoints/logo";
+import { useGetApiV10Logo } from "@/api/endpoints/logo";
 import type { Logo } from "@/api/models/logo";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
 import { resolveUploadUrl } from "@/links";
@@ -90,7 +90,7 @@ export function AdminSidebar() {
     Record<string, boolean>
   >({});
 
-  const { data: logoData } = useGetLogo(
+  const { data: logoData } = useGetApiV10Logo(
     {
       page: 1,
       pageSize: 1,

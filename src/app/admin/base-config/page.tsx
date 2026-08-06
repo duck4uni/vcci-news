@@ -43,24 +43,24 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  deleteSiteInformationBranchesId,
-  getSiteInformation,
-  patchSiteInformationBranchesId,
-  patchSiteInformationSocialsId,
-  postSiteInformationBranches,
-  putSiteInformation,
+  deleteApiV10SiteInformationBranchesId,
+  getApiV10SiteInformation,
+  patchApiV10SiteInformationBranchesId,
+  patchApiV10SiteInformationSocialsId,
+  postApiV10SiteInformationBranches,
+  putApiV10SiteInformation,
 } from "@/api/endpoints/site-information";
 import {
-  deleteLogoId,
-  getLogo,
-  postLogo,
-  putLogoId,
+  deleteApiV10LogoId,
+  getApiV10Logo,
+  postApiV10Logo,
+  putApiV10LogoId,
 } from "@/api/endpoints/logo";
 import {
-  deleteBannerId,
-  getBanner,
-  postBanner,
-  putBannerId,
+  deleteApiV10BannerId,
+  getApiV10Banner,
+  postApiV10Banner,
+  putApiV10BannerId,
 } from "@/api/endpoints/banner";
 import type {
   Banner,
@@ -567,8 +567,8 @@ export default function AdminBaseConfigPage() {
     const loadSiteInformation = async () => {
       try {
         const [siteInformationResponse, logoResponse] = await Promise.all([
-          getSiteInformation(),
-          getLogo({
+          getApiV10SiteInformation(),
+          getApiV10Logo({
             page: 1,
             pageSize: 1,
             sortField: "updated_at",
@@ -635,7 +635,7 @@ export default function AdminBaseConfigPage() {
 
     const loadBanners = async () => {
       try {
-        const response = await getBanner({
+        const response = await getApiV10Banner({
           page: 1,
           pageSize: 100,
           sortField: "display_order",
@@ -776,12 +776,12 @@ export default function AdminBaseConfigPage() {
 
       try {
         const response = currentLogoId
-          ? await putLogoId(currentLogoId, {
+          ? await putApiV10LogoId(currentLogoId, {
               logo_name: trimmedName,
               logo_url: selectedMedia?.url ?? null,
               file_id: itemForm.imageId,
             })
-          : await postLogo({
+          : await postApiV10Logo({
               logo_name: trimmedName,
               logo_url: selectedMedia?.url ?? null,
               file_id: itemForm.imageId,
@@ -821,8 +821,8 @@ export default function AdminBaseConfigPage() {
 
     try {
       const response = editingItemId
-        ? await putBannerId(editingItemId, mapConfigBannerToApi(bannerDraft))
-        : await postBanner(mapConfigBannerToApi(bannerDraft));
+        ? await putApiV10BannerId(editingItemId, mapConfigBannerToApi(bannerDraft))
+        : await postApiV10Banner(mapConfigBannerToApi(bannerDraft));
       const savedBanner = getEnvelopeData<Banner>(response);
       const nextBanner = savedBanner
         ? mapApiBannerToConfig(savedBanner)
@@ -890,7 +890,7 @@ export default function AdminBaseConfigPage() {
 
       if (deleteTarget.mode === "logo") {
         try {
-          await deleteLogoId(deleteTarget.id);
+          await deleteApiV10LogoId(deleteTarget.id);
           nextConfig.logo = null;
           queryClient.invalidateQueries({ queryKey: ["/logo"] });
         } catch (error) {
@@ -900,7 +900,7 @@ export default function AdminBaseConfigPage() {
           return;
         }
       } else {
-        await deleteBannerId(deleteTarget.id);
+        await deleteApiV10BannerId(deleteTarget.id);
         nextConfig.banners = nextConfig.banners.filter(
           (item) => item.id !== deleteTarget.id,
         );
@@ -987,7 +987,7 @@ export default function AdminBaseConfigPage() {
     setSavingContact(true);
 
     try {
-      const response = await postSiteInformationBranches({
+      const response = await postApiV10SiteInformationBranches({
         branch_name: `Chi nhánh ${config.branches.length + 1}`,
         sort_order: config.branches.length + 1,
         is_active: true,
@@ -1027,7 +1027,7 @@ export default function AdminBaseConfigPage() {
     setSavingContact(true);
 
     try {
-      await deleteSiteInformationBranchesId(branchId);
+      await deleteApiV10SiteInformationBranchesId(branchId);
 
       const nextConfig = cloneBaseConfigData(config);
       nextConfig.branches = nextConfig.branches.filter(
@@ -1057,7 +1057,7 @@ export default function AdminBaseConfigPage() {
     try {
       await Promise.all(
         sortBaseConfigBranches(config.branches).map((branch, index) =>
-          patchSiteInformationBranchesId(
+          patchApiV10SiteInformationBranchesId(
             branch.id,
             mapConfigBranchToApi(branch, index),
           ),
@@ -1087,7 +1087,7 @@ export default function AdminBaseConfigPage() {
     setSavingWebsiteInfo(true);
 
     try {
-      const response = await putSiteInformation({
+      const response = await putApiV10SiteInformation({
         website_name: config.websiteName.trim() || null,
         website_link: config.websiteLink.trim() || null,
       });
@@ -1140,7 +1140,7 @@ export default function AdminBaseConfigPage() {
     try {
       await Promise.all(
         config.socials.map((social) =>
-          patchSiteInformationSocialsId(
+          patchApiV10SiteInformationSocialsId(
             social.id,
             mapConfigSocialToApi(social),
           ),

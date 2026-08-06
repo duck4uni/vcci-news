@@ -5,11 +5,6 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
+import type { BannerCreate } from './bannerCreate';
 
-export interface BannerMutate {
-  banner_name?: string;
-  display_order?: number;
-  status?: string;
-  file_id?: string;
-  display_time?: number;
-}
+export type BannerMutate = BannerCreate;

@@ -26,10 +26,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  deleteVideoId,
-  getVideo,
-  patchVideoId,
-  postVideo,
+  deleteApiV10VideoId,
+  getApiV10Video,
+  patchApiV10VideoId,
+  postApiV10Video,
 } from "@/api/endpoints/video";
 import type { Video as CmsVideoItem } from "@/api/models/video";
 import { readVideoPageData, readVideoRows } from "@/lib/api/videos";
@@ -183,7 +183,7 @@ export default function AdminVideosPage() {
 
     try {
       const keyword = search.trim();
-      const response = await getVideo({
+      const response = await getApiV10Video({
         page,
         pageSize: PAGE_SIZE,
         sortField: "created_at",
@@ -228,10 +228,10 @@ export default function AdminVideosPage() {
 
     try {
       if (data.id) {
-        await patchVideoId(data.id, { name: data.name, url: data.url });
+        await patchApiV10VideoId(data.id, { name: data.name, url: data.url });
         toast.success("Đã cập nhật video");
       } else {
-        await postVideo({ name: data.name, url: data.url });
+        await postApiV10Video({ name: data.name, url: data.url });
         toast.success("Đã thêm video mới");
       }
 
@@ -248,7 +248,7 @@ export default function AdminVideosPage() {
     if (!deleteTarget) return;
 
     try {
-      await deleteVideoId(deleteTarget.id);
+      await deleteApiV10VideoId(deleteTarget.id);
       toast.success("Đã xóa video");
       setDeleteTarget(null);
       await loadVideos();

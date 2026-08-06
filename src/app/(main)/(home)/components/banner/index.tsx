@@ -7,7 +7,7 @@ import { Swiper as SwiperType } from "swiper/types";
 import { useRef } from "react";
 import "swiper/css";
 
-import { getBanner } from "@/api/endpoints/banner";
+import { getApiV10Banner } from "@/api/endpoints/banner";
 import { useQuery } from "@tanstack/react-query";
 import { resolveCmsFileUrl } from "@/lib/api/files";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -100,7 +100,7 @@ const Banner = () => {
   const { data: bannerData, isPending, isError } = useQuery({
     queryKey: ["home-banner"],
     queryFn: () =>
-      getBanner({
+      getApiV10Banner({
         filters: "status@=ACTIVE",
         sortField: "display_order",
         sortOrder: "asc",

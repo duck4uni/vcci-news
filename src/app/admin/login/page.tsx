@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { useGetLogo } from "@/api/endpoints/logo";
+import { useGetApiV10Logo } from "@/api/endpoints/logo";
 import type { Logo } from "@/api/models/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -131,7 +131,7 @@ function AuthShell({
   mode: AuthMode;
   children: React.ReactNode;
 }) {
-  const { data: logoData } = useGetLogo(
+  const { data: logoData } = useGetApiV10Logo(
     {
       page: 1,
       pageSize: 1,
