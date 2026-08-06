@@ -6,6 +6,10 @@ ARG NEXT_PUBLIC_FRONTEND_HOST=https://news.vccihcm.vn
 ENV NEXT_PUBLIC_BACKEND_HOST=$NEXT_PUBLIC_BACKEND_HOST
 ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
 
+# Base image cũ có thể chưa có pnpm — bật corepack ở đâng để chắc chắn.
+# (Sau khi base image được rebuild với base.Dockerfile mới, dòng này sẽ là no-op.)
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
 # Copy toàn bộ source (đã được .dockerignore lọc trừ node_modules / .next / openapi)
 COPY . .
 
