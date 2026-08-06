@@ -9,7 +9,7 @@ import "swiper/css";
 
 import { getApiV10Banner } from "@/api/endpoints/banner";
 import { useQuery } from "@tanstack/react-query";
-import { resolveCmsFileUrl } from "@/lib/api/files";
+import { fetchCmsFileById, resolveCmsFileUrl } from "@/lib/api/files";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ApiEnvelope<T> = {
@@ -65,12 +65,12 @@ function BannerSlideItem({
   fileId?: string | null;
 }) {
   const { data: file, isPending } = useQuery({
-    queryKey: ["file", fileId],
-    queryFn: () => Promise.resolve({ path: src }),
-    enabled: !!fileId && !src,
+    queryKey: ["cms-file", fileId],
+    queryFn: () => fetchCmsFileById(fileId!),
+    enabled: !!fileId,
   });
 
-  if (fileId && isPending && !src) {
+  if (isPending) {
     return (
       <Skeleton className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px]" />
     );
