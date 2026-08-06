@@ -6,11 +6,14 @@ ARG NEXT_PUBLIC_FRONTEND_HOST=https://news.vccihcm.vn
 ENV NEXT_PUBLIC_BACKEND_HOST=$NEXT_PUBLIC_BACKEND_HOST
 ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
 
+# Copy toàn bộ source (đã được .dockerignore lọc trừ node_modules / .next / openapi)
 COPY . .
 
+# Generate API client + build
 RUN node scripts/generate-api.mjs
-RUN npm run build
+RUN pnpm run build
 
+# ----------------- Production stage -----------------
 FROM node:22-alpine AS production
 WORKDIR /app
 
@@ -20,15 +23,19 @@ ARG NEXT_PUBLIC_FRONTEND_HOST=https://news.vccihcm.vn
 ENV NEXT_PUBLIC_BACKEND_HOST=$NEXT_PUBLIC_BACKEND_HOST
 ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
 
-COPY --from=builder /app/package*.json ./
+RUN corepack enable && corepack prepare pnpm@latest --activate
 
+# Copy lockfile + manifest + node_modules từ builder
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/pnpm-lock.yaml* ./
 COPY --from=builder /app/node_modules ./node_modules
 
-RUN npm prune --production
+# Prune dev deps để giảm image size
+RUN pnpm prune --prod
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 
 EXPOSE 3000
 
-CMD ["npm", "run", "start"]
+CMD ["pnpm", "run", "start"]
