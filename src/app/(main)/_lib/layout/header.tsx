@@ -7,8 +7,8 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
-import { useGetLogo } from "@/api/endpoints/logo";
-import { getSiteInformation } from "@/api/endpoints/site-information";
+import { useGetApiV10Logo } from "@/api/endpoints/logo";
+import { getApiV10SiteInformation } from "@/api/endpoints/site-information";
 import { resolveUploadUrl } from "@/links";
 import type { Logo } from "@/api/models/logo";
 import type {
@@ -185,7 +185,7 @@ function Header() {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: currentLogo = null } = useGetLogo(
+  const { data: currentLogo = null } = useGetApiV10Logo(
     {
       page: 1,
       pageSize: 1,
@@ -206,7 +206,7 @@ function Header() {
   const { data: siteInformationResponse } =
     useQuery<ApiEnvelope<SiteInformationData> | null>({
       queryKey: ["site-information"],
-      queryFn: () => getSiteInformation().catch(() => null),
+      queryFn: () => getApiV10SiteInformation().catch(() => null),
       staleTime: 5 * 60 * 1000,
     });
 

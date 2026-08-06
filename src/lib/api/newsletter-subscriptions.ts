@@ -1,10 +1,10 @@
 "use client";
 
 import {
-  deleteNewsletterSubscriptionId,
-  getNewsletterSubscription,
-  patchNewsletterSubscriptionId,
-  postNewsletterSubscription,
+  deleteApiV10NewsletterSubscriptionId,
+  getApiV10NewsletterSubscription,
+  patchApiV10NewsletterSubscriptionId,
+  postApiV10NewsletterSubscription,
 } from "@/api/endpoints/newsletter-subscription";
 import type { NewsletterSubscription } from "@/api/models/newsletterSubscription";
 
@@ -31,7 +31,7 @@ export async function fetchNewsletterSubscriptions(params?: {
   sortOrder?: "asc" | "desc";
   filters?: string;
 }) {
-  const response = await getNewsletterSubscription({
+  const response = await getApiV10NewsletterSubscription({
     page: params?.page ?? 1,
     pageSize: params?.pageSize ?? 10,
     sortField: params?.sortField ?? "created_at",
@@ -49,13 +49,13 @@ export async function fetchNewsletterSubscriptions(params?: {
 }
 
 export async function subscribeNewsletterEmail(email: string) {
-  return postNewsletterSubscription({ email: email.trim() });
+  return postApiV10NewsletterSubscription({ email: email.trim() });
 }
 
 export async function deleteNewsletterSubscription(id: string) {
-  return deleteNewsletterSubscriptionId(id);
+  return deleteApiV10NewsletterSubscriptionId(id);
 }
 
 export async function markNewsletterSubscriptionSeen(id: string) {
-  return patchNewsletterSubscriptionId(id, { is_seen: true });
+  return patchApiV10NewsletterSubscriptionId(id, { is_seen: true });
 }

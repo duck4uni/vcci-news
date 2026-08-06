@@ -15,7 +15,7 @@ import {
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { subscribeNewsletterEmail } from "@/lib/api/newsletter-subscriptions";
-import { getSiteInformation } from "@/api/endpoints/site-information";
+import { getApiV10SiteInformation } from "@/api/endpoints/site-information";
 import type { SiteInformationData } from "@/api/models";
 import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
 
@@ -92,7 +92,7 @@ function Footer() {
   const { data: siteInformationResponse } =
     useQuery<ApiEnvelope<SiteInformationData> | null>({
       queryKey: ["site-information"],
-      queryFn: () => getSiteInformation().catch(() => null),
+      queryFn: () => getApiV10SiteInformation().catch(() => null),
       staleTime: 5 * 60 * 1000,
     });
 

@@ -40,23 +40,52 @@ const swaggerCandidates = [
 
 async function fetchSwagger() {
   for (const url of swaggerCandidates) {
-    if (typeof url === "string" && fs.existsSync(url)) {
-      return JSON.parse(fs.readFileSync(url, "utf8"));
+    if (!url) continue;
+
+    // 1) Local file path
+    if (fs.existsSync(url) && fs.statSync(url).isFile()) {
+      const raw = fs.readFileSync(url, "utf8");
+      try {
+        return JSON.parse(raw);
+      } catch (error) {
+        throw new Error(`Swagger spec tại ${url} không phải JSON hợp lệ: ${error}`);
+      }
     }
 
-    try {
-      const { data } = await axios.get(url, {
-        headers: { Origin: siteURL },
-      });
-      return data;
-    } catch {
-      continue;
+    // 2) HTTP fetch — chỉ chấp nhận JSON, bỏ qua HTML (404, page app,...)
+    if (/^https?:\/\//i.test(url)) {
+      try {
+        const { data, headers } = await axios.get(url, {
+          headers: { Origin: siteURL },
+          // Ngăn axios tự nhận HTML là JSON — ép raw response để check Content-Type
+          responseType: "json",
+          validateStatus: (status) => status >= 200 && status < 400,
+        });
+
+        const contentType = String(headers?.["content-type"] ?? "").toLowerCase();
+        if (!contentType.includes("application/json") && typeof data === "string") {
+          // Phản hồi không phải JSON (thường là HTML 404) — bỏ qua candidate này
+          continue;
+        }
+
+        if (data && typeof data === "object") {
+          return data;
+        }
+      } catch {
+        continue;
+      }
     }
   }
 
+  // 3) Fallback cuối: openapi/swagger-output.json nằm trong repo
   const localSwagger = path.resolve(process.cwd(), "openapi/swagger-output.json");
   if (fs.existsSync(localSwagger)) {
-    return JSON.parse(fs.readFileSync(localSwagger, "utf8"));
+    const raw = fs.readFileSync(localSwagger, "utf8");
+    try {
+      return JSON.parse(raw);
+    } catch (error) {
+      throw new Error(`Swagger spec tại ${localSwagger} không phải JSON hợp lệ: ${error}`);
+    }
   }
 
   throw new Error(

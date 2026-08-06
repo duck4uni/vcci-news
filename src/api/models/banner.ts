@@ -5,16 +5,21 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
+import type { BannerStatus } from './bannerStatus';
 
 export interface Banner {
-  id?: string;
-  banner_name?: string;
-  display_order?: number;
-  status?: string;
-  file_id?: string;
-  created_at?: string;
-  created_by?: string;
-  updated_at?: string;
-  updated_by?: string;
+  id: string;
+  /** @maxLength 255 */
+  banner_name: string;
+  display_order: number;
+  /** @minimum 1 */
   display_time?: number;
+  status: BannerStatus;
+  file_id: string;
+  created_at: string;
+  /** @nullable */
+  created_by?: string | null;
+  updated_at: string;
+  /** @nullable */
+  updated_by?: string | null;
 }

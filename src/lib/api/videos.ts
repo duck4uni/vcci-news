@@ -1,6 +1,6 @@
 "use client";
 
-import { getVideo } from "@/api/endpoints/video";
+import { getApiV10Video } from "@/api/endpoints/video";
 import type { Video } from "@/api/models/video";
 
 export type ClientVideoItem = Video & {
@@ -81,7 +81,7 @@ export const normalizeVideoUrl = (url: string) => {
 
 export async function fetchClientVideos(params?: { page?: number; pageSize?: number }) {
   try {
-    const response = await getVideo({
+    const response = await getApiV10Video({
       page: params?.page ?? 1,
       pageSize: params?.pageSize ?? 10,
       sortField: "created_at",
