@@ -7,7 +7,7 @@ import useAuthStore, {
 } from "@/store/useAuthStore";
 import links from "@/links";
 
-const AUTH_BASE_URL = `${links.apiEndpoint}/auth`;
+const AUTH_BASE_URL = `${links.apiEndpoint}/api/v1.0/auth`;
 const SESSION_EXPIRED_MESSAGE = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
 
 interface AuthEnvelope<T> {
@@ -39,6 +39,12 @@ interface LoginResponseData {
   token_type?: string | null;
 }
 
+interface LoginResponseEnvelope {
+  responseData?: LoginResponseData;
+  message?: string | null;
+  message_en?: string | null;
+}
+
 type MeResponseData = Partial<AuthenticatedAdminUser>;
 
 interface RefreshResponseData {
@@ -49,9 +55,14 @@ interface RefreshResponseData {
   token_type?: string | null;
 }
 
+interface RefreshResponseEnvelope {
+  responseData?: RefreshResponseData;
+}
+
 interface AuthRequestOptions extends RequestInit {
   skipAuthHeader?: boolean;
   authToken?: string | null;
+  noEnvelope?: boolean;
 }
 
 type AuthFailureReason = "missing_refresh_token" | "refresh_failed";
@@ -163,7 +174,7 @@ async function requestAuth<T>(
     throw error;
   }
 
-  return getEnvelopeData(data) as T;
+  return init?.noEnvelope ? (data as T) : getEnvelopeData(data) as T;
 }
 
 const redirectToLogin = () => {
@@ -191,7 +202,7 @@ export async function loginAdmin(
   password: string,
   options?: { persistSession?: boolean },
 ) {
-  const payload = await requestAuth<LoginResponseData>("/login", {
+  const payload = await requestAuth<LoginResponseEnvelope>("/login", {
     method: "POST",
     body: JSON.stringify({
       email,
@@ -200,30 +211,32 @@ export async function loginAdmin(
     skipAuthHeader: true,
   });
 
-  if (!payload.access_token || !payload.refresh_token || !payload.expires_in) {
+  const loginData = payload?.responseData ?? payload as LoginResponseData;
+
+  if (!loginData?.access_token || !loginData?.refresh_token || !loginData?.expires_in) {
     throw new Error("Thiếu dữ liệu phiên đăng nhập từ API.");
   }
 
   const me = await requestAuth<MeResponseData>("/me", {
     method: "GET",
-    authToken: payload.access_token,
-  }).catch(() => payload.user ?? null);
+    authToken: loginData.access_token,
+  }).catch(() => loginData.user ?? null);
 
-  const normalizedUser = normalizeUser(me ?? payload.user);
+  const normalizedUser = normalizeUser(me ?? loginData.user);
 
   useAuthStore.getState().setAuthSession({
-    accessToken: payload.access_token,
-    refreshToken: payload.refresh_token,
-    expiresIn: payload.expires_in,
-    accessTokenExpired: getJwtExpiresAt(payload.access_token),
+    accessToken: loginData.access_token,
+    refreshToken: loginData.refresh_token,
+    expiresIn: loginData.expires_in,
+    accessTokenExpired: getJwtExpiresAt(loginData.access_token),
     user: normalizedUser,
-    session: normalizeSession(payload.session),
+    session: normalizeSession(loginData.session),
     persistSession: options?.persistSession === true,
   });
 
   useAuthStore.getState().setAppUser(normalizedUser);
 
-  return payload;
+  return loginData;
 }
 
 export async function logoutAdmin(options?: {
@@ -290,7 +303,7 @@ export async function refreshAdminAccessToken() {
     store.setAppRefreshing(true);
 
     try {
-      const payload = await requestAuth<RefreshResponseData>("/refresh", {
+      const payload = await requestAuth<RefreshResponseEnvelope>("/refresh", {
         method: "POST",
         body: JSON.stringify({
           refresh_token: refreshToken,
@@ -298,19 +311,21 @@ export async function refreshAdminAccessToken() {
         skipAuthHeader: true,
       });
 
-      if (!payload.access_token || !payload.expires_in) {
+      const refreshData = payload?.responseData ?? payload as RefreshResponseData;
+
+      if (!refreshData?.access_token || !refreshData?.expires_in) {
         throw new Error("Thiếu access token mới từ API.");
       }
 
       useAuthStore.getState().updateAccessToken({
-        accessToken: payload.access_token,
-        expiresIn: payload.expires_in,
-        accessTokenExpired: getJwtExpiresAt(payload.access_token),
-        refreshToken: payload.refresh_token ?? refreshToken,
-        session: normalizeSession(payload.session),
+        accessToken: refreshData.access_token,
+        expiresIn: refreshData.expires_in,
+        accessTokenExpired: getJwtExpiresAt(refreshData.access_token),
+        refreshToken: refreshData.refresh_token ?? refreshToken,
+        session: normalizeSession(refreshData.session),
       });
 
-      return payload.access_token;
+      return refreshData.access_token;
     } catch (error) {
       await logoutAdmin({ silent: true, reason: "refresh_failed" });
       throw error;
