@@ -1,11 +1,11 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
+import { useGetApiV10PageConfig } from "@/api/endpoints/page-config";
 import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
 
 function SiteMapPage() {
-  const { data: categoriesData, isLoading, isError } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>();
+  const { data: categoriesData, isLoading, isError } = useGetApiV10PageConfig<GetNewsPageConfigResponseType>();
 
   if (isLoading) {
     return (
