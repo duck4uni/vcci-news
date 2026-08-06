@@ -153,7 +153,10 @@ export const resolveUploadUrl = (value?: string | null) => {
 
 const links = {
   analyticsGoogle: "G-C9TEK9BS4C",
-  apiEndpoint: backendOrigin ? `${backendOrigin}/api/v1.0` : "/api/v1.0",
+  // CHỈ dùng origin làm baseURL — orval-generated endpoints đã chứa path
+  // đầy đủ dạng `/api/v1.0/<resource>` nếu không axios sẽ ghép thành double prefix
+  // (vd: `https://news.vccihcm.vn/api/v1.0` + `/api/v1.0/banner` => .../api/v1.0/api/v1.0/banner).
+  apiEndpoint: backendOrigin || "",
   imageEndpoint: uploadsEndpoint,
   resolveUploadUrl,
   backendHost: backendUrl?.hostname || "",
