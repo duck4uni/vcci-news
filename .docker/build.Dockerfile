@@ -29,13 +29,12 @@ ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy lockfile + manifest + node_modules từ builder
+# Chỉ copy manifest + lockfile (KHÔNG copy node_modules).
+# Cài fresh production-only deps để tránh `pnpm prune --prod` bị
+# ERR_PNPM_IGNORED_BUILDS trên pnpm v11+.
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml* ./
-COPY --from=builder /app/node_modules ./node_modules
-
-# Prune dev deps để giảm image size
-RUN pnpm prune --prod
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
