@@ -168,7 +168,16 @@ const withNoopCancel = <T>(promise: Promise<T>): CustomClientPromise<T> => {
   return nextPromise;
 };
 
-const useCustomClient = <T>(url: string, options?: RequestInit): Promise<T> => {
+const API_PREFIX = "/api/v1.0";
+
+const normalizeApiUrl = (url: string): string => {
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith(`${API_PREFIX}/`) || url.startsWith(`${API_PREFIX}?`)) return url;
+  return `${API_PREFIX}${url.startsWith("/") ? "" : "/"}${url}`;
+};
+
+const useCustomClient = <T>(rawUrl: string, options?: RequestInit): Promise<T> => {
+  const url = normalizeApiUrl(rawUrl);
   const method = getRequestMethod(options);
   const shouldCacheGet = shouldUseGetCache(url, options);
   const cacheKey = shouldCacheGet ? makeGetCacheKey(url, options) : "";
