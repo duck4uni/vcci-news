@@ -35,5 +35,5 @@ yarn-error.log*
 coverage
 .nyc_output
 
-# Swagger spec chỉ dùng cho local dev — base image nên dùng BE thật
-openapi/
+# Swagger spec — cần thiết cho Docker build để generate API client nhất quán với local
+# (orval.config.ts sẽ ưu dụng local file trước, fallback sang fetch từ BE)

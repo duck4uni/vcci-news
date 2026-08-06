@@ -28,6 +28,7 @@ const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
 const siteURL = process.env.NEXT_PUBLIC_FRONTEND_HOST;
 
 const swaggerCandidates = [
+  path.resolve(process.cwd(), "openapi", "swagger-output.json"),
   process.env.ORVAL_SWAGGER_URL,
   path.resolve(process.cwd(), "..", "vietprodev-cms-backend", "storage", "swagger", "swagger-output.json"),
   `${backendHost}/swagger-output.json`,
