@@ -6,7 +6,8 @@ const LEGACY_MEDIA_HOSTS = new Set([
   "vccihcm.vn",
 ]);
 
-const normalizeOrigin = (value?: string | null) => value?.trim().replace(/\/+$/, "") || "";
+const normalizeOrigin = (value?: string | null) =>
+  value?.trim().replace(/\/+$/, "").replace(/\/api\/v\d+\.\d+$/, "") || "";
 
 const extractUploadPath = (pathname: string) => {
   const markers = ["/api/uploads/", "/uploads/", "/images/", "/wp-content/uploads/"];
