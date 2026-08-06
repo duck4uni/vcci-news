@@ -39,12 +39,64 @@ const resolvePartnerImage = (avatar: string | null | undefined, index: number) =
   return partnerImages[index % partnerImages.length] ?? "/img-error.png";
 };
 
-const fallbackPartners: Partner[] = Array.from({ length: 6 }, (_, index) => ({
-  id: `fallback-partner-${index}`,
-  name: `Đối tác ${index + 1}`,
-  avatar: partnerImages[index % partnerImages.length],
-  website: null,
-}));
+const renderPartnerContent = (partners: Partner[]) => {
+  if (partners.length > 0) {
+    return (
+      <Swiper
+        modules={[Autoplay]}
+        autoplay={{ delay: 4200, disableOnInteraction: false }}
+        observer
+        observeParents
+        updateOnWindowResize
+        slidesPerView="auto"
+        spaceBetween={16}
+        className="w-full"
+      >
+        {partners.map((partner, index) => (
+          <SwiperSlide
+            key={partner.id}
+            className="!h-auto !w-full sm:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
+          >
+            {partner.website ? (
+              <a
+                href={partner.website}
+                target="_blank"
+                rel="noreferrer"
+                className="block"
+              >
+                <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(31,59,124,0.1)] xl:h-[151px]">
+                  <ImageNext
+                    src={resolvePartnerImage(partner.avatar, index)}
+                    alt={partner.name}
+                    width={140}
+                    height={72}
+                    className="max-h-full w-full object-contain"
+                  />
+                </div>
+              </a>
+            ) : (
+              <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-[151px]">
+                <ImageNext
+                  src={resolvePartnerImage(partner.avatar, index)}
+                  alt={partner.name}
+                  width={140}
+                  height={72}
+                  className="max-h-full w-full object-contain"
+                />
+              </div>
+            )}
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    );
+  }
+
+  return (
+    <div className="rounded-[14px] border border-[#edf1f7] bg-white px-5 py-10 text-center text-sm text-gray-500">
+      Chưa có thông tin.
+    </div>
+  );
+};
 
 function VideoAndPartners() {
   const videosQuery = useQuery({
@@ -71,7 +123,9 @@ function VideoAndPartners() {
 
   const videos = videosQuery.data?.rows ?? [];
   const partners = partnersQuery.data?.responseData?.rows?.slice(0, 12) ?? [];
-  const displayPartners = partners.length > 0 ? partners : fallbackPartners;
+  const hasPartnerError = partnersQuery.isError;
+  const displayPartners =
+    hasPartnerError || partners.length === 0 ? [] : partners;
 
   return (
     <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
@@ -150,52 +204,7 @@ function VideoAndPartners() {
           </div>
         </div>
 
-        <Swiper
-          modules={[Autoplay]}
-          autoplay={{ delay: 4200, disableOnInteraction: false }}
-          observer
-          observeParents
-          updateOnWindowResize
-          slidesPerView="auto"
-          spaceBetween={16}
-          className="w-full"
-        >
-          {displayPartners.map((partner, index) => (
-            <SwiperSlide
-              key={partner.id}
-              className="!h-auto !w-full sm:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
-            >
-              {partner.website ? (
-                <a
-                  href={partner.website}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="block"
-                >
-                  <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(31,59,124,0.1)] xl:h-[151px]">
-                    <ImageNext
-                      src={resolvePartnerImage(partner.avatar, index)}
-                      alt={partner.name}
-                      width={140}
-                      height={72}
-                      className="max-h-full w-full object-contain"
-                    />
-                  </div>
-                </a>
-              ) : (
-                <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-[151px]">
-                  <ImageNext
-                    src={resolvePartnerImage(partner.avatar, index)}
-                    alt={partner.name}
-                    width={140}
-                    height={72}
-                    className="max-h-full w-full object-contain"
-                  />
-                </div>
-              )}
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {renderPartnerContent(displayPartners)}
       </aside>
     </section>
   );

@@ -28,6 +28,11 @@ type FeaturedMembersResponse = {
   };
 };
 
+type FeaturedMemberState =
+  | { status: "loading" }
+  | { status: "empty" }
+  | { status: "ready"; rows: FeaturedMember[] };
+
 const resolveMemberImage = (avatar: string | null | undefined, index: number) => {
   if (avatar?.startsWith("http://") || avatar?.startsWith("https://")) {
     return avatar;
@@ -40,15 +45,11 @@ const resolveMemberImage = (avatar: string | null | undefined, index: number) =>
   return memberImages[index % memberImages.length] ?? "/img-error.png";
 };
 
-const fallbackMembers: FeaturedMember[] = Array.from({ length: 9 }, (_, index) => ({
-  id: `fallback-member-${index}`,
-  name: `Hội viên tiêu biểu ${index + 1}`,
-  avatar: memberImages[index % memberImages.length],
-}));
-
 function Members() {
   const { memberConnectionPosts, categoryLinks, categoryNames } = useHomePosts();
-  const [featuredMembers, setFeaturedMembers] = useState<FeaturedMember[]>([]);
+  const [featuredMembers, setFeaturedMembers] = useState<FeaturedMemberState>({
+    status: "loading",
+  });
   const featuredConnection = memberConnectionPosts[0];
   const sectionLink =
     categoryLinks.get(categoryNames.ketNoiHoiVien.toLowerCase()) ?? "/hoi-vien/ket-noi-hoi-vien";
@@ -56,7 +57,8 @@ function Members() {
     featuredConnection?.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE;
   const connectionImageAlt =
     featuredConnection?.thumbnail?.alt || featuredConnection?.title || "VCCI HCM";
-  const displayMembers = featuredMembers.length > 0 ? featuredMembers : fallbackMembers;
+  const displayMembers =
+    featuredMembers.status === "ready" ? featuredMembers.rows.slice(0, 9) : [];
 
   useEffect(() => {
     let isMounted = true;
@@ -75,10 +77,17 @@ function Members() {
         const rows = data.responseData?.rows ?? [];
 
         if (isMounted) {
-          setFeaturedMembers(rows.slice(0, 9));
+          setFeaturedMembers(
+            rows.length > 0
+              ? { status: "ready", rows }
+              : { status: "empty" },
+          );
         }
       } catch (error) {
         console.error(error);
+        if (isMounted) {
+          setFeaturedMembers({ status: "empty" });
+        }
       }
     };
 
@@ -88,6 +97,61 @@ function Members() {
       isMounted = false;
     };
   }, []);
+
+  const renderMemberContent = () => {
+    if (featuredMembers.status === "loading") {
+      return (
+        <div className="rounded-[16px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
+          Đang tải dữ liệu...
+        </div>
+      );
+    }
+
+    if (featuredMembers.status === "empty" || displayMembers.length === 0) {
+      return (
+        <div className="rounded-[16px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
+          Chưa có thông tin.
+        </div>
+      );
+    }
+
+    return (
+      <Swiper
+        modules={[Autoplay]}
+        autoplay={{ delay: 4200, disableOnInteraction: false }}
+        observer
+        observeParents
+        updateOnWindowResize
+        slidesPerView="auto"
+        spaceBetween={16}
+        className="w-full"
+      >
+        {displayMembers.map((member, index) => (
+          <SwiperSlide
+            key={member.id}
+            className="!h-auto !w-full md:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
+          >
+            <article className="rounded-[20px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
+              <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
+                <div className="flex h-full w-full max-w-[260px] items-center justify-center">
+                  <ImageNext
+                    src={resolveMemberImage(member.avatar, index)}
+                    alt={member.name}
+                    width={260}
+                    height={180}
+                    className="h-[180px] w-[260px] max-w-full object-contain"
+                  />
+                </div>
+              </div>
+              <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e]">
+                {member.name}
+              </h3>
+            </article>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+    );
+  };
 
   return (
     <section className="flex flex-col gap-5 pb-8 xl:flex-row xl:items-stretch">
@@ -112,40 +176,7 @@ function Members() {
 
         <div className="mt-4 border-t border-[#e7aa00] pt-5" />
 
-        <Swiper
-          modules={[Autoplay]}
-          autoplay={{ delay: 4200, disableOnInteraction: false }}
-          observer
-          observeParents
-          updateOnWindowResize
-          slidesPerView="auto"
-          spaceBetween={16}
-          className="w-full"
-        >
-          {displayMembers.map((member, index) => (
-            <SwiperSlide
-              key={member.id}
-              className="!h-auto !w-full md:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
-            >
-              <article className="rounded-[20px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
-                <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
-                  <div className="flex h-full w-full max-w-[260px] items-center justify-center">
-                    <ImageNext
-                      src={resolveMemberImage(member.avatar, index)}
-                      alt={member.name}
-                      width={260}
-                      height={180}
-                      className="h-[180px] w-[260px] max-w-full object-contain"
-                    />
-                  </div>
-                </div>
-                <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e]">
-                  {member.name}
-                </h3>
-              </article>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {renderMemberContent()}
       </aside>
 
       <aside className="w-full xl:w-[31%] xl:min-w-[320px]">

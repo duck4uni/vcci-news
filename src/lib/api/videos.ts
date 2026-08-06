@@ -80,25 +80,33 @@ export const normalizeVideoUrl = (url: string) => {
 };
 
 export async function fetchClientVideos(params?: { page?: number; pageSize?: number }) {
-  const response = await getVideo({
-    page: params?.page ?? 1,
-    pageSize: params?.pageSize ?? 10,
-    sortField: "created_at",
-    sortOrder: "desc",
-  });
-  const pageData = readVideoPageData(response);
-  const pageSize = pageData.pageSize ?? params?.pageSize ?? 10;
-  const count = pageData.count ?? 0;
+  try {
+    const response = await getVideo({
+      page: params?.page ?? 1,
+      pageSize: params?.pageSize ?? 10,
+      sortField: "created_at",
+      sortOrder: "desc",
+    });
+    const pageData = readVideoPageData(response);
+    const pageSize = pageData.pageSize ?? params?.pageSize ?? 10;
+    const count = pageData.count ?? 0;
 
-  return {
-    rows: readVideoRows(response).map((item) => ({
-      ...item,
-      thumbnail: getVideoThumbnail(item.url),
-      watchUrl: normalizeVideoUrl(item.url),
-    })),
-    count,
-    page: pageData.page ?? params?.page ?? 1,
-    pageSize,
-    totalPages: Math.max(1, Math.ceil(count / pageSize)),
-  } satisfies ClientVideoListResult;
+    return {
+      rows: readVideoRows(response).map((item) => ({
+        ...item,
+        thumbnail: getVideoThumbnail(item.url),
+        watchUrl: normalizeVideoUrl(item.url),
+      })),
+      count,
+      page: pageData.page ?? params?.page ?? 1,
+      pageSize,
+      totalPages: Math.max(1, Math.ceil(count / pageSize)),
+    } satisfies ClientVideoListResult;
+  } catch (error) {
+    // Khi CMS / BE gặp sự cố — rethrow để UI component tự xử lý
+    // (hiển thị trạng thái "Chưa có video nào.").
+    // eslint-disable-next-line no-console
+    console.warn("[fetchClientVideos] CMS unavailable", error);
+    throw error;
+  }
 }

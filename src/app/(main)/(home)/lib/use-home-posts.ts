@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import { useCustomClient } from "@/api/mutator/custom-client";
 import Links, { resolveUploadUrl } from "@/links";
+import { MOCK_HOME_POSTS } from "@lib/mock-home-posts";
 
 type RawHomeCategory = {
   id?: string | null;
@@ -279,6 +280,17 @@ function createEventCalendarQuery(currentMonth: Date) {
 }
 
 async function fetchHomePosts() {
+  // Trả về mock ngay khi CMS/BE gặp sự cố — website vẫn hiển thị được nội dung cơ bản.
+  try {
+    return await fetchHomePostsFromApi();
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn("[useHomePosts] CMS unavailable, falling back to mock data", error);
+    return MOCK_HOME_POSTS;
+  }
+}
+
+async function fetchHomePostsFromApi() {
   const featuredQuery = new URLSearchParams({
     page: "1",
     pageSize: "3",
@@ -550,56 +562,62 @@ export function useEventCalendarPosts(currentMonth: Date) {
     queryKey: ["event-calendar-posts", currentMonth.getFullYear(), currentMonth.getMonth()],
     queryFn: async () => {
       const queryParams = createEventCalendarQuery(currentMonth);
-      const response = await useCustomClient<HomeEnvelope<HomePagedResult<RawHomePost>>>(
-        `/post?${queryParams.toString()}`,
-      );
 
-      return (response.responseData?.rows ?? []).map((item) => {
-        const categories = (item.categories ?? [])
-          .filter((category) => category?.id && category?.name)
-          .map((category) => ({
-            id: String(category.id),
-            name: String(category.name),
-            slug: String(category.slug ?? ""),
-            url: normalizeLink(category.url, "#"),
-            type: String(category.type ?? ""),
-          }));
-
-        const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
-        const title = String(item.title ?? "").trim();
-        const externalLink = buildPostLink(
-          item.external_link || (title ? `/${title}` : undefined),
-          item.id ? String(item.id) : "",
-          "#",
+      try {
+        const response = await useCustomClient<HomeEnvelope<HomePagedResult<RawHomePost>>>(
+          `/post?${queryParams.toString()}`,
         );
+        return (response.responseData?.rows ?? []).map((item) => {
+          const categories = (item.categories ?? [])
+            .filter((category) => category?.id && category?.name)
+            .map((category) => ({
+              id: String(category.id),
+              name: String(category.name),
+              slug: String(category.slug ?? ""),
+              url: normalizeLink(category.url, "#"),
+              type: String(category.type ?? ""),
+            }));
 
-        return {
-          id: String(item.id ?? ""),
-          title,
-          externalLink,
-          summary: String(item.summary ?? item.content ?? ""),
-          createdAt: String(item.created_at ?? ""),
-          publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
-          startedAt: String(item.started_at ?? ""),
-          endedAt: String(item.ended_at ?? ""),
-          registrationDeadline: String(item.registration_deadline ?? ""),
-          location: String(item.location ?? ""),
-          participationFee: String(item.participation_fee ?? ""),
-          expiredAt: String(item.expired_at ?? ""),
-          isFeatured: Boolean(item.is_featured),
-          isHidden: Boolean(item.is_hidden),
-          isActive: item.is_active !== false,
-          status: String(item.status ?? ""),
-          type: String(item.type ?? ""),
-          categories,
-          thumbnail: thumbnailPath
-            ? {
-                url: resolveAssetUrl(thumbnailPath),
-                alt: title,
-              }
-            : null,
-        } satisfies HomePostItem;
-      });
+          const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
+          const title = String(item.title ?? "").trim();
+          const externalLink = buildPostLink(
+            item.external_link || (title ? `/${title}` : undefined),
+            item.id ? String(item.id) : "",
+            "#",
+          );
+
+          return {
+            id: String(item.id ?? ""),
+            title,
+            externalLink,
+            summary: String(item.summary ?? item.content ?? ""),
+            createdAt: String(item.created_at ?? ""),
+            publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+            startedAt: String(item.started_at ?? ""),
+            endedAt: String(item.ended_at ?? ""),
+            registrationDeadline: String(item.registration_deadline ?? ""),
+            location: String(item.location ?? ""),
+            participationFee: String(item.participation_fee ?? ""),
+            expiredAt: String(item.expired_at ?? ""),
+            isFeatured: Boolean(item.is_featured),
+            isHidden: Boolean(item.is_hidden),
+            isActive: item.is_active !== false,
+            status: String(item.status ?? ""),
+            type: String(item.type ?? ""),
+            categories,
+            thumbnail: thumbnailPath
+              ? {
+                  url: resolveAssetUrl(thumbnailPath),
+                  alt: title,
+                }
+              : null,
+          } satisfies HomePostItem;
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.warn("[useEventCalendarPosts] CMS unavailable, falling back to mock data", error);
+        return MOCK_HOME_POSTS;
+      }
     },
     staleTime: 5 * 60 * 1000,
   });
