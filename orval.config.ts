@@ -52,7 +52,6 @@ async function fetchSwagger() {
         throw new Error(`Swagger spec tại ${url} không phải JSON hợp lệ: ${error}`);
       }
     }
-
     // 2) HTTP fetch — chỉ chấp nhận JSON, bỏ qua HTML (404, page app,...)
     if (/^https?:\/\//i.test(url)) {
       try {
