@@ -53,6 +53,7 @@ import {
 import {
   deleteApiV10LogoId,
   getApiV10Logo,
+  getApiV10LogoId,
   postApiV10Logo,
   putApiV10LogoId,
 } from "@/api/endpoints/logo";
@@ -775,8 +776,25 @@ export default function AdminBaseConfigPage() {
       const currentLogoId = editingItemId || currentLogo?.id || null;
 
       try {
-        const response = currentLogoId
-          ? await putApiV10LogoId(currentLogoId, {
+        let apiLogoId: string | null = null;
+
+        // If we have a currentLogoId, resolve it to actual UUID
+        if (currentLogoId) {
+          try {
+            const logoResponse = await getApiV10LogoId(currentLogoId);
+            const existingLogo = getEnvelopeData<Logo>(logoResponse);
+            // Only use if it's a valid UUID (32+ chars with hyphens)
+            if (existingLogo?.id && existingLogo.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+              apiLogoId = existingLogo.id;
+            }
+          } catch {
+            // currentLogoId is not a valid UUID or fetch failed, treat as create new
+            apiLogoId = null;
+          }
+        }
+
+        const response = apiLogoId
+          ? await putApiV10LogoId(apiLogoId, {
               logo_name: trimmedName,
               logo_url: selectedMedia?.url ?? null,
               file_id: itemForm.imageId,
@@ -787,11 +805,11 @@ export default function AdminBaseConfigPage() {
               file_id: itemForm.imageId,
             });
         const savedLogo =
-          getEnvelopeData<NonNullable<SiteInformationData["logo"]>>(response);
+          getEnvelopeData<Logo>(response);
         const nextConfig = cloneBaseConfigData(config);
 
         nextConfig.logo = {
-          id: savedLogo?.id ?? currentLogoId ?? createBaseConfigItemId("logo"),
+          id: savedLogo?.id ?? apiLogoId ?? createBaseConfigItemId("logo"),
           name: savedLogo?.logo_name ?? trimmedName,
           imageId: savedLogo?.file_id ?? itemForm.imageId,
           isActive: true,
