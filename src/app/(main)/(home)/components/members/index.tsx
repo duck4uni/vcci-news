@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
+import dayjs from "dayjs";
 
 const MEMBER_CONNECTION_FALLBACK_IMAGE = "/home/20-2048x1365.webp";
 const FEATURED_MEMBER_API_URL = `${links.siteURL}api/featured-members`;
@@ -50,13 +51,9 @@ function Members() {
   const [featuredMembers, setFeaturedMembers] = useState<FeaturedMemberState>({
     status: "loading",
   });
-  const featuredConnection = memberConnectionPosts[0];
+  const connectionPosts = memberConnectionPosts.slice(0, 2);
   const sectionLink =
     categoryLinks.get(categoryNames.ketNoiHoiVien.toLowerCase()) ?? "/hoi-vien/ket-noi-hoi-vien";
-  const connectionImage =
-    featuredConnection?.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE;
-  const connectionImageAlt =
-    featuredConnection?.thumbnail?.alt || featuredConnection?.title || "VCCI HCM";
   const displayMembers =
     featuredMembers.status === "ready" ? featuredMembers.rows.slice(0, 9) : [];
 
@@ -187,22 +184,113 @@ function Members() {
             </h2>
             <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />
           </div>
+
+          <Link
+            href={sectionLink}
+            className="pt-1 text-sm font-semibold text-[#24469c] transition-colors hover:text-[#1b55a1]"
+          >
+            Xem tất cả
+          </Link>
         </div>
 
-        <Link
-          href={sectionLink}
-          className="block overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
-        >
-          <div className="aspect-[1.25/1] overflow-hidden rounded-[20px]">
-            <ImageNext
-              src={connectionImage}
-              alt={connectionImageAlt}
-              width={520}
-              height={420}
-              className="h-full w-full object-cover"
-            />
-          </div>
-        </Link>
+        <div>
+          {connectionPosts.length > 0 ? (
+            <>
+              {/* Mobile + xl+: Swiper */}
+              <div className="md:hidden xl:block">
+                <Swiper
+                  modules={[Autoplay]}
+                  autoplay={{ delay: 4000, disableOnInteraction: false }}
+                  loop={connectionPosts.length > 1}
+                  slidesPerView={1}
+                  className="w-full overflow-hidden rounded-[20px]"
+                >
+                  {connectionPosts.map((item) => (
+                    <SwiperSlide key={item.id}>
+                      <Link
+                        href={item.externalLink}
+                        className="group relative block cursor-pointer overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+                      >
+                        <div className="aspect-[16/10] overflow-hidden xl:aspect-[1.25/1]">
+                          <ImageNext
+                            src={item.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE}
+                            alt={item.thumbnail?.alt || item.title}
+                            width={520}
+                            height={420}
+                            className="h-full w-full object-cover object-[center_80%]"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-linear-to-t from-[#0d2f5f]/85 via-[#0d2f5f]/30 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-4">
+                          <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.32] text-white transition-colors duration-200 group-hover:text-[#f7b500]">
+                            {item.title}
+                          </h4>
+                          <div className="mt-1.5 flex items-center gap-2">
+                            {item.categories[0]?.name && (
+                              <>
+                                <span className="text-[12px] font-medium text-[#f7b500]">
+                                  {item.categories[0].name}
+                                </span>
+                                <span className="text-[12px] text-white/50">•</span>
+                              </>
+                            )}
+                            <p className="text-[12px] font-medium text-white/78">
+                              {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+
+              {/* md to < xl: Grid 2 columns */}
+              <div className="hidden gap-4 md:grid md:grid-cols-2 xl:hidden">
+                {connectionPosts.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.externalLink}
+                    className="group relative block cursor-pointer overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+                  >
+                    <div className="aspect-[16/10] overflow-hidden">
+                      <ImageNext
+                        src={item.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE}
+                        alt={item.thumbnail?.alt || item.title}
+                        width={520}
+                        height={420}
+                        className="h-full w-full object-cover object-[center_80%]"
+                      />
+                    </div>
+                    <div className="absolute inset-0 bg-linear-to-t from-[#0d2f5f]/85 via-[#0d2f5f]/30 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-4">
+                      <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.32] text-white transition-colors duration-200 group-hover:text-[#f7b500]">
+                        {item.title}
+                      </h4>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        {item.categories[0]?.name && (
+                          <>
+                            <span className="text-[12px] font-medium text-[#f7b500]">
+                              {item.categories[0].name}
+                            </span>
+                            <span className="text-[12px] text-white/50">•</span>
+                          </>
+                        )}
+                        <p className="text-[12px] font-medium text-white/78">
+                          {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-[16px] bg-[#eef3fb] px-5 py-10 text-center text-sm text-[#7f8eab]">
+              Chưa có thông tin.
+            </div>
+          )}
+        </div>
       </aside>
     </section>
   );

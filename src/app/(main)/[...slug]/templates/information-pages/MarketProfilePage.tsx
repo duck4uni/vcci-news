@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from "react";
-import { Globe2, Newspaper, TrendingUp } from "lucide-react";
+import { FileText, Globe2, Newspaper, TrendingUp } from "lucide-react";
 import ImageNext from "@/components/shared/image-next";
 import type { DynamicPostItem } from "../types";
 
@@ -236,7 +236,9 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
           <div className="mt-7 overflow-hidden rounded-[30px] border border-[#dce7f7] bg-white shadow-[0_18px_42px_rgba(17,24,39,0.06)]">
             <div className="relative min-h-[280px] bg-[#f3f7ff] p-4 sm:p-5">
                 <div className="absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2 sm:inset-x-6 sm:top-6">
-                  {activeRegion.markets.map((item) => (
+                  {activeRegion.markets.map((item) => {
+                    const hasDoc = item.href && item.href !== "#";
+                    return (
                     <a
                       key={`${activeRegion.key}-${item.name}`}
                       href={item.href}
@@ -246,8 +248,12 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
                     >
                       <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
                       <span>{item.name}</span>
+                      {hasDoc && (
+                        <FileText className="h-3.5 w-3.5 text-[#2450b5]" />
+                      )}
                     </a>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <ImageNext

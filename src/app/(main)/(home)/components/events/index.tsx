@@ -32,13 +32,13 @@ function Events() {
         </Link>
       </div>
 
-      <div className="grid items-stretch gap-3 xl:grid-cols-[minmax(0,1.02fr)_minmax(270px,0.98fr)]">
+      <div className="grid items-stretch gap-3 md:grid-cols-[minmax(0,1.02fr)_minmax(270px,0.98fr)]">
         {featuredEvent ? (
           <Link
             href={featuredEvent.externalLink}
-            className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
+            className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
           >
-            <div className="h-[220px] overflow-hidden md:h-[235px] xl:h-[248px]">
+            <div className="relative h-[180px] overflow-hidden md:h-[220px] xl:h-[248px]">
               <ImageNext
                 src={featuredEvent.thumbnail?.url ?? "/thumbnail.png"}
                 alt={featuredEvent.thumbnail?.alt || featuredEvent.title}
@@ -46,10 +46,13 @@ function Events() {
                 height={520}
                 className="h-full w-full object-cover"
               />
+              <span className="absolute left-3 top-3 inline-flex rounded-full bg-[#f7b500] px-3 py-1 text-[12px] font-bold text-[#15357a]">
+                {featuredEvent.categories[0]?.name || "Sự kiện"}
+              </span>
             </div>
 
             <div className="flex flex-col p-3 pt-2.5">
-              <h3 className="text-[16px] font-bold uppercase leading-[1.28] text-[#22459b] line-clamp-2 md:text-[18px]">
+              <h3 className="text-[16px] font-bold uppercase leading-[1.28] text-[#22459b] line-clamp-2 transition-colors duration-200 group-hover:text-[#f7b500] md:text-[18px]">
                 {featuredEvent.title}
               </h3>
               {(() => {
@@ -85,7 +88,7 @@ function Events() {
           </Link>
         ) : (
           <div className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.12)]">
-            <div className="h-[220px] bg-[#d7e3f9] md:h-[235px] xl:h-[248px]" />
+            <div className="h-[180px] bg-[#d7e3f9] md:h-[220px] xl:h-[248px]" />
             <div className="space-y-2 p-3 pt-2.5">
               <div className="h-6 w-5/6 rounded bg-[#e7eefb]" />
               <div className="h-4 w-24 rounded bg-[#eef3fb]" />
@@ -93,13 +96,13 @@ function Events() {
           </div>
         )}
 
-        <div className="flex h-full flex-col gap-3">
+        <div className="grid h-full grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-1">
           {sideSlots.map((item, index) =>
             item ? (
               <Link
                 key={item.id}
                 href={item.externalLink}
-                className="flex flex-1 items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
+                className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
               >
                 <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[12px]">
                   <ImageNext
@@ -112,7 +115,7 @@ function Events() {
                 </div>
 
                 <div className="min-w-0">
-                  <h4 className="line-clamp-1 text-[15px] font-semibold leading-[1.35] text-white">
+                  <h4 className="line-clamp-1 text-[15px] font-semibold leading-[1.35] text-white transition-colors duration-200 group-hover:text-[#f7b500]">
                     {item.title}
                   </h4>
                   {(() => {
@@ -139,11 +142,21 @@ function Events() {
                       </p>
                     ) : null;
                   })()}
-                  <p className="mt-1 text-[12px] text-white/78">
-                    {dayjs(item.startedAt || item.publishedAt || item.createdAt).format(
-                      "DD/MM/YYYY",
+                  <div className="mt-1 flex items-center gap-2">
+                    {item.categories[0]?.name && (
+                      <span className="text-[12px] font-medium text-[#f7b500]">
+                        {item.categories[0].name}
+                      </span>
                     )}
-                  </p>
+                    {item.categories[0]?.name && (
+                      <span className="text-[12px] text-white/50">•</span>
+                    )}
+                    <p className="text-[12px] text-white/78">
+                      {dayjs(item.startedAt || item.publishedAt || item.createdAt).format(
+                        "DD/MM/YYYY",
+                      )}
+                    </p>
+                  </div>
                 </div>
               </Link>
             ) : (

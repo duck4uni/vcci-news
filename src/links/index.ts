@@ -9,20 +9,6 @@ const LEGACY_MEDIA_HOSTS = new Set([
 const normalizeOrigin = (value?: string | null) =>
   value?.trim().replace(/\/+$/, "").replace(/\/api\/v\d+\.\d+$/, "") || "";
 
-const extractUploadPath = (pathname: string) => {
-  const markers = ["/api/uploads/", "/uploads/", "/images/", "/wp-content/uploads/"];
-
-  for (const marker of markers) {
-    const index = pathname.indexOf(marker);
-    if (index >= 0) {
-      const cleanPath = pathname.slice(index).replace(/^\/api\/uploads\//, "/uploads/");
-      return cleanPath;
-    }
-  }
-
-  return null;
-};
-
 const normalizeUploadPath = (pathname: string) => {
   if (pathname.includes("/api/uploads/")) {
     return pathname.replace(/^.*\/api\/uploads\//, "/uploads/");
@@ -107,6 +93,13 @@ export const resolveUploadUrl = (value?: string | null) => {
   if (/^https?:\/\//i.test(trimmed)) {
     try {
       const url = new URL(trimmed);
+
+      // Keep URLs from current backend/frontend origins as-is
+      const currentOrigins = [backendOrigin, frontendOrigin].filter(Boolean);
+      if (currentOrigins.some(origin => url.origin === origin)) {
+        return trimmed;
+      }
+
       const normalizedPath = normalizeUploadPath(url.pathname);
 
       if (normalizedPath !== url.pathname) {
@@ -114,10 +107,8 @@ export const resolveUploadUrl = (value?: string | null) => {
       }
 
       if (LEGACY_MEDIA_HOSTS.has(url.hostname)) {
-        const uploadPath = extractUploadPath(url.pathname);
-        if (uploadPath) {
-          return backendOrigin ? `${backendOrigin}${uploadPath}` : uploadPath;
-        }
+        // Keep legacy media URLs as-is since they already have correct domain
+        return trimmed;
       }
     } catch {
       return trimmed;

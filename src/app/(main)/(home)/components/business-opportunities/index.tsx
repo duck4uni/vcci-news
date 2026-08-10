@@ -43,10 +43,10 @@ function BusinessOpportunities() {
               <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500] transition-opacity duration-200 group-hover:opacity-0" />
 
               <div className="hidden min-w-0 group-hover:block">
-                <h3 className="line-clamp-2 text-[16px] font-bold leading-[1.45] text-[#264798] md:text-[17px]">
+                <h3 className="line-clamp-2 text-[15px] font-bold leading-[1.45] text-[#264798] md:text-[16px]">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-[13px] text-[#9aa8c1]">
+                <p className="mt-1.5 text-[13px] text-[#9aa8c1]">
                   {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
                 </p>
               </div>

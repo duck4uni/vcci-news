@@ -1,61 +1,60 @@
 'use client';
 
-import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import ImageNext from "@/components/shared/image-next";
 import Link from "next/link";
 
-function QuickLinks() {
-  const { quickLinkPosts } = useHomePosts();
-  const linkSlots = Array.from({ length: 4 }, (_, index) => quickLinkPosts[index] ?? null);
-
+function Advertisements({ count = 2 }: { count?: number }) {
+  const mdCols = count >= 3 ? "md:grid-cols-3" : "md:grid-cols-2";
   return (
-    <aside className="w-full xl:grid xl:w-[32%] xl:grid-rows-[0.74fr_0.88fr] xl:gap-4">
-      <div className="rounded-[22px] border border-[#dbe4f2] bg-white p-4 shadow-[0_8px_24px_rgba(31,59,124,0.08)] xl:h-full">
-        <h2 className="client-section-title uppercase text-[#24469c]">
-          Liên kết nhanh
-        </h2>
-        <div className="mt-3 h-[5px] w-[68px] rounded-full bg-[#f7b500]" />
-
-        <div className="mt-4 space-y-3">
-          {linkSlots.map((item, index) =>
-            item ? (
-              <Link
-                key={item.id}
-                href={item.externalLink}
-                className="flex items-start gap-3 text-[15px] leading-[1.32] text-[#556684] transition-colors hover:text-[#21408f]"
-              >
-                <span className="mt-1 text-[#e2a500]">›</span>
-                <span className="line-clamp-1">{item.title}</span>
-              </Link>
-            ) : (
-              <div
-                key={`quick-link-placeholder-${index}`}
-                className="flex items-start gap-3"
-              >
-                <span className="mt-1 h-4 w-2 shrink-0 rounded bg-[#f5d774]" />
-                <span className="h-5 w-5/6 rounded bg-[#eef3fb]" />
-              </div>
-            ),
-          )}
-        </div>
-      </div>
-
+    <aside className={`flex w-full flex-col gap-4 md:grid ${mdCols} xl:grid xl:order-2 xl:w-[22%] xl:grid-cols-1 xl:gap-4 xl:self-center`}>
       <Link
         href="https://hardwaretools.com.vn/"
-        className="mt-4 block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)] xl:mt-0 xl:h-full"
+        className="block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
       >
-        <div className="aspect-[1.55/1] overflow-hidden xl:h-full xl:aspect-auto">
+        <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
           <ImageNext
             src="/home/20-2048x1365.webp"
-            alt="Liên kết nhanh"
+            alt="Quảng cáo 1"
             width={2048}
             height={1365}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover object-[center_80%]"
           />
         </div>
       </Link>
+
+      <Link
+        href="https://hardwaretools.com.vn/"
+        className="block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
+      >
+        <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
+          <ImageNext
+            src="/home/20-2048x1365.webp"
+            alt="Quảng cáo 2"
+            width={2048}
+            height={1365}
+            className="h-full w-full object-cover object-[center_80%]"
+          />
+        </div>
+      </Link>
+
+      {count >= 3 && (
+        <Link
+          href="https://hardwaretools.com.vn/"
+          className="block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
+        >
+          <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
+            <ImageNext
+              src="/home/20-2048x1365.webp"
+              alt="Quảng cáo 3"
+              width={2048}
+              height={1365}
+              className="h-full w-full object-cover object-[center_80%]"
+            />
+          </div>
+        </Link>
+      )}
     </aside>
   );
 }
 
-export default QuickLinks;
+export default Advertisements;

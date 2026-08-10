@@ -143,6 +143,28 @@ export default function AdminNewsletterEmailsPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex items-start gap-3 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-red-800">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="mt-0.5 h-5 w-5 shrink-0 text-red-500"
+        >
+          <path
+            fillRule="evenodd"
+            d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.5 5.25a.75.75 0 0 0-.75.75v6a.75.75 0 0 0 1.5 0v-6a.75.75 0 0 0-.75-.75Zm0 9a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div className="text-sm">
+          <p className="font-semibold">Cảnh báo xóa dữ liệu</p>
+          <p className="mt-0.5 text-red-700">
+            Việc xóa email sẽ làm mất dữ liệu hoàn toàn và không thể hoàn tác
+            được. Vui lòng cân nhắc thật kỹ trước khi xóa.
+          </p>
+        </div>
+      </div>
+
       <AdminTableLayout
         searchValue={search}
         searchPlaceholder="Tìm kiếm email đăng ký..."
