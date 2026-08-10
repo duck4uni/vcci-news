@@ -72,7 +72,7 @@ function BannerSlideItem({
 
   if (isPending) {
     return (
-      <Skeleton className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px]" />
+      <Skeleton className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px]" />
     );
   }
 
@@ -80,7 +80,7 @@ function BannerSlideItem({
     ? src
     : file
       ? resolveCmsFileUrl(file.path)
-      : "/img-error.png";
+      : "/thumbnail.png";
 
   return (
     <ImageNext
@@ -89,7 +89,8 @@ function BannerSlideItem({
       width={2560}
       height={720}
       sizes="100vw"
-      className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] object-cover"
+      fallback="/thumbnail.png"
+      className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] object-cover"
     />
   );
 }
@@ -119,7 +120,7 @@ const Banner = () => {
 
   if (isPending && !rows.length) {
     return (
-      <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] bg-slate-100 flex items-center justify-center">
+      <div className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] bg-slate-100 flex items-center justify-center">
         <Skeleton className="w-full h-full" />
       </div>
     );
@@ -127,7 +128,7 @@ const Banner = () => {
 
   if (!rows || rows.length === 0) {
     return (
-      <div className="w-full h-[200px] sm:h-[300px] md:h-[400px] lg:h-[500px] bg-slate-100 flex items-center justify-center">
+      <div className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] bg-slate-100 flex items-center justify-center">
         <Skeleton className="w-full h-full" />
       </div>
     );

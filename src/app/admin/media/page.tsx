@@ -33,6 +33,24 @@ import {
 
 const PAGE_SIZE = 10;
 
+function resolveApiError(error: unknown, fallback: string) {
+  if (error && typeof error === "object" && "response" in error) {
+    const axiosError = error as { response?: { status?: number; data?: { message?: string; error?: string } } };
+    const status = axiosError.response?.status;
+    const apiMessage = axiosError.response?.data?.message || axiosError.response?.data?.error;
+    if (status && apiMessage) {
+      return `[Lỗi ${status}] ${apiMessage}`;
+    }
+    if (status) {
+      return `[Lỗi ${status}] ${fallback}`;
+    }
+  }
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+}
+
 const inputClassName =
   "rounded-2xl border-[#063e8e]/15 bg-white text-gray-700 shadow-sm placeholder:text-gray-400 focus-visible:ring-[#063e8e]/20";
 
@@ -305,7 +323,7 @@ export default function AdminMediaPage() {
       setItems(result.rows);
       setTotal(result.count);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không thể tải danh sách ảnh");
+      toast.error(resolveApiError(error, "Không thể tải danh sách ảnh"));
       setItems([]);
       setTotal(0);
     } finally {
@@ -337,11 +355,11 @@ export default function AdminMediaPage() {
         file: data.file,
         original: data.name,
       });
-      toast.success("Đã tải ảnh lên");
+      toast.success("Đã tải ảnh lên thành công");
       setDialogOpen(false);
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không thể tải ảnh lên");
+      toast.error(resolveApiError(error, "Không thể tải ảnh lên"));
     } finally {
       setSaving(false);
     }
@@ -352,11 +370,11 @@ export default function AdminMediaPage() {
 
     try {
       await deleteCmsFile(deleteTarget.id);
-      toast.success("Đã xóa ảnh");
+      toast.success("Đã xóa ảnh thành công");
       setDeleteTarget(null);
       await load();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không thể xóa ảnh");
+      toast.error(resolveApiError(error, "Không thể xóa ảnh"));
     }
   };
 

@@ -326,6 +326,30 @@ export default function HeaderConfigPage() {
 
   return (
     <div className="space-y-8">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="mt-0.5 h-5 w-5 shrink-0 text-amber-500"
+        >
+          <path
+            fillRule="evenodd"
+            d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z"
+            clipRule="evenodd"
+          />
+        </svg>
+        <div className="text-sm">
+          <p className="font-semibold">Lưu ý quan trọng</p>
+          <p className="mt-0.5 text-amber-700">
+            Việc chỉnh sửa hoặc xóa danh mục sẽ ảnh hưởng trực tiếp đến cấu trúc
+            Website và có thể gây mất dữ liệu trang liên quan. Vui lòng thao tác
+            cẩn thận và kiểm tra kỹ trước khi xác nhận. Nếu phát sinh lỗi, xin vui
+            lòng báo ngay cho bên kỹ thuật để được hỗ trợ.
+          </p>
+        </div>
+      </div>
+
       <HeaderCategoryStats
         total={flatRows.length}
         root={flatRows.filter((item) => !item.parentId).length}

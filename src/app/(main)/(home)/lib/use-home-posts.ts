@@ -267,6 +267,21 @@ function createCategoryPostsQuery(categoryId: string, pageSize: string) {
   });
 }
 
+function createMultiCategoryPostsQuery(categoryIds: string[], pageSize: string) {
+  return new URLSearchParams({
+    page: "1",
+    pageSize,
+    sortField: "release_at",
+    sortOrder: "desc",
+    filters: [
+      `category.id==(${categoryIds.join("|")})`,
+      "is_hidden==false",
+      "is_active==true",
+      "type==news",
+    ].join(","),
+  });
+}
+
 function createEventCalendarQuery(currentMonth: Date) {
   // We'll filter by date on client-side for more flexibility
   return new URLSearchParams({
@@ -310,7 +325,10 @@ async function fetchHomePostsFromApi() {
   const tinVcciQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.tinVcci, "6");
   const tinKinhTeQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.tinKinhTe, "6");
   const chuyenDeQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chuyenDe, "6");
-  const eventQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.suKien, "5");
+  const eventQuery = createMultiCategoryPostsQuery(
+    [HOME_CATEGORY_IDS.suKien, HOME_CATEGORY_IDS.daoTao],
+    "5"
+  );
   const policyQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chinhSachPhapLuat, "6");
   const quickLinksQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.lienKetNhanh, "6");
   const trainingQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.daoTao, "10");
