@@ -16,6 +16,7 @@ export type HomePostItem = {
   title: string;
   externalLink: string;
   summary: string;
+  contentText: string;
   createdAt: string;
   publishedAt: string;
   startedAt: string;
@@ -111,6 +112,7 @@ const buildPost = (params: BuildPostParams): HomePostItem => ({
   title: params.title,
   externalLink: `/bai-viet/${params.id}`,
   summary: params.summary,
+  contentText: params.content,
   createdAt: params.publishedAt,
   publishedAt: params.publishedAt,
   startedAt: params.startedAt ?? "",

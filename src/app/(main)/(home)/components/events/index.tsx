@@ -1,4 +1,4 @@
-'use client';
+  'use client';
 
 import ImageNext from "@/components/shared/image-next";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
@@ -7,7 +7,8 @@ import Link from "next/link";
 
 function Events() {
   const { eventPosts, categoryLinks, categoryNames } = useHomePosts();
-  const eventItems = eventPosts;
+  // Reverse so newest event is first (featured card)
+  const eventItems = [...eventPosts].reverse();
   const [featuredEvent, ...sideEvents] = eventItems;
   const sideSlots = Array.from({ length: 4 }, (_, index) => sideEvents[index] ?? null);
   const eventsLink =
@@ -47,11 +48,35 @@ function Events() {
               />
             </div>
 
-            <div className="p-3 pt-2.5">
-              <h3 className="line-clamp-2 text-[16px] font-extrabold uppercase leading-[1.28] text-[#22459b] md:text-[18px]">
+            <div className="flex flex-col p-3 pt-2.5">
+              <h3 className="text-[16px] font-bold uppercase leading-[1.28] text-[#22459b] line-clamp-2 md:text-[18px]">
                 {featuredEvent.title}
               </h3>
-              <p className="mt-1.5 text-[13px] text-[#90a0bd]">
+              {(() => {
+                const rawText = featuredEvent.contentText || featuredEvent.summary || "";
+                const textOnly = rawText
+                  .replace(/\[caption[^\]]*\].*?\[\/caption\]/gi, "")
+                  .replace(/<figure[^>]*>.*?<\/figure>/gi, "")
+                  .replace(/<img[^>]*>/gi, "")
+                  .replace(/<[^>]+>/g, " ")
+                  .replace(/&nbsp;/g, " ")
+                  .replace(/&amp;/g, "&")
+                  .replace(/&lt;/g, "<")
+                  .replace(/&gt;/g, ">")
+                  .replace(/&quot;/g, '"')
+                  .replace(/"/g, '"')
+                  .replace(/"/g, '"')
+                  .replace(/'/g, "'")
+                  .replace(/–/g, "–")
+                  .replace(/\s+/g, " ")
+                  .trim();
+                return textOnly.length > 10 ? (
+                  <p className="mt-2 line-clamp-1 text-[13px] leading-normal text-[#5f6f86]">
+                    {textOnly.substring(0, 150)}
+                  </p>
+                ) : null;
+              })()}
+              <p className="mt-auto pt-2 text-[13px] text-[#90a0bd]">
                 {dayjs(
                   featuredEvent.startedAt || featuredEvent.publishedAt || featuredEvent.createdAt,
                 ).format("DD/MM/YYYY")}
@@ -87,9 +112,33 @@ function Events() {
                 </div>
 
                 <div className="min-w-0">
-                  <h4 className="line-clamp-2 text-[15px] font-semibold leading-[1.35] text-white">
+                  <h4 className="line-clamp-1 text-[15px] font-semibold leading-[1.35] text-white">
                     {item.title}
                   </h4>
+                  {(() => {
+                    const rawText = item.contentText || item.summary || "";
+                    const textOnly = rawText
+                      .replace(/\[caption[^\]]*\].*?\[\/caption\]/gi, "")
+                      .replace(/<figure[^>]*>.*?<\/figure>/gi, "")
+                      .replace(/<img[^>]*>/gi, "")
+                      .replace(/<[^>]+>/g, " ")
+                      .replace(/&nbsp;/g, " ")
+                      .replace(/&amp;/g, "&")
+                      .replace(/&lt;/g, "<")
+                      .replace(/&gt;/g, ">")
+                      .replace(/&quot;/g, '"')
+                      .replace(/"/g, '"')
+                      .replace(/"/g, '"')
+                      .replace(/'/g, "'")
+                      .replace(/–/g, "–")
+                      .replace(/\s+/g, " ")
+                      .trim();
+                    return textOnly.length > 10 ? (
+                      <p className="mt-1 line-clamp-1 text-[12px] text-white/78">
+                        {textOnly.substring(0, 80)}
+                      </p>
+                    ) : null;
+                  })()}
                   <p className="mt-1 text-[12px] text-white/78">
                     {dayjs(item.startedAt || item.publishedAt || item.createdAt).format(
                       "DD/MM/YYYY",

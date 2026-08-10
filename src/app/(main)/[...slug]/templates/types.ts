@@ -19,6 +19,7 @@ export type DynamicCategoryMenuItem = {
 export type DynamicPostCategoryItem = {
   id: string;
   name: string;
+  slug: string;
   url: string;
   type: string;
 };
@@ -63,6 +64,8 @@ export type DynamicPostItem = {
   ended_at: string | null;
   expired_at: string | null;
   registration_deadline: string | null;
+  location: string | null;
+  participation_fee: string | null;
   is_featured: boolean;
   is_hidden: boolean;
   is_active: boolean;

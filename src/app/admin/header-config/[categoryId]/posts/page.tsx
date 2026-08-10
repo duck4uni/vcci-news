@@ -379,12 +379,12 @@ export default function HeaderCategoryPostsPage() {
                           {
                             kind: item.is_hidden ? "hidden" : "visible",
                             label: item.is_hidden
-                              ? "B\u00e0i vi\u1ebft \u0111ang \u1ea9n"
-                              : "B\u00e0i vi\u1ebft \u0111ang hi\u1ec3n th\u1ecb",
+                              ? "Bài viết đang ẩn"
+                              : "Bài viết đang hiển thị",
                           },
                           {
                             kind: "edit",
-                            label: "Ch\u1ec9nh s\u1eeda b\u00e0i vi\u1ebft",
+                            label: "Chỉnh sửa bài viết",
                             onClick: () =>
                               router.push(
                                 `/admin/header-config/${categoryId}/posts/${item.id}?returnTo=${encodeURIComponent(listPath)}`,
@@ -392,7 +392,7 @@ export default function HeaderCategoryPostsPage() {
                           },
                           {
                             kind: "delete",
-                            label: "X\u00f3a b\u00e0i vi\u1ebft",
+                            label: "Xóa bài viết",
                             onClick: () => setDeleteTarget(item),
                           },
                         ]}
@@ -407,9 +407,8 @@ export default function HeaderCategoryPostsPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-[#063e8e]/10 px-4 py-3">
             <div className="text-sm text-gray-700">
-              {"Hi\u1ec3n th\u1ecb"} {(page - 1) * PAGE_SIZE + 1} {"\u0111\u1ebfn"}{" "}
-              {Math.min(page * PAGE_SIZE, total)} {"c\u1ee7a"}{" "}
-              {total} {"b\u00e0i vi\u1ebft"}
+              Hiển thị {(page - 1) * PAGE_SIZE + 1} đến{" "}
+              {Math.min(page * PAGE_SIZE, total)} của {total} bài viết
             </div>
             <Pagination page={page} pageCount={totalPages} onChangePage={handlePageChange} />
           </div>

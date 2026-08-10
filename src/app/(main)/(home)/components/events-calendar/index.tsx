@@ -14,6 +14,36 @@ const weekDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 const formatDateTime = (value: string) =>
   value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "Đang cập nhật";
 
+const getEventDateRange = (item: HomePostItem) => {
+  const startedAt = item.startedAt ? dayjs(item.startedAt) : null;
+  const endedAt = item.endedAt ? dayjs(item.endedAt) : null;
+
+  if (startedAt && endedAt) {
+    const dates: string[] = [];
+    let current = startedAt;
+    while (current.isBefore(endedAt) || current.isSame(endedAt, "day")) {
+      dates.push(current.format("YYYY-MM-DD"));
+      current = current.add(1, "day");
+    }
+    return dates;
+  }
+
+  if (startedAt) {
+    return [startedAt.format("YYYY-MM-DD")];
+  }
+
+  if (endedAt) {
+    return [endedAt.format("YYYY-MM-DD")];
+  }
+
+  // Fallback to registrationDeadline
+  if (item.registrationDeadline) {
+    return [dayjs(item.registrationDeadline).format("YYYY-MM-DD")];
+  }
+
+  return [];
+};
+
 const isTrainingEvent = (item: HomePostItem) =>
   item.categories.some((category) => {
     const key = `${category.name} ${category.slug} ${category.url}`.toLowerCase();
@@ -39,19 +69,19 @@ function EventsCalendar({
 }) {
   const today = dayjs();
   const todayKey = today.format("YYYY-MM-DD");
-  const todayMonth = today.month();
-  const todayYear = today.year();
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDateKey, setSelectedDateKey] = useState<string | null>(null);
   const eventCalendarQuery = useEventCalendarPosts(currentMonth);
-  const monthEvents = eventCalendarQuery.data ?? [];
+  const monthEvents = useMemo(() => eventCalendarQuery.data ?? [], [eventCalendarQuery.data]);
 
+  const viewingCurrentMonth =
+    currentMonth.getMonth() === today.month() && currentMonth.getFullYear() === today.year();
+  const defaultSelectedKey = viewingCurrentMonth ? todayKey : null;
+
+  // Initialize selectedDateKey when month changes
   useEffect(() => {
-    const viewingCurrentMonth =
-      currentMonth.getMonth() === todayMonth && currentMonth.getFullYear() === todayYear;
-
-    setSelectedDateKey(viewingCurrentMonth ? todayKey : null);
-  }, [currentMonth, todayKey, todayMonth, todayYear]);
+    setSelectedDateKey(defaultSelectedKey);
+  }, [defaultSelectedKey]);
 
   const days = useMemo(() => {
     const monthStart = startOfMonth(currentMonth);
@@ -70,16 +100,22 @@ function EventsCalendar({
     const map = new Map<string, HomePostItem[]>();
 
     monthEvents.forEach((item) => {
-      const key = dayjs(item.registrationDeadline).format("YYYY-MM-DD");
-      const existing = map.get(key) ?? [];
-      existing.push(item);
-      map.set(
-        key,
-        existing.sort(
-          (left, right) =>
-            dayjs(left.registrationDeadline).valueOf() - dayjs(right.registrationDeadline).valueOf(),
-        ),
-      );
+      const eventDates = getEventDateRange(item);
+
+      eventDates.forEach((dateKey) => {
+        const existing = map.get(dateKey) ?? [];
+        if (!existing.some((e) => e.id === item.id)) {
+          existing.push(item);
+        }
+        map.set(
+          dateKey,
+          existing.sort((left, right) => {
+            const leftStart = dayjs(left.startedAt || left.endedAt || left.registrationDeadline).valueOf();
+            const rightStart = dayjs(right.startedAt || right.endedAt || right.registrationDeadline).valueOf();
+            return leftStart - rightStart;
+          }),
+        );
+      });
     });
 
     return map;
@@ -242,7 +278,7 @@ function EventsCalendar({
                                 </p>
                                 <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6f84aa]">
                                   <span>Hạn đăng ký: {formatDateTime(item.registrationDeadline)}</span>
-                                  <span>Chi phí: {item.participationFee || "Đang cập nhật"}</span>
+                                  <span>Chi phí: {item.participationFee || "Miễn phí"}</span>
                                 </div>
                                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-[#6f84aa]">
                                   <span>Địa điểm: {item.location || "Đang cập nhật"}</span>
@@ -314,7 +350,7 @@ function EventsCalendar({
                     </Link>
                     <p>
                       Hạn đăng ký: {formatDateTime(item.registrationDeadline)} · Chi phí:{" "}
-                      {item.participationFee || "Đang cập nhật"}
+                      {item.participationFee || "Miễn phí"}
                     </p>
                     <p>Địa điểm: {item.location || "Đang cập nhật"}</p>
                   </div>

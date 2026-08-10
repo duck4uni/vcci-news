@@ -131,7 +131,7 @@ export default function MemberBenefitsPage() {
           <div>
             <div className="flex items-center gap-2 text-[#f5c21b]">
               <Phone className="h-4 w-4" />
-              <span className="font-semibold">Phòng Hội viên và Đào tạo</span>
+              <span className="font-semibold">Phòng Hội viên Đào tạo và Truyền thông</span>
             </div>
             <p className="mt-1">C. Thanh Thủy</p>
             <p>ĐT: 0903 909 796</p>
@@ -160,9 +160,7 @@ export default function MemberBenefitsPage() {
               <span className="font-semibold">Địa chỉ</span>
             </div>
             <p className="mt-1">
-              P. 306, Lầu 3, Tòa nhà VCCI, 171 Võ Thị Sáu,
-              <br />
-              Phường Xuân Hoà, TP. HCM
+              P. 306, Lầu 3, Tòa nhà VCCI, 171 Võ Thị Sáu, Phường Xuân Hoà, TP. HCM
             </p>
           </div>
         </div>

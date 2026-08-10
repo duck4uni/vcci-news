@@ -20,6 +20,7 @@ type CategoryListResponse = {
 type RawPostCategory = {
   id?: string | null;
   name?: string | null;
+  slug?: string | null;
   url?: string | null;
   type?: string | null;
 };
@@ -56,6 +57,8 @@ type RawPostItem = {
   ended_at?: string | null;
   expired_at?: string | null;
   registration_deadline?: string | null;
+  location?: string | null;
+  participation_fee?: string | null;
   is_featured?: boolean | null;
   is_hidden?: boolean | null;
   is_active?: boolean | null;
@@ -216,6 +219,8 @@ const mapPost = (item: RawPostItem): DynamicPostItem => ({
   ended_at: item.ended_at ?? null,
   expired_at: item.expired_at ?? null,
   registration_deadline: item.registration_deadline ?? null,
+  location: item.location ?? null,
+  participation_fee: item.participation_fee ?? null,
   is_featured: Boolean(item.is_featured),
   is_hidden: Boolean(item.is_hidden),
   is_active: item.is_active !== false,
@@ -227,6 +232,7 @@ const mapPost = (item: RawPostItem): DynamicPostItem => ({
     .map((category) => ({
       id: String(category.id),
       name: String(category.name),
+      slug: String(category.slug ?? ""),
       url: normalizePath(category.url),
       type: String(category.type ?? ""),
     })),

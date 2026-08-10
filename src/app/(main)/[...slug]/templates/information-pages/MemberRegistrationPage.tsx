@@ -87,7 +87,7 @@ export default function MemberRegistrationPage({ post }: MemberRegistrationPageP
             <div className="mt-4 space-y-1 text-[18px] leading-9 text-[#1f2a44]">
               <p className="font-semibold">Phòng Hội viên Đào tạo và Truyền thông:</p>
               <p>C. Thúy – ĐD: 0903 909 756</p>
-              <p>Email: luuthanhthuy72@yahoo.com; hoivien@vcci-hcm.org.vn;</p>
+              <p>Email: luuthanhthuy72@yahoo.com; hoivien@vcci-hcm.org.vn</p>
               <p>Điện thoại: 028. 3932 0611 – Fax: 028. 3932 5472</p>
               <p>Địa chỉ: P. 306, Lầu 3, Tòa nhà VCCI, 171 Võ Thị Sáu, Phường Xuân Hòa, TP. Hồ Chí Minh</p>
             </div>
