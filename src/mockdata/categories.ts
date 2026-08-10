@@ -3,9 +3,9 @@ import type { Category } from "@/api/models/category";
 export const categoryFallbackRows: Category[] = [
   {
     "id": "450bed53-0e17-4f0a-8a02-17fa657ab5b0",
-    "name": "Điểm cấp và cấp GCN và xác nhận CTTM",
-    "slug": "diem-cap-va-cap-gcn-va-xac-nhan-cttm",
-    "url": "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm",
+    "name": "Điểm cấp và thời gian cấp GCN và xác nhận CTTM",
+    "slug": "diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm",
+    "url": "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm",
     "created_at": "2026-05-19T07:10:47.564Z",
     "created_by": "aff87dea-73a3-4076-b1be-6b0b7b59a21d",
     "updated_at": "2026-05-19T07:10:47.564Z",
@@ -241,9 +241,9 @@ export const categoryFallbackRows: Category[] = [
   },
   {
     "id": "69b4c7e7-28ea-41f2-97f4-988fe702a8a3",
-    "name": "Pháp chế, cấp giấy chứng nhận và xác nhận chứng từ thương mại",
-    "slug": "phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai",
-    "url": "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai",
+    "name": "Pháp chế và CTTM",
+    "slug": "phap-che-va-cttm",
+    "url": "/phap-che-va-cttm",
     "created_at": "2026-05-14T04:54:26.127Z",
     "created_by": null,
     "updated_at": "2026-05-15T08:29:25.863Z",

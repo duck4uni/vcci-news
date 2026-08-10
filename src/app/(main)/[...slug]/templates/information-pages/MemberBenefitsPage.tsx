@@ -162,7 +162,7 @@ export default function MemberBenefitsPage() {
             <p className="mt-1">
               P. 306, Lầu 3, Tòa nhà VCCI, 171 Võ Thị Sáu,
               <br />
-              Quận 3, TP. Hồ Chí Minh
+              Phường Xuân Hoà, TP. HCM
             </p>
           </div>
         </div>

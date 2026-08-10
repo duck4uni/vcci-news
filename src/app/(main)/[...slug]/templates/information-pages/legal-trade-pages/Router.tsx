@@ -74,10 +74,15 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
   if (
     slug === "diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
     slug === "diem-cap-va-thoi-gian-cap-co" ||
+    slug === "diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
     externalLink ===
       "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
+    externalLink ===
+      "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
     url ===
       "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
+    url ===
+      "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
     url === "/xuat-xu-hang-hoa/diem-cap-va-thoi-gian-cap-co"
   ) {
     return "locations" as const;
