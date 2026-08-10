@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from "react";
-import { ArrowDownToLine, Globe2, MapPinned, Newspaper, TrendingUp } from "lucide-react";
+import { Globe2, Newspaper, TrendingUp } from "lucide-react";
 import ImageNext from "@/components/shared/image-next";
 import type { DynamicPostItem } from "../types";
 
@@ -35,14 +35,14 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "dong-nam-a",
     label: "Đông Nam Á",
     title: "Đông Nam Á",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Dong-Nam-A-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Dong-Nam-A-scaled.jpg",
     imageAlt: "Bản đồ thị trường Đông Nam Á",
     description:
       "Khu vực trọng điểm dành cho doanh nghiệp theo dõi cơ hội thương mại, xuất nhập khẩu, chuỗi cung ứng và kết nối đối tác trong ASEAN.",
     markets: [
       {
         name: "Việt Nam",
-        href: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/VN-factsheet.pdf",
+        href: "/ho-so-thi-truong/tai-lieu/VN-factsheet.pdf",
         tone: "bg-[#da251d]",
       },
       { name: "Lào", href: "#", tone: "bg-[#002868]" },
@@ -52,7 +52,7 @@ const REGION_CONFIGS: RegionConfig[] = [
       { name: "Malaysia", href: "#", tone: "bg-[#c00]" },
       {
         name: "Singapore",
-        href: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/SINGAPORE-2020.pdf",
+        href: "/ho-so-thi-truong/tai-lieu/SINGAPORE-2020.pdf",
         tone: "bg-[#df0000]",
       },
       { name: "Philippines", href: "#", tone: "bg-[#0038a8]" },
@@ -61,7 +61,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     ],
     featuredDocument: {
       title: "Factsheet Việt Nam",
-      href: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/VN-factsheet.pdf",
+      href: "/ho-so-thi-truong/tai-lieu/VN-factsheet.pdf",
       description: "Mở tài liệu tham khảo",
     },
   },
@@ -69,7 +69,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "dong-bac-a",
     label: "Đông Bắc Á",
     title: "Đông Bắc Á",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Dong-Bac-A-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Dong-Bac-A-scaled.jpg",
     imageAlt: "Khu vực Đông Bắc Á",
     description:
       "Nhóm thị trường phù hợp để doanh nghiệp tiếp cận chuỗi giá trị công nghiệp, công nghệ, logistics và thương mại khu vực Đông Bắc Á.",
@@ -85,7 +85,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "nam-a",
     label: "Nam Á",
     title: "Nam Á",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/d60bf053ad586e063749-scaled.jpg",
+    image: "/ho-so-thi-truong/d60bf053ad586e063749-scaled.jpg",
     imageAlt: "Khu vực Nam Á",
     description:
       "Không gian thị trường giàu tiềm năng với dân số lớn, tốc độ đô thị hóa nhanh và nhu cầu hợp tác thương mại đa ngành.",
@@ -101,7 +101,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "tay-a",
     label: "Tây Á",
     title: "Tây Á",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/33a2e0fdbdf67ea827e7-scaled.jpg",
+    image: "/ho-so-thi-truong/33a2e0fdbdf67ea827e7-scaled.jpg",
     imageAlt: "Khu vực Tây Á",
     description:
       "Thị trường phù hợp với định hướng mở rộng đối tác năng lượng, xây dựng, thương mại dịch vụ và kết nối trung chuyển.",
@@ -117,7 +117,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "bac-my",
     label: "Bắc Mỹ",
     title: "Bắc Mỹ",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Bac-My-1-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Bac-My-1-scaled.jpg",
     imageAlt: "Khu vực Bắc Mỹ",
     description:
       "Thị trường quy mô lớn, yêu cầu cao về tiêu chuẩn, truy xuất nguồn gốc và chiến lược tiếp cận bài bản.",
@@ -131,7 +131,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "nam-my",
     label: "Nam Mỹ",
     title: "Nam Mỹ",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Nam-My-1-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Nam-My-1-scaled.jpg",
     imageAlt: "Khu vực Nam Mỹ",
     description:
       "Nhóm thị trường phù hợp để theo dõi nhu cầu hàng tiêu dùng, nông sản, logistics biển và liên kết chuỗi cung ứng mới.",
@@ -146,7 +146,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "chau-au",
     label: "Châu Âu",
     title: "Châu Âu",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Chau-Au-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Chau-Au-scaled.jpg",
     imageAlt: "Khu vực Châu Âu",
     description:
       "Khu vực trọng tâm cho doanh nghiệp quan tâm đến EVFTA, tiêu chuẩn xanh, phát triển bền vững và thị trường giá trị cao.",
@@ -162,7 +162,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "chau-uc",
     label: "Châu Úc",
     title: "Châu Úc",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Chau-Uc-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Chau-Uc-scaled.jpg",
     imageAlt: "Khu vực Châu Úc",
     description:
       "Phù hợp với chiến lược tìm hiểu nhu cầu nhập khẩu ổn định, tiêu chuẩn chất lượng cao và hợp tác thương mại dài hạn.",
@@ -176,7 +176,7 @@ const REGION_CONFIGS: RegionConfig[] = [
     key: "chau-phi",
     label: "Châu Phi",
     title: "Châu Phi",
-    image: "https://vcci-hcm.org.vn/wp-content/uploads/2022/06/Chau-Phi-1-scaled.jpg",
+    image: "/ho-so-thi-truong/ban-do/Chau-Phi-1-scaled.jpg",
     imageAlt: "Khu vực Châu Phi",
     description:
       "Khu vực giàu dư địa tiếp cận thị trường mới cho hàng tiêu dùng, nông sản, vật liệu và hợp tác thương mại song phương.",

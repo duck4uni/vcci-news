@@ -2,7 +2,6 @@
 
 import ImageNext from "@/components/shared/image-next";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
-import stripImagesAndHtml from "@/helpers/stripImageAndHtml";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useMemo, useState } from "react";
@@ -76,7 +75,7 @@ function News() {
               href={featuredArticle.externalLink}
               className="block h-full overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
             >
-              <div className="aspect-[1.75/1] overflow-hidden">
+              <div className="aspect-[1.4/1] overflow-hidden">
                 <ImageNext
                   src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
                   alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
@@ -95,8 +94,27 @@ function News() {
                   {featuredArticle.title}
                 </h3>
 
-                <p className="line-clamp-2 text-[13px] leading-[1.45] text-[#6c7b96]">
-                  {stripImagesAndHtml(featuredArticle.summary)}
+                <p className="line-clamp-3 text-[13px] leading-[1.45] text-[#6c7b96]">
+                  {(() => {
+                    const rawText = featuredArticle.contentText || featuredArticle.summary || "";
+                    const textOnly = rawText
+                      .replace(/\[caption[^\]]*\].*?\[\/caption\]/gi, "")
+                      .replace(/<figure[^>]*>.*?<\/figure>/gi, "")
+                      .replace(/<img[^>]*>/gi, "")
+                      .replace(/<[^>]+>/g, " ")
+                      .replace(/&nbsp;/g, " ")
+                      .replace(/&amp;/g, "&")
+                      .replace(/&lt;/g, "<")
+                      .replace(/&gt;/g, ">")
+                      .replace(/&quot;/g, '"')
+                      .replace(/"/g, '"')
+                      .replace(/"/g, '"')
+                      .replace(/'/g, "'")
+                      .replace(/–/g, "–")
+                      .replace(/\s+/g, " ")
+                      .trim();
+                    return textOnly || "-";
+                  })()}
                 </p>
 
                 <p className="text-[14px] text-[#8a9bb6]">
@@ -129,9 +147,33 @@ function News() {
                   href={news.externalLink}
                   className="block rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)] xl:flex-1"
                 >
-                  <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.28] text-[#21408f]">
+                  <h4 className="line-clamp-1 text-[15px] font-bold leading-[1.28] text-[#21408f]">
                     {news.title}
                   </h4>
+                  {(() => {
+                    const rawText = news.contentText || news.summary || "";
+                    const textOnly = rawText
+                      .replace(/\[caption[^\]]*\].*?\[\/caption\]/gi, "")
+                      .replace(/<figure[^>]*>.*?<\/figure>/gi, "")
+                      .replace(/<img[^>]*>/gi, "")
+                      .replace(/<[^>]+>/g, " ")
+                      .replace(/&nbsp;/g, " ")
+                      .replace(/&amp;/g, "&")
+                      .replace(/&lt;/g, "<")
+                      .replace(/&gt;/g, ">")
+                      .replace(/&quot;/g, '"')
+                      .replace(/"/g, '"')
+                      .replace(/"/g, '"')
+                      .replace(/'/g, "'")
+                      .replace(/–/g, "–")
+                      .replace(/\s+/g, " ")
+                      .trim();
+                    return textOnly.length > 10 ? (
+                      <p className="mt-1.5 line-clamp-2 text-[13px] leading-normal text-[#6c7b96]">
+                        {textOnly}
+                      </p>
+                    ) : null;
+                  })()}
                   <p className="mt-1 text-[13px] text-[#8a9bb6]">
                     {dayjs(news.publishedAt || news.createdAt).format("DD/MM/YYYY")}
                   </p>
