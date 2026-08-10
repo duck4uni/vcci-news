@@ -19,7 +19,12 @@ const MenuItem = ({ title, link, items }: MenuItemProps) => {
   const normalizedLink = link && link !== '#' ? link : '/'
   const hasChildren = items.length > 0
   const isRoot = normalizedLink === '/'
-  const isActive = isRoot ? pathname === '/' : pathname === normalizedLink || pathname.startsWith(normalizedLink)
+  const isChildActive = items.some((item) => pathname === item.link || pathname.startsWith(item.link))
+  const isActive = isRoot
+    ? pathname === '/'
+    : pathname === normalizedLink ||
+      pathname.startsWith(normalizedLink) ||
+      isChildActive
   const linkId = useMemo(() => `header-trigger-${title}`, [title])
 
   const hoverCardRef = useCallback(

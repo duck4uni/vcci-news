@@ -10,6 +10,7 @@ import ImageNext from "@/components/shared/image-next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ListCategory from "@/components/base/list-category";
+import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
 import {
   buildDynamicPostHref,
   buildDynamicCategoryMenu,
@@ -36,6 +37,15 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
   const [page, setPage] = useState(initialPage);
   const pageSize = 8;
   const keyword = submitSearch.trim();
+
+  // Auto-search with debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSubmitSearch(searchInput);
+      setPage(1);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParamsString);
@@ -140,7 +150,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
 
             <aside className="contents xl:order-2 xl:block xl:w-[320px] xl:space-y-5 xl:pt-0">
               <form
-                className="order-1 rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)] xl:order-none"
+                className="order-1 rounded-[22px] border border-[#edf1f5] bg-white p-5 shadow-[0_14px_34px_rgba(17,24,39,0.05)] xl:order-0"
                 onSubmit={(event) => {
                   event.preventDefault();
                   setPage(1);
@@ -175,6 +185,8 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                   </Button>
                 </div>
               </form>
+
+              <EventsCalendar compact className="xl:w-full xl:min-w-0" />
 
               <div className="order-3 overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)] xl:order-0">
                 <div className="relative min-h-[390px] bg-[#1f334f]">

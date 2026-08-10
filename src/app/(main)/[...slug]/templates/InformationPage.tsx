@@ -7,7 +7,7 @@ import {
   ABOUT_VCCI_HCM_SLUG,
   AboutVcciHcmPage,
   DefaultInformationPage,
-  LEGAL_TRADE_PAGE_SLUG,
+  LEGAL_TRADE_PAGE_SLUGS,
   LegalTradePages,
   MARKET_PROFILE_PAGE_SLUG,
   MarketProfilePage,
@@ -32,6 +32,7 @@ const LEGAL_TRADE_CHILD_SLUGS = new Set([
   "bieu-mau-co-va-cach-khai",
   "phi-va-le-phi-cap-co",
   "diem-cap-va-thoi-gian-cap-co",
+  "diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm",
   "thong-tin-lien-he-co",
 ]);
 
@@ -77,15 +78,16 @@ function resolveInformationVariant(post: DynamicPostItem, category: DynamicCateg
   }
 
   if (
-    category.slug === LEGAL_TRADE_PAGE_SLUG ||
+    LEGAL_TRADE_PAGE_SLUGS.has(category.slug) ||
     category.parent_id === LEGAL_TRADE_CATEGORY_ID ||
     LEGAL_TRADE_CHILD_SLUGS.has(category.slug) ||
-    post.slug === LEGAL_TRADE_PAGE_SLUG ||
+    LEGAL_TRADE_PAGE_SLUGS.has(post.slug) ||
     LEGAL_TRADE_CHILD_SLUGS.has(post.slug) ||
     post.categories.some((item) => item.id === LEGAL_TRADE_CATEGORY_ID) ||
     post.categories.some(
       (item) =>
         item.url === "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai" ||
+        item.url === "/phap-che-va-cttm" ||
         item.url.startsWith("/xuat-xu-hang-hoa/"),
     )
   ) {
