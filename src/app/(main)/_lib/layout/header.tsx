@@ -6,7 +6,7 @@ import { Facebook, Linkedin, Menu, Twitter, X, Youtube } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
-import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
+const fallbackLogo = "/logo.png";
 import { useGetApiV10Logo } from "@/api/endpoints/logo";
 import { getApiV10SiteInformation } from "@/api/endpoints/site-information";
 import { resolveUploadUrl } from "@/links";
@@ -333,9 +333,14 @@ function Header() {
               width={108}
               height={40}
               className="h-auto max-h-10 w-[108px] object-contain"
-              src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : logo}
+              src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : fallbackLogo}
               alt={currentLogo?.logo_name || "VCCI-HCM"}
               priority
+              unoptimized={Boolean(currentLogo?.logo_url)}
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.src !== fallbackLogo) img.src = fallbackLogo;
+              }}
             />
           </Link>
 
@@ -387,9 +392,14 @@ function Header() {
                 width={108}
                 height={40}
                 className="h-auto max-h-10 w-[108px] object-contain"
-                src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : logo}
+                src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : fallbackLogo}
                 alt={currentLogo?.logo_name || "VCCI-HCM"}
                 priority
+                unoptimized={Boolean(currentLogo?.logo_url)}
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  if (img.src !== fallbackLogo) img.src = fallbackLogo;
+                }}
               />
             </Link>
             <button
