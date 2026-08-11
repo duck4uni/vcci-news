@@ -1297,6 +1297,17 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách permission strings (vd: 'posts:read', 'posts:write')",
+            "example": [
+              "posts:read",
+              "posts:write"
+            ]
           }
         },
         "required": [
@@ -2100,6 +2111,200 @@
           "name",
           "url"
         ]
+      },
+      "AdvertisementFile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "path": {
+            "type": "string",
+            "example": "advertisements/qc-2.gif"
+          },
+          "mime": {
+            "type": "string",
+            "example": "image/gif"
+          }
+        }
+      },
+      "Advertisement": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "file_id",
+          "link",
+          "type",
+          "status",
+          "sort_order"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Quảng cáo sidebar 1"
+          },
+          "file_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b1c1d1-0003-4000-8000-000000000001"
+          },
+          "file": {
+            "$ref": "#/components/schemas/AdvertisementFile",
+            "nullable": true
+          },
+          "alt": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "example": "Quảng cáo 1"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "https://hardwaretools.com.vn/"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "square",
+              "horizontal"
+            ],
+            "example": "square"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "example": "ACTIVE"
+          },
+          "sort_order": {
+            "type": "integer",
+            "example": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "updated_by": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        }
+      },
+      "AdvertisementCreate": {
+        "type": "object",
+        "required": [
+          "name",
+          "file_id",
+          "link"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "example": "Quảng cáo sidebar 1"
+          },
+          "file_id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "a1b1c1d1-0003-4000-8000-000000000001"
+          },
+          "alt": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true,
+            "example": "Quảng cáo 1"
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 500,
+            "example": "https://hardwaretools.com.vn/"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "square",
+              "horizontal"
+            ],
+            "example": "square"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ],
+            "example": "ACTIVE"
+          },
+          "sort_order": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "AdvertisementUpdate": {
+        "type": "object",
+        "minProperties": 1,
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "file_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "alt": {
+            "type": "string",
+            "maxLength": 255,
+            "nullable": true
+          },
+          "link": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "square",
+              "horizontal"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "AdvertisementMutate": {
+        "$ref": "#/components/schemas/AdvertisementCreate"
       },
       "LoginRequest": {
         "type": "object",
@@ -2999,6 +3204,17 @@
             "maxLength": 500,
             "nullable": true,
             "example": "Quản trị viên hệ thống"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách permission strings",
+            "example": [
+              "posts:read",
+              "posts:write"
+            ]
           }
         }
       },
@@ -3016,6 +3232,18 @@
             "maxLength": 500,
             "nullable": true,
             "example": "Quản trị viên cấp cao"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Danh sách permission strings (ghi đà toàn bộ permissions hiện tại)",
+            "example": [
+              "posts:read",
+              "posts:write",
+              "posts:delete"
+            ]
           }
         }
       },
@@ -4915,6 +5143,205 @@
         }
       }
     },
+    "/api/v1.0/user/{id}/status": {
+      "patch": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Toggle user status (enable/disable)",
+        "description": "Bật hoặc tắt trạng thái tài khoản user. Chỉ users:write mới có quyền.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "inactive"
+                    ],
+                    "description": "Trạng thái mới của user"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Status updated successfully"
+          },
+          "403": {
+            "description": "Cannot change your own status"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/api/v1.0/user/{id}/role": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Assign role to user",
+        "description": "Assign one or more roles to a user. Replaces existing non-primary roles.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Role ID to assign"
+                  },
+                  "is_primary": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Set as primary role"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role assigned successfully"
+          },
+          "404": {
+            "description": "User or role not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Remove role from user",
+        "description": "Remove a role from a user",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "role_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Role ID to remove"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role removed successfully"
+          },
+          "404": {
+            "description": "User or role assignment not found"
+          }
+        }
+      }
+    },
+    "/api/v1.0/user/{id}/reset-password": {
+      "post": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Reset user password to default",
+        "description": "Reset password của user về mật khẩu mặc định vcci@2026. Chỉ users:write mới có quyền.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "User ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "403": {
+            "description": "Cannot reset your own password"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
     "/api/v1.0/term/{id}": {
       "get": {
         "tags": [
@@ -5957,6 +6384,38 @@
       }
     },
     "/api/v1.0/role/{id}": {
+      "get": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Get role by ID",
+        "description": "Retrieve a single role by its ID, including users assigned to this role",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Role ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved role"
+          },
+          "404": {
+            "description": "Role not found"
+          }
+        }
+      },
       "put": {
         "tags": [
           "Role"
@@ -5992,29 +6451,45 @@
         },
         "responses": {
           "200": {
-            "description": "Role updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "allOf": [
-                    {
-                      "$ref": "#/components/schemas/ApiResponse"
-                    },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "responseData": {
-                          "$ref": "#/components/schemas/Role"
-                        }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
+            "description": "Role updated successfully"
           },
           "400": {
             "description": "Invalid input data"
+          },
+          "404": {
+            "description": "Role not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Delete role by ID",
+        "description": "Delete a single role by its ID. Cannot delete system roles (system_admin).",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Role ID",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Role deleted successfully"
+          },
+          "400": {
+            "description": "Cannot delete system role"
           },
           "404": {
             "description": "Role not found"
@@ -6029,6 +6504,11 @@
         ],
         "summary": "Get all roles",
         "description": "Retrieve a list of roles with pagination, filtering and sorting",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/filters"
@@ -6056,6 +6536,47 @@
                 }
               }
             }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Role"
+        ],
+        "summary": "Create a new role",
+        "description": "Create a new role with permissions",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Role created successfully"
           }
         }
       }
@@ -7553,13 +8074,37 @@
         }
       }
     },
+    "/api/v1.0/permission/sync": {
+      "post": {
+        "tags": [
+          "Permission"
+        ],
+        "summary": "Sync permissions from config",
+        "description": "Sync permissions từ file config vào database. Chỉ system_admin mới có quyền.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Permissions synced successfully"
+          }
+        }
+      }
+    },
     "/api/v1.0/permission": {
       "get": {
         "tags": [
           "Permission"
         ],
         "summary": "Get all permissions",
-        "description": "Retrieve a list of permissions with pagination, filtering and sorting",
+        "description": "Retrieve a list of permissions with pagination, filtering and sorting. Also returns structured permissions grouped by resource.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
         "parameters": [
           {
             "$ref": "#/components/parameters/filters"
@@ -7702,6 +8247,183 @@
           },
           "404": {
             "description": "No permissions found to delete"
+          }
+        }
+      }
+    },
+    "/api/v1.0/password-reset-request": {
+      "get": {
+        "tags": [
+          "PasswordResetRequest"
+        ],
+        "summary": "List password reset requests (admin)",
+        "description": "Lấy danh sách yêu cầu reset mật khẩu. Yêu cầu quyền users:write.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "pageSize",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "RESOLVED",
+                "REJECTED",
+                "all"
+              ],
+              "default": "all"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortField",
+            "schema": {
+              "type": "string",
+              "default": "created_at"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sortOrder",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ],
+              "default": "desc"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of password reset requests"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/v1.0/password-reset-request/{id}/resolve": {
+      "post": {
+        "tags": [
+          "PasswordResetRequest"
+        ],
+        "summary": "Resolve a password reset request (reset password)",
+        "description": "Admin xử lý yêu cầu reset mật khẩu.\n- Reset password cho user về mật khẩu mặc định (vcci@2026) hoặc mật khẩu tùy chỉnh.\n- Set must_change_password=true để user phải đổi mật khẩu khi login.\n- Đánh dấu request là RESOLVED.\n",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "newPassword": {
+                    "type": "string",
+                    "description": "Mật khẩu mới (nếu bỏ trống sẽ dùng vcci@2026)"
+                  },
+                  "resolveNote": {
+                    "type": "string",
+                    "description": "Ghi chú của admin"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Password reset successfully"
+          },
+          "404": {
+            "description": "Request not found"
+          }
+        }
+      }
+    },
+    "/api/v1.0/password-reset-request/{id}/reject": {
+      "post": {
+        "tags": [
+          "PasswordResetRequest"
+        ],
+        "summary": "Reject a password reset request",
+        "description": "Admin từ chối yêu cầu reset mật khẩu.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "resolveNote": {
+                    "type": "string",
+                    "description": "Lý do từ chối"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Request rejected"
+          },
+          "404": {
+            "description": "Request not found"
           }
         }
       }
@@ -10466,6 +11188,363 @@
           },
           "429": {
             "description": "Too many requests"
+          }
+        }
+      }
+    },
+    "/api/v1.0/auth/forgot-password/request": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Forgot password - submit reset request to admin",
+        "description": "User quên mật khẩu gửi yêu cầu reset về admin.\nAdmin sẽ xem và xử lý (reset password) thay vì gửi OTP qua email.\nAnti-enumeration: luôn trả 200 kể cả khi email không tồn tại.\n",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "email"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "note": {
+                    "type": "string",
+                    "description": "Ghi chú thêm từ user (tên, lý do, etc.)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Yêu cầu đã được ghi nhận"
+          },
+          "400": {
+            "description": "Email không hợp lệ"
+          },
+          "429": {
+            "description": "Too many requests"
+          }
+        }
+      }
+    },
+    "/api/v1.0/advertisement/{id}": {
+      "get": {
+        "tags": [
+          "Advertisement"
+        ],
+        "summary": "Get advertisement by ID",
+        "description": "Retrieve a single advertisement record by its ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Advertisement ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Advertisement retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "responseData": {
+                          "$ref": "#/components/schemas/Advertisement"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Advertisement not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Advertisement"
+        ],
+        "summary": "Update advertisement by ID",
+        "description": "Update a single advertisement record by its ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Advertisement ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvertisementUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Advertisement updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "responseData": {
+                          "$ref": "#/components/schemas/Advertisement"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Advertisement not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Advertisement"
+        ],
+        "summary": "Delete advertisement by ID",
+        "description": "Delete a single advertisement record by its ID",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "Advertisement ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Advertisement deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "responseData": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Advertisement not found"
+          }
+        }
+      }
+    },
+    "/api/v1.0/advertisement/public": {
+      "get": {
+        "tags": [
+          "Advertisement"
+        ],
+        "summary": "Get active advertisements (public)",
+        "description": "Retrieve active advertisements filtered by type, sorted by sort_order. No auth required. Includes file info (path, mime).",
+        "parameters": [
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "description": "Advertisement type (square or horizontal). If omitted, returns all active.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "square",
+                "horizontal"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "Max number of records to return (default 20)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved active advertisements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "responseData": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Advertisement"
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1.0/advertisement": {
+      "get": {
+        "tags": [
+          "Advertisement"
+        ],
+        "summary": "Get all advertisements",
+        "description": "Retrieve a list of advertisements with pagination, filtering and sorting",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/filters"
+          },
+          {
+            "$ref": "#/components/parameters/sortField"
+          },
+          {
+            "$ref": "#/components/parameters/sortOrder"
+          },
+          {
+            "$ref": "#/components/parameters/page"
+          },
+          {
+            "$ref": "#/components/parameters/pageSize"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved advertisements",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/responseGetAllData"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Advertisement"
+        ],
+        "summary": "Create an advertisement",
+        "description": "Create a new advertisement record",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvertisementCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Advertisement created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/ApiResponse"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "responseData": {
+                          "$ref": "#/components/schemas/Advertisement"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            }
           }
         }
       }
