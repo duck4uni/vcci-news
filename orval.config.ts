@@ -28,8 +28,15 @@ const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
 const siteURL = process.env.NEXT_PUBLIC_FRONTEND_HOST;
 
 const swaggerCandidates = [
+  // 1) Explicit override (highest priority)
   process.env.ORVAL_SWAGGER_URL,
+  // 2) Sibling backend repo (local dev with both repos checked out)
   path.resolve(process.cwd(), "..", "vietprodev-cms-backend", "storage", "swagger", "swagger-output.json"),
+  // 3) Committed spec in repo — deterministic source for CI builds.
+  //    Must be tried BEFORE HTTP URLs: production backend doesn't serve swagger
+  //    and ${backendHost}/swagger/swagger-output.json may return a stale/wrong spec.
+  path.resolve(process.cwd(), "openapi", "swagger-output.json"),
+  // 4) HTTP fallbacks (last resort)
   `${backendHost}/swagger-output.json`,
   `${backendHost}/swagger/swagger-output.json`,
   `${backendHost}/swagger.json`,
