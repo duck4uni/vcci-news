@@ -374,7 +374,90 @@ export const usePutApiV10PermissionId = <TError = ErrorType<void>,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Retrieve a list of permissions with pagination, filtering and sorting
+ * Sync permissions từ file config vào database. Chỉ system_admin mới có quyền.
+ * @summary Sync permissions from config
+ */
+export type postApiV10PermissionSyncResponse200 = {
+  data: void
+  status: 200
+}
+    
+export type postApiV10PermissionSyncResponseSuccess = (postApiV10PermissionSyncResponse200) & {
+  headers: Headers;
+};
+;
+
+export type postApiV10PermissionSyncResponse = (postApiV10PermissionSyncResponseSuccess)
+
+export const getPostApiV10PermissionSyncUrl = () => {
+
+
+  
+
+  return `/api/v1.0/permission/sync`
+}
+
+export const postApiV10PermissionSync = async ( options?: RequestInit): Promise<postApiV10PermissionSyncResponse> => {
+  
+  return useCustomClient<postApiV10PermissionSyncResponse>(getPostApiV10PermissionSyncUrl(),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getPostApiV10PermissionSyncMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10PermissionSync>>, TError,void, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV10PermissionSync>>, TError,void, TContext> => {
+
+const mutationKey = ['postApiV10PermissionSync'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV10PermissionSync>>, void> = () => {
+          
+
+          return  postApiV10PermissionSync(requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV10PermissionSyncMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV10PermissionSync>>>
+    
+    export type PostApiV10PermissionSyncMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Sync permissions from config
+ */
+export const usePostApiV10PermissionSync = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10PermissionSync>>, TError,void, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV10PermissionSync>>,
+        TError,
+        void,
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiV10PermissionSyncMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Retrieve a list of permissions with pagination, filtering and sorting. Also returns structured permissions grouped by resource.
  * @summary Get all permissions
  */
 export type getApiV10PermissionResponse200 = {

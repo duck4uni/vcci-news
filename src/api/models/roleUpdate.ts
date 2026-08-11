@@ -14,4 +14,6 @@ export interface RoleUpdate {
    * @nullable
    */
   description?: string | null;
+  /** Danh sách permission strings (ghi đà toàn bộ permissions hiện tại) */
+  permissions?: string[];
 }

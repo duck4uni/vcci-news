@@ -16,6 +16,7 @@ import {
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { useGetApiV10Logo } from "@/api/endpoints/logo";
+import { usePostApiV10AuthForgotPasswordRequest } from "@/api/endpoints/authentication";
 import type { Logo } from "@/api/models/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -26,8 +27,7 @@ import links, { resolveUploadUrl } from "@/links";
 import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
 
-type AuthMode = "login" | "forgot" | "reset";
-type ResetStep = "request" | "verify" | "password" | "done";
+type AuthMode = "login" | "forgot";
 
 type ApiEnvelope<T = unknown> = {
   responseData?: T;
@@ -46,11 +46,6 @@ type LogoListEnvelope = {
   };
 };
 
-type VerifyOtpPayload = {
-  reset_token?: string;
-  expires_in?: number;
-};
-
 type ErrorResponse = {
   message?: string;
   error?: {
@@ -61,7 +56,7 @@ type ErrorResponse = {
   };
 };
 
-const DEFAULT_REDIRECT = "/admin/base-config";
+const DEFAULT_REDIRECT = "/admin";
 const ADMIN_BLUE = "#063e8e";
 const authFieldClassName =
   "h-11 rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-400 shadow-sm focus-visible:ring-[#063e8e]/30";
@@ -72,7 +67,8 @@ function normalizeRedirectPath(redirect: string | null) {
   if (
     !redirect ||
     !redirect.startsWith("/admin") ||
-    redirect === "/admin/login"
+    redirect === "/admin/login" ||
+    redirect === "/admin/change-password"
   ) {
     return DEFAULT_REDIRECT;
   }
@@ -98,30 +94,6 @@ function getAuthErrorMessage(error: unknown, fallback: string) {
     apiError.message ??
     fallback
   );
-}
-
-async function postAuthJson<TResponse, TBody>(path: string, body: TBody) {
-  const response = await fetch(`${links.apiEndpoint}${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    credentials: "include",
-    body: JSON.stringify(body),
-  });
-
-  const data = (await response.json().catch(() => ({}))) as TResponse &
-    ErrorResponse;
-
-  if (!response.ok) {
-    throw {
-      response: {
-        data,
-      },
-    };
-  }
-
-  return data as TResponse;
 }
 
 function AuthShell({
@@ -151,16 +123,12 @@ function AuthShell({
   const title =
     mode === "login"
       ? "Đăng nhập quản trị"
-      : mode === "forgot"
-        ? "Khôi phục mật khẩu"
-        : "Đặt lại mật khẩu";
+      : "Khôi phục mật khẩu";
 
   const description =
     mode === "login"
       ? "Truy cập khu vực quản trị nội dung VCCI News."
-      : mode === "forgot"
-        ? "Xác thực email quản trị để nhận mã OTP."
-        : "Nhập mã OTP để tạo mật khẩu mới cho tài khoản.";
+      : "Gửi yêu cầu reset mật khẩu cho ban quản trị.";
 
   return (
     <div className="min-h-screen bg-[#f6f9ff] px-4 py-8 text-gray-700">
@@ -346,14 +314,11 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  const [resetStep, setResetStep] = useState<ResetStep>("request");
-  const [otp, setOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [resetToken, setResetToken] = useState("");
-  const [resetLoading, setResetLoading] = useState(false);
-  const [resetMessage, setResetMessage] = useState<string | null>(null);
-  const [resetError, setResetError] = useState<string | null>(null);
+  // Forgot password state
+  const [forgotNote, setForgotNote] = useState("");
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!rememberState?.remember) return;
@@ -366,7 +331,13 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
   useEffect(() => {
     if (!hasHydrated || !isLoggedIn) return;
 
-    router.replace(redirect);
+    // Nếu user phải đổi mật khẩu → luôn redirect sang change-password
+    const currentUser = useAuthStore.getState().appUser;
+    if (currentUser?.must_change_password) {
+      router.replace("/admin/change-password");
+    } else {
+      router.replace(redirect);
+    }
   }, [hasHydrated, isLoggedIn, redirect, router]);
 
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
@@ -375,15 +346,21 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     setLoginLoading(true);
 
     try {
-      await loginAdmin(email.trim(), password, { persistSession: remember });
+      const loginData = await loginAdmin(email.trim(), password, { persistSession: remember });
       setAppUserRemember(
         remember ? email.trim() : "",
         remember ? password : "",
         remember,
       );
 
-      toast.success("Đăng nhập quản trị thành công");
-      router.replace(redirect);
+      // Nếu BE báo phải đổi mật khẩu → redirect sang trang đổi mật khẩu
+      if (loginData?.must_change_password) {
+        toast.success("Đăng nhập thành công. Vui lòng đổi mật khẩu để tiếp tục.");
+        router.replace("/admin/change-password");
+      } else {
+        toast.success("Đăng nhập quản trị thành công");
+        router.replace(redirect);
+      }
     } catch (error) {
       setLoginError(
         getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."),
@@ -393,121 +370,54 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
     }
   };
 
-  const handleSendOtp = async (event: FormEvent<HTMLFormElement>) => {
+  const forgotMutation = usePostApiV10AuthForgotPasswordRequest({
+    mutation: {
+      onSuccess: (response: any) => {
+        const data = response?.responseData ?? response?.data?.responseData;
+        setForgotMessage(
+          data?.message ||
+            "Yêu cầu của bạn đã được ghi nhận. Ban quản trị sẽ liên hệ với bạn sớm.",
+        );
+        setForgotNote("");
+        toast.success("Đã gửi yêu cầu reset mật khẩu");
+      },
+      onError: (error: any) => {
+        setForgotError(
+          getAuthErrorMessage(error, "Không thể gửi yêu cầu. Vui lòng thử lại."),
+        );
+      },
+      onSettled: () => {
+        setForgotLoading(false);
+      },
+    },
+  });
+
+  const handleForgotRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setResetError(null);
-    setResetMessage(null);
-    setResetLoading(true);
+    setForgotError(null);
+    setForgotMessage(null);
 
-    try {
-      await postAuthJson<ApiEnvelope, { email: string }>(
-        "/auth/forgot-password/send-otp",
-        {
-          email: email.trim(),
-        },
-      );
-
-      setResetStep("verify");
-      setMode("reset");
-      setResetMessage("M? OTP d? du?c g?i d?n email qu?n tr?.");
-    } catch (error) {
-      setResetError(
-        getAuthErrorMessage(error, "Kh?ng th? g?i m? OTP. Vui l?ng th? l?i."),
-      );
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setResetError(null);
-    setResetMessage(null);
-    setResetLoading(true);
-
-    try {
-      const response = await postAuthJson<
-        ApiEnvelope<VerifyOtpPayload>,
-        { email: string; otp: string }
-      >("/auth/forgot-password/verify-otp", {
-        email: email.trim(),
-        otp: otp.trim(),
-      });
-      const payload = getResponseData<VerifyOtpPayload>(response);
-
-      if (!payload?.reset_token) {
-        throw new Error("Kh?ng nh?n du?c m? d?t l?i m?t kh?u t? API.");
-      }
-
-      setResetToken(payload.reset_token);
-      setResetStep("password");
-      setResetMessage("OTP hợp lệ. Bạn có thể tạo mật khẩu mới.");
-    } catch (error) {
-      setResetError(
-        getAuthErrorMessage(error, "OTP kh?ng h?p l? ho?c d? h?t h?n."),
-      );
-    } finally {
-      setResetLoading(false);
-    }
-  };
-
-  const handleResetPassword = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setResetError(null);
-    setResetMessage(null);
-
-    if (newPassword.length < 6) {
-      setResetError("Mật khẩu mới phải có ít nhất 6 ký tự.");
+    if (!email.trim()) {
+      setForgotError("Vui lòng nhập email quản trị.");
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setResetError("Mật khẩu xác nhận chưa khớp.");
-      return;
-    }
-
-    setResetLoading(true);
-
-    try {
-      await postAuthJson<
-        ApiEnvelope,
-        { reset_token: string; new_password: string }
-      >("/auth/forgot-password/reset", {
-        reset_token: resetToken,
-        new_password: newPassword,
-      });
-
-      setResetStep("done");
-      setResetMessage(
-        "Đặt lại mật khẩu thành công. Bạn có thể đăng nhập bằng mật khẩu mới.",
-      );
-      setPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      toast.success("Đặt lại mật khẩu thành công");
-    } catch (error) {
-      setResetError(
-        getAuthErrorMessage(
-          error,
-          "Không thể đặt lại mật khẩu. Vui lòng thử lại.",
-        ),
-      );
-    } finally {
-      setResetLoading(false);
-    }
+    setForgotLoading(true);
+    forgotMutation.mutate({
+      data: { email: email.trim(), note: forgotNote.trim() || undefined },
+    });
   };
 
   const switchToLogin = () => {
     setMode("login");
-    setResetError(null);
-    setResetMessage(null);
+    setForgotError(null);
+    setForgotMessage(null);
   };
 
   const switchToForgot = () => {
     setMode("forgot");
-    setResetStep("request");
-    setResetError(null);
-    setResetMessage(null);
+    setForgotError(null);
+    setForgotMessage(null);
   };
 
   if (!hasHydrated) {
@@ -602,13 +512,18 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
       ) : null}
 
       {mode === "forgot" ? (
-        <form className="space-y-5" onSubmit={handleSendOtp}>
-          {resetError ? (
-            <InlineMessage type="error" message={resetError} />
+        <form className="space-y-5" onSubmit={handleForgotRequest}>
+          {forgotError ? (
+            <InlineMessage type="error" message={forgotError} />
           ) : null}
-          {resetMessage ? (
-            <InlineMessage type="success" message={resetMessage} />
+          {forgotMessage ? (
+            <InlineMessage type="success" message={forgotMessage} />
           ) : null}
+
+          <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Nếu bạn quên mật khẩu, vui lòng nhập email và ghi chú yêu cầu.
+            Ban quản trị sẽ liên hệ để cấp lại mật khẩu cho bạn.
+          </div>
 
           <div className="space-y-2">
             <Label htmlFor="forgot-email" className="text-gray-700">
@@ -629,18 +544,32 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="forgot-note" className="text-gray-700">
+              Ghi chú (tùy chọn)
+            </Label>
+            <textarea
+              id="forgot-note"
+              value={forgotNote}
+              onChange={(event) => setForgotNote(event.target.value)}
+              placeholder="VD: Tên của bạn, lý do quên mật khẩu, số điện thoại liên hệ..."
+              rows={3}
+              className={`${authFieldClassName} resize-none`}
+            />
+          </div>
+
           <Button
             type="submit"
             className={authButtonClassName}
-            disabled={resetLoading}
+            disabled={forgotLoading}
           >
-            {resetLoading ? (
+            {forgotLoading ? (
               <>
                 <LoaderCircle className="h-4 w-4 animate-spin" />
-                Đang gửi OTP...
+                Đang gửi yêu cầu...
               </>
             ) : (
-              "Gửi mã OTP"
+              "Gửi yêu cầu reset mật khẩu"
             )}
           </Button>
 
@@ -654,155 +583,6 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             Quay lại đăng nhập
           </Button>
         </form>
-      ) : null}
-
-      {mode === "reset" ? (
-        <div className="space-y-6">
-          <div className="grid grid-cols-3 gap-2">
-            {[
-              ["verify", "OTP"],
-              ["password", "Mật khẩu"],
-              ["done", "Hoàn tất"],
-            ].map(([step, label]) => {
-              const stepIndex = ["verify", "password", "done"].indexOf(step);
-              const currentIndex = ["verify", "password", "done"].indexOf(
-                resetStep,
-              );
-              const active = currentIndex >= stepIndex;
-
-              return (
-                <div
-                  key={step}
-                  className={
-                    active
-                      ? "rounded-xl border border-[#063e8e]/20 bg-[#edf4ff] px-3 py-2 text-center text-xs font-semibold text-[#063e8e]"
-                      : "rounded-xl border border-gray-200 bg-white px-3 py-2 text-center text-xs font-semibold text-gray-500"
-                  }
-                >
-                  {label}
-                </div>
-              );
-            })}
-          </div>
-
-          {resetError ? (
-            <InlineMessage type="error" message={resetError} />
-          ) : null}
-          {resetMessage ? (
-            <InlineMessage type="success" message={resetMessage} />
-          ) : null}
-
-          {resetStep === "verify" ? (
-            <form className="space-y-5" onSubmit={handleVerifyOtp}>
-              <div className="space-y-2">
-                <Label htmlFor="otp" className="text-gray-700">
-                  M? OTP
-                </Label>
-                <Input
-                  id="otp"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  value={otp}
-                  onChange={(event) =>
-                    setOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                  placeholder="Nhập 6 chữ số"
-                  className={`${authFieldClassName} text-center text-lg font-semibold tracking-[0.35em]`}
-                  required
-                />
-              </div>
-              <Button
-                type="submit"
-                className={authButtonClassName}
-                disabled={resetLoading}
-              >
-                {resetLoading ? (
-                  <>
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                    Đang xác thực...
-                  </>
-                ) : (
-                  "Xác thực OTP"
-                )}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={switchToForgot}
-                className="h-10 w-full rounded-xl text-gray-700 hover:bg-[#edf4ff] hover:text-[#063e8e]"
-              >
-                G?i l?i m? OTP
-              </Button>
-            </form>
-          ) : null}
-
-          {resetStep === "password" ? (
-            <form className="space-y-5" onSubmit={handleResetPassword}>
-              <div className="space-y-2">
-                <Label htmlFor="new-password" className="text-gray-700">
-                  Mật khẩu mới
-                </Label>
-                <PasswordInput
-                  id="new-password"
-                  value={newPassword}
-                  onChange={setNewPassword}
-                  placeholder="Tối thiểu 6 ký tự"
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="confirm-password" className="text-gray-700">
-                  Xác nhận mật khẩu
-                </Label>
-                <PasswordInput
-                  id="confirm-password"
-                  value={confirmPassword}
-                  onChange={setConfirmPassword}
-                  placeholder="Nhập lại mật khẩu mới"
-                  autoComplete="new-password"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className={authButtonClassName}
-                disabled={resetLoading}
-              >
-                {resetLoading ? (
-                  <>
-                    <LoaderCircle className="h-4 w-4 animate-spin" />
-                    Đang cập nhật...
-                  </>
-                ) : (
-                  "Đặt lại mật khẩu"
-                )}
-              </Button>
-            </form>
-          ) : null}
-
-          {resetStep === "done" ? (
-            <div className="space-y-5">
-              <div className="rounded-2xl border border-[#063e8e]/15 bg-[#f8fbff] p-5 text-center">
-                <CheckCircle2 className="mx-auto h-10 w-10 text-[#063e8e]" />
-                <div className="mt-3 text-base font-semibold text-gray-900">
-                  M?t kh?u d? du?c c?p nh?t
-                </div>
-                <p className="mt-2 text-sm leading-6 text-gray-700">
-                  Quay lại màn đăng nhập để vào khu vực quản trị bằng mật khẩu
-                  mới.
-                </p>
-              </div>
-              <Button
-                type="button"
-                className={authButtonClassName}
-                onClick={switchToLogin}
-              >
-                Đăng nhập ngay
-              </Button>
-            </div>
-          ) : null}
-        </div>
       ) : null}
     </AuthShell>
   );

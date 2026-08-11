@@ -36,6 +36,7 @@ export interface CmsFileItem {
 
 export interface CmsPostContentImage {
   position: number;
+  caption: string;
   image: {
     id: string;
     name: string;
@@ -277,6 +278,7 @@ const parsePostContent = (contentStructure?: Record<string, unknown> | null): Cm
       image_rows: typeof section.image_rows === "number" ? section.image_rows : 2,
       images: images.map((image, imageIndex) => ({
         position: typeof image.position === "number" ? image.position : imageIndex + 1,
+        caption: typeof image.caption === "string" ? image.caption : "",
         image: {
           id: typeof image.image === "object" && image.image && "id" in image.image
             ? String((image.image as Record<string, unknown>).id ?? "")

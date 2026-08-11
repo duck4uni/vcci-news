@@ -37,6 +37,7 @@ import type {
   GetApiV10AuthMe200,
   GetApiV10AuthProfile200,
   LoginRequest,
+  PostApiV10AuthForgotPasswordRequestBody,
   PostApiV10AuthForgotPasswordVerifyOtp200,
   PostApiV10AuthLogin200,
   PostApiV10AuthLogin423,
@@ -1160,6 +1161,105 @@ export const usePostApiV10AuthForgotPasswordReset = <TError = ErrorType<BadReque
       > => {
 
       const mutationOptions = getPostApiV10AuthForgotPasswordResetMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * User quên mật khẩu gửi yêu cầu reset về admin.
+Admin sẽ xem và xử lý (reset password) thay vì gửi OTP qua email.
+Anti-enumeration: luôn trả 200 kể cả khi email không tồn tại.
+
+ * @summary Forgot password - submit reset request to admin
+ */
+export type postApiV10AuthForgotPasswordRequestResponse200 = {
+  data: void
+  status: 200
+}
+
+export type postApiV10AuthForgotPasswordRequestResponse400 = {
+  data: void
+  status: 400
+}
+
+export type postApiV10AuthForgotPasswordRequestResponse429 = {
+  data: void
+  status: 429
+}
+    
+export type postApiV10AuthForgotPasswordRequestResponseSuccess = (postApiV10AuthForgotPasswordRequestResponse200) & {
+  headers: Headers;
+};
+export type postApiV10AuthForgotPasswordRequestResponseError = (postApiV10AuthForgotPasswordRequestResponse400 | postApiV10AuthForgotPasswordRequestResponse429) & {
+  headers: Headers;
+};
+
+export type postApiV10AuthForgotPasswordRequestResponse = (postApiV10AuthForgotPasswordRequestResponseSuccess | postApiV10AuthForgotPasswordRequestResponseError)
+
+export const getPostApiV10AuthForgotPasswordRequestUrl = () => {
+
+
+  
+
+  return `/api/v1.0/auth/forgot-password/request`
+}
+
+export const postApiV10AuthForgotPasswordRequest = async (postApiV10AuthForgotPasswordRequestBody: PostApiV10AuthForgotPasswordRequestBody, options?: RequestInit): Promise<postApiV10AuthForgotPasswordRequestResponse> => {
+  
+  return useCustomClient<postApiV10AuthForgotPasswordRequestResponse>(getPostApiV10AuthForgotPasswordRequestUrl(),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postApiV10AuthForgotPasswordRequestBody,)
+  }
+);}
+
+
+
+
+export const getPostApiV10AuthForgotPasswordRequestMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10AuthForgotPasswordRequest>>, TError,{data: BodyType<PostApiV10AuthForgotPasswordRequestBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV10AuthForgotPasswordRequest>>, TError,{data: BodyType<PostApiV10AuthForgotPasswordRequestBody>}, TContext> => {
+
+const mutationKey = ['postApiV10AuthForgotPasswordRequest'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV10AuthForgotPasswordRequest>>, {data: BodyType<PostApiV10AuthForgotPasswordRequestBody>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  postApiV10AuthForgotPasswordRequest(data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV10AuthForgotPasswordRequestMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV10AuthForgotPasswordRequest>>>
+    export type PostApiV10AuthForgotPasswordRequestMutationBody = BodyType<PostApiV10AuthForgotPasswordRequestBody>
+    export type PostApiV10AuthForgotPasswordRequestMutationError = ErrorType<void>
+
+    /**
+ * @summary Forgot password - submit reset request to admin
+ */
+export const usePostApiV10AuthForgotPasswordRequest = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10AuthForgotPasswordRequest>>, TError,{data: BodyType<PostApiV10AuthForgotPasswordRequestBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV10AuthForgotPasswordRequest>>,
+        TError,
+        {data: BodyType<PostApiV10AuthForgotPasswordRequestBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiV10AuthForgotPasswordRequestMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

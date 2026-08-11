@@ -30,7 +30,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DeleteApiV10UserIdRoleBody,
   GetApiV10UserParams,
+  PatchApiV10UserIdStatusBody,
+  PostApiV10UserIdRoleBody,
   UserChangePassword,
   UserCreate,
   UserUpdate
@@ -862,6 +865,382 @@ export const usePutApiV10UserChangePassword = <TError = ErrorType<void>,
       > => {
 
       const mutationOptions = getPutApiV10UserChangePasswordMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Bật hoặc tắt trạng thái tài khoản user. Chỉ users:write mới có quyền.
+ * @summary Toggle user status (enable/disable)
+ */
+export type patchApiV10UserIdStatusResponse200 = {
+  data: void
+  status: 200
+}
+
+export type patchApiV10UserIdStatusResponse403 = {
+  data: void
+  status: 403
+}
+
+export type patchApiV10UserIdStatusResponse404 = {
+  data: void
+  status: 404
+}
+    
+export type patchApiV10UserIdStatusResponseSuccess = (patchApiV10UserIdStatusResponse200) & {
+  headers: Headers;
+};
+export type patchApiV10UserIdStatusResponseError = (patchApiV10UserIdStatusResponse403 | patchApiV10UserIdStatusResponse404) & {
+  headers: Headers;
+};
+
+export type patchApiV10UserIdStatusResponse = (patchApiV10UserIdStatusResponseSuccess | patchApiV10UserIdStatusResponseError)
+
+export const getPatchApiV10UserIdStatusUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1.0/user/${id}/status`
+}
+
+export const patchApiV10UserIdStatus = async (id: string,
+    patchApiV10UserIdStatusBody: PatchApiV10UserIdStatusBody, options?: RequestInit): Promise<patchApiV10UserIdStatusResponse> => {
+  
+  return useCustomClient<patchApiV10UserIdStatusResponse>(getPatchApiV10UserIdStatusUrl(id),
+  {      
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      patchApiV10UserIdStatusBody,)
+  }
+);}
+
+
+
+
+export const getPatchApiV10UserIdStatusMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiV10UserIdStatus>>, TError,{id: string;data: BodyType<PatchApiV10UserIdStatusBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof patchApiV10UserIdStatus>>, TError,{id: string;data: BodyType<PatchApiV10UserIdStatusBody>}, TContext> => {
+
+const mutationKey = ['patchApiV10UserIdStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof patchApiV10UserIdStatus>>, {id: string;data: BodyType<PatchApiV10UserIdStatusBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  patchApiV10UserIdStatus(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PatchApiV10UserIdStatusMutationResult = NonNullable<Awaited<ReturnType<typeof patchApiV10UserIdStatus>>>
+    export type PatchApiV10UserIdStatusMutationBody = BodyType<PatchApiV10UserIdStatusBody>
+    export type PatchApiV10UserIdStatusMutationError = ErrorType<void>
+
+    /**
+ * @summary Toggle user status (enable/disable)
+ */
+export const usePatchApiV10UserIdStatus = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof patchApiV10UserIdStatus>>, TError,{id: string;data: BodyType<PatchApiV10UserIdStatusBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof patchApiV10UserIdStatus>>,
+        TError,
+        {id: string;data: BodyType<PatchApiV10UserIdStatusBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPatchApiV10UserIdStatusMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Assign one or more roles to a user. Replaces existing non-primary roles.
+ * @summary Assign role to user
+ */
+export type postApiV10UserIdRoleResponse200 = {
+  data: void
+  status: 200
+}
+
+export type postApiV10UserIdRoleResponse404 = {
+  data: void
+  status: 404
+}
+    
+export type postApiV10UserIdRoleResponseSuccess = (postApiV10UserIdRoleResponse200) & {
+  headers: Headers;
+};
+export type postApiV10UserIdRoleResponseError = (postApiV10UserIdRoleResponse404) & {
+  headers: Headers;
+};
+
+export type postApiV10UserIdRoleResponse = (postApiV10UserIdRoleResponseSuccess | postApiV10UserIdRoleResponseError)
+
+export const getPostApiV10UserIdRoleUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1.0/user/${id}/role`
+}
+
+export const postApiV10UserIdRole = async (id: string,
+    postApiV10UserIdRoleBody: PostApiV10UserIdRoleBody, options?: RequestInit): Promise<postApiV10UserIdRoleResponse> => {
+  
+  return useCustomClient<postApiV10UserIdRoleResponse>(getPostApiV10UserIdRoleUrl(id),
+  {      
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      postApiV10UserIdRoleBody,)
+  }
+);}
+
+
+
+
+export const getPostApiV10UserIdRoleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10UserIdRole>>, TError,{id: string;data: BodyType<PostApiV10UserIdRoleBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV10UserIdRole>>, TError,{id: string;data: BodyType<PostApiV10UserIdRoleBody>}, TContext> => {
+
+const mutationKey = ['postApiV10UserIdRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV10UserIdRole>>, {id: string;data: BodyType<PostApiV10UserIdRoleBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postApiV10UserIdRole(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV10UserIdRoleMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV10UserIdRole>>>
+    export type PostApiV10UserIdRoleMutationBody = BodyType<PostApiV10UserIdRoleBody>
+    export type PostApiV10UserIdRoleMutationError = ErrorType<void>
+
+    /**
+ * @summary Assign role to user
+ */
+export const usePostApiV10UserIdRole = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10UserIdRole>>, TError,{id: string;data: BodyType<PostApiV10UserIdRoleBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV10UserIdRole>>,
+        TError,
+        {id: string;data: BodyType<PostApiV10UserIdRoleBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiV10UserIdRoleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Remove a role from a user
+ * @summary Remove role from user
+ */
+export type deleteApiV10UserIdRoleResponse200 = {
+  data: void
+  status: 200
+}
+
+export type deleteApiV10UserIdRoleResponse404 = {
+  data: void
+  status: 404
+}
+    
+export type deleteApiV10UserIdRoleResponseSuccess = (deleteApiV10UserIdRoleResponse200) & {
+  headers: Headers;
+};
+export type deleteApiV10UserIdRoleResponseError = (deleteApiV10UserIdRoleResponse404) & {
+  headers: Headers;
+};
+
+export type deleteApiV10UserIdRoleResponse = (deleteApiV10UserIdRoleResponseSuccess | deleteApiV10UserIdRoleResponseError)
+
+export const getDeleteApiV10UserIdRoleUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1.0/user/${id}/role`
+}
+
+export const deleteApiV10UserIdRole = async (id: string,
+    deleteApiV10UserIdRoleBody: DeleteApiV10UserIdRoleBody, options?: RequestInit): Promise<deleteApiV10UserIdRoleResponse> => {
+  
+  return useCustomClient<deleteApiV10UserIdRoleResponse>(getDeleteApiV10UserIdRoleUrl(id),
+  {      
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      deleteApiV10UserIdRoleBody,)
+  }
+);}
+
+
+
+
+export const getDeleteApiV10UserIdRoleMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV10UserIdRole>>, TError,{id: string;data: BodyType<DeleteApiV10UserIdRoleBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteApiV10UserIdRole>>, TError,{id: string;data: BodyType<DeleteApiV10UserIdRoleBody>}, TContext> => {
+
+const mutationKey = ['deleteApiV10UserIdRole'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteApiV10UserIdRole>>, {id: string;data: BodyType<DeleteApiV10UserIdRoleBody>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  deleteApiV10UserIdRole(id,data,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteApiV10UserIdRoleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteApiV10UserIdRole>>>
+    export type DeleteApiV10UserIdRoleMutationBody = BodyType<DeleteApiV10UserIdRoleBody>
+    export type DeleteApiV10UserIdRoleMutationError = ErrorType<void>
+
+    /**
+ * @summary Remove role from user
+ */
+export const useDeleteApiV10UserIdRole = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteApiV10UserIdRole>>, TError,{id: string;data: BodyType<DeleteApiV10UserIdRoleBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof deleteApiV10UserIdRole>>,
+        TError,
+        {id: string;data: BodyType<DeleteApiV10UserIdRoleBody>},
+        TContext
+      > => {
+
+      const mutationOptions = getDeleteApiV10UserIdRoleMutationOptions(options);
+
+      return useMutation(mutationOptions, queryClient);
+    }
+    /**
+ * Reset password của user về mật khẩu mặc định vcci@2026. Chỉ users:write mới có quyền.
+ * @summary Reset user password to default
+ */
+export type postApiV10UserIdResetPasswordResponse200 = {
+  data: void
+  status: 200
+}
+
+export type postApiV10UserIdResetPasswordResponse403 = {
+  data: void
+  status: 403
+}
+
+export type postApiV10UserIdResetPasswordResponse404 = {
+  data: void
+  status: 404
+}
+    
+export type postApiV10UserIdResetPasswordResponseSuccess = (postApiV10UserIdResetPasswordResponse200) & {
+  headers: Headers;
+};
+export type postApiV10UserIdResetPasswordResponseError = (postApiV10UserIdResetPasswordResponse403 | postApiV10UserIdResetPasswordResponse404) & {
+  headers: Headers;
+};
+
+export type postApiV10UserIdResetPasswordResponse = (postApiV10UserIdResetPasswordResponseSuccess | postApiV10UserIdResetPasswordResponseError)
+
+export const getPostApiV10UserIdResetPasswordUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1.0/user/${id}/reset-password`
+}
+
+export const postApiV10UserIdResetPassword = async (id: string, options?: RequestInit): Promise<postApiV10UserIdResetPasswordResponse> => {
+  
+  return useCustomClient<postApiV10UserIdResetPasswordResponse>(getPostApiV10UserIdResetPasswordUrl(id),
+  {      
+    ...options,
+    method: 'POST'
+    
+    
+  }
+);}
+
+
+
+
+export const getPostApiV10UserIdResetPasswordMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10UserIdResetPassword>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV10UserIdResetPassword>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['postApiV10UserIdResetPassword'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+      
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV10UserIdResetPassword>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  postApiV10UserIdResetPassword(id,requestOptions)
+        }
+
+        
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostApiV10UserIdResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV10UserIdResetPassword>>>
+    
+    export type PostApiV10UserIdResetPasswordMutationError = ErrorType<void>
+
+    /**
+ * @summary Reset user password to default
+ */
+export const usePostApiV10UserIdResetPassword = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10UserIdResetPassword>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postApiV10UserIdResetPassword>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+
+      const mutationOptions = getPostApiV10UserIdResetPasswordMutationOptions(options);
 
       return useMutation(mutationOptions, queryClient);
     }

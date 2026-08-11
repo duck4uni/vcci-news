@@ -37,6 +37,7 @@ interface LoginResponseData {
   refresh_token?: string | null;
   expires_in?: number | null;
   token_type?: string | null;
+  must_change_password?: boolean | null;
 }
 
 interface LoginResponseEnvelope {
@@ -104,6 +105,7 @@ const normalizeUser = (user?: Partial<AuthenticatedAdminUser> | null): Authentic
       : [],
     status: user.status ?? null,
     last_login_at: user.last_login_at ?? null,
+    must_change_password: user.must_change_password === true,
   };
 };
 
@@ -181,9 +183,14 @@ const redirectToLogin = () => {
   if (typeof window === "undefined") return;
 
   const currentPath = `${window.location.pathname}${window.location.search}`;
-  const redirect = currentPath.startsWith("/admin") && currentPath !== "/admin/login"
-    ? `?redirect=${encodeURIComponent(currentPath)}`
-    : "";
+  // Không bao giờ redirect về trang đổi mật khẩu sau khi login lại
+  const isChangePasswordPage = currentPath.startsWith("/admin/change-password");
+  const redirect =
+    currentPath.startsWith("/admin") &&
+    currentPath !== "/admin/login" &&
+    !isChangePasswordPage
+      ? `?redirect=${encodeURIComponent(currentPath)}`
+      : "";
 
   window.location.replace(`/admin/login${redirect}`);
 };
@@ -222,7 +229,23 @@ export async function loginAdmin(
     authToken: loginData.access_token,
   }).catch(() => loginData.user ?? null);
 
-  const normalizedUser = normalizeUser(me ?? loginData.user);
+  // Merge user data: ưu tiên permissions từ login response nếu /me trả về rỗng
+  const mergedUser = me
+    ? {
+        ...me,
+        // Nếu /me trả về permissions rỗng, dùng permissions từ login response
+        permissions: (me as { permissions?: unknown[] }).permissions?.length
+          ? me.permissions
+          : loginData.user?.permissions,
+        // must_change_password đến từ login response (BE), không có trong /me
+        must_change_password: loginData.must_change_password === true,
+      }
+    : {
+        ...loginData.user,
+        must_change_password: loginData.must_change_password === true,
+      } as Partial<AuthenticatedAdminUser>;
+
+  const normalizedUser = normalizeUser(mergedUser);
 
   useAuthStore.getState().setAuthSession({
     accessToken: loginData.access_token,
@@ -300,6 +323,15 @@ export async function refreshAdminAccessToken() {
       return null;
     }
 
+    // Refresh token đã hết hạn → không gọi API, logout ngay
+    if (store.appSession?.refresh_expires_at) {
+      const refreshExpiredAt = new Date(store.appSession.refresh_expires_at).getTime();
+      if (Number.isFinite(refreshExpiredAt) && refreshExpiredAt <= Date.now()) {
+        await logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+        return null;
+      }
+    }
+
     store.setAppRefreshing(true);
 
     try {
@@ -341,24 +373,46 @@ export async function refreshAdminAccessToken() {
 export async function ensureValidAdminAccessToken() {
   const store = useAuthStore.getState();
 
+  // No access token at all — try refresh if we have a usable refresh token
   if (!store.appAccessToken) {
-    if (store.appRefreshToken) {
+    if (store.appRefreshToken && isRefreshTokenUsable(store.appSession)) {
       return refreshAdminAccessToken();
     }
-
+    // No usable refresh token — logout
+    if (store.appIsLoggedIn) {
+      await logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+    }
     return null;
   }
 
-  if (!store.appAccessTokenExpired || store.appAccessTokenExpired > Date.now()) {
-    const jwtExpiresAt = getJwtExpiresAt(store.appAccessToken);
+  // Determine expiry: prefer stored appAccessTokenExpired, fallback to JWT exp
+  const expiryMs =
+    store.appAccessTokenExpired ?? getJwtExpiresAt(store.appAccessToken);
 
-    if (!jwtExpiresAt || jwtExpiresAt > Date.now()) {
-      return store.appAccessToken;
-    }
+  // If we can't determine expiry, assume token is still valid (let 401 handle it)
+  if (expiryMs === null) {
+    return store.appAccessToken;
+  }
+
+  // Token still valid — use it
+  if (expiryMs > Date.now()) {
+    return store.appAccessToken;
+  }
+
+  // Token expired — need refresh; check refresh token usability first
+  if (!store.appRefreshToken || !isRefreshTokenUsable(store.appSession)) {
+    await logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+    return null;
   }
 
   return refreshAdminAccessToken();
 }
+
+const isRefreshTokenUsable = (session: AuthenticatedAdminSession | null): boolean => {
+  if (!session?.refresh_expires_at) return true; // không biết → cho phép thử
+  const time = new Date(session.refresh_expires_at).getTime();
+  return Number.isFinite(time) && time > Date.now();
+};
 
 export async function handleAdminUnauthorized() {
   await logoutAdmin({ silent: true, reason: "refresh_failed" });

@@ -14,4 +14,6 @@ export interface RoleCreate {
    * @nullable
    */
   description?: string | null;
+  /** Danh sách permission strings */
+  permissions?: string[];
 }

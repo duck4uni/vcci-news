@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Image as ImageIcon, Plus, Type, Upload, X } from "lucide-react";
+import { Image as ImageIcon, Pencil, Plus, Type, Upload, X } from "lucide-react";
 import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminRichTextEditor } from "@/components/admin/rich-text-editor";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
@@ -23,6 +23,86 @@ import {
 interface AdminPostContentEditorProps {
   sections: AdminNewsContentSection[];
   onChange: (sections: AdminNewsContentSection[]) => void;
+}
+
+function CaptionEditor({
+  caption,
+  onCaptionChange,
+}: {
+  caption: string;
+  onCaptionChange: (caption: string) => void;
+}) {
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [value, setValue] = React.useState(caption);
+
+  React.useEffect(() => {
+    setValue(caption);
+  }, [caption]);
+
+  const handleSave = () => {
+    onCaptionChange(value.trim());
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setValue(caption);
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex flex-col gap-2 p-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleSave();
+            if (e.key === "Escape") handleCancel();
+          }}
+          placeholder="Nhập chú thích cho ảnh..."
+          className="w-full rounded-lg border border-[#063e8e]/15 bg-white px-3 py-2 text-sm text-gray-700 placeholder:text-gray-500 focus:border-[#063e8e]/30 focus:outline-none focus:ring-2 focus:ring-[#063e8e]/20"
+          autoFocus
+        />
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="flex-1 rounded-lg bg-[#063e8e] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#063e8e]/90"
+          >
+            Lưu
+          </button>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="flex-1 rounded-lg border border-[#063e8e]/15 px-3 py-1.5 text-xs font-medium text-gray-700 transition hover:bg-[#063e8e]/5"
+          >
+            Hủy
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="group/piece flex min-h-11 items-center justify-between gap-2 border-t border-[#063e8e]/10 px-3 py-2">
+      {caption ? (
+        <p className="flex-1 text-center text-xs italic text-gray-700">{caption}</p>
+      ) : (
+        <p className="flex-1 text-center text-xs italic text-gray-500">
+          Thêm chú thích...
+        </p>
+      )}
+      <button
+        type="button"
+        onClick={() => setIsEditing(true)}
+        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg text-gray-400 transition hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
+        title="Sửa chú thích"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
 }
 
 export function AdminPostContentEditor({
@@ -98,6 +178,7 @@ export function AdminPostContentEditor({
       const nextImages = section.images.filter((image) => image.position !== pickerState.position);
       nextImages.push({
         position: pickerState.position,
+        caption: "",
         image: {
           id: item.id,
           name: item.name,
@@ -295,58 +376,101 @@ export function AdminPostContentEditor({
                         const currentImage = section.images.find(
                           (image) => image.position === position,
                         );
+                        const currentImageId = currentImage?.image?.id ?? null;
 
                         return (
                           <div
                             key={`${section.id}-${position}`}
-                            role="button"
-                            tabIndex={0}
-                            onClick={() =>
-                              setPickerState({
-                                open: true,
-                                sectionId: section.id,
-                                position,
-                                selectedId: currentImage?.image.id ?? null,
-                              })
-                            }
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                setPickerState({
-                                  open: true,
-                                  sectionId: section.id,
-                                  position,
-                                  selectedId: currentImage?.image.id ?? null,
-                                });
-                              }
-                            }}
-                            className="group relative flex aspect-square cursor-pointer items-center justify-center overflow-hidden rounded-2xl border border-dashed border-[#063e8e]/20 bg-white text-center transition hover:border-[#063e8e]/40"
+                            className="group flex flex-col overflow-hidden rounded-2xl border border-dashed border-[#063e8e]/20 bg-white transition hover:border-[#063e8e]/40"
                           >
                             {currentImage ? (
                               <>
-                                <SafeNextImage
-                                  src={currentImage.image.url}
-                                  alt={currentImage.image.alt || currentImage.image.name}
-                                  fill
-                                  className="object-cover"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    handleRemoveImage(section.id, position);
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  onClick={() =>
+                                    setPickerState({
+                                      open: true,
+                                      sectionId: section.id,
+                                      position,
+                                      selectedId: currentImageId,
+                                    })
+                                  }
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                      event.preventDefault();
+                                      setPickerState({
+                                        open: true,
+                                        sectionId: section.id,
+                                        position,
+                                        selectedId: currentImageId,
+                                      });
+                                    }
                                   }}
-                                  className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-gray-700 shadow-sm transition hover:text-red-600"
+                                  className="relative h-64 w-full cursor-pointer"
                                 >
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
+                                  <SafeNextImage
+                                    src={currentImage.image.url}
+                                    alt={currentImage.image.alt || currentImage.image.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={(event) => {
+                                      event.stopPropagation();
+                                      handleRemoveImage(section.id, position);
+                                    }}
+                                    className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 text-gray-700 shadow-sm transition hover:text-red-600"
+                                  >
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                                <div onClick={(e) => e.stopPropagation()}>
+                                  <CaptionEditor
+                                    caption={currentImage.caption}
+                                    onCaptionChange={(caption) => {
+                                      updateSection(section.id, (sec) => ({
+                                        ...sec,
+                                        images: sec.images.map((img) =>
+                                          img.position === position ? { ...img, caption } : img
+                                        ),
+                                      }));
+                                    }}
+                                  />
+                                </div>
                               </>
                             ) : (
-                              <div className="px-3 text-center">
-                                <Upload className="mx-auto mb-2 h-5 w-5 text-[#063e8e]" />
-                                <p className="text-xs font-medium text-gray-700">
-                                  Chọn ảnh {position}
-                                </p>
+                              <div
+                                role="button"
+                                tabIndex={0}
+                                onClick={() =>
+                                  setPickerState({
+                                    open: true,
+                                    sectionId: section.id,
+                                    position,
+                                    selectedId: currentImageId,
+                                  })
+                                }
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter" || event.key === " ") {
+                                    event.preventDefault();
+                                    setPickerState({
+                                      open: true,
+                                      sectionId: section.id,
+                                      position,
+                                      selectedId: currentImageId,
+                                    });
+                                  }
+                                }}
+                                className="flex h-40 w-full shrink-0 cursor-pointer items-center justify-center px-3 text-center"
+                              >
+                                <div>
+                                  <Upload className="mx-auto mb-2 h-5 w-5 text-[#063e8e]" />
+                                  <p className="text-xs font-medium text-gray-700">
+                                    Chọn ảnh {position}
+                                  </p>
+                                </div>
                               </div>
                             )}
                           </div>

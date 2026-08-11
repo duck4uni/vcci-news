@@ -128,6 +128,7 @@ const orvalConfig = async () => {
           // Cập nhật khi backend thêm/xóa tag. Bỏ hết filter nếu muốn generate toàn bộ.
           tags: [
             'Authentication',
+            'Advertisement',
             'Banner',
             'Business',
             'Category',
@@ -138,6 +139,7 @@ const orvalConfig = async () => {
             'Member',
             'NewsletterSubscription',
             'PageConfig',
+            'PasswordResetRequest',
             'Permission',
             'Position',
             'Post',

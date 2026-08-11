@@ -43,6 +43,7 @@ export interface AdminNewsImageRef {
 export interface AdminNewsContentImage {
   position: number;
   image: AdminNewsImageRef;
+  caption: string;
 }
 
 export interface AdminNewsContentSection {
@@ -256,8 +257,8 @@ const newsSeed: AdminNewsItem[] = [
         image_columns: 2,
         image_rows: 1,
         images: [
-          { position: 1, image: toImageRef(mediaSeed[2]) },
-          { position: 2, image: toImageRef(mediaSeed[3]) },
+          { position: 1, image: toImageRef(mediaSeed[2]), caption: "" },
+          { position: 2, image: toImageRef(mediaSeed[3]), caption: "" },
         ],
       },
     ],
@@ -337,7 +338,7 @@ const newsSeed: AdminNewsItem[] = [
         content: "",
         image_columns: 1,
         image_rows: 1,
-        images: [{ position: 1, image: toImageRef(mediaSeed[0]) }],
+        images: [{ position: 1, image: toImageRef(mediaSeed[0]), caption: "" }],
       },
     ],
   },
@@ -1327,6 +1328,7 @@ export function cloneAdminNewsFormValues(item?: AdminNewsItem | null): AdminNews
       ...section,
       images: section.images.map((image) => ({
         ...image,
+        caption: image.caption ?? "",
         image: { ...image.image },
       })),
     })),

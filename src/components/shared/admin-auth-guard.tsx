@@ -1,11 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ensureValidAdminAccessToken } from "@/lib/auth/admin-auth";
+import { ensureValidAdminAccessToken, logoutAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
 
 const LOGIN_PATH = "/admin/login";
+const CHANGE_PASSWORD_PATH = "/admin/change-password";
+const PROACTIVE_REFRESH_INTERVAL_MS = 60 * 1000;
+
+const getRefreshTokenExpiredAt = (session?: { refresh_expires_at?: string | null } | null) => {
+  if (!session?.refresh_expires_at) return null;
+  const time = new Date(session.refresh_expires_at).getTime();
+  return Number.isFinite(time) ? time : null;
+};
+
+const isSessionUsable = () => {
+  const state = useAuthStore.getState();
+  if (!state.appRefreshToken) return false;
+  const refreshExpiredAt = getRefreshTokenExpiredAt(state.appSession);
+  return !refreshExpiredAt || refreshExpiredAt > Date.now();
+};
 
 export function AdminAuthLoadingScreen() {
   return (
@@ -75,11 +90,25 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   const accessTokenExpired = useAuthStore((state) => state.appAccessTokenExpired);
   const refreshToken = useAuthStore((state) => state.appRefreshToken);
   const isRefreshing = useAuthStore((state) => state.appIsRefreshing);
+  const mustChangePassword = useAuthStore((state) => state.appUser?.must_change_password === true);
   const [authCheckState, setAuthCheckState] = useState<"idle" | "checking" | "ready">("idle");
   const redirectParam =
     typeof window === "undefined"
       ? encodeURIComponent(pathname || "/admin")
       : encodeURIComponent(`${window.location.pathname}${window.location.search}`);
+
+  // Force redirect to change-password page if user must change password
+  useEffect(() => {
+    if (
+      authCheckState === "ready" &&
+      isLoggedIn &&
+      mustChangePassword &&
+      pathname !== CHANGE_PASSWORD_PATH &&
+      pathname !== LOGIN_PATH
+    ) {
+      router.replace(CHANGE_PASSWORD_PATH);
+    }
+  }, [authCheckState, isLoggedIn, mustChangePassword, pathname, router]);
 
   useEffect(() => {
     if (pathname === LOGIN_PATH) {
@@ -97,10 +126,21 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     const restoreSession = async () => {
       setAuthCheckState("checking");
 
+      // Refresh token đã hết hạn → logout ngay, không cố refresh nữa
+      if (!isSessionUsable()) {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+          void logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+        }
+        return;
+      }
+
+      // Access token còn hạn → OK
       const hasValidAccessToken = Boolean(
         accessToken &&
           isLoggedIn &&
-          (!accessTokenExpired || accessTokenExpired > Date.now()),
+          accessTokenExpired !== null &&
+          accessTokenExpired > Date.now(),
       );
 
       if (hasValidAccessToken) {
@@ -110,23 +150,17 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      if (!refreshToken) {
-        if (!cancelled) {
-          setAuthCheckState("ready");
-          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
-        }
-        return;
-      }
-
+      // Access token hết hạn nhưng còn refresh token → thử refresh
       try {
         const nextToken = await ensureValidAdminAccessToken();
 
         if (!nextToken && !cancelled) {
-          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+          // refresh đã gọi logoutAdmin bên trong, không cần redirect thêm
+          setAuthCheckState("ready");
         }
       } catch {
         if (!cancelled) {
-          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+          setAuthCheckState("ready");
         }
       } finally {
         if (!cancelled) {
@@ -137,8 +171,22 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
     void restoreSession();
 
+    // Proactive token refresh: kiểm tra định kỳ và refresh trước khi hết hạn
+    const refreshInterval = setInterval(() => {
+      if (cancelled) return;
+      const state = useAuthStore.getState();
+      if (!state.appAccessToken || !state.appRefreshToken) return;
+      // Refresh token hết hạn → logout ngay
+      if (!isSessionUsable()) {
+        void logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+        return;
+      }
+      void ensureValidAdminAccessToken().catch(() => null);
+    }, PROACTIVE_REFRESH_INTERVAL_MS);
+
     return () => {
       cancelled = true;
+      clearInterval(refreshInterval);
     };
   }, [
     accessToken,
@@ -151,7 +199,7 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
     router,
   ]);
 
-  if (pathname === LOGIN_PATH) {
+  if (pathname === LOGIN_PATH || pathname === CHANGE_PASSWORD_PATH) {
     return <>{children}</>;
   }
 
@@ -165,6 +213,11 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
 
   if (!isLoggedIn || !accessToken) {
     return null;
+  }
+
+  // Nếu user phải đổi mật khẩu, không render nội dung admin (đã redirect ở useEffect)
+  if (mustChangePassword) {
+    return <AdminAuthLoadingScreen />;
   }
 
   return <>{children}</>;
@@ -201,10 +254,20 @@ export function useAdminAuthStatus() {
     const restoreSession = async () => {
       setAuthCheckState("checking");
 
+      // Refresh token đã hết hạn → logout ngay
+      if (!isSessionUsable()) {
+        if (!cancelled) {
+          setAuthCheckState("ready");
+          void logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+        }
+        return;
+      }
+
       const hasValidAccessToken = Boolean(
         accessToken &&
           isLoggedIn &&
-          (!accessTokenExpired || accessTokenExpired > Date.now()),
+          accessTokenExpired !== null &&
+          accessTokenExpired > Date.now(),
       );
 
       if (hasValidAccessToken) {
@@ -214,23 +277,15 @@ export function useAdminAuthStatus() {
         return;
       }
 
-      if (!refreshToken) {
-        if (!cancelled) {
-          setAuthCheckState("ready");
-          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
-        }
-        return;
-      }
-
       try {
         const nextToken = await ensureValidAdminAccessToken();
 
         if (!nextToken && !cancelled) {
-          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+          setAuthCheckState("ready");
         }
       } catch {
         if (!cancelled) {
-          router.replace(`${LOGIN_PATH}?redirect=${redirectParam}`);
+          setAuthCheckState("ready");
         }
       } finally {
         if (!cancelled) {
@@ -241,8 +296,21 @@ export function useAdminAuthStatus() {
 
     void restoreSession();
 
+    // Proactive token refresh
+    const refreshInterval = setInterval(() => {
+      if (cancelled) return;
+      const state = useAuthStore.getState();
+      if (!state.appAccessToken || !state.appRefreshToken) return;
+      if (!isSessionUsable()) {
+        void logoutAdmin({ silent: true, reason: "missing_refresh_token" });
+        return;
+      }
+      void ensureValidAdminAccessToken().catch(() => null);
+    }, PROACTIVE_REFRESH_INTERVAL_MS);
+
     return () => {
       cancelled = true;
+      clearInterval(refreshInterval);
     };
   }, [
     accessToken,
