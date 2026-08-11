@@ -8,7 +8,7 @@ import { resolveUploadUrl } from "@/links";
 import type { Advertisement } from "@/api/models/advertisement";
 
 const FALLBACK_SRC = "/quang-cao/qc-3.jpg";
-const FALLBACK_HREF = "https://vcci-hcm.org.vn";
+const FALLBACK_HREF = "https://vccihcm.vn";
 
 function AdItem({ item }: { item: Advertisement }) {
   const initialSrc = item.file?.path ? resolveUploadUrl(item.file.path) : FALLBACK_SRC;
@@ -17,7 +17,7 @@ function AdItem({ item }: { item: Advertisement }) {
 
   return (
     <Link
-      href={item.link}
+      href={item.link || FALLBACK_HREF}
       target="_blank"
       rel="noopener noreferrer"
       className="block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
@@ -66,11 +66,12 @@ function Advertisements({ count = 2, startIndex = 0 }: { count?: number; startIn
   const ads = useAdvertisements("square");
   const visibleAds = ads.slice(startIndex, startIndex + count);
 
-  // Fallback: nếu API không có data, hiển thị fallback item
-  const items =
-    visibleAds.length > 0
-      ? visibleAds.map((item) => <AdItem key={item.id} item={item} />)
-      : Array.from({ length: count }).map((_, i) => <FallbackAdItem key={`fallback-${i}`} />);
+  // Luôn render đủ `count` khung hình: vị trí nào API không có data thì dùng fallback qc-3.jpg.
+  const items = Array.from({ length: count }, (_, i) => {
+    const ad = visibleAds[i];
+    if (ad) return <AdItem key={ad.id} item={ad} />;
+    return <FallbackAdItem key={`fallback-${startIndex + i}`} />;
+  });
 
   const mdCols = count >= 3 ? "md:grid-cols-3" : "md:grid-cols-2";
   return (
