@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ListCategory from "@/components/base/list-category";
 import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
+import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import {
   buildDynamicPostHref,
   buildDynamicCategoryMenu,
@@ -188,26 +189,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
 
               <EventsCalendar compact className="xl:w-full xl:min-w-0" />
 
-              <div className="order-3 overflow-hidden rounded-[22px] shadow-[0_18px_42px_rgba(17,24,39,0.12)] xl:order-0">
-                <div className="relative min-h-[390px] bg-[#1f334f]">
-                  <ImageNext
-                    src="/banner.webp"
-                    alt="Đối tác quảng bá"
-                    width={640}
-                    height={760}
-                    className="absolute inset-0 h-full w-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-liner-to-t from-[#14213d]/92 via-[#14213d]/28 to-transparent" />
-                  <div className="absolute bottom-8 left-7 right-7 text-white">
-                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-white/70">
-                      Đối tác quảng bá
-                    </div>
-                    <div className="mt-3 text-2xl font-bold leading-tight">
-                      Business Combo cho hội viên doanh nghiệp
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <SidebarAdvertisements count={5} startIndex={0} />
             </aside>
           </div>
         </div>

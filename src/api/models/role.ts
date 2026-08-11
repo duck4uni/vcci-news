@@ -23,4 +23,6 @@ export interface Role {
   created_by?: string | null;
   /** @nullable */
   updated_by?: string | null;
+  /** Danh sách permission strings (vd: 'posts:read', 'posts:write') */
+  permissions?: string[];
 }

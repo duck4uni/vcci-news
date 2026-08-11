@@ -2,6 +2,7 @@
 
 import FeaturedNews from "./components/featured-news";
 import Advertisements from "./components/quick-links";
+import HorizontalAdBanner from "./components/horizontal-ad-banner";
 import News from "./components/news";
 import Events from "./components/events";
 import BusinessOpportunities from "./components/business-opportunities";
@@ -18,21 +19,14 @@ const Page = () => {
       {/* contents */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-10 space-y-6">
         <FeaturedNews />
-        {/* <div>
-          <Link href="https://hardwaretools.com.vn/">
-            <ImageNext
-              src="/home/Standard-Banner-1-2024.png.webp"
-              alt="banner"
-              width={2560}
-              height={720}
-            />
-          </Link>
-        </div> */}
+
 
         <section className="flex flex-col xl:flex-row pb-8 gap-5 mb-0">
           <News />
-          <Advertisements count={3} />
+          <Advertisements count={3} startIndex={0} />
         </section >
+
+        <HorizontalAdBanner />
 
         <section className="flex flex-col gap-5 xl:flex-row xl:items-stretch" >
           <Events />
@@ -57,7 +51,7 @@ const Page = () => {
                 <BusinessOpportunities />
                 <PolicyAndLaws />
               </div>
-              <Advertisements />
+              <Advertisements count={2} startIndex={3} />
             </section>
           </div>
 

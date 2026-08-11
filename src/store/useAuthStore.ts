@@ -11,6 +11,7 @@ export interface AuthenticatedAdminUser {
   permissions: string[];
   status: string | null;
   last_login_at: string | null;
+  must_change_password?: boolean;
 }
 
 export interface AuthenticatedAdminSession {
