@@ -16,7 +16,7 @@ export function useAdvertisements(
   type: "square" | "horizontal",
   limit?: number,
 ): Advertisement[] {
-  const effectiveLimit = limit ?? (type === "horizontal" ? 1 : 20);
+  const effectiveLimit = limit ?? (type === "horizontal" ? 1 : 5);
 
   const { data } = useGetApiV10AdvertisementPublic({
     type: type as GetApiV10AdvertisementPublicType,

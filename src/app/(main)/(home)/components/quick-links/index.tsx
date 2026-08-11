@@ -13,7 +13,6 @@ const FALLBACK_HREF = "https://vccihcm.vn";
 function AdItem({ item }: { item: Advertisement }) {
   const initialSrc = item.file?.path ? resolveUploadUrl(item.file.path) : FALLBACK_SRC;
   const [src, setSrc] = useState(initialSrc);
-  const isGif = src.toLowerCase().endsWith(".gif");
 
   return (
     <Link
@@ -30,7 +29,7 @@ function AdItem({ item }: { item: Advertisement }) {
           width={2048}
           height={1365}
           className="h-full w-full object-cover object-[center_80%]"
-          unoptimized={isGif}
+          unoptimized
           onError={() => {
             if (src !== FALLBACK_SRC) setSrc(FALLBACK_SRC);
           }}
