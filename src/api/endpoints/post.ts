@@ -30,12 +30,14 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  DeleteApiV10PostId200,
   GetApiV10PostId200,
+  GetApiV10PostIdHistory200,
   GetApiV10PostParams,
   PostApiV10Post200,
-  PostApiV10PostBody,
+  PostMutate,
   PutApiV10PostId200,
-  PutApiV10PostIdBody
+  ResponseGetAllData
 } from '../models';
 
 import { useCustomClient } from '../mutator/custom-client';
@@ -48,7 +50,7 @@ type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
 /**
- * Retrieve a single post record by its ID (includes categories)
+ * Retrieve a single post record by its ID
  * @summary Get post by ID
  */
 export type getApiV10PostIdResponse200 = {
@@ -269,23 +271,12 @@ export const prefetchGetApiV10PostIdQuery = async <TData = Awaited<ReturnType<ty
 
 
 /**
- * Update a post by ID.
-category_ids behavior:
-- Not provided: do not change existing category mappings
-- Provided as []: remove all category mappings
-- Provided as [ids...]: replace all mappings by the provided ids
-Rule: all category_ids must exist and must be same type (post | trade | industry | page).
-
+ * Update a single post record by its ID
  * @summary Update post by ID
  */
 export type putApiV10PostIdResponse200 = {
   data: PutApiV10PostId200
   status: 200
-}
-
-export type putApiV10PostIdResponse400 = {
-  data: void
-  status: 400
 }
 
 export type putApiV10PostIdResponse404 = {
@@ -296,7 +287,7 @@ export type putApiV10PostIdResponse404 = {
 export type putApiV10PostIdResponseSuccess = (putApiV10PostIdResponse200) & {
   headers: Headers;
 };
-export type putApiV10PostIdResponseError = (putApiV10PostIdResponse400 | putApiV10PostIdResponse404) & {
+export type putApiV10PostIdResponseError = (putApiV10PostIdResponse404) & {
   headers: Headers;
 };
 
@@ -311,7 +302,7 @@ export const getPutApiV10PostIdUrl = (id: string,) => {
 }
 
 export const putApiV10PostId = async (id: string,
-    putApiV10PostIdBody: PutApiV10PostIdBody, options?: RequestInit): Promise<putApiV10PostIdResponse> => {
+    postMutate: PostMutate, options?: RequestInit): Promise<putApiV10PostIdResponse> => {
   
   return useCustomClient<putApiV10PostIdResponse>(getPutApiV10PostIdUrl(id),
   {      
@@ -319,7 +310,7 @@ export const putApiV10PostId = async (id: string,
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      putApiV10PostIdBody,)
+      postMutate,)
   }
 );}
 
@@ -327,8 +318,8 @@ export const putApiV10PostId = async (id: string,
 
 
 export const getPutApiV10PostIdMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiV10PostId>>, TError,{id: string;data: BodyType<PutApiV10PostIdBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof putApiV10PostId>>, TError,{id: string;data: BodyType<PutApiV10PostIdBody>}, TContext> => {
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiV10PostId>>, TError,{id: string;data: BodyType<PostMutate>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof putApiV10PostId>>, TError,{id: string;data: BodyType<PostMutate>}, TContext> => {
 
 const mutationKey = ['putApiV10PostId'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -340,7 +331,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiV10PostId>>, {id: string;data: BodyType<PutApiV10PostIdBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putApiV10PostId>>, {id: string;data: BodyType<PostMutate>}> = (props) => {
           const {id,data} = props ?? {};
 
           return  putApiV10PostId(id,data,requestOptions)
@@ -352,18 +343,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PutApiV10PostIdMutationResult = NonNullable<Awaited<ReturnType<typeof putApiV10PostId>>>
-    export type PutApiV10PostIdMutationBody = BodyType<PutApiV10PostIdBody>
+    export type PutApiV10PostIdMutationBody = BodyType<PostMutate>
     export type PutApiV10PostIdMutationError = ErrorType<void>
 
     /**
  * @summary Update post by ID
  */
 export const usePutApiV10PostId = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiV10PostId>>, TError,{id: string;data: BodyType<PutApiV10PostIdBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putApiV10PostId>>, TError,{id: string;data: BodyType<PostMutate>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof putApiV10PostId>>,
         TError,
-        {id: string;data: BodyType<PutApiV10PostIdBody>},
+        {id: string;data: BodyType<PostMutate>},
         TContext
       > => {
 
@@ -376,7 +367,7 @@ export const usePutApiV10PostId = <TError = ErrorType<void>,
  * @summary Delete post by ID
  */
 export type deleteApiV10PostIdResponse200 = {
-  data: void
+  data: DeleteApiV10PostId200
   status: 200
 }
 
@@ -462,16 +453,11 @@ export const useDeleteApiV10PostId = <TError = ErrorType<void>,
       return useMutation(mutationOptions, queryClient);
     }
     /**
- * Retrieve a list of post with pagination, filtering and sorting (includes categories).
-Extra filter supported:
-- filters=category.type==trade (allowed: post, trade, industry, page)
-- filters=category.type==(trade|post)
-- filters=category.id=={categoryId}
-
+ * Retrieve a list of post with pagination, filtering and sorting
  * @summary Get all post
  */
 export type getApiV10PostResponse200 = {
-  data: void
+  data: ResponseGetAllData
   status: 200
 }
     
@@ -688,35 +674,20 @@ export const prefetchGetApiV10PostQuery = async <TData = Awaited<ReturnType<type
 
 
 /**
- * Create a new post record.
-If category_ids is provided, it will link this post to those categories.
-Rule: all category_ids must exist and must be same type (post | trade | industry | page).
-
+ * Create a new post record
  * @summary Create a post
  */
 export type postApiV10PostResponse200 = {
   data: PostApiV10Post200
   status: 200
 }
-
-export type postApiV10PostResponse400 = {
-  data: void
-  status: 400
-}
-
-export type postApiV10PostResponse404 = {
-  data: void
-  status: 404
-}
     
 export type postApiV10PostResponseSuccess = (postApiV10PostResponse200) & {
   headers: Headers;
 };
-export type postApiV10PostResponseError = (postApiV10PostResponse400 | postApiV10PostResponse404) & {
-  headers: Headers;
-};
+;
 
-export type postApiV10PostResponse = (postApiV10PostResponseSuccess | postApiV10PostResponseError)
+export type postApiV10PostResponse = (postApiV10PostResponseSuccess)
 
 export const getPostApiV10PostUrl = () => {
 
@@ -726,7 +697,7 @@ export const getPostApiV10PostUrl = () => {
   return `/api/v1.0/post`
 }
 
-export const postApiV10Post = async (postApiV10PostBody: PostApiV10PostBody, options?: RequestInit): Promise<postApiV10PostResponse> => {
+export const postApiV10Post = async (postMutate: PostMutate, options?: RequestInit): Promise<postApiV10PostResponse> => {
   
   return useCustomClient<postApiV10PostResponse>(getPostApiV10PostUrl(),
   {      
@@ -734,16 +705,16 @@ export const postApiV10Post = async (postApiV10PostBody: PostApiV10PostBody, opt
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...options?.headers },
     body: JSON.stringify(
-      postApiV10PostBody,)
+      postMutate,)
   }
 );}
 
 
 
 
-export const getPostApiV10PostMutationOptions = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10Post>>, TError,{data: BodyType<PostApiV10PostBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
-): UseMutationOptions<Awaited<ReturnType<typeof postApiV10Post>>, TError,{data: BodyType<PostApiV10PostBody>}, TContext> => {
+export const getPostApiV10PostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10Post>>, TError,{data: BodyType<PostMutate>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+): UseMutationOptions<Awaited<ReturnType<typeof postApiV10Post>>, TError,{data: BodyType<PostMutate>}, TContext> => {
 
 const mutationKey = ['postApiV10Post'];
 const {mutation: mutationOptions, request: requestOptions} = options ?
@@ -755,7 +726,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV10Post>>, {data: BodyType<PostApiV10PostBody>}> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postApiV10Post>>, {data: BodyType<PostMutate>}> = (props) => {
           const {data} = props ?? {};
 
           return  postApiV10Post(data,requestOptions)
@@ -767,18 +738,18 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
   return  { mutationFn, ...mutationOptions }}
 
     export type PostApiV10PostMutationResult = NonNullable<Awaited<ReturnType<typeof postApiV10Post>>>
-    export type PostApiV10PostMutationBody = BodyType<PostApiV10PostBody>
-    export type PostApiV10PostMutationError = ErrorType<void>
+    export type PostApiV10PostMutationBody = BodyType<PostMutate>
+    export type PostApiV10PostMutationError = ErrorType<unknown>
 
     /**
  * @summary Create a post
  */
-export const usePostApiV10Post = <TError = ErrorType<void>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10Post>>, TError,{data: BodyType<PostApiV10PostBody>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
+export const usePostApiV10Post = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiV10Post>>, TError,{data: BodyType<PostMutate>}, TContext>, request?: SecondParameter<typeof useCustomClient>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiV10Post>>,
         TError,
-        {data: BodyType<PostApiV10PostBody>},
+        {data: BodyType<PostMutate>},
         TContext
       > => {
 
@@ -786,4 +757,224 @@ export const usePostApiV10Post = <TError = ErrorType<void>,
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * Retrieve the change history of a specific post
+ * @summary Get post history
+ */
+export type getApiV10PostIdHistoryResponse200 = {
+  data: GetApiV10PostIdHistory200
+  status: 200
+}
+
+export type getApiV10PostIdHistoryResponse404 = {
+  data: void
+  status: 404
+}
     
+export type getApiV10PostIdHistoryResponseSuccess = (getApiV10PostIdHistoryResponse200) & {
+  headers: Headers;
+};
+export type getApiV10PostIdHistoryResponseError = (getApiV10PostIdHistoryResponse404) & {
+  headers: Headers;
+};
+
+export type getApiV10PostIdHistoryResponse = (getApiV10PostIdHistoryResponseSuccess | getApiV10PostIdHistoryResponseError)
+
+export const getGetApiV10PostIdHistoryUrl = (id: string,) => {
+
+
+  
+
+  return `/api/v1.0/post/${id}/history`
+}
+
+export const getApiV10PostIdHistory = async (id: string, options?: RequestInit): Promise<getApiV10PostIdHistoryResponse> => {
+  
+  return useCustomClient<getApiV10PostIdHistoryResponse>(getGetApiV10PostIdHistoryUrl(id),
+  {      
+    ...options,
+    method: 'GET'
+    
+    
+  }
+);}
+
+
+
+
+
+export const getGetApiV10PostIdHistoryInfiniteQueryKey = (id?: string,) => {
+    return [
+    'infinite', `/api/v1.0/post/${id}/history`
+    ] as const;
+    }
+
+export const getGetApiV10PostIdHistoryQueryKey = (id?: string,) => {
+    return [
+    `/api/v1.0/post/${id}/history`
+    ] as const;
+    }
+
+    
+export const getGetApiV10PostIdHistoryInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV10PostIdHistoryInfiniteQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV10PostIdHistory>>> = ({ signal }) => getApiV10PostIdHistory(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV10PostIdHistoryInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>
+export type GetApiV10PostIdHistoryInfiniteQueryError = ErrorType<void>
+
+
+export function useGetApiV10PostIdHistoryInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>, TError = ErrorType<void>>(
+ id: string, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostIdHistoryInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostIdHistoryInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get post history
+ */
+
+export function useGetApiV10PostIdHistoryInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV10PostIdHistoryInfiniteQueryOptions(id,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get post history
+ */
+export const prefetchGetApiV10PostIdHistoryInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiV10PostIdHistoryInfiniteQueryOptions(id,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiV10PostIdHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV10PostIdHistoryQueryKey(id);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV10PostIdHistory>>> = ({ signal }) => getApiV10PostIdHistory(id, { signal, ...requestOptions });
+
+      
+
+      
+
+   return  { queryKey, queryFn, enabled: !!(id),  retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV10PostIdHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV10PostIdHistory>>>
+export type GetApiV10PostIdHistoryQueryError = ErrorType<void>
+
+
+export function useGetApiV10PostIdHistory<TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostIdHistory<TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostIdHistory>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostIdHistory<TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get post history
+ */
+
+export function useGetApiV10PostIdHistory<TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV10PostIdHistoryQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get post history
+ */
+export const prefetchGetApiV10PostIdHistoryQuery = async <TData = Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError = ErrorType<void>>(
+ queryClient: QueryClient, id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostIdHistory>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiV10PostIdHistoryQueryOptions(id,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+

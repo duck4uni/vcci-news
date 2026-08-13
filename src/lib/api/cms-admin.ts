@@ -55,6 +55,16 @@ export interface CmsPostContentSection {
   images: CmsPostContentImage[];
 }
 
+export interface CmsUserSummary {
+  id: string;
+  email: string;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string;
+  avatar_url: string | null;
+}
+
 export interface CmsNewsItem {
   id: string;
   title: string;
@@ -82,7 +92,10 @@ export interface CmsNewsItem {
   registration_deadline: string;
   location: string;
   participation_fee: string;
+  event_dates: string[];
   post_content: CmsPostContentSection[];
+  creator: CmsUserSummary | null;
+  editor: CmsUserSummary | null;
 }
 
 export interface CmsHeaderCategoryItem {
@@ -169,7 +182,20 @@ interface CmsRawPostItem {
   registration_deadline?: string | null;
   location?: string | null;
   participation_fee?: string | null;
+  event_dates?: string[] | null;
   content_structure?: Record<string, unknown> | null;
+  creator?: CmsRawUser | null;
+  editor?: CmsRawUser | null;
+}
+
+interface CmsRawUser {
+  id?: string | null;
+  email?: string | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
 }
 
 interface CmsPivotItem {
@@ -181,6 +207,26 @@ interface CmsPivotItem {
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
+const normalizeUser = (user: CmsRawUser | null | undefined): CmsUserSummary | null => {
+  if (!user || typeof user !== "object" || !user.id) return null;
+  const firstName = String(user.first_name ?? "").trim();
+  const lastName = String(user.last_name ?? "").trim();
+  const fullName =
+    String(user.full_name ?? "").trim() ||
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    String(user.username ?? "").trim() ||
+    String(user.email ?? "").trim();
+  return {
+    id: String(user.id),
+    email: String(user.email ?? ""),
+    username: user.username ? String(user.username) : null,
+    first_name: firstName || null,
+    last_name: lastName || null,
+    full_name: fullName,
+    avatar_url: user.avatar_url ? String(user.avatar_url) : null,
+  };
+};
 
 const readMessage = (payload: unknown) => {
   if (!isObject(payload)) return "Request failed";
@@ -367,7 +413,12 @@ const transformPost = (
     registration_deadline: normalizeDateTimeInput(post.registration_deadline),
     location: post.location ?? "",
     participation_fee: post.participation_fee ?? "",
+    event_dates: Array.isArray(post.event_dates)
+      ? post.event_dates.filter((d): d is string => typeof d === "string")
+      : [],
     post_content: fallbackContent,
+    creator: normalizeUser(post.creator),
+    editor: normalizeUser(post.editor),
   };
 };
 
@@ -802,6 +853,7 @@ export async function createCmsNewsItem(input: {
   registration_deadline?: string | null;
   location?: string;
   participation_fee?: string;
+  event_dates?: string[] | null;
   post_content: CmsPostContentSection[];
 }) {
   const payload = {
@@ -823,6 +875,7 @@ export async function createCmsNewsItem(input: {
     registration_deadline: input.registration_deadline || null,
     location: input.location?.trim() || null,
     participation_fee: input.participation_fee?.trim() || null,
+    event_dates: input.event_dates ?? null,
     release_mode: input.published_at ? "SCHEDULED" : "NOW",
     release_at: input.published_at || null,
     content_structure: {
@@ -863,6 +916,7 @@ export async function updateCmsNewsItem(
     registration_deadline?: string | null;
     location?: string;
     participation_fee?: string;
+    event_dates?: string[] | null;
     post_content: CmsPostContentSection[];
   },
 ) {
@@ -885,6 +939,7 @@ export async function updateCmsNewsItem(
     registration_deadline: input.registration_deadline || null,
     location: input.location?.trim() || null,
     participation_fee: input.participation_fee?.trim() || null,
+    event_dates: input.event_dates ?? null,
     release_mode: input.published_at ? "SCHEDULED" : "NOW",
     release_at: input.published_at || null,
     content_structure: {
@@ -907,5 +962,16 @@ export async function deleteCmsNewsItem(id: string) {
   await cmsRequest(`/post/${id}`, {
     method: "DELETE",
     headers: authHeaders(false),
+  });
+}
+
+export async function toggleCmsNewsVisibility(id: string, isHidden: boolean) {
+  return cmsRequest<CmsRawPostItem>(`/post/${id}`, {
+    method: "PUT",
+    headers: authHeaders(),
+    body: JSON.stringify({
+      is_hidden: isHidden,
+      is_active: !isHidden,
+    }),
   });
 }

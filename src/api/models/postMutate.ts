@@ -30,4 +30,5 @@ export interface PostMutate {
   location?: string;
   participation_fee?: string;
   content_structure?: PostMutateContentStructure;
+  event_dates?: string;
 }

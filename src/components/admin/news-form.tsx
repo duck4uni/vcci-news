@@ -2,15 +2,18 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { ArrowLeft, Check, ChevronsUpDown, Save, Upload, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronsUpDown, Save, Upload, X, Calendar as CalendarIcon, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminPostContentEditor } from "@/components/admin/post-content-editor";
+import { PostHistoryViewer } from "@/components/admin/post-history-viewer";
 import { AdminRichTextEditor } from "@/components/admin/rich-text-editor";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { PermissionGate } from "@/components/shared/permission-gate";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Command,
@@ -399,6 +402,10 @@ export function AdminNewsForm({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [isLoadingInitialData, setIsLoadingInitialData] = React.useState(true);
   const [isMissingPost, setIsMissingPost] = React.useState(false);
+  // Toggle state for "Hiển thị các ngày cụ thể trên lịch" — independent of
+  // whether event_dates array is empty, so the date picker section stays
+  // visible after enabling (even before any dates are added).
+  const [useEventDates, setUseEventDates] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -440,6 +447,7 @@ export function AdminNewsForm({
             created_at: now,
             updated_at: now,
           });
+          setUseEventDates(false);
           return;
         }
 
@@ -483,6 +491,8 @@ export function AdminNewsForm({
           nextForm.header_category_id = nextForm.category_ids[0] ?? "";
         }
         setForm(nextForm);
+        // Enable the "specific dates" toggle if the post already has event_dates
+        setUseEventDates((nextForm.event_dates ?? []).length > 0);
       } catch (error) {
         if (cancelled) return;
         toast.error(error instanceof Error ? error.message : "Không thể tải bài viết");
@@ -735,6 +745,7 @@ export function AdminNewsForm({
       registration_deadline: form.registration_deadline || null,
       location: form.location.trim(),
       participation_fee: form.participation_fee.trim(),
+      event_dates: (form.event_dates ?? []).length > 0 ? form.event_dates : null,
       post_content: form.post_content.map((section, index) => ({
         ...section,
         position: index + 1,
@@ -1089,7 +1100,65 @@ export function AdminNewsForm({
           title="Thông tin sự kiện (tùy chọn)"
           description="Nhóm các trường dành cho bài viết có tính chất sự kiện hoặc chương trình."
         >
-          <div className="rounded-xl border border-[#063e8e]/15 p-4">
+          <div className="rounded-xl border border-[#063e8e]/15 p-4 space-y-4">
+            {/* Toggle: Sử dụng ngày cụ thể */}
+            <div className="flex items-center gap-3 rounded-lg border border-[#063e8e]/10 bg-[#063e8e]/5 p-3">
+              <Checkbox
+                id="use-event-dates"
+                checked={useEventDates}
+                onCheckedChange={(checked) => {
+                  setUseEventDates(checked === true);
+                  if (!checked) {
+                    // Tắt: xóa hết event_dates
+                    handleField("event_dates", []);
+                  }
+                }}
+                className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
+              />
+              <div className="flex-1">
+                <Label htmlFor="use-event-dates" className="cursor-pointer text-sm font-medium text-gray-700">
+                  Hiển thị các ngày cụ thể trên lịch
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Thay vì hiển thị tất cả ngày từ bắt đầu đến kết thúc, chỉ hiển thị những ngày bạn chọn bên dưới
+                </p>
+              </div>
+            </div>
+
+            {/* Ngày cụ thể - chỉ hiển thị khi được bật */}
+            {useEventDates && (
+              <div className="space-y-2">
+                <Label className="block text-sm font-medium text-gray-700">
+                  Các ngày cụ thể ({(form.event_dates ?? []).length} ngày)
+                </Label>
+                <div className="flex flex-wrap gap-2">
+                  {(form.event_dates ?? []).map((date, index) => (
+                    <div
+                      key={date}
+                      className="flex items-center gap-1 rounded-lg bg-[#063e8e]/10 px-3 py-1.5 text-sm text-[#063e8e]"
+                    >
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      <span>{dayjs(date).format("DD/MM/YYYY")}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newDates = (form.event_dates ?? []).filter((_, i) => i !== index);
+                          handleField("event_dates", newDates);
+                        }}
+                        className="ml-1 rounded-full p-0.5 hover:bg-[#063e8e]/20"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <EventDatesDatePicker
+                  value={form.event_dates ?? []}
+                  onChange={(dates) => handleField("event_dates", dates)}
+                />
+              </div>
+            )}
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
                 <Label className="mb-1.5 block text-gray-700">Ngày bắt đầu</Label>
@@ -1199,6 +1268,108 @@ export function AdminNewsForm({
         onOpenChange={setPickerOpen}
         onSelect={handleThumbnailSelect}
       />
+
+      {!isCreate && newsId && (
+        <PermissionGate required="posts:read">
+          <PostHistoryViewer postId={newsId} />
+        </PermissionGate>
+      )}
     </div>
+  );
+}
+
+function EventDatesDatePicker({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (dates: string[]) => void;
+}) {
+  const [popoverOpen, setPopoverOpen] = React.useState(false);
+
+  // Convert stored "YYYY-MM-DD" strings to Date objects for react-day-picker
+  const selectedDates = React.useMemo(
+    () => value.map((d) => dayjs(d).toDate()).filter((d) => !Number.isNaN(d.getTime())),
+    [value],
+  );
+
+  const handleMultipleSelect = (dates: Date[] | undefined) => {
+    if (!dates) {
+      onChange([]);
+      return;
+    }
+    const newDates = Array.from(
+      new Set(dates.map((d) => dayjs(d).format("YYYY-MM-DD"))),
+    ).sort();
+    onChange(newDates);
+  };
+
+  return (
+    <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          className="border-[#063e8e]/15 bg-white text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e]"
+        >
+          <Plus className="mr-2 h-4 w-4" />
+          Thêm ngày{value.length > 0 ? ` (${value.length})` : ""}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-fit p-0" align="start">
+        <div className="p-4">
+          <div className="mb-3 flex items-center justify-between gap-2 border-b border-gray-100 pb-3">
+            <span className="text-base font-semibold text-[#063e8e]">
+              {value.length > 0
+                ? `Đã chọn ${value.length} ngày`
+                : "Chọn các ngày cụ thể"}
+            </span>
+            {value.length > 0 && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 text-sm text-red-600 hover:bg-red-50 hover:text-red-700"
+                onClick={() => onChange([])}
+              >
+                Xóa tất cả
+              </Button>
+            )}
+          </div>
+          <Calendar
+            mode="multiple"
+            selected={selectedDates}
+            onSelect={handleMultipleSelect}
+            className="w-full [--cell-size:3.5rem]"
+            classNames={{
+              root: "w-full",
+              month: "flex w-full flex-col gap-4",
+              month_caption: "flex h-12 w-full items-center justify-center px-2 text-xl font-bold text-[#063e8e]",
+              nav: "absolute inset-x-0 top-0 flex w-full items-center justify-between gap-1",
+              button_previous: "h-12 w-12 select-none p-0 text-[#063e8e] hover:bg-[#063e8e]/10 aria-disabled:opacity-50 [&>svg]:size-6",
+              button_next: "h-12 w-12 select-none p-0 text-[#063e8e] hover:bg-[#063e8e]/10 aria-disabled:opacity-50 [&>svg]:size-6",
+              weekday: "flex-1 select-none rounded-md text-sm font-semibold uppercase text-gray-400",
+              day: "group/day relative aspect-square h-full w-full select-none p-0 text-center text-lg",
+              today: "ring-2 ring-[#063e8e]/40 rounded-full bg-[#063e8e]/5 text-[#063e8e] font-semibold",
+              outside: "text-gray-300",
+            }}
+          />
+          <div className="mt-3 flex items-center justify-between gap-4 border-t border-gray-100 pt-3">
+            <span className="text-sm text-gray-400">
+              Click ngày để chọn / bỏ chọn
+            </span>
+            <Button
+              type="button"
+              variant="default"
+              size="default"
+              className="bg-[#063e8e] hover:bg-[#063e8e]/90"
+              onClick={() => setPopoverOpen(false)}
+            >
+              Xong
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

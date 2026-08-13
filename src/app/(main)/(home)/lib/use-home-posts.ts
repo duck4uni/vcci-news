@@ -40,6 +40,7 @@ type RawHomePost = {
   is_active?: boolean | null;
   status?: string | null;
   type?: string | null;
+  event_dates?: string[] | null;
   categories?: RawHomeCategory[] | null;
   thumbnail?: RawHomeThumbnail | null;
   content_structure?: {
@@ -84,6 +85,7 @@ export type HomePostItem = {
   isActive: boolean;
   status: string;
   type: string;
+  eventDates?: string[];
   categories: HomePostCategory[];
   thumbnail: {
     url: string;
@@ -416,6 +418,9 @@ async function fetchHomePostsFromApi() {
         isActive: item.is_active !== false,
         status: String(item.status ?? ""),
         type: String(item.type ?? ""),
+        eventDates: Array.isArray(item.event_dates)
+          ? item.event_dates.filter((d): d is string => typeof d === "string")
+          : [],
         categories,
         thumbnail: thumbnailPath
           ? {
@@ -642,6 +647,9 @@ export function useEventCalendarPosts(currentMonth: Date) {
             isActive: item.is_active !== false,
             status: String(item.status ?? ""),
             type: String(item.type ?? ""),
+            eventDates: Array.isArray(item.event_dates)
+              ? item.event_dates.filter((d): d is string => typeof d === "string")
+              : [],
             categories,
             thumbnail: thumbnailPath
               ? {
@@ -652,15 +660,16 @@ export function useEventCalendarPosts(currentMonth: Date) {
           } satisfies HomePostItem;
         });
 
-        // Filter posts that have at least one date (startedAt, endedAt, or registrationDeadline)
-        // falling within the current month
+        // Filter posts that have at least one date (eventDates, startedAt,
+        // endedAt, or registrationDeadline) falling within the current month
         return mappedPosts.filter((item) => {
           const startedAt = item.startedAt ? dayjs(item.startedAt) : null;
           const endedAt = item.endedAt ? dayjs(item.endedAt) : null;
           const registrationDeadline = item.registrationDeadline ? dayjs(item.registrationDeadline) : null;
+          const eventDates = (item.eventDates ?? []).map((d) => dayjs(d)).filter((d) => d.isValid());
 
           // If no dates at all, exclude
-          if (!startedAt && !endedAt && !registrationDeadline) return false;
+          if (!startedAt && !endedAt && !registrationDeadline && eventDates.length === 0) return false;
 
           const monthStartDay = dayjs(monthStart);
           const monthEndDay = dayjs(monthEnd);
@@ -669,6 +678,13 @@ export function useEventCalendarPosts(currentMonth: Date) {
           const hasDateInMonth = (date: dayjs.Dayjs | null): boolean => {
             return date !== null && !date.isBefore(monthStartDay, "day") && !date.isAfter(monthEndDay, "day");
           };
+
+          // If specific event_dates are set, only check those (they take
+          // priority over the started_at/ended_at range — same rule the
+          // calendar rendering uses in getEventDateRange).
+          if (eventDates.length > 0) {
+            return eventDates.some((d) => hasDateInMonth(d));
+          }
 
           // Check if event overlaps with current month (spans across the month)
           const eventStartDate = startedAt || registrationDeadline;

@@ -30,6 +30,16 @@ export type DynamicPostThumbnail = {
   url?: string | null;
 } | null;
 
+export type DynamicPostUser = {
+  id: string;
+  email: string;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string;
+  avatar_url: string | null;
+} | null;
+
 export type DynamicPostContentSection = {
   id: string;
   type: string;
@@ -76,4 +86,6 @@ export type DynamicPostItem = {
   content_structure: {
     post_content: DynamicPostContentSection[];
   } | null;
+  creator: DynamicPostUser;
+  editor: DynamicPostUser;
 };

@@ -23,4 +23,5 @@ export interface UserAuthMutate {
   reset_password_otp_expires_at?: string;
   reset_password_otp_attempts?: number;
   reset_password_otp_sent_at?: string;
+  must_change_password?: boolean;
 }

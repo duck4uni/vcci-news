@@ -5,13 +5,16 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
-import type { SiteInformationMutateLinkSocials } from './siteInformationMutateLinkSocials';
 
 export interface SiteInformationMutate {
-  code?: string;
-  telephone?: string;
+  hotline?: string;
   email?: string;
   address?: string;
-  working_hours?: string;
-  link_socials?: SiteInformationMutateLinkSocials;
+  branch_name?: string;
+  fax?: string;
+  googlemap_link?: string;
+  sort_order?: number;
+  is_active?: boolean;
+  website_name?: string;
+  website_link?: string;
 }

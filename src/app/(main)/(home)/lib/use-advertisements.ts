@@ -23,6 +23,7 @@ export function useAdvertisements(
     limit: effectiveLimit,
   });
 
+  // Backend trả về { responseData: [...] }
   return (
     (data as unknown as { responseData?: Advertisement[] } | undefined)?.responseData ?? []
   );

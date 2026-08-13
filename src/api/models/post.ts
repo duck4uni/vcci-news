@@ -35,4 +35,5 @@ export interface Post {
   location?: string;
   participation_fee?: string;
   content_structure?: PostContentStructure;
+  event_dates?: string;
 }
