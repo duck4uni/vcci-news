@@ -5,6 +5,7 @@ import ImageNext from "@/components/shared/image-next";
 import partnerImages from "@/constants/partnerImages";
 import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
+import { MOCK_PARTNERS_RESPONSE } from "@/app/api/mock-data";
 import { fetchClientVideos } from "@/lib/api/videos";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -110,24 +111,36 @@ function VideoAndPartners() {
   const partnersQuery = useQuery({
     queryKey: ["home-partners"],
     queryFn: async () => {
-      const response = await fetch(PARTNER_API_URL, {
-        cache: "no-store",
-      });
+      try {
+        const response = await fetch(PARTNER_API_URL, {
+          cache: "no-store",
+        });
 
-      if (!response.ok) {
-        throw new Error(`Cannot load partners: ${response.status}`);
+        if (!response.ok) {
+          throw new Error(`Cannot load partners: ${response.status}`);
+        }
+
+        const data = (await response.json()) as PartnerResponse;
+        const rows = data.responseData?.rows ?? [];
+
+        // API trả về rỗng → dùng mock data
+        if (rows.length === 0) {
+          return MOCK_PARTNERS_RESPONSE as unknown as PartnerResponse;
+        }
+
+        return data;
+      } catch (error) {
+        console.error(error);
+        // Fallback: dùng mock data thay vì hiển thị "Chưa có thông tin"
+        return MOCK_PARTNERS_RESPONSE as unknown as PartnerResponse;
       }
-
-      return (await response.json()) as PartnerResponse;
     },
     staleTime: 60 * 1000,
   });
 
   const videos = videosQuery.data?.rows ?? [];
   const partners = partnersQuery.data?.responseData?.rows?.slice(0, 12) ?? [];
-  const hasPartnerError = partnersQuery.isError;
-  const displayPartners =
-    hasPartnerError || partners.length === 0 ? [] : partners;
+  const displayPartners = partners;
 
   return (
     <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
