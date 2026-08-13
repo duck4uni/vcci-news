@@ -5,8 +5,8 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
-import type { GetApiV10PostId200AllOfResponseData } from './getApiV10PostId200AllOfResponseData';
+import type { Post } from './post';
 
 export type GetApiV10PostId200AllOf = {
-  responseData?: GetApiV10PostId200AllOfResponseData;
+  responseData?: Post;
 };

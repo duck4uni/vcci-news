@@ -71,6 +71,7 @@ import {
   usePatchApiV10UserIdStatus,
   usePostApiV10UserIdResetPassword,
   usePostApiV10UserIdRole,
+  useDeleteApiV10UserIdRole,
   useGetApiV10UserId,
   usePutApiV10UserId,
   putApiV10UserId,
@@ -234,6 +235,7 @@ export default function UsersPage() {
   const toggleStatusMutation = usePatchApiV10UserIdStatus();
   const resetPasswordMutation = usePostApiV10UserIdResetPassword();
   const assignRoleMutation = usePostApiV10UserIdRole();
+  const removeRoleMutation = useDeleteApiV10UserIdRole();
 
   // Data
   const roles: Role[] = ((rolesData as unknown as { responseData?: { rows?: Role[] } })?.responseData?.rows) || [];
@@ -373,16 +375,64 @@ export default function UsersPage() {
     }
 
     try {
-      const primaryRole = roles.find((r) => r.name === userRoles[0]);
-      if (primaryRole) {
+      // Compute diff between current roles (from selectedUser) and new
+      // selection (userRoles). Both arrays hold role *names*.
+      const currentRoleNames = selectedUser.roles ?? [];
+      const currentRoleSet = new Set(currentRoleNames);
+      const newRoleSet = new Set(userRoles);
+
+      // Roles to remove: in current but not in new
+      const rolesToRemove = currentRoleNames.filter(
+        (name) => !newRoleSet.has(name),
+      );
+      // Roles to add: in new but not in current
+      const rolesToAdd = userRoles.filter(
+        (name) => !currentRoleSet.has(name),
+      );
+
+      // Resolve role IDs from name
+      const roleByName = new Map(roles.map((r) => [r.name, r]));
+
+      // 1. Remove roles no longer selected
+      for (const roleName of rolesToRemove) {
+        const role = roleByName.get(roleName);
+        if (!role) continue;
+        await removeRoleMutation.mutateAsync({
+          id: selectedUser.id,
+          data: { role_id: role.id },
+        });
+      }
+
+      // 2. Add new roles. userRoles[0] is treated as primary.
+      //    Non-primary roles get is_primary=false.
+      for (let i = 0; i < rolesToAdd.length; i++) {
+        const role = roleByName.get(rolesToAdd[i]);
+        if (!role) continue;
         await assignRoleMutation.mutateAsync({
           id: selectedUser.id,
           data: {
-            role_id: primaryRole.id,
-            is_primary: true,
+            role_id: role.id,
+            is_primary: i === 0,
           },
         });
       }
+
+      // 3. If no roles were added but primary changed (e.g. user reordered
+      //    existing roles), still POST the first selected role with
+      //    is_primary=true. Backend will update is_primary without 409.
+      if (rolesToAdd.length === 0 && rolesToRemove.length === 0) {
+        const primaryRole = roleByName.get(userRoles[0]);
+        if (primaryRole) {
+          await assignRoleMutation.mutateAsync({
+            id: selectedUser.id,
+            data: {
+              role_id: primaryRole.id,
+              is_primary: true,
+            },
+          });
+        }
+      }
+
       toast.success("Cập nhật vai trò thành công!");
       setIsRoleDialogOpen(false);
       queryClient.invalidateQueries({ queryKey: ["/api/v1.0/user"], exact: false });
@@ -978,7 +1028,7 @@ export default function UsersPage() {
             </Button>
             <Button
               onClick={handleSaveRoles}
-              disabled={userRoles.length === 0 || assignRoleMutation.isPending}
+              disabled={userRoles.length === 0 || assignRoleMutation.isPending || removeRoleMutation.isPending}
               className="h-10 rounded-xl bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
             >
               {assignRoleMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

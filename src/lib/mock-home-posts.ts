@@ -30,6 +30,7 @@ export type HomePostItem = {
   isActive: boolean;
   status: string;
   type: string;
+  eventDates?: string[];
   categories: HomePostCategory[];
   thumbnail: { url: string; alt: string } | null;
 };
@@ -126,6 +127,7 @@ const buildPost = (params: BuildPostParams): HomePostItem => ({
   isActive: true,
   status: "published",
   type: "news",
+  eventDates: [],
   categories: [
     buildCategory(
       params.categoryId,

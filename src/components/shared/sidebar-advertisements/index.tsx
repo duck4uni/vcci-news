@@ -13,7 +13,6 @@ const FALLBACK_HREF = "https://vcci-hcm.org.vn";
 function SidebarAdItem({ item }: { item: Advertisement }) {
   const initialSrc = item.file?.path ? resolveUploadUrl(item.file.path) : FALLBACK_SRC;
   const [src, setSrc] = useState(initialSrc);
-  const isGif = src.toLowerCase().endsWith(".gif");
 
   return (
     <Link
@@ -29,7 +28,7 @@ function SidebarAdItem({ item }: { item: Advertisement }) {
           alt={item.alt || item.name}
           fill
           className="h-full w-full object-cover"
-          unoptimized={isGif}
+          unoptimized
           onError={() => {
             if (src !== FALLBACK_SRC) setSrc(FALLBACK_SRC);
           }}
@@ -54,6 +53,7 @@ function FallbackSidebarAdItem() {
           alt="Quảng cáo VCCI HCM"
           fill
           className="h-full w-full object-cover"
+          unoptimized
         />
       </div>
     </Link>

@@ -56,6 +56,16 @@ export interface AdminNewsContentSection {
   images: AdminNewsContentImage[];
 }
 
+export interface AdminNewsUser {
+  id: string;
+  email: string;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string;
+  avatar_url: string | null;
+}
+
 export interface AdminNewsItem {
   id: string;
   title: string;
@@ -77,7 +87,10 @@ export interface AdminNewsItem {
   registration_deadline: string;
   location: string;
   participation_fee: string;
+  event_dates?: string[];
   post_content: AdminNewsContentSection[];
+  creator?: AdminNewsUser | null;
+  editor?: AdminNewsUser | null;
 }
 
 export interface AdminNewsFormValues {
@@ -100,6 +113,7 @@ export interface AdminNewsFormValues {
   registration_deadline: string;
   location: string;
   participation_fee: string;
+  event_dates?: string[];
   post_content: AdminNewsContentSection[];
 }
 
@@ -123,6 +137,7 @@ export const EMPTY_ADMIN_NEWS_FORM: AdminNewsFormValues = {
   registration_deadline: "",
   location: "",
   participation_fee: "",
+  event_dates: [],
   post_content: [],
 };
 
@@ -1324,6 +1339,7 @@ export function cloneAdminNewsFormValues(item?: AdminNewsItem | null): AdminNews
     registration_deadline: item.registration_deadline,
     location: item.location,
     participation_fee: item.participation_fee,
+    event_dates: [...(item.event_dates ?? [])],
     post_content: item.post_content.map((section) => ({
       ...section,
       images: section.images.map((image) => ({

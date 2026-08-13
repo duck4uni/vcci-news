@@ -15,6 +15,11 @@ const formatDateTime = (value: string) =>
   value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "Đang cập nhật";
 
 const getEventDateRange = (item: HomePostItem) => {
+  // Ưu tiên event_dates (ngày cụ thể)
+  if (item.eventDates && item.eventDates.length > 0) {
+    return item.eventDates.map((d) => dayjs(d).format("YYYY-MM-DD")).filter(Boolean);
+  }
+
   const startedAt = item.startedAt ? dayjs(item.startedAt) : null;
   const endedAt = item.endedAt ? dayjs(item.endedAt) : null;
 

@@ -9,6 +9,7 @@ import type {
   DynamicPostContentSection,
   DynamicPostItem,
   DynamicPostThumbnail,
+  DynamicPostUser,
 } from "./types";
 
 type CategoryListResponse = {
@@ -30,6 +31,16 @@ type RawPostThumbnail = {
   original?: string | null;
   url?: string | null;
 };
+
+type RawPostUser = {
+  id?: string | null;
+  email?: string | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+} | null;
 
 type RawPostSectionImage = {
   position?: number | null;
@@ -66,6 +77,8 @@ type RawPostItem = {
   type?: string | null;
   thumbnail?: RawPostThumbnail | null;
   categories?: RawPostCategory[] | null;
+  creator?: RawPostUser;
+  editor?: RawPostUser;
   content_structure?: {
     post_content?: Array<{
       id?: string | null;
@@ -205,6 +218,26 @@ const mapPostContentSections = (item: RawPostItem): DynamicPostContentSection[] 
   }));
 };
 
+const mapPostUser = (user: RawPostUser | undefined): DynamicPostUser => {
+  if (!user || typeof user !== "object") return null;
+  const firstName = String(user.first_name ?? "").trim();
+  const lastName = String(user.last_name ?? "").trim();
+  const fullName =
+    String(user.full_name ?? "").trim() ||
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    String(user.username ?? "").trim() ||
+    String(user.email ?? "").trim();
+  return {
+    id: String(user.id ?? ""),
+    email: String(user.email ?? ""),
+    username: user.username ? String(user.username) : null,
+    first_name: firstName || null,
+    last_name: lastName || null,
+    full_name: fullName,
+    avatar_url: user.avatar_url ? String(user.avatar_url) : null,
+  };
+};
+
 const mapPost = (item: RawPostItem): DynamicPostItem => ({
   id: String(item.id ?? ""),
   title: String(item.title ?? "").trim(),
@@ -239,6 +272,8 @@ const mapPost = (item: RawPostItem): DynamicPostItem => ({
   content_structure: {
     post_content: mapPostContentSections(item),
   },
+  creator: mapPostUser(item.creator),
+  editor: mapPostUser(item.editor),
 });
 
 const buildPostFilters = (filters: Array<string | null | undefined>) =>

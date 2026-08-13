@@ -5,18 +5,21 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
-import type { SiteInformationLinkSocials } from './siteInformationLinkSocials';
 
 export interface SiteInformation {
   id?: string;
-  code?: string;
-  telephone?: string;
+  hotline?: string;
   email?: string;
   address?: string;
-  working_hours?: string;
-  link_socials?: SiteInformationLinkSocials;
   created_at?: string;
   created_by?: string;
   updated_at?: string;
   updated_by?: string;
+  branch_name?: string;
+  fax?: string;
+  googlemap_link?: string;
+  sort_order?: number;
+  is_active?: boolean;
+  website_name?: string;
+  website_link?: string;
 }

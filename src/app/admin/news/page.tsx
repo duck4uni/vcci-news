@@ -47,6 +47,7 @@ import {
   fetchCmsNewsItems,
   fetchCmsPostCount,
   fetchHeaderConfigItems,
+  toggleCmsNewsVisibility,
 } from "@/lib/api/cms-admin";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
@@ -239,6 +240,7 @@ export default function AdminNewsPage() {
   const [deleteTarget, setDeleteTarget] = React.useState<AdminNewsItem | null>(null);
   const [ready, setReady] = React.useState(false);
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [togglingVisibilityId, setTogglingVisibilityId] = React.useState<string | null>(null);
   const [page, setPage] = React.useState(() => {
     const parsedPage = Number(searchParams.get("page") ?? 1);
     return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
@@ -450,6 +452,25 @@ export default function AdminNewsPage() {
     }
   };
 
+  const handleToggleVisibility = async (item: AdminNewsItem) => {
+    if (togglingVisibilityId) return;
+
+    const nextIsHidden = !item.is_hidden;
+    setTogglingVisibilityId(item.id);
+
+    try {
+      await toggleCmsNewsVisibility(item.id, nextIsHidden);
+      toast.success(nextIsHidden ? "Đã ẩn bài viết" : "Đã hiển thị bài viết");
+      await Promise.all([load(), loadStats()]);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "Không thể thay đổi trạng thái hiển thị",
+      );
+    } finally {
+      setTogglingVisibilityId(null);
+    }
+  };
+
   const totalPages = Math.ceil(total / pageSize);
 
   const handlePageChange = (newPage: number) => {
@@ -528,17 +549,17 @@ export default function AdminNewsPage() {
                 <TableHead className="w-[140px] py-4 text-center text-white">
                   Hình ảnh đại diện
                 </TableHead>
-                <TableHead className="w-40 py-4 text-center text-white">
-                  Loại bài viết
-                </TableHead>
-                <TableHead className="w-[190px] py-4 text-center text-white">
-                  Danh mục hiển thị
+                <TableHead className="w-[220px] py-4 text-center text-white">
+                  Loại / Danh mục
                 </TableHead>
                 <TableHead className="w-[170px] py-4 text-center text-white">
-                  Ngày xuất bản
+                  Ngày xuất bản / Hết hạn
                 </TableHead>
-                <TableHead className="w-[170px] py-4 text-center text-white">
-                  Ngày hết hạn
+                <TableHead className="w-[150px] py-4 text-center text-white">
+                  Người tạo
+                </TableHead>
+                <TableHead className="w-[150px] py-4 text-center text-white">
+                  Cập nhật bởi
                 </TableHead>
                 <TableHead className="w-[130px] py-4 text-center text-white">
                   Thao tác
@@ -598,31 +619,64 @@ export default function AdminNewsPage() {
                       </TableCell>
 
                       <TableCell className="text-center">
-                        <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
-                          {ADMIN_NEWS_TYPE_LABELS[item.type]}
-                        </Badge>
+                        <div className="flex flex-col items-center gap-1">
+                          <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
+                            {ADMIN_NEWS_TYPE_LABELS[item.type]}
+                          </Badge>
+                          <span className="text-sm text-gray-700">
+                            {primaryCategoryName}
+                            {extraCategoryCount > 0 ? ` (+${extraCategoryCount})` : ""}
+                          </span>
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-center text-sm text-gray-700">
-                        {primaryCategoryName}
-                        {extraCategoryCount > 0 ? ` (+${extraCategoryCount})` : ""}
+                        <div className="flex flex-col gap-0.5">
+                          <span>{formatDateTime(item.published_at) || "—"}</span>
+                          <span className="text-gray-500">{formatDateTime(item.expired_at) || "—"}</span>
+                        </div>
                       </TableCell>
 
                       <TableCell className="text-center text-sm text-gray-700">
-                        {formatDateTime(item.published_at)}
+                        {item.creator ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium text-[#1f3768]">
+                              {item.creator.full_name}
+                            </span>
+                            <span className="text-gray-500">
+                              {formatDateTime(item.created_at) || "—"}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </TableCell>
 
                       <TableCell className="text-center text-sm text-gray-700">
-                        {formatDateTime(item.expired_at)}
+                        {item.editor && item.editor.id ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium text-[#1f3768]">
+                              {item.editor.full_name}
+                            </span>
+                            <span className="text-gray-500">
+                              {formatDateTime(item.updated_at) || "—"}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
                       </TableCell>
+
                       <TableCell className="text-center">
                         <AdminRowActions
                           actions={[
                             {
                               kind: item.is_hidden ? "hidden" : "visible",
                               label: item.is_hidden
-                                ? "B\u00e0i vi\u1ebft \u0111ang \u1ea9n"
-                                : "B\u00e0i vi\u1ebft \u0111ang hi\u1ec3n th\u1ecb",
+                                ? "B\u00e0i vi\u1ebft \u0111ang \u1ea9n, b\u1ea5m \u0111\u1ec3 hi\u1ec3n th\u1ecb"
+                                : "B\u00e0i vi\u1ebft \u0111ang hi\u1ec3n th\u1ecb, b\u1ea5m \u0111\u1ec3 \u1ea9n",
+                              disabled: togglingVisibilityId === item.id,
+                              onClick: () => void handleToggleVisibility(item),
                             },
                             {
                               kind: "edit",

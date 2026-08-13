@@ -5,8 +5,7 @@
  * Generated API documentation
  * OpenAPI spec version: 1.0.0
  */
-import type { Post } from './post';
 
-export type PostApiV10Post200AllOf = {
-  responseData?: Post;
+export type DeleteApiV10PostId200AllOf = {
+  responseData?: boolean;
 };

@@ -21,6 +21,7 @@ type FeaturedMember = {
   id: string;
   name: string;
   avatar?: string | null;
+  org_link?: string | null;
 };
 
 type FeaturedMembersResponse = {
@@ -44,6 +45,13 @@ const resolveMemberImage = (avatar: string | null | undefined, index: number) =>
   }
 
   return memberImages[index % memberImages.length] ?? "/img-error.png";
+};
+
+const getMemberDetailUrl = (orgLink: string | null | undefined) => {
+  if (orgLink) {
+    return `${VCCI_HCM_ORIGIN}/giao-thuong-b2b/doanh-nghiep/${orgLink}`;
+  }
+  return null;
 };
 
 function Members() {
@@ -123,29 +131,58 @@ function Members() {
         spaceBetween={16}
         className="w-full"
       >
-        {displayMembers.map((member, index) => (
-          <SwiperSlide
-            key={member.id}
-            className="!h-auto !w-full md:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
-          >
-            <article className="rounded-[20px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
-              <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
-                <div className="flex h-full w-full max-w-[260px] items-center justify-center">
-                  <ImageNext
-                    src={resolveMemberImage(member.avatar, index)}
-                    alt={member.name}
-                    width={260}
-                    height={180}
-                    className="h-[180px] w-[260px] max-w-full object-contain"
-                  />
-                </div>
-              </div>
-              <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e]">
-                {member.name}
-              </h3>
-            </article>
-          </SwiperSlide>
-        ))}
+        {displayMembers.map((member, index) => {
+          const detailUrl = getMemberDetailUrl(member.org_link);
+          return (
+            <SwiperSlide
+              key={member.id}
+              className="!h-auto !w-full md:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
+            >
+              <article className="rounded-[20px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
+                {detailUrl ? (
+                  <a
+                    href={detailUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block"
+                  >
+                    <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
+                      <div className="flex h-full w-full max-w-[260px] items-center justify-center">
+                        <ImageNext
+                          src={resolveMemberImage(member.avatar, index)}
+                          alt={member.name}
+                          width={260}
+                          height={180}
+                          className="h-[180px] w-[260px] max-w-full object-contain"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e] transition-colors hover:text-[#20449a]">
+                      {member.name}
+                    </h3>
+                  </a>
+                ) : (
+                  <>
+                    <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
+                      <div className="flex h-full w-full max-w-[260px] items-center justify-center">
+                        <ImageNext
+                          src={resolveMemberImage(member.avatar, index)}
+                          alt={member.name}
+                          width={260}
+                          height={180}
+                          className="h-[180px] w-[260px] max-w-full object-contain"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e]">
+                      {member.name}
+                    </h3>
+                  </>
+                )}
+              </article>
+            </SwiperSlide>
+          );
+        })}
       </Swiper>
     );
   };
