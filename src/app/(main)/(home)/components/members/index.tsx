@@ -3,6 +3,7 @@
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import ImageNext from "@/components/shared/image-next";
 import memberImages from "@/constants/memberImages";
+import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/app/api/mock-data";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Autoplay } from "swiper/modules";
@@ -84,16 +85,28 @@ function Members() {
         const rows = data.responseData?.rows ?? [];
 
         if (isMounted) {
-          setFeaturedMembers(
-            rows.length > 0
-              ? { status: "ready", rows }
-              : { status: "empty" },
-          );
+          if (rows.length > 0) {
+            setFeaturedMembers({ status: "ready", rows });
+          } else {
+            // API trả về rỗng → dùng mock data
+            const mockRows = MOCK_FEATURED_MEMBERS_RESPONSE.responseData?.rows ?? [];
+            setFeaturedMembers(
+              mockRows.length > 0
+                ? { status: "ready", rows: mockRows as FeaturedMember[] }
+                : { status: "empty" },
+            );
+          }
         }
       } catch (error) {
         console.error(error);
         if (isMounted) {
-          setFeaturedMembers({ status: "empty" });
+          // Fallback: dùng mock data thay vì hiển thị "Chưa có thông tin"
+          const mockRows = MOCK_FEATURED_MEMBERS_RESPONSE.responseData?.rows ?? [];
+          setFeaturedMembers(
+            mockRows.length > 0
+              ? { status: "ready", rows: mockRows as FeaturedMember[] }
+              : { status: "empty" },
+          );
         }
       }
     };
