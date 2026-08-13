@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
 import { resolveUploadUrl } from "@/links";
 
-const FALLBACK_HREF = "https://vcci-hcm.org.vn";
+const FALLBACK_HREF = "https://vccihcm.vn";
 const FALLBACK_SRC = "/quang-cao/qc-1.jpg";
 
 /**

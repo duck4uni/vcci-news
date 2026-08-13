@@ -5,7 +5,6 @@ import ImageNext from "@/components/shared/image-next";
 import partnerImages from "@/constants/partnerImages";
 import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
-import links from "@/links";
 import { fetchClientVideos } from "@/lib/api/videos";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -24,7 +23,10 @@ type PartnerResponse = {
   };
 };
 
-const PARTNER_API_URL = `${links.siteURL}api/partners`;
+const PARTNER_API_URL =
+  "https://vccihcm.vn/api/v1.0/organizations" +
+  "?filters=type%3D%3DSPONSOR&pageSize=12" +
+  "&sortField=sort_order&sortOrder=ASC";
 const VCCI_HCM_ORIGIN = "https://vccihcm.vn";
 
 const resolvePartnerImage = (avatar: string | null | undefined, index: number) => {
