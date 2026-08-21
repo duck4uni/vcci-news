@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/app/api/mock-data";
 
-const BACKEND_HOST = process.env.NEXT_PUBLIC_BACKEND_HOST || "https://news.vccihcm.vn";
+const BACKEND_HOST = process.env.NEXT_PUBLIC_BACKEND_HOST || "https://vcci-hcm.org.vn";
 const BACKEND_FEATURED_MEMBER_API_URL = `${BACKEND_HOST.replace(/\/+$/, "")}/api/v1.0/vcci/featured-members`;
 
 // Ưu tiên gọi trực tiếp VCCI HCM API (BE hiện chưa có endpoint này)

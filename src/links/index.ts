@@ -1,5 +1,5 @@
-const DEFAULT_BACKEND_ORIGIN = "https://news.vccihcm.vn";
-const DEFAULT_FRONTEND_ORIGIN = "https://news.vccihcm.vn";
+const DEFAULT_BACKEND_ORIGIN = "https://vcci-hcm.org.vn";
+const DEFAULT_FRONTEND_ORIGIN = "https://vcci-hcm.org.vn";
 const LEGACY_MEDIA_HOSTS = new Set([
   "vietprodev.duckdns.org",
   "vcci-hcm.org.vn",
@@ -147,7 +147,7 @@ const links = {
   analyticsGoogle: "G-C9TEK9BS4C",
   // CHỈ dùng origin làm baseURL — orval-generated endpoints đã chứa path
   // đầy đủ dạng `/api/v1.0/<resource>` nếu không axios sẽ ghép thành double prefix
-  // (vd: `https://news.vccihcm.vn/api/v1.0` + `/api/v1.0/banner` => .../api/v1.0/api/v1.0/banner).
+  // (vd: `https://vcci-hcm.org.vn/api/v1.0` + `/api/v1.0/banner` => .../api/v1.0/api/v1.0/banner).
   apiEndpoint: backendOrigin || "",
   imageEndpoint: uploadsEndpoint,
   resolveUploadUrl,
