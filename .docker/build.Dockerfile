@@ -1,7 +1,7 @@
 FROM registry.gitlab.com/meusolutions/vcci-news:base AS builder
 
-ARG NEXT_PUBLIC_BACKEND_HOST=https://news.vccihcm.vn
-ARG NEXT_PUBLIC_FRONTEND_HOST=https://news.vccihcm.vn
+ARG NEXT_PUBLIC_BACKEND_HOST=https://vcci-hcm.org.vn
+ARG NEXT_PUBLIC_FRONTEND_HOST=https://vcci-hcm.org.vn
 
 ENV NEXT_PUBLIC_BACKEND_HOST=$NEXT_PUBLIC_BACKEND_HOST
 ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
@@ -21,8 +21,8 @@ RUN pnpm run build
 FROM node:22-alpine AS production
 WORKDIR /app
 
-ARG NEXT_PUBLIC_BACKEND_HOST=https://news.vccihcm.vn
-ARG NEXT_PUBLIC_FRONTEND_HOST=https://news.vccihcm.vn
+ARG NEXT_PUBLIC_BACKEND_HOST=https://vcci-hcm.org.vn
+ARG NEXT_PUBLIC_FRONTEND_HOST=https://vcci-hcm.org.vn
 
 ENV NEXT_PUBLIC_BACKEND_HOST=$NEXT_PUBLIC_BACKEND_HOST
 ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST

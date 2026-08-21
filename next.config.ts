@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "news.vccihcm.vn",
+        hostname: "vcci-hcm.org.vn",
         port: "",
         pathname: "/uploads/**",
       },
