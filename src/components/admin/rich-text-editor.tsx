@@ -239,6 +239,36 @@ export function AdminRichTextEditor({
   const recentlyFormattedRef = useRef(false);
   // Flag set by the native paste handler — only true right after a real paste event
   const pasteDetectedRef = useRef(false);
+  // Holds the cleanup function for the paste listener so we can remove it
+  // when the editor instance is replaced or the component unmounts.
+  const pasteCleanupRef = useRef<(() => void) | null>(null);
+
+  // Called by JoditEditor once the IJodit instance is ready. We use this to
+  // attach a native paste listener to the editor's editable DOM element.
+  const handleEditorRef = React.useCallback((jodit: { editor?: HTMLElement }) => {
+    // Clean up any previous listener
+    pasteCleanupRef.current?.();
+    pasteCleanupRef.current = null;
+
+    const editorEl = jodit?.editor;
+    if (!editorEl) return;
+
+    const handlePaste = () => {
+      pasteDetectedRef.current = true;
+    };
+
+    editorEl.addEventListener("paste", handlePaste);
+    pasteCleanupRef.current = () => {
+      editorEl.removeEventListener("paste", handlePaste);
+    };
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      pasteCleanupRef.current?.();
+      pasteCleanupRef.current = null;
+    };
+  }, []);
 
   const handleFormat = React.useCallback((html: string) => {
     setIsFormatting(true);
@@ -286,25 +316,6 @@ export function AdminRichTextEditor({
     lastValueRef.current = html;
     onChange(html);
   }, [handleFormat, onChange]);
-
-  // Attach a native paste listener to the editor container so we can detect
-  // real clipboard paste events instead of guessing from HTML content.
-  React.useEffect(() => {
-    const container = editor.current as unknown as HTMLElement | null;
-    if (!container) return;
-
-    const editorEl = container.querySelector?.(".jodit-wysiwyg") as HTMLElement | null;
-    const target = editorEl ?? container;
-
-    const handlePaste = () => {
-      pasteDetectedRef.current = true;
-    };
-
-    target.addEventListener("paste", handlePaste);
-    return () => {
-      target.removeEventListener("paste", handlePaste);
-    };
-  }, [localValue]);
 
   const config: JoditEditorProps["config"] = useMemo(
     () => ({
@@ -565,6 +576,7 @@ export function AdminRichTextEditor({
         <div className="editor-wrapper">
           <JoditEditor
             ref={editor}
+            editorRef={handleEditorRef}
             value={localValue}
             config={config}
             onBlur={(nextContent) => {
