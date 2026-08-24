@@ -325,7 +325,7 @@ export function AdminRichTextEditor({
       language: "vi",
       toolbarButtonSize: "middle",
       uploader: {
-        url: `${links.apiEndpoint}/files`,
+        url: `${links.apiEndpoint}/api/v1.0/file/upload`,
         method: "POST",
         headers: {
           ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
