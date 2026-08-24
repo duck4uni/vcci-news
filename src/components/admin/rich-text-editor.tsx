@@ -5,7 +5,7 @@ import * as React from "react";
 import { useMemo, useRef } from "react";
 import type { JoditEditorProps } from "jodit-react";
 import useAuthStore from "@/store/useAuthStore";
-import links from "@/links";
+import links, { resolveUploadUrl } from "@/links";
 
 const JoditEditor = dynamic(() => import("jodit-react").then((mod) => mod.default), {
   ssr: false,
@@ -104,26 +104,24 @@ function cleanPastedHtml(value: string) {
     });
   });
 
-  // Handle images
+  // Handle images - remove width/height attributes, let client CSS handle layout
   doc.querySelectorAll("img").forEach((el) => {
-    el.setAttribute("style", "display:block;width:100%;max-width:100%;height:auto;");
     el.removeAttribute("width");
     el.removeAttribute("height");
     el.removeAttribute("style");
-    el.setAttribute("style", "display:block;width:100%;max-width:100%;height:auto;");
   });
 
-  // Handle tables
+  // Handle tables - remove inline styles, let client CSS handle layout
   doc.querySelectorAll("table").forEach((el) => {
-    el.setAttribute("style", "width:100%;max-width:100%;border-collapse:collapse;");
+    el.removeAttribute("style");
     el.querySelectorAll("td, th").forEach((cell) => {
-      cell.setAttribute("style", "border:1px solid #ddd;padding:8px;");
+      cell.removeAttribute("style");
     });
   });
 
-  // Handle figure tags
+  // Handle figure tags - remove inline styles
   doc.querySelectorAll("figure").forEach((el) => {
-    el.setAttribute("style", "display:block;margin:1.5rem 0;");
+    el.removeAttribute("style");
   });
 
   // Unwrap divs that contain block elements
@@ -238,6 +236,10 @@ export function AdminRichTextEditor({
     }
   }, [value, isFormatting]);
 
+  const recentlyFormattedRef = useRef(false);
+  // Flag set by the native paste handler — only true right after a real paste event
+  const pasteDetectedRef = useRef(false);
+
   const handleFormat = React.useCallback((html: string) => {
     setIsFormatting(true);
     // Don't update localValue - keep showing previous content during formatting
@@ -253,26 +255,56 @@ export function AdminRichTextEditor({
       onChange(cleaned);
       lastValueRef.current = cleaned;
       setIsFormatting(false);
+      // Cooldown 5s to avoid re-triggering format on normal edits after a paste
+      recentlyFormattedRef.current = true;
+      setTimeout(() => {
+        recentlyFormattedRef.current = false;
+      }, 5000);
     }, 3500); // 3.5s delay to show formatting message
   }, [onChange]);
 
   const handleEditorChange = React.useCallback((html: string) => {
-    // Detect if this looks like pasted content (has style attributes)
-    const hasInlineStyles = html.includes('style="') || html.includes("style='");
-    const hasFontTag = html.includes("<font");
-    const hasClassAttr = html.includes('class="') || html.includes("class='");
-    const contentLengthChanged = Math.abs(html.length - lastValueRef.current.length) > 50;
-
-    if ((hasInlineStyles || hasFontTag || hasClassAttr) && contentLengthChanged) {
-      // This looks like pasted content, run clean
-      handleFormat(html);
-    } else {
-      // Normal typing, update directly
+    // Skip paste detection during cooldown after a recent format
+    if (recentlyFormattedRef.current) {
       setLocalValue(html);
       lastValueRef.current = html;
       onChange(html);
+      return;
     }
+
+    // Only run format when a real paste event was captured by the native handler.
+    // This avoids false positives when the user styles content via the toolbar
+    // (brush/font/align) and then deletes a large chunk of text.
+    if (pasteDetectedRef.current) {
+      pasteDetectedRef.current = false;
+      handleFormat(html);
+      return;
+    }
+
+    // Normal typing, update directly
+    setLocalValue(html);
+    lastValueRef.current = html;
+    onChange(html);
   }, [handleFormat, onChange]);
+
+  // Attach a native paste listener to the editor container so we can detect
+  // real clipboard paste events instead of guessing from HTML content.
+  React.useEffect(() => {
+    const container = editor.current as unknown as HTMLElement | null;
+    if (!container) return;
+
+    const editorEl = container.querySelector?.(".jodit-wysiwyg") as HTMLElement | null;
+    const target = editorEl ?? container;
+
+    const handlePaste = () => {
+      pasteDetectedRef.current = true;
+    };
+
+    target.addEventListener("paste", handlePaste);
+    return () => {
+      target.removeEventListener("paste", handlePaste);
+    };
+  }, [localValue]);
 
   const config: JoditEditorProps["config"] = useMemo(
     () => ({
@@ -314,17 +346,19 @@ export function AdminRichTextEditor({
           }
           const r = resp as Record<string, unknown>;
           const responseData = r.responseData as Record<string, unknown> | undefined;
-          const url =
+          const rawUrl =
             (typeof responseData?.url === "string" && responseData.url) ||
             (typeof responseData?.fileUrl === "string" && responseData.fileUrl) ||
             (typeof responseData?.path === "string" && responseData.path) ||
             (typeof responseData?.link === "string" && responseData.link) ||
             (typeof responseData?.src === "string" && responseData.src) ||
             "";
+          // Resolve to a full URL so the image preview renders inside the editor.
+          const resolvedUrl = rawUrl ? resolveUploadUrl(rawUrl) : "";
           return {
-            files: url ? [url] : [],
+            files: resolvedUrl ? [resolvedUrl] : [],
             baseurl: "",
-            error: url ? undefined : (r.message as string) || "Upload failed",
+            error: resolvedUrl ? undefined : (r.message as string) || "Upload failed",
             msg: (r.message as string) || "",
           };
         },
