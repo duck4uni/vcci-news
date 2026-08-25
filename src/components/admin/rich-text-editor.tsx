@@ -385,8 +385,14 @@ export function AdminRichTextEditor({
             "";
           // Resolve to a full URL so the image preview renders inside the editor.
           const resolvedUrl = rawUrl ? resolveUploadUrl(rawUrl) : "";
+          // isImages tells Jodit's defaultHandlerSuccess to insert an <img>
+          // tag instead of an <a> link. Without it, uploaded images render as
+          // plain text links inside the editor and on the client.
+          const mime = typeof responseData?.mime === "string" ? responseData.mime : "";
+          const isImage = mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(resolvedUrl);
           return {
             files: resolvedUrl ? [resolvedUrl] : [],
+            isImages: resolvedUrl ? [isImage] : [],
             baseurl: "",
             error: resolvedUrl ? undefined : (r.message as string) || "Upload failed",
             msg: (r.message as string) || "",

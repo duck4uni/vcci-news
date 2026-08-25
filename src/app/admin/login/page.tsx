@@ -22,11 +22,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
-import links, { resolveUploadUrl } from "@/links";
 import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
-import { fetchCmsFileById, resolveCmsFileUrl } from "@/lib/api/files";
 
 type AuthMode = "login" | "forgot";
 
@@ -121,18 +118,9 @@ function AuthShell({
     }
   );
 
-  // Resolve logo URL: prefer logo_url, otherwise fetch file by file_id.
-  const { data: logoFile } = useQuery({
-    queryKey: ["cms-file", logoData?.file_id],
-    queryFn: () => fetchCmsFileById(logoData!.file_id),
-    enabled: !!logoData?.file_id && !logoData?.logo_url,
-  });
-
-  const logoSrc = logoData?.logo_url
-    ? resolveUploadUrl(logoData.logo_url)
-    : logoFile
-      ? resolveCmsFileUrl(logoFile.path)
-      : logo;
+  // Always use the static /logo.png from public/ for the login screen so the
+  // logo renders reliably regardless of backend logo/upload state.
+  const logoSrc = "/logo.png";
 
   const title =
     mode === "login"
