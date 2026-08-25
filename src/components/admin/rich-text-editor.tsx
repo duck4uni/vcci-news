@@ -333,12 +333,31 @@ export function AdminRichTextEditor({
         format: "json",
         buildData: (data: FormData) => {
           const next = new FormData();
+          let firstFileAppended = false;
           data.forEach((value, key) => {
-            if (key === "files[]" && value instanceof File) {
-              next.append("file", value);
-            } else {
-              next.append(key, value);
+            // Jodit sends files as files[0], files[1], ... — multer expects
+            // a single field named "file". Only keep the first file and drop
+            // the rest (backend uses multer.single("file")).
+            if (/^files\[\d+\]$/.test(key) && value instanceof File) {
+              if (!firstFileAppended) {
+                next.append("file", value);
+                firstFileAppended = true;
+              }
+              return;
             }
+            // Also handle legacy "files[]" pattern just in case.
+            if (key === "files[]" && value instanceof File) {
+              if (!firstFileAppended) {
+                next.append("file", value);
+                firstFileAppended = true;
+              }
+              return;
+            }
+            // Drop Jodit-internal fields the backend doesn't use.
+            if (key === "source" || key === "extension" || key === "mimetype") {
+              return;
+            }
+            next.append(key, value);
           });
           return next;
         },
