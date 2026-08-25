@@ -26,6 +26,7 @@ import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
 import links, { resolveUploadUrl } from "@/links";
 import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
+import { fetchCmsFileById, resolveCmsFileUrl } from "@/lib/api/files";
 
 type AuthMode = "login" | "forgot";
 
@@ -120,6 +121,19 @@ function AuthShell({
     }
   );
 
+  // Resolve logo URL: prefer logo_url, otherwise fetch file by file_id.
+  const { data: logoFile } = useQuery({
+    queryKey: ["cms-file", logoData?.file_id],
+    queryFn: () => fetchCmsFileById(logoData!.file_id),
+    enabled: !!logoData?.file_id && !logoData?.logo_url,
+  });
+
+  const logoSrc = logoData?.logo_url
+    ? resolveUploadUrl(logoData.logo_url)
+    : logoFile
+      ? resolveCmsFileUrl(logoFile.path)
+      : logo;
+
   const title =
     mode === "login"
       ? "Đăng nhập quản trị"
@@ -141,7 +155,7 @@ function AuthShell({
                 <div className="flex items-center gap-4">
                   <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-white shadow-sm">
                     <Image
-                      src={logoData?.logo_url ? resolveUploadUrl(logoData.logo_url) : logo}
+                      src={logoSrc}
                       alt={logoData?.logo_name || "VCCI HCM"}
                       width={48}
                       height={48}
@@ -195,7 +209,7 @@ function AuthShell({
               <div className="mb-8 flex items-center gap-3 lg:hidden">
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff]">
                   <Image
-                    src={logoData?.logo_url ? resolveUploadUrl(logoData.logo_url) : logo}
+                    src={logoSrc}
                     alt={logoData?.logo_name || "VCCI HCM"}
                     width={36}
                     height={36}

@@ -182,11 +182,10 @@ interface PostHistoryViewerProps {
 
 export function PostHistoryViewer({ postId }: PostHistoryViewerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const { data, isLoading, isError, error } = useGetApiV10PostIdHistory(postId, {
-    query: {
-      enabled: isOpen,
-    },
-  });
+  // Always fetch history so the count is correct even before the user opens
+  // the panel. Previously `enabled: isOpen` caused the count to show "0 thay
+  // đổi" until the panel was opened.
+  const { data, isLoading, isError, error } = useGetApiV10PostIdHistory(postId);
 
   const historyItems = React.useMemo(() => {
     // useQuery's `data` IS the API response body: { responseData: [...], ... }
