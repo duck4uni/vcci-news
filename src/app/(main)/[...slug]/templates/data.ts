@@ -522,6 +522,42 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
   return resolveUploadUrl(value);
 }
 
+export function extractFirstImageFromHtml(html?: string | null): string {
+  if (!html) return "";
+
+  const imgRegex = /<img[^>]*\ssrc=["']([^"']+)["']/i;
+  const match = html.match(imgRegex);
+
+  return match?.[1]?.trim() ?? "";
+}
+
+export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
+  if (!post) return "/thumbnail.png";
+
+  if (post.thumbnail) {
+    const resolved = resolveDynamicPostImage(post.thumbnail);
+    if (resolved && resolved !== "/thumbnail.png") return resolved;
+  }
+
+  const sections = post.content_structure?.post_content ?? [];
+  for (const section of sections) {
+    for (const item of section.images) {
+      const url = item.image?.url;
+      if (url) return url;
+    }
+  }
+
+  for (const section of sections) {
+    const htmlImage = extractFirstImageFromHtml(section.content);
+    if (htmlImage) return resolveUploadUrl(htmlImage);
+  }
+
+  const htmlImage = extractFirstImageFromHtml(post.content) || extractFirstImageFromHtml(post.summary);
+  if (htmlImage) return resolveUploadUrl(htmlImage);
+
+  return "/thumbnail.png";
+}
+
 export function stripHtml(value?: string | null) {
   if (!value) return "";
 
