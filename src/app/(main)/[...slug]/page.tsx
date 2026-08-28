@@ -3,7 +3,6 @@ import links from "@links/index";
 import {
   fetchDynamicPostById,
   fetchDynamicPostByExternalLink,
-  getDynamicPostSeoImage,
   getDynamicPostExcerpt,
   stripHtml,
 } from "./templates/data";
@@ -46,7 +45,6 @@ export async function generateMetadata({
     stripHtml(post.summary) ||
     getDynamicPostExcerpt(post).slice(0, 160) ||
     "Tin tức từ VCCI HCM";
-  const imageUrl = getDynamicPostSeoImage(post);
   const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}${
     postId || categoryIdParam
       ? `?${new URLSearchParams({
@@ -55,6 +53,11 @@ export async function generateMetadata({
         }).toString()}`
       : ""
   }`;
+
+  const ogImageParams = new URLSearchParams();
+  if (postId) ogImageParams.set("id", postId);
+  if (!postId && slug?.length) ogImageParams.set("slug", slug.join("/"));
+  const ogImageUrl = `/api/og-post?${ogImageParams.toString()}`;
 
   return {
     title,
@@ -67,7 +70,7 @@ export async function generateMetadata({
       siteName: "VCCI HCM",
       images: [
         {
-          url: imageUrl,
+          url: ogImageUrl,
           width: 1200,
           height: 630,
           alt: title,
@@ -80,7 +83,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title,
       description,
-      images: [imageUrl],
+      images: [ogImageUrl],
     },
   };
 }
