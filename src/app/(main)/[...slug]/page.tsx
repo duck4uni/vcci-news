@@ -1,146 +1,90 @@
-"use client";
-
-import { useEffect, useMemo } from "react";
-import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Spinner } from "@/components/ui";
-import ArticlePage from "./templates/ArticlePage";
-import ArticleDetailPage from "./templates/ArticleDetailPage";
-import CatalogPage from "./templates/CatalogPage";
-import InformationPage from "./templates/InformationPage";
+import type { Metadata } from "next";
+import links from "@links/index";
 import {
-  fetchDynamicCategories,
   fetchDynamicPostById,
   fetchDynamicPostByExternalLink,
-  fetchDynamicSinglePagePost,
-  findDynamicCategoryByPath,
-  findFirstChildCategory,
-  findMenuCategoryForPost,
+  getDynamicPostSeoImage,
+  getDynamicPostExcerpt,
+  stripHtml,
 } from "./templates/data";
+import DynamicPageClient from "./DynamicPageClient";
 
-export default function DynamicPage() {
-  const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
-  const path = slug.join("/");
-  const routePath = `/${path}`;
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const postId = searchParams.get("id")?.trim() ?? "";
-  const preferredCategoryId = searchParams.get("categoryId")?.trim() ?? "";
+type GenerateMetadataArgs = {
+  params: Promise<{ slug: string[] }>;
+  searchParams: Promise<{ id?: string; categoryId?: string }>;
+};
 
-  const categoryQuery = useQuery({
-    queryKey: ["dynamic-categories"],
-    queryFn: fetchDynamicCategories,
-    staleTime: 5 * 60 * 1000,
-  });
+export async function generateMetadata({
+  params,
+  searchParams,
+}: GenerateMetadataArgs): Promise<Metadata> {
+  const { slug } = await params;
+  const { id, categoryId } = await searchParams;
 
-  const matchedCategory = useMemo(
-    () => findDynamicCategoryByPath(categoryQuery.data ?? [], routePath),
-    [categoryQuery.data, routePath],
-  );
+  const path = `/${(slug ?? []).join("/")}`;
+  const postId = id?.trim() ?? "";
+  const categoryIdParam = categoryId?.trim() ?? "";
 
-  const detailQuery = useQuery({
-    queryKey: ["dynamic-post-detail", postId || routePath],
-    queryFn: () =>
-      postId
-        ? fetchDynamicPostById(postId)
-        : fetchDynamicPostByExternalLink(routePath),
-    enabled:
-      (Boolean(postId) || Boolean(routePath)) &&
-      !categoryQuery.isLoading &&
-      (Boolean(postId) || !matchedCategory),
-    staleTime: 60 * 1000,
-  });
-
-  const resolvedCategory = useMemo(
-    () =>
-      (preferredCategoryId
-        ? categoryQuery.data?.find((item) => item.id === preferredCategoryId) ?? null
-        : null) ??
-      matchedCategory ??
-      findMenuCategoryForPost(detailQuery.data ?? null, categoryQuery.data ?? []),
-    [preferredCategoryId, matchedCategory, detailQuery.data, categoryQuery.data],
-  );
-
-  const singlePageQuery = useQuery({
-    queryKey: ["dynamic-single-page-post", resolvedCategory?.id],
-    queryFn: () => fetchDynamicSinglePagePost(resolvedCategory!.id),
-    enabled: resolvedCategory?.type === "page",
-    staleTime: 60 * 1000,
-  });
-
-  useEffect(() => {
-    if (!matchedCategory || matchedCategory.type !== "category") return;
-
-    const firstChild = findFirstChildCategory(matchedCategory, categoryQuery.data ?? []);
-    if (slug.length === 1 && firstChild?.url) {
-      router.replace(firstChild.url);
-    }
-  }, [matchedCategory, categoryQuery.data, router, slug.length]);
-
-  const isLoading =
-    categoryQuery.isLoading ||
-    detailQuery.isLoading ||
-    (resolvedCategory?.type === "page" && singlePageQuery.isLoading);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner />
-      </div>
-    );
+  let post = null;
+  try {
+    post = postId
+      ? await fetchDynamicPostById(postId)
+      : await fetchDynamicPostByExternalLink(path);
+  } catch {
+    post = null;
   }
 
-  if (detailQuery.data) {
-    return (
-      <ArticleDetailPage
-        post={detailQuery.data}
-        category={resolvedCategory}
-        allCategories={categoryQuery.data ?? []}
-      />
-    );
+  if (!post || !post.title) {
+    return {
+      title: "Bài viết không tìm thấy",
+      robots: { index: false, follow: false },
+    };
   }
 
-  if (resolvedCategory?.type === "page") {
-    if (!singlePageQuery.data) return notFound();
+  const title = post.title;
+  const description =
+    stripHtml(post.summary) ||
+    getDynamicPostExcerpt(post).slice(0, 160) ||
+    "Tin tức từ VCCI HCM";
+  const imageUrl = getDynamicPostSeoImage(post);
+  const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}${
+    postId || categoryIdParam
+      ? `?${new URLSearchParams({
+          ...(postId && { id: postId }),
+          ...(categoryIdParam && { categoryId: categoryIdParam }),
+        }).toString()}`
+      : ""
+  }`;
 
-    return (
-      <InformationPage
-        post={singlePageQuery.data}
-        category={resolvedCategory}
-        allCategories={categoryQuery.data ?? []}
-      />
-    );
-  }
+  return {
+    title,
+    description,
+    alternates: { canonical: articleUrl },
+    openGraph: {
+      title,
+      description,
+      url: articleUrl,
+      siteName: "VCCI HCM",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      locale: "vi_VN",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
-  if (resolvedCategory?.type === "news") {
-    if (
-      resolvedCategory.slug === "an-pham" ||
-      resolvedCategory.slug === "thu-vien-tai-lieu"
-    ) {
-      return (
-        <CatalogPage
-          category={resolvedCategory}
-          allCategories={categoryQuery.data ?? []}
-        />
-      );
-    }
-
-    return (
-      <ArticlePage
-        category={resolvedCategory}
-        allCategories={categoryQuery.data ?? []}
-      />
-    );
-  }
-
-  if (resolvedCategory?.type === "category") {
-    return (
-      <div className="flex min-h-[50vh] items-center justify-center">
-        <Spinner />
-      </div>
-    );
-  }
-
-  return notFound();
+export default function Page() {
+  return <DynamicPageClient />;
 }
