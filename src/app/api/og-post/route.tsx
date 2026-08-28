@@ -60,50 +60,6 @@ export async function GET(request: Request) {
               }}
             />
           )}
-
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              display: "flex",
-              flexDirection: "column",
-              padding: "48px 56px",
-              background:
-                "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.6) 50%, rgba(0,0,0,0) 100%)",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                fontSize: 42,
-                fontWeight: 700,
-                color: "#ffffff",
-                lineHeight: 1.25,
-                maxHeight: 120,
-                overflow: "hidden",
-              }}
-            >
-              {title}
-            </div>
-
-            {description && (
-              <div
-                style={{
-                  display: "flex",
-                  fontSize: 22,
-                  color: "rgba(255,255,255,0.85)",
-                  marginTop: 12,
-                  lineHeight: 1.4,
-                  maxHeight: 65,
-                  overflow: "hidden",
-                }}
-              >
-                {description}
-              </div>
-            )}
-          </div>
         </div>
       ),
       {
