@@ -77,31 +77,6 @@ export async function GET(request: Request) {
             <div
               style={{
                 display: "flex",
-                alignItems: "center",
-                gap: 12,
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  backgroundColor: "#fff",
-                  borderRadius: 6,
-                  padding: "6px 14px",
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "#0a4d8c",
-                }}
-              >
-                VCCI-HCM
-              </div>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
                 fontSize: 42,
                 fontWeight: 700,
                 color: "#ffffff",
