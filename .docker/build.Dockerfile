@@ -13,7 +13,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy toàn bộ source (đã được .dockerignore lọc trừ node_modules / .next / openapi)
 COPY . .
 
-RUN npm run build
+RUN pnpm run build
 
 # ----------------- Production stage -----------------
 FROM node:22-alpine AS production
