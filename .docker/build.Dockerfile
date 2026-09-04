@@ -8,7 +8,6 @@ ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
 
 COPY . .
 
-RUN node scripts/generate-api.mjs
 RUN npm run build
 
 FROM node:22-alpine AS production
