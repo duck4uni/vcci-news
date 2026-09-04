@@ -1,4 +1,3 @@
-
 # VCCI Frontend (v2)
 
 This README provides quick setup, usage, and troubleshooting information for the `vcci-fontend-v2` repository.
