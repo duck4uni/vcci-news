@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
-import { resolveUploadUrl } from "@/links";
-import type { Advertisement } from "@/api/models/advertisement";
+import links from "@/links";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
+import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
 
-const FALLBACK_SRC = "/quang-cao/qc-3.jpg";
 const FALLBACK_HREF = "https://vcci-hcm.org.vn";
 
-function SidebarAdItem({ item }: { item: Advertisement }) {
-  const initialSrc = item.file?.path ? resolveUploadUrl(item.file.path) : FALLBACK_SRC;
+function SidebarAdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: string }) {
+  const initialSrc = item.file?.path ? links.resolveImageUrl(item.file.path) : fallbackSrc;
   const [src, setSrc] = useState(initialSrc);
 
   return (
@@ -30,7 +30,7 @@ function SidebarAdItem({ item }: { item: Advertisement }) {
           className="h-full w-full object-cover"
           unoptimized
           onError={() => {
-            if (src !== FALLBACK_SRC) setSrc(FALLBACK_SRC);
+            if (src !== fallbackSrc) setSrc(fallbackSrc);
           }}
         />
       </div>
@@ -38,7 +38,7 @@ function SidebarAdItem({ item }: { item: Advertisement }) {
   );
 }
 
-function FallbackSidebarAdItem() {
+function FallbackSidebarAdItem({ src }: { src: string }) {
   return (
     <Link
       href={FALLBACK_HREF}
@@ -49,7 +49,7 @@ function FallbackSidebarAdItem() {
     >
       <div className="relative aspect-[16/10]">
         <Image
-          src={FALLBACK_SRC}
+          src={src}
           alt="Quảng cáo VCCI HCM"
           fill
           className="h-full w-full object-cover"
@@ -65,11 +65,19 @@ function SidebarAdvertisements({ count = 5, startIndex = 0 }: { count?: number; 
   const ads = useAdvertisements("square");
   const visibleAds = ads.slice(startIndex, startIndex + count);
 
+  // Random fallback images ổn định trong 1 session render
+  const fallbackSrcs = useMemo(
+    () => Array.from({ length: count }, () => getRandomFallbackImage()),
+    [count],
+  );
+
   // Fallback: nếu API không có data, hiển thị fallback items
   const items =
     visibleAds.length > 0
-      ? visibleAds.map((item) => <SidebarAdItem key={item.id} item={item} />)
-      : Array.from({ length: count }).map((_, i) => <FallbackSidebarAdItem key={`fallback-${i}`} />);
+      ? visibleAds.map((item, i) => (
+        <SidebarAdItem key={item.id} item={item} fallbackSrc={fallbackSrcs[i] ?? fallbackSrcs[0]} />
+      ))
+      : fallbackSrcs.map((src, i) => <FallbackSidebarAdItem key={`fallback-${i}`} src={src} />);
 
   return (
     <div className="order-3 flex flex-col gap-4 xl:order-none">

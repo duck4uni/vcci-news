@@ -1,34 +1,20 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import ImageNext from "@/components/shared/image-next";
 import partnerImages from "@/constants/partnerImages";
 import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
+import { useGetOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
+import type { Organization } from "@/api/vcci-hcm/models";
+import { useGetApiV10Video } from "@/api/vcci-news/endpoints/video";
+import type { Video } from "@/api/vcci-news/models/video";
 import { MOCK_PARTNERS_RESPONSE } from "@/app/api/mock-data";
-import { fetchClientVideos } from "@/lib/api/videos";
+import { getVideoThumbnail, normalizeVideoUrl } from "@/lib/utils/video";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
-type Partner = {
-  id: string;
-  name: string;
-  avatar?: string | null;
-  website?: string | null;
-};
-
-type PartnerResponse = {
-  responseData?: {
-    rows?: Partner[];
-  };
-};
-
-const PARTNER_API_URL =
-  "https://vccihcm.vn/api/v1.0/organizations" +
-  "?filters=type%3D%3DSPONSOR&pageSize=12" +
-  "&sortField=sort_order&sortOrder=ASC";
-const VCCI_HCM_ORIGIN = "https://vccihcm.vn";
+const VCCI_HCM_SITE_URL = "https://vccihcm.vn";
 
 const resolvePartnerImage = (avatar: string | null | undefined, index: number) => {
   if (avatar?.startsWith("http://") || avatar?.startsWith("https://")) {
@@ -36,13 +22,27 @@ const resolvePartnerImage = (avatar: string | null | undefined, index: number) =
   }
 
   if (avatar?.startsWith("/")) {
-    return `${VCCI_HCM_ORIGIN}${avatar}`;
+    return `${VCCI_HCM_SITE_URL}${avatar}`;
   }
 
   return partnerImages[index % partnerImages.length] ?? "/img-error.png";
 };
 
-const renderPartnerContent = (partners: Partner[]) => {
+const MOCK_PARTNER_ROWS =
+  MOCK_PARTNERS_RESPONSE.responseData.rows as unknown as Organization[];
+
+type ClientVideoItem = Video & {
+  thumbnail: string;
+  watchUrl: string;
+};
+
+const toClientVideo = (video: Video): ClientVideoItem => ({
+  ...video,
+  thumbnail: getVideoThumbnail(video.url),
+  watchUrl: normalizeVideoUrl(video.url),
+});
+
+const renderPartnerContent = (partners: Organization[]) => {
   if (partners.length > 0) {
     return (
       <Swiper
@@ -102,44 +102,44 @@ const renderPartnerContent = (partners: Partner[]) => {
 };
 
 function VideoAndPartners() {
-  const videosQuery = useQuery({
-    queryKey: ["home-videos"],
-    queryFn: () => fetchClientVideos({ page: 1, pageSize: 2 }),
-    staleTime: 60 * 1000,
-  });
-
-  const partnersQuery = useQuery({
-    queryKey: ["home-partners"],
-    queryFn: async () => {
-      try {
-        const response = await fetch(PARTNER_API_URL, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error(`Cannot load partners: ${response.status}`);
-        }
-
-        const data = (await response.json()) as PartnerResponse;
-        const rows = data.responseData?.rows ?? [];
-
-        // API trả về rỗng → dùng mock data
-        if (rows.length === 0) {
-          return MOCK_PARTNERS_RESPONSE as unknown as PartnerResponse;
-        }
-
-        return data;
-      } catch (error) {
-        console.error(error);
-        // Fallback: dùng mock data thay vì hiển thị "Chưa có thông tin"
-        return MOCK_PARTNERS_RESPONSE as unknown as PartnerResponse;
-      }
+  const { data: videosData, isLoading: videosLoading } = useGetApiV10Video(
+    {
+      page: 1,
+      pageSize: 2,
+      sortField: "created_at",
+      sortOrder: "desc",
     },
-    staleTime: 60 * 1000,
-  });
+    {
+      query: {
+        staleTime: 60 * 1000,
+        select: (response) => {
+          const rows = (response?.responseData?.rows ?? []) as unknown as Video[];
+          return rows.map(toClientVideo);
+        },
+      },
+    },
+  );
 
-  const videos = videosQuery.data?.rows ?? [];
-  const partners = partnersQuery.data?.responseData?.rows?.slice(0, 12) ?? [];
+  const { data: partnersResponse } = useGetOrganizations<Organization[] | undefined>(
+    {
+      filters: "type==SPONSOR",
+      pageSize: "12",
+      sortField: "sort_order",
+      sortOrder: "ASC",
+    },
+    {
+      query: {
+        staleTime: 60 * 1000,
+        select: (response) => {
+          const rows = (response as any)?.responseData?.rows ?? [];
+          return rows.length > 0 ? rows : MOCK_PARTNER_ROWS;
+        },
+      },
+    },
+  );
+
+  const videos = videosData ?? [];
+  const partners = (partnersResponse ?? MOCK_PARTNER_ROWS).slice(0, 12);
   const displayPartners = partners;
 
   return (
@@ -162,7 +162,7 @@ function VideoAndPartners() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
-          {videosQuery.isLoading ? (
+          {videosLoading ? (
             Array.from({ length: 2 }).map((_, index) => (
               <div
                 key={`video-loading-${index}`}

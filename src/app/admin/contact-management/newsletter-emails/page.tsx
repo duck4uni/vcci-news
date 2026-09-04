@@ -24,12 +24,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { NewsletterSubscription } from "@/api/models/newsletterSubscription";
+import type { NewsletterSubscription } from "@/api/vcci-news/models/newsletterSubscription";
 import {
-  deleteNewsletterSubscription,
-  fetchNewsletterSubscriptions,
-  markNewsletterSubscriptionSeen,
-} from "@/lib/api/newsletter-subscriptions";
+  deleteApiV10NewsletterSubscriptionId,
+  getApiV10NewsletterSubscription,
+  patchApiV10NewsletterSubscriptionId,
+} from "@/api/vcci-news/endpoints/newsletter-subscription";
 
 type SeenFilter = "all" | "seen" | "unseen";
 
@@ -76,14 +76,17 @@ export default function AdminNewsletterEmailsPage() {
     setReady(false);
 
     try {
-      const data = await fetchNewsletterSubscriptions({
+      const response = await getApiV10NewsletterSubscription({
         page,
         pageSize: PAGE_SIZE,
+        sortField: "created_at",
+        sortOrder: "desc",
         filters: buildNewsletterFilters(search, seenFilter),
       });
+      const pageData = response.responseData ?? {};
 
-      setItems(data.rows);
-      setTotalItems(data.count);
+      setItems((pageData.rows ?? []) as unknown as NewsletterSubscription[]);
+      setTotalItems(pageData.count ?? 0);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể tải danh sách email đăng ký");
       setItems([]);
@@ -113,7 +116,7 @@ export default function AdminNewsletterEmailsPage() {
     if (!deleteTarget) return;
 
     try {
-      await deleteNewsletterSubscription(deleteTarget.id);
+      await deleteApiV10NewsletterSubscriptionId(deleteTarget.id);
       toast.success("Đã xóa email đăng ký nhận thông tin");
       setDeleteTarget(null);
       await loadItems();
@@ -128,7 +131,7 @@ export default function AdminNewsletterEmailsPage() {
     if (item.is_seen) return;
 
     try {
-      await markNewsletterSubscriptionSeen(item.id);
+      await patchApiV10NewsletterSubscriptionId(item.id, { is_seen: true });
       const seenAt = new Date().toISOString();
       const nextItem = { ...item, is_seen: true, seen_at: item.seen_at ?? seenAt };
 
@@ -284,19 +287,19 @@ export default function AdminNewsletterEmailsPage() {
         sections={
           detailTarget
             ? [
-                {
-                  title: "Thông tin đăng ký",
-                  fields: [
-                    { label: "Email", value: detailTarget.email },
-                    { label: "Ngày gửi", value: formatDateTime(detailTarget.created_at) },
-                    { label: "Trạng thái", value: detailTarget.is_seen ? "Đã xem" : "Chưa xem" },
-                    {
-                      label: "Ngày xem",
-                      value: detailTarget.seen_at ? formatDateTime(detailTarget.seen_at) : "Chưa xem",
-                    },
-                  ],
-                },
-              ]
+              {
+                title: "Thông tin đăng ký",
+                fields: [
+                  { label: "Email", value: detailTarget.email },
+                  { label: "Ngày gửi", value: formatDateTime(detailTarget.created_at) },
+                  { label: "Trạng thái", value: detailTarget.is_seen ? "Đã xem" : "Chưa xem" },
+                  {
+                    label: "Ngày xem",
+                    value: detailTarget.seen_at ? formatDateTime(detailTarget.seen_at) : "Chưa xem",
+                  },
+                ],
+              },
+            ]
             : []
         }
         onOpenChange={(open) => !open && setDetailTarget(null)}

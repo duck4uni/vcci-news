@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ShieldCheck, Target, Zap } from "lucide-react";
 import parse from "html-react-parser";
 import Link from "next/link";
-import { useCustomClient } from "@/api/mutator/custom-client";
+import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import ImageNext from "@/components/shared/image-next";
 import { buildDynamicPostHref, buildVisibleNewsFilters, stripHtml } from "../data";
 import StructuredPostContent from "../StructuredPostContent";
@@ -103,34 +103,33 @@ type AboutVcciHcmPageProps = {
 export default function AboutVcciHcmPage({
   post,
 }: AboutVcciHcmPageProps) {
-  const tinVcciQuery = useQuery({
-    queryKey: ["about-vcci-hcm-tin-vcci"],
-    queryFn: async () => {
-      const query = new URLSearchParams({
-        page: "1",
-        pageSize: "3",
-        sortField: "release_at",
-        sortOrder: "desc",
-        filters: buildVisibleNewsFilters([`category.id==${TIN_VCCI_CATEGORY_ID}`]),
-      });
-
-      const response = await useCustomClient<TinVcciApiEnvelope>(`/post?${query.toString()}`);
-
-      return (response.responseData?.rows ?? []).map((item) => ({
-        id: String(item.id ?? ""),
-        title: String(item.title ?? "").trim(),
-        externalLink: buildDynamicPostHref(item.external_link?.trim() || "#", item.id ? String(item.id) : ""),
-        publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
-        thumbnailUrl:
-          item.thumbnail?.url?.trim() ||
-          item.thumbnail?.path?.trim() ||
-          item.thumbnail?.original?.trim() ||
-          "/thumbnail.png",
-        thumbnailAlt: String(item.title ?? "").trim() || "Tin VCCI",
-      }));
+  const tinVcciQuery = useGetApiV10Post(
+    {
+      page: 1,
+      pageSize: 3,
+      sortField: "release_at",
+      sortOrder: "desc",
+      filters: buildVisibleNewsFilters([`category.id==${TIN_VCCI_CATEGORY_ID}`]),
     },
-    staleTime: 60 * 1000,
-  });
+    {
+      query: {
+        staleTime: 60 * 1000,
+        select: (response) =>
+          ((response?.responseData?.rows ?? []) as unknown as TinVcciApiRow[]).map((item) => ({
+            id: String(item.id ?? ""),
+            title: String(item.title ?? "").trim(),
+            externalLink: buildDynamicPostHref(item.external_link?.trim() || "#", item.id ? String(item.id) : ""),
+            publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+            thumbnailUrl:
+              item.thumbnail?.url?.trim() ||
+              item.thumbnail?.path?.trim() ||
+              item.thumbnail?.original?.trim() ||
+              "/thumbnail.png",
+            thumbnailAlt: String(item.title ?? "").trim() || "Tin VCCI",
+          })),
+      },
+    },
+  );
 
   const tinVcciItems = tinVcciQuery.data ?? [];
   const summaryContent = renderSummary(post.summary);

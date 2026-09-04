@@ -1,5 +1,5 @@
-import { NewsItem } from "@/api/types/news";
-import { resolveUploadUrl } from "@/links";
+import { NewsItem } from "@/api/vcci-news/types/news";
+import links from "@/links";
 import dayjs from "dayjs";
 import Link from "next/link";
 import ImageNext from "@/components/shared/image-next";
@@ -11,7 +11,7 @@ function CardNews({ news }: { news: NewsItem }) {
       className="flex flex-row gap-2 mb-2 sm:gap-3 sm:mb-3"
     >
       <ImageNext
-        src={resolveUploadUrl(news.thumbnail)}
+        src={links.resolveImageUrl(news.thumbnail) || "/img-error.png"}
         alt={news.title}
         className="aspect-3/2 object-cover"
         width={130}

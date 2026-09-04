@@ -2,16 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
-import { resolveUploadUrl } from "@/links";
-import type { Advertisement } from "@/api/models/advertisement";
+import links from "@/links";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
+import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
 
-const FALLBACK_SRC = "/quang-cao/qc-3.jpg";
-const FALLBACK_HREF = "https://vccihcm.vn";
+const FALLBACK_HREF = links.externalApiOrigin;
 
-function AdItem({ item }: { item: Advertisement }) {
-  const initialSrc = item.file?.path ? resolveUploadUrl(item.file.path) : FALLBACK_SRC;
+function AdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: string }) {
+  const initialSrc = item.file?.path ? links.resolveImageUrl(item.file.path) : fallbackSrc;
   const [src, setSrc] = useState(initialSrc);
 
   return (
@@ -31,7 +31,7 @@ function AdItem({ item }: { item: Advertisement }) {
           className="h-full w-full object-cover object-[center_80%]"
           unoptimized
           onError={() => {
-            if (src !== FALLBACK_SRC) setSrc(FALLBACK_SRC);
+            if (src !== fallbackSrc) setSrc(fallbackSrc);
           }}
         />
       </div>
@@ -39,7 +39,7 @@ function AdItem({ item }: { item: Advertisement }) {
   );
 }
 
-function FallbackAdItem() {
+function FallbackAdItem({ src }: { src: string }) {
   return (
     <Link
       href={FALLBACK_HREF}
@@ -50,7 +50,7 @@ function FallbackAdItem() {
     >
       <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
         <Image
-          src={FALLBACK_SRC}
+          src={src}
           alt="Quảng cáo VCCI HCM"
           width={2048}
           height={1365}
@@ -65,11 +65,17 @@ function Advertisements({ count = 2, startIndex = 0 }: { count?: number; startIn
   const ads = useAdvertisements("square");
   const visibleAds = ads.slice(startIndex, startIndex + count);
 
-  // Luôn render đủ `count` khung hình: vị trí nào API không có data thì dùng fallback qc-3.jpg.
+  // Random fallback images ổn định trong 1 session render
+  const fallbackSrcs = useMemo(
+    () => Array.from({ length: count }, () => getRandomFallbackImage()),
+    [count],
+  );
+
+  // Luôn render đủ `count` khung hình: vị trí nào API không có data thì dùng random fallback.
   const items = Array.from({ length: count }, (_, i) => {
     const ad = visibleAds[i];
-    if (ad) return <AdItem key={ad.id} item={ad} />;
-    return <FallbackAdItem key={`fallback-${startIndex + i}`} />;
+    if (ad) return <AdItem key={ad.id} item={ad} fallbackSrc={fallbackSrcs[i]} />;
+    return <FallbackAdItem key={`fallback-${startIndex + i}`} src={fallbackSrcs[i]} />;
   });
 
   const mdCols = count >= 3 ? "md:grid-cols-3" : "md:grid-cols-2";

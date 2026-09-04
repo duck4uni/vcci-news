@@ -2,17 +2,15 @@
 
 import { useEffect, useMemo } from "react";
 import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui";
 import ArticlePage from "./templates/ArticlePage";
 import ArticleDetailPage from "./templates/ArticleDetailPage";
 import CatalogPage from "./templates/CatalogPage";
 import InformationPage from "./templates/InformationPage";
 import {
-  fetchDynamicCategories,
-  fetchDynamicPostById,
-  fetchDynamicPostByExternalLink,
-  fetchDynamicSinglePagePost,
+  useDynamicCategories,
+  useDynamicPostDetail,
+  useDynamicSinglePagePost,
   findDynamicCategoryByPath,
   findFirstChildCategory,
   findMenuCategoryForPost,
@@ -28,23 +26,14 @@ export default function DynamicPageClient() {
   const postId = searchParams.get("id")?.trim() ?? "";
   const preferredCategoryId = searchParams.get("categoryId")?.trim() ?? "";
 
-  const categoryQuery = useQuery({
-    queryKey: ["dynamic-categories"],
-    queryFn: fetchDynamicCategories,
-    staleTime: 5 * 60 * 1000,
-  });
+  const categoryQuery = useDynamicCategories({ staleTime: 5 * 60 * 1000 });
 
   const matchedCategory = useMemo(
     () => findDynamicCategoryByPath(categoryQuery.data ?? [], routePath),
     [categoryQuery.data, routePath],
   );
 
-  const detailQuery = useQuery({
-    queryKey: ["dynamic-post-detail", postId || routePath],
-    queryFn: () =>
-      postId
-        ? fetchDynamicPostById(postId)
-        : fetchDynamicPostByExternalLink(routePath),
+  const detailQuery = useDynamicPostDetail(postId, routePath, {
     enabled:
       (Boolean(postId) || Boolean(routePath)) &&
       !categoryQuery.isLoading &&
@@ -55,16 +44,14 @@ export default function DynamicPageClient() {
   const resolvedCategory = useMemo(
     () =>
       (preferredCategoryId
-        ? categoryQuery.data?.find((item) => item.id === preferredCategoryId) ?? null
-        : null) ??
+        ? categoryQuery.data?.find((item) => item.id === preferredCategoryId)
+        : undefined) ??
       matchedCategory ??
       findMenuCategoryForPost(detailQuery.data ?? null, categoryQuery.data ?? []),
     [preferredCategoryId, matchedCategory, detailQuery.data, categoryQuery.data],
   );
 
-  const singlePageQuery = useQuery({
-    queryKey: ["dynamic-single-page-post", resolvedCategory?.id],
-    queryFn: () => fetchDynamicSinglePagePost(resolvedCategory!.id),
+  const singlePageQuery = useDynamicSinglePagePost(resolvedCategory?.id, {
     enabled: resolvedCategory?.type === "page",
     staleTime: 60 * 1000,
   });

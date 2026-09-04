@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import ImageNext from "@/components/shared/image-next";
 import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import { Pagination } from "@components/base/pagination";
@@ -13,7 +12,7 @@ import { Spinner } from "@components/ui/spinner";
 import {
   buildDynamicPostHref,
   buildVisibleNewsFilters,
-  fetchDynamicPostList,
+  useDynamicPostList,
   getDynamicPostExcerpt,
   resolveDynamicPostImage,
 } from "@/app/(main)/[...slug]/templates/data";
@@ -96,16 +95,12 @@ function SearchContent() {
   const [searchInput, setSearchInput] = useState(query);
 
   const pageSize = 10;
-  const postsQuery = useQuery({
-    queryKey: ["search-posts", page, pageSize, query],
-    queryFn: () =>
-      fetchDynamicPostList({
-        page,
-        pageSize,
-        filters: buildVisibleNewsFilters([
-          query ? `title@=${query}` : null,
-        ]),
-      }),
+  const postsQuery = useDynamicPostList({
+    page,
+    pageSize,
+    filters: buildVisibleNewsFilters([
+      query ? `title@=${query}` : null,
+    ]),
     staleTime: 60 * 1000,
   });
 

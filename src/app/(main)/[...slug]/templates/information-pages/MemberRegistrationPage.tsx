@@ -1,5 +1,6 @@
 'use client';
 
+import links from "@/links";
 import type { DynamicPostItem } from "../types";
 
 type MemberRegistrationPageProps = {
@@ -30,7 +31,7 @@ const ATTACHED_FORMS = [
   },
   {
     label: "Hướng dẫn hồ sơ đăng ký Hội viên VCCI",
-    href: "https://vccihcm.vn/dang-ky",
+    href: `${links.externalApiOrigin}/dang-ky`,
     download: false,
   },
 ] as const;
@@ -114,7 +115,7 @@ export default function MemberRegistrationPage({ post }: MemberRegistrationPageP
 
           <div className="flex justify-center pt-4">
             <a
-              href="https://vccihcm.vn/dang-ky"
+              href={`${links.externalApiOrigin}/dang-ky`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex min-w-[220px] items-center justify-center rounded-[4px] bg-[#2450b5] px-6 py-4 text-[18px] font-semibold text-white transition-colors hover:bg-[#173f9f]"

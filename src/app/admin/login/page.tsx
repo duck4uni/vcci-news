@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
-import { useGetApiV10Logo } from "@/api/endpoints/logo";
-import { usePostApiV10AuthForgotPasswordRequest } from "@/api/endpoints/authentication";
-import type { Logo } from "@/api/models/logo";
+import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
+import { usePostApiV10AuthForgotPasswordRequest } from "@/api/vcci-news/endpoints/authentication";
+import type { Logo } from "@/api/vcci-news/models/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -378,7 +378,7 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
         const data = response?.responseData ?? response?.data?.responseData;
         setForgotMessage(
           data?.message ||
-            "Yêu cầu của bạn đã được ghi nhận. Ban quản trị sẽ liên hệ với bạn sớm.",
+          "Yêu cầu của bạn đã được ghi nhận. Ban quản trị sẽ liên hệ với bạn sớm.",
         );
         setForgotNote("");
         toast.success("Đã gửi yêu cầu reset mật khẩu");

@@ -49,20 +49,20 @@ import {
   patchApiV10SiteInformationSocialsId,
   postApiV10SiteInformationBranches,
   putApiV10SiteInformation,
-} from "@/api/endpoints/site-information";
+} from "@/api/vcci-news/endpoints/site-information";
 import {
   deleteApiV10LogoId,
   getApiV10Logo,
   getApiV10LogoId,
   postApiV10Logo,
   putApiV10LogoId,
-} from "@/api/endpoints/logo";
+} from "@/api/vcci-news/endpoints/logo";
 import {
   deleteApiV10BannerId,
   getApiV10Banner,
   postApiV10Banner,
   putApiV10BannerId,
-} from "@/api/endpoints/banner";
+} from "@/api/vcci-news/endpoints/banner";
 import type {
   Banner,
   BannerMutate,
@@ -72,10 +72,11 @@ import type {
   SiteInformationData,
   SiteInformationSocialLink,
   SiteInformationSocialMutate,
-} from "@/api/models";
+} from "@/api/vcci-news/models";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
-import { fetchCmsFileById, toAdminMediaItem } from "@/lib/api/files";
-import { resolveUploadUrl } from "@/links";
+import { toAdminMediaItem } from "@/lib/utils/file";
+import { getApiV10FileId } from "@/api/vcci-news/endpoints/file";
+import links from "@/links";
 import {
   type BaseConfigBannerItem,
   type BaseConfigBranchItem,
@@ -234,7 +235,7 @@ function mapApiLogoToConfig(logo: Logo): {
     logoId: logo.id,
     name: logo.logo_name,
     alt: logo.logo_name,
-    url: resolveUploadUrl(logo.logo_url) || "/img-error.png",
+    url: links.resolveImageUrl(logo.logo_url) || "/img-error.png",
     mime: "image/*",
     size: 0,
     created_at: logo.created_at,
@@ -291,11 +292,10 @@ function ConfigItemPreview({
     <button
       type="button"
       onClick={onSelect}
-      className={`overflow-hidden rounded-3xl border text-left transition-all ${
-        current
-          ? "border-[#063e8e]/35 bg-[#edf4ff] shadow-[0_10px_24px_rgba(6,62,142,0.12)]"
-          : "border-[#063e8e]/10 bg-white hover:border-[#063e8e]/25 hover:shadow-sm"
-      }`}
+      className={`overflow-hidden rounded-3xl border text-left transition-all ${current
+        ? "border-[#063e8e]/35 bg-[#edf4ff] shadow-[0_10px_24px_rgba(6,62,142,0.12)]"
+        : "border-[#063e8e]/10 bg-white hover:border-[#063e8e]/25 hover:shadow-sm"
+        }`}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[#eef4ff]">
         {media ? (
@@ -500,11 +500,10 @@ function BranchCard({
 }) {
   return (
     <div
-      className={`rounded-3xl border p-4 transition-all ${
-        current
-          ? "border-[#063e8e]/30 bg-[#eef5ff] shadow-[0_10px_24px_rgba(6,62,142,0.1)]"
-          : "border-[#063e8e]/10 bg-white"
-      }`}
+      className={`rounded-3xl border p-4 transition-all ${current
+        ? "border-[#063e8e]/30 bg-[#eef5ff] shadow-[0_10px_24px_rgba(6,62,142,0.1)]"
+        : "border-[#063e8e]/10 bg-white"
+        }`}
     >
       <button type="button" onClick={onSelect} className="w-full text-left">
         <div className="text-sm font-semibold text-[#163b73]">
@@ -615,13 +614,13 @@ export default function AdminBaseConfigPage() {
           setConfig((previous) =>
             previous
               ? {
-                  ...previous,
-                  logo: logoConfig?.logo ?? previous.logo,
-                }
+                ...previous,
+                logo: logoConfig?.logo ?? previous.logo,
+              }
               : {
-                  ...baseConfig,
-                  logo: logoConfig?.logo ?? baseConfig.logo,
-                },
+                ...baseConfig,
+                logo: logoConfig?.logo ?? baseConfig.logo,
+              },
           );
         }
       } catch (error) {
@@ -650,7 +649,8 @@ export default function AdminBaseConfigPage() {
             .map((banner) => banner.file_id)
             .filter((fileId): fileId is string => Boolean(fileId))
             .map(async (fileId) => {
-              const file = await fetchCmsFileById(fileId).catch(() => null);
+              const response = await getApiV10FileId(fileId).catch(() => null);
+              const file = response?.responseData ?? null;
               return file ? toAdminMediaItem(file) : null;
             }),
         );
@@ -668,9 +668,9 @@ export default function AdminBaseConfigPage() {
         setConfig((previous) =>
           previous
             ? {
-                ...previous,
-                banners: nextBanners,
-              }
+              ...previous,
+              banners: nextBanners,
+            }
             : previous,
         );
         setCurrentBannerIndex(0);
@@ -795,15 +795,15 @@ export default function AdminBaseConfigPage() {
 
         const response = apiLogoId
           ? await putApiV10LogoId(apiLogoId, {
-              logo_name: trimmedName,
-              logo_url: selectedMedia?.url ?? null,
-              file_id: itemForm.imageId,
-            })
+            logo_name: trimmedName,
+            logo_url: selectedMedia?.url ?? null,
+            file_id: itemForm.imageId,
+          })
           : await postApiV10Logo({
-              logo_name: trimmedName,
-              logo_url: selectedMedia?.url ?? null,
-              file_id: itemForm.imageId,
-            });
+            logo_name: trimmedName,
+            logo_url: selectedMedia?.url ?? null,
+            file_id: itemForm.imageId,
+          });
         const savedLogo =
           getEnvelopeData<Logo>(response);
         const nextConfig = cloneBaseConfigData(config);
@@ -873,13 +873,13 @@ export default function AdminBaseConfigPage() {
       nextConfig.banners = nextConfig.banners.map((item) =>
         item.id === editingItemId
           ? {
-              ...item,
-              name: trimmedName,
-              imageId: itemForm.imageId,
-              isActive: itemForm.isActive,
-              displayTimeSeconds: itemForm.displayTimeSeconds,
-              sortOrder: itemForm.sortOrder,
-            }
+            ...item,
+            name: trimmedName,
+            imageId: itemForm.imageId,
+            isActive: itemForm.isActive,
+            displayTimeSeconds: itemForm.displayTimeSeconds,
+            sortOrder: itemForm.sortOrder,
+          }
           : item,
       );
     } else {
@@ -947,13 +947,13 @@ export default function AdminBaseConfigPage() {
     setConfig((previous) =>
       previous
         ? {
-            ...previous,
-            branches: previous.branches.map((branch) =>
-              branch.id === currentBranch.id
-                ? { ...branch, [key]: value }
-                : branch,
-            ),
-          }
+          ...previous,
+          branches: previous.branches.map((branch) =>
+            branch.id === currentBranch.id
+              ? { ...branch, [key]: value }
+              : branch,
+          ),
+        }
         : previous,
     );
   };
@@ -1014,16 +1014,16 @@ export default function AdminBaseConfigPage() {
       const nextBranch = createdBranch
         ? mapApiBranchToConfig(createdBranch)
         : {
-            id: createBaseConfigItemId("branch"),
-            branchName: `Chi nhánh ${config.branches.length + 1}`,
-            address: "",
-            hotline: "",
-            email: "",
-            fax: "",
-            mapsEmbedUrl: "",
-            sortOrder: config.branches.length + 1,
-            isVisible: true,
-          };
+          id: createBaseConfigItemId("branch"),
+          branchName: `Chi nhánh ${config.branches.length + 1}`,
+          address: "",
+          hotline: "",
+          email: "",
+          fax: "",
+          mapsEmbedUrl: "",
+          sortOrder: config.branches.length + 1,
+          isVisible: true,
+        };
 
       const nextConfig = cloneBaseConfigData(config);
       nextConfig.branches.push(nextBranch);
@@ -1136,11 +1136,11 @@ export default function AdminBaseConfigPage() {
     setConfig((previous) =>
       previous
         ? {
-            ...previous,
-            socials: previous.socials.map((item) =>
-              item.id === socialId ? { ...item, [key]: value } : item,
-            ),
-          }
+          ...previous,
+          socials: previous.socials.map((item) =>
+            item.id === socialId ? { ...item, [key]: value } : item,
+          ),
+        }
         : previous,
     );
   };

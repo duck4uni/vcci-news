@@ -7,17 +7,17 @@ import { useQuery } from "@tanstack/react-query";
 import Image from "next/image";
 import Link from "next/link";
 const fallbackLogo = "/logo.png";
-import { useGetApiV10Logo } from "@/api/endpoints/logo";
-import { getApiV10SiteInformation } from "@/api/endpoints/site-information";
-import { resolveUploadUrl } from "@/links";
-import type { Logo } from "@/api/models/logo";
+import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
+import { getApiV10SiteInformation } from "@/api/vcci-news/endpoints/site-information";
+import links from "@/links";
+import type { Logo } from "@/api/vcci-news/models/logo";
 import type {
   SiteInformationData,
   SiteInformationSocialLink,
-} from "@/api/models";
+} from "@/api/vcci-news/models";
 import MenuItem from "@/components/base/menu-item";
-import { useCustomClient as customClient } from "@/api/mutator/custom-client";
-import type { Category } from "@/api/models/category";
+import { useGetApiV10Category } from "@/api/vcci-news/endpoints/category";
+import type { Category } from "@/api/vcci-news/models/category";
 import { getCategoryFallbackResponse } from "@/mockdata/categories";
 import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
 
@@ -176,14 +176,20 @@ function Header() {
     [],
   );
 
-  const { data: categoriesResponse } = useQuery({
-    queryKey: ["header-categories"],
-    queryFn: () =>
-      customClient<CategoryListResponse>(
-        "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
-      ).catch(() => getCategoryFallbackResponse()),
-    staleTime: 5 * 60 * 1000,
-  });
+  const { data: categoriesResponse } = useGetApiV10Category(
+    {
+      page: 1,
+      pageSize: 200,
+      sortField: "sort_order",
+      sortOrder: "asc",
+    },
+    {
+      query: {
+        staleTime: 5 * 60 * 1000,
+        select: (response) => response ?? getCategoryFallbackResponse(),
+      },
+    },
+  );
 
   const { data: currentLogo = null } = useGetApiV10Logo(
     {
@@ -287,7 +293,7 @@ function Header() {
               className="px-3 py-1 text-[13px] font-medium text-white transition hover:opacity-80"
               href="https://vccihcm.vn/lien-he"
             >
-              {"Li\u00ean h\u1ec7"}
+              Liên hệ
             </Link>
           </div>
 
@@ -295,7 +301,7 @@ function Header() {
             <input
               className="h-7 w-44 rounded-[4px] border border-[#3a57b4] bg-[#3554b7] px-3 text-[13px] text-white outline-none placeholder:text-[13px] placeholder:text-[#b5c4ff]"
               type="text"
-              placeholder={"T\u00ecm ki\u1ebfm"}
+              placeholder="Tìm kiếm"
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const value =
@@ -333,7 +339,7 @@ function Header() {
               width={108}
               height={40}
               className="h-auto max-h-10 w-[108px] object-contain"
-              src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : fallbackLogo}
+              src={currentLogo?.logo_url ? links.resolveImageUrl(currentLogo.logo_url) : fallbackLogo}
               alt={currentLogo?.logo_name || "VCCI-HCM"}
               priority
               unoptimized={Boolean(currentLogo?.logo_url)}
@@ -377,8 +383,8 @@ function Header() {
 
       <div
         className={`fixed inset-0 z-60 bg-white transition-all duration-300 lg:hidden ${toggleMenu
-            ? "pointer-events-auto translate-y-0 opacity-100"
-            : "pointer-events-none -translate-y-2 opacity-0"
+          ? "pointer-events-auto translate-y-0 opacity-100"
+          : "pointer-events-none -translate-y-2 opacity-0"
           }`}
       >
         <div className="flex h-full flex-col overflow-hidden">
@@ -392,7 +398,7 @@ function Header() {
                 width={108}
                 height={40}
                 className="h-auto max-h-10 w-[108px] object-contain"
-                src={currentLogo?.logo_url ? resolveUploadUrl(currentLogo.logo_url) : fallbackLogo}
+                src={currentLogo?.logo_url ? links.resolveImageUrl(currentLogo.logo_url) : fallbackLogo}
                 alt={currentLogo?.logo_name || "VCCI-HCM"}
                 priority
                 unoptimized={Boolean(currentLogo?.logo_url)}

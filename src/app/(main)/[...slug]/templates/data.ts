@@ -1,7 +1,9 @@
-import type { Category } from "@/api/models/category";
-import { useCustomClient } from "@/api/mutator/custom-client";
-import Links, { resolveUploadUrl } from "@/links";
+import type { Category } from "@/api/vcci-news/models/category";
+import { getApiV10Category, useGetApiV10Category } from "@/api/vcci-news/endpoints/category";
+import { getApiV10Post, getApiV10PostId, useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
+import Links from "@/links";
 import { getCategoryFallbackResponse } from "@/mockdata/categories";
+import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import type {
   DynamicCategoryMenuItem,
   DynamicCategoryRouteItem,
@@ -204,13 +206,13 @@ const mapPostContentSections = (item: RawPostItem): DynamicPostContentSection[] 
             : imageIndex + 1,
         image: item?.image
           ? {
-              id: String(item.image.id ?? ""),
-              name: String(item.image.name ?? item.image.original ?? ""),
-              alt: String(item.image.alt ?? item.image.name ?? ""),
-              url: resolveUploadUrl(item.image.url ?? item.image.path ?? item.image.original ?? ""),
-              path: item.image.path ?? null,
-              original: item.image.original ?? null,
-            }
+            id: String(item.image.id ?? ""),
+            name: String(item.image.name ?? item.image.original ?? ""),
+            alt: String(item.image.alt ?? item.image.name ?? ""),
+            url: Links.resolveImageUrl(item.image.url ?? item.image.path ?? item.image.original ?? ""),
+            path: item.image.path ?? null,
+            original: item.image.original ?? null,
+          }
           : null,
       }))
       .filter((item) => Boolean(item.image?.url))
@@ -238,7 +240,7 @@ const mapPostUser = (user: RawPostUser | undefined): DynamicPostUser => {
   };
 };
 
-const mapPost = (item: RawPostItem): DynamicPostItem => ({
+export const mapPost = (item: RawPostItem): DynamicPostItem => ({
   id: String(item.id ?? ""),
   title: String(item.title ?? "").trim(),
   slug: String(item.slug ?? "").trim(),
@@ -293,11 +295,14 @@ export const buildVisibleNewsFilters = (
   ]);
 
 export async function fetchDynamicCategories(): Promise<DynamicCategoryRouteItem[]> {
-  const response = await useCustomClient<CategoryListResponse>(
-    "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
-  ).catch(() => getCategoryFallbackResponse());
+  const response = await getApiV10Category({
+    page: 1,
+    pageSize: 200,
+    sortField: "sort_order",
+    sortOrder: "asc",
+  }).catch(() => getCategoryFallbackResponse());
 
-  const rows = response.responseData?.rows ?? [];
+  const rows = (response.responseData?.rows ?? []) as unknown as Category[];
 
   return sortCategories(
     rows
@@ -329,18 +334,13 @@ export async function fetchDynamicPostList(params: {
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 5;
 
-  const query = new URLSearchParams({
-    page: String(page),
-    pageSize: String(pageSize),
+  const response = await getApiV10Post({
+    page,
+    pageSize,
     sortField: params.sortField ?? "release_at",
-    sortOrder: params.sortOrder ?? "desc",
+    sortOrder: (params.sortOrder ?? "desc") as "asc" | "desc",
+    filters: params.filters?.trim() || undefined,
   });
-
-  if (params.filters?.trim()) {
-    query.set("filters", params.filters.trim());
-  }
-
-  const response = await useCustomClient<PostListResponse>(`/post?${query.toString()}`);
   const count = Number(response.responseData?.count ?? 0);
 
   return {
@@ -348,7 +348,7 @@ export async function fetchDynamicPostList(params: {
     page,
     pageSize,
     totalPages: pageSize > 0 ? Math.max(1, Math.ceil(count / pageSize)) : 1,
-    rows: (response.responseData?.rows ?? []).map(mapPost).filter((item) => item.id && item.title),
+    rows: ((response.responseData?.rows ?? []) as unknown as RawPostItem[]).map(mapPost).filter((item) => item.id && item.title),
   };
 }
 
@@ -367,19 +367,12 @@ export async function fetchDynamicPostById(id: string) {
     return listResult.rows[0];
   }
 
-  const newsResponse = await useCustomClient<PostDetailEnvelope>(`/news/${normalizedId}`).catch(() => null);
-  const newsItem = newsResponse?.responseData ?? newsResponse?.data?.responseData ?? null;
+  const postResponse = await getApiV10PostId(normalizedId).catch(() => null);
+  const postRaw = (postResponse?.responseData ?? null) as unknown as RawPostItem | null;
 
-  if (newsItem) {
-    const post = mapPost(newsItem);
-    return post.id && post.title ? post : null;
-  }
+  if (!postRaw) return null;
 
-  const postResponse = await useCustomClient<PostDetailResponse>(`/post/${normalizedId}`).catch(() => null);
-
-  if (!postResponse) return null;
-
-  const post = mapPost(postResponse);
+  const post = mapPost(postRaw);
   return post.id && post.title ? post : null;
 }
 
@@ -519,7 +512,7 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
 
   if (!value) return "/thumbnail.png";
 
-  return resolveUploadUrl(value);
+  return Links.resolveImageUrl(value);
 }
 
 export function extractFirstImageFromHtml(html?: string | null): string {
@@ -549,11 +542,11 @@ export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
 
   for (const section of sections) {
     const htmlImage = extractFirstImageFromHtml(section.content);
-    if (htmlImage) return resolveUploadUrl(htmlImage);
+    if (htmlImage) return Links.resolveImageUrl(htmlImage);
   }
 
   const htmlImage = extractFirstImageFromHtml(post.content) || extractFirstImageFromHtml(post.summary);
-  if (htmlImage) return resolveUploadUrl(htmlImage);
+  if (htmlImage) return Links.resolveImageUrl(htmlImage);
 
   return "/thumbnail.png";
 }
@@ -634,3 +627,116 @@ export function isDynamicPostVisible(post: DynamicPostItem) {
 }
 
 export { buildPostFilters, normalizePath };
+
+export type UseDynamicPostListOptions = {
+  page?: number;
+  pageSize?: number;
+  sortField?: string;
+  sortOrder?: string;
+  filters?: string;
+  enabled?: boolean;
+  staleTime?: number;
+};
+
+export function useDynamicPostList(options: UseDynamicPostListOptions) {
+  const page = options.page ?? 1;
+  const pageSize = options.pageSize ?? 5;
+
+  return useGetApiV10Post(
+    {
+      page,
+      pageSize,
+      sortField: options.sortField ?? "release_at",
+      sortOrder: (options.sortOrder ?? "desc") as "asc" | "desc",
+      filters: options.filters?.trim() || undefined,
+    },
+    {
+      query: {
+        enabled: options.enabled !== false,
+        staleTime: options.staleTime ?? 60 * 1000,
+        select: (response): DynamicPostListResult => {
+          const data = response?.responseData;
+          const count = Number(data?.count ?? 0);
+          return {
+            count,
+            page,
+            pageSize,
+            totalPages: pageSize > 0 ? Math.max(1, Math.ceil(count / pageSize)) : 1,
+            rows: ((data?.rows ?? []) as unknown as RawPostItem[])
+              .map(mapPost)
+              .filter((item) => item.id && item.title),
+          };
+        },
+      },
+    },
+  );
+}
+
+export type UseDynamicCategoriesOptions = {
+  enabled?: boolean;
+  staleTime?: number;
+};
+
+export function useDynamicCategories(options: UseDynamicCategoriesOptions = {}) {
+  return useGetApiV10Category(
+    {
+      page: 1,
+      pageSize: 200,
+      sortField: "sort_order",
+      sortOrder: "asc",
+    },
+    {
+      query: {
+        enabled: options.enabled !== false,
+        staleTime: options.staleTime ?? 5 * 60 * 1000,
+        select: (response): DynamicCategoryRouteItem[] => {
+          const rows = (response?.responseData?.rows ?? []) as unknown as Category[];
+          return sortCategories(
+            rows
+              .map((item) => {
+                const type = normalizeCategoryType(item.type);
+                if (!item.id || !item.name || !type) return null;
+                return {
+                  id: item.id,
+                  name: item.name,
+                  slug: item.slug ?? "",
+                  url: normalizePath(item.url),
+                  type,
+                  sort_order: item.sort_order ?? null,
+                  parent_id: item.parent_id ?? null,
+                } as DynamicCategoryRouteItem;
+              })
+              .filter((item): item is DynamicCategoryRouteItem => item !== null),
+          );
+        },
+      },
+    },
+  );
+}
+
+export function useDynamicPostDetail(postId: string, routePath: string, options: {
+  enabled?: boolean;
+  staleTime?: number;
+} = {}) {
+  return useQuery({
+    queryKey: ["dynamic-post-detail", postId || routePath],
+    queryFn: () =>
+      postId
+        ? fetchDynamicPostById(postId)
+        : fetchDynamicPostByExternalLink(routePath),
+    enabled: options.enabled !== false,
+    staleTime: options.staleTime ?? 60 * 1000,
+  });
+}
+
+export function useDynamicSinglePagePost(categoryId: string | undefined, options: {
+  enabled?: boolean;
+  staleTime?: number;
+} = {}) {
+  return useQuery({
+    queryKey: ["dynamic-single-page-post", categoryId],
+    queryFn: () => fetchDynamicSinglePagePost(categoryId!),
+    enabled: (options.enabled !== false) && Boolean(categoryId),
+    staleTime: options.staleTime ?? 60 * 1000,
+  });
+}

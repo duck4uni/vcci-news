@@ -21,10 +21,10 @@ import {
   Video,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { useGetApiV10Logo } from "@/api/endpoints/logo";
-import type { Logo } from "@/api/models/logo";
+import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
+import type { Logo } from "@/api/vcci-news/models/logo";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
-import { resolveUploadUrl } from "@/links";
+import links from "@/links";
 import { useSidebarStore } from "@/hooks/use-admin-sidebar";
 import { usePermission } from "@/hooks/usePermission";
 import { cn } from "@/lib/utils";
@@ -204,7 +204,7 @@ export function AdminSidebar() {
           >
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff] shadow-sm">
               <Image
-                src={logoData?.logo_url ? resolveUploadUrl(logoData.logo_url) : logo}
+                src={logoData?.logo_url ? links.resolveImageUrl(logoData.logo_url) : logo}
                 alt={logoData?.logo_name || "VCCI HCM"}
                 width={40}
                 height={40}

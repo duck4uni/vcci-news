@@ -1,4 +1,4 @@
-import type { Category } from "@/api/models/category";
+import type { Category } from "@/api/vcci-news/models/category";
 
 export const categoryFallbackRows: Category[] = [
   {

@@ -2,14 +2,20 @@
 
 import { Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { Play } from "lucide-react";
 import ImageNext from "@/components/shared/image-next";
 import { Pagination } from "@/components/base/pagination";
 import { Spinner } from "@/components/ui/spinner";
-import { fetchClientVideos } from "@/lib/api/videos";
+import { useGetApiV10Video } from "@/api/vcci-news/endpoints/video";
+import type { Video } from "@/api/vcci-news/models/video";
+import { getVideoThumbnail, normalizeVideoUrl } from "@/lib/utils/video";
 
 const PAGE_SIZE = 10;
+
+type ClientVideoItem = Video & {
+  thumbnail: string;
+  watchUrl: string;
+};
 
 function VideoPageContent() {
   const router = useRouter();
@@ -18,11 +24,35 @@ function VideoPageContent() {
   const pageFromUrl = Number(searchParams.get("page") ?? "1");
   const page = Number.isFinite(pageFromUrl) && pageFromUrl > 0 ? Math.floor(pageFromUrl) : 1;
 
-  const videosQuery = useQuery({
-    queryKey: ["video-page", page, PAGE_SIZE],
-    queryFn: () => fetchClientVideos({ page, pageSize: PAGE_SIZE }),
-    staleTime: 60 * 1000,
-  });
+  const videosQuery = useGetApiV10Video(
+    {
+      page,
+      pageSize: PAGE_SIZE,
+      sortField: "created_at",
+      sortOrder: "desc",
+    },
+    {
+      query: {
+        staleTime: 60 * 1000,
+        select: (response) => {
+          const pageData = response?.responseData ?? {};
+          const pageSize = pageData.pageSize ?? PAGE_SIZE;
+          const count = pageData.count ?? 0;
+          return {
+            rows: ((pageData.rows ?? []) as unknown as Video[]).map((item) => ({
+              ...item,
+              thumbnail: getVideoThumbnail(item.url ?? ""),
+              watchUrl: normalizeVideoUrl(item.url ?? ""),
+            })),
+            count,
+            page: pageData.page ?? page,
+            pageSize,
+            totalPages: Math.max(1, Math.ceil(count / pageSize)),
+          };
+        },
+      },
+    },
+  );
 
   const videos = videosQuery.data?.rows ?? [];
   const totalPages = videosQuery.data?.totalPages ?? 1;

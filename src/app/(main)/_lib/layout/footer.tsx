@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { subscribeNewsletterEmail } from "@/lib/api/newsletter-subscriptions";
-import { getApiV10SiteInformation } from "@/api/endpoints/site-information";
-import type { SiteInformationData } from "@/api/models";
+import { postApiV10NewsletterSubscription } from "@/api/vcci-news/endpoints/newsletter-subscription";
+import { getApiV10SiteInformation } from "@/api/vcci-news/endpoints/site-information";
+import type { SiteInformationData } from "@/api/vcci-news/models";
 import { ZaloIcon, TiktokIcon } from "@/components/ui/icons";
 
 type ApiEnvelope<T> = {
@@ -179,7 +179,7 @@ function Footer() {
     setSubmitting(true);
 
     try {
-      await subscribeNewsletterEmail(trimmedEmail);
+      await postApiV10NewsletterSubscription({ email: trimmedEmail.trim() });
       setEmail("");
       setAccepted(false);
       setMessage("Đăng ký nhận thông tin thành công.");
