@@ -1,9 +1,11 @@
-  'use client';
+'use client';
 
 import ImageNext from "@/components/shared/image-next";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
+import { useMemo } from "react";
+import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
 
 function Events() {
   const { eventPosts, categoryLinks, categoryNames } = useHomePosts();
@@ -13,6 +15,12 @@ function Events() {
   const sideSlots = Array.from({ length: 4 }, (_, index) => sideEvents[index] ?? null);
   const eventsLink =
     categoryLinks.get(categoryNames.suKien.toLowerCase()) ?? "/hoat-dong/su-kien";
+
+  const featuredFallback = useMemo(() => getRandomFallbackImage(), []);
+  const sideFallbacks = useMemo(
+    () => Array.from({ length: 4 }, () => getRandomFallbackImage()),
+    [],
+  );
 
   return (
     <div className="flex-1 rounded-[28px] bg-linear-to-br from-[#14488f] to-[#2d67bf] p-4 text-white shadow-[0_18px_38px_rgba(16,61,130,0.24)] md:p-5">
@@ -40,7 +48,7 @@ function Events() {
           >
             <div className="relative h-[180px] overflow-hidden md:h-[220px] xl:h-[248px]">
               <ImageNext
-                src={featuredEvent.thumbnail?.url ?? "/thumbnail.png"}
+                src={featuredEvent.thumbnail?.url ?? featuredFallback}
                 alt={featuredEvent.thumbnail?.alt || featuredEvent.title}
                 width={720}
                 height={520}
@@ -106,7 +114,7 @@ function Events() {
               >
                 <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[12px]">
                   <ImageNext
-                    src={item.thumbnail?.url ?? "/thumbnail.png"}
+                    src={item.thumbnail?.url ?? sideFallbacks[index]}
                     alt={item.thumbnail?.alt || item.title}
                     width={160}
                     height={160}

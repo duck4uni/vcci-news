@@ -4,23 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
-import { resolveUploadUrl } from "@/links";
+import links from "@/links";
 
-const FALLBACK_HREF = "https://vccihcm.vn";
+const FALLBACK_HREF = links.externalApiOrigin;
 const FALLBACK_SRC = "/quang-cao/qc-1.jpg";
 
-/**
- * Banner quảng cáo ngang (full-width) giữa các section.
- * Luôn hiển thị 1 banner duy nhất (record đầu tiên theo sort_order).
- * Dù có nhiều vị trí đặt component, tất cả đều hiển thị cùng 1 banner.
- * Fallback: nếu API không có data hoặc ảnh lỗi → dùng /quang-cao/qc-1.jpg.
- */
 function HorizontalAdBanner() {
   const ads = useAdvertisements("horizontal");
   const ad = ads[0];
 
   const href = ad?.link || FALLBACK_HREF;
-  const initialSrc = ad?.file?.path ? resolveUploadUrl(ad.file.path) : FALLBACK_SRC;
+  const initialSrc = ad?.file?.path ? links.resolveImageUrl(ad.file.path) : FALLBACK_SRC;
   const [src, setSrc] = useState(initialSrc);
   const [errored, setErrored] = useState(false);
 

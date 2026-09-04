@@ -1,13 +1,13 @@
 "use client";
 
-import { useGetApiV10AdvertisementPublic } from "@/api/endpoints/advertisement";
-import type { Advertisement } from "@/api/models/advertisement";
-import type { GetApiV10AdvertisementPublicType } from "@/api/models/getApiV10AdvertisementPublicType";
+import { useGetApiV10AdvertisementPublic } from "@/api/vcci-news/endpoints/advertisement";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
+import type { GetApiV10AdvertisementPublicType } from "@/api/vcci-news/models/getApiV10AdvertisementPublicType";
 
 /**
  * Hook đọc danh sách quảng cáo active theo loại từ API backend (public, không cần auth).
  * Backend đã lọc status=ACTIVE và sort theo sort_order ASC.
- * Mỗi record có `file` (path, mime) — dùng `resolveUploadUrl(file.path)` để lấy URL ảnh.
+ * Mỗi record có `file` (path, mime) — dùng `links.resolveImageUrl(file.path)` để lấy URL ảnh.
  *
  * @param type - "square" | "horizontal"
  * @param limit - số lượng records tối đa (mặc định 20 cho square, 1 cho horizontal)

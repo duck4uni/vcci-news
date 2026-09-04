@@ -1,8 +1,8 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { useGetApiV10PageConfig } from "@/api/endpoints/page-config";
-import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
+import { useGetApiV10PageConfig } from "@/api/vcci-news/endpoints/page-config";
+import { GetNewsPageConfigResponseType } from "@/api/vcci-news/types/news-page-config";
 
 function SiteMapPage() {
   const { data: categoriesData, isLoading, isError } = useGetApiV10PageConfig<GetNewsPageConfigResponseType>();

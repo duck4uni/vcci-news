@@ -41,7 +41,7 @@ import {
   usePostApiV10Role,
   usePutApiV10RoleId,
   useDeleteApiV10RoleId,
-} from "@/api/endpoints/role";
+} from "@/api/vcci-news/endpoints/role";
 
 // Types
 interface Role {

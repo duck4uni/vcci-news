@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { usePutApiV10UserChangePassword } from "@/api/endpoints/user";
+import { usePutApiV10UserChangePassword } from "@/api/vcci-news/endpoints/user";
 import useAuthStore from "@/store/useAuthStore";
 import { logoutAdmin } from "@/lib/auth/admin-auth";
 

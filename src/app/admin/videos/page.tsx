@@ -30,9 +30,8 @@ import {
   getApiV10Video,
   patchApiV10VideoId,
   postApiV10Video,
-} from "@/api/endpoints/video";
-import type { Video as CmsVideoItem } from "@/api/models/video";
-import { readVideoPageData, readVideoRows } from "@/lib/api/videos";
+} from "@/api/vcci-news/endpoints/video";
+import type { Video as CmsVideoItem } from "@/api/vcci-news/models/video";
 
 const PAGE_SIZE = 10;
 
@@ -73,10 +72,10 @@ function VideoFormDialog({
     setForm(
       initial
         ? {
-            id: initial.id,
-            name: initial.name,
-            url: initial.url,
-          }
+          id: initial.id,
+          name: initial.name,
+          url: initial.url,
+        }
         : EMPTY_VIDEO_FORM,
     );
   }, [initial, open]);
@@ -190,9 +189,9 @@ export default function AdminVideosPage() {
         sortOrder: "desc",
         filters: keyword ? `name@=${keyword}|url@=${keyword}` : undefined,
       });
-      const pageData = readVideoPageData(response);
+      const pageData = response.responseData ?? {};
 
-      setItems(readVideoRows(response));
+      setItems((pageData.rows ?? []) as unknown as CmsVideoItem[]);
       setTotal(pageData.count ?? 0);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể tải danh sách video");

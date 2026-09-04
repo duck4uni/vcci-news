@@ -47,7 +47,7 @@ import { usePermission } from "@/hooks/usePermission";
 import { AdminImagePicker } from "@/components/admin/image-picker";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
-import { resolveUploadUrl } from "@/links";
+import links from "@/links";
 import { useQueryClient } from "@tanstack/react-query";
 
 // API imports
@@ -56,10 +56,10 @@ import {
   usePostApiV10Advertisement,
   usePutApiV10AdvertisementId,
   useDeleteApiV10AdvertisementId,
-} from "@/api/endpoints/advertisement";
-import type { Advertisement } from "@/api/models/advertisement";
-import type { AdvertisementCreate } from "@/api/models/advertisementCreate";
-import type { AdvertisementUpdate } from "@/api/models/advertisementUpdate";
+} from "@/api/vcci-news/endpoints/advertisement";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
+import type { AdvertisementCreate } from "@/api/vcci-news/models/advertisementCreate";
+import type { AdvertisementUpdate } from "@/api/vcci-news/models/advertisementUpdate";
 
 const PAGE_SIZE = 10;
 
@@ -156,7 +156,7 @@ export function AdvertisementList({
     setForm({
       name: ad.name,
       file_id: ad.file_id,
-      filePreviewUrl: ad.file?.path ? resolveUploadUrl(ad.file.path) : "",
+      filePreviewUrl: ad.file?.path ? links.resolveImageUrl(ad.file.path) : "",
       alt: ad.alt || "",
       link: ad.link,
       status: ad.status as "ACTIVE" | "INACTIVE",
@@ -353,7 +353,7 @@ export function AdvertisementList({
                   </TableRow>
                 ) : (
                   ads.map((ad, index) => {
-                    const imageUrl = ad.file?.path ? resolveUploadUrl(ad.file.path) : "";
+                    const imageUrl = ad.file?.path ? links.resolveImageUrl(ad.file.path) : "";
                     const isGif = imageUrl.toLowerCase().endsWith(".gif");
                     return (
                       <TableRow
@@ -401,11 +401,10 @@ export function AdvertisementList({
                         <TableCell className="text-center">
                           <Badge
                             variant="outline"
-                            className={`text-sm whitespace-nowrap ${
-                              ad.status === "ACTIVE"
-                                ? "border-green-200 bg-green-50 text-green-700"
-                                : "border-red-200 bg-red-50 text-red-700"
-                            }`}
+                            className={`text-sm whitespace-nowrap ${ad.status === "ACTIVE"
+                              ? "border-green-200 bg-green-50 text-green-700"
+                              : "border-red-200 bg-red-50 text-red-700"
+                              }`}
                           >
                             {ad.status === "ACTIVE" ? (
                               <CheckCircle className="mr-1 h-4 w-4" />

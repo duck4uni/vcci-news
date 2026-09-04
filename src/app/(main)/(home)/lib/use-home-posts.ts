@@ -3,8 +3,8 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useCustomClient } from "@/api/mutator/custom-client";
-import Links, { resolveUploadUrl } from "@/links";
+import { getApiV10Post, useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
+import Links from "@/links";
 import { MOCK_HOME_POSTS } from "@lib/mock-home-posts";
 
 type RawHomeCategory = {
@@ -177,7 +177,7 @@ const resolveAssetUrl = (value?: string | null) => {
 
   if (!trimmed) return "/thumbnail.png";
 
-  return resolveUploadUrl(trimmed);
+  return Links.resolveImageUrl(trimmed);
 };
 
 const sortByPublishedDesc = (items: HomePostItem[]) =>
@@ -249,55 +249,66 @@ const isVisibleNewsPost = (item: HomePostItem) => {
 const hasCategoryId = (item: HomePostItem, categoryId: string) =>
   item.categories.some((category) => category.id === categoryId);
 
-async function fetchHomePostRows(path: string) {
-  const response = await useCustomClient<HomeEnvelope<HomePagedResult<RawHomePost>>>(path);
-  return response.responseData?.rows ?? [];
+async function fetchHomePostRows(params: {
+  page?: number;
+  pageSize?: number;
+  sortField?: string;
+  sortOrder?: string;
+  filters?: string;
+}) {
+  const response = await getApiV10Post({
+    page: params.page ?? 1,
+    pageSize: params.pageSize ?? 10,
+    sortField: params.sortField ?? "release_at",
+    sortOrder: (params.sortOrder ?? "desc") as "asc" | "desc",
+    filters: params.filters,
+  });
+  return ((response.responseData?.rows ?? []) as unknown as RawHomePost[]);
 }
 
-function createCategoryPostsQuery(categoryId: string, pageSize: string) {
-  return new URLSearchParams({
-    page: "1",
-    pageSize,
+function createCategoryPostsParams(categoryId: string, pageSize: string) {
+  return {
+    page: 1,
+    pageSize: Number(pageSize),
     sortField: "release_at",
-    sortOrder: "desc",
+    sortOrder: "desc" as const,
     filters: [
       `category.id==${categoryId}`,
       "is_hidden==false",
       "is_active==true",
       "type==news",
     ].join(","),
-  });
+  };
 }
 
-function createMultiCategoryPostsQuery(categoryIds: string[], pageSize: string) {
-  return new URLSearchParams({
-    page: "1",
-    pageSize,
+function createMultiCategoryPostsParams(categoryIds: string[], pageSize: string) {
+  return {
+    page: 1,
+    pageSize: Number(pageSize),
     sortField: "release_at",
-    sortOrder: "desc",
+    sortOrder: "desc" as const,
     filters: [
       `category.id==(${categoryIds.join("|")})`,
       "is_hidden==false",
       "is_active==true",
       "type==news",
     ].join(","),
-  });
+  };
 }
 
-function createEventCalendarQuery(currentMonth: Date) {
-  // We'll filter by date on client-side for more flexibility
-  return new URLSearchParams({
-    page: "1",
-    pageSize: "100",
+function createEventCalendarParams(currentMonth: Date) {
+  return {
+    page: 1,
+    pageSize: 100,
     sortField: "started_at",
-    sortOrder: "asc",
+    sortOrder: "asc" as const,
     filters: [
       `category.id==(${HOME_CATEGORY_IDS.suKien}|${HOME_CATEGORY_IDS.daoTao})`,
       "is_hidden==false",
       "is_active==true",
       "type==news",
     ].join(","),
-  });
+  };
 }
 
 async function fetchHomePosts() {
@@ -312,30 +323,30 @@ async function fetchHomePosts() {
 }
 
 async function fetchHomePostsFromApi() {
-  const featuredQuery = new URLSearchParams({
-    page: "1",
-    pageSize: "3",
+  const featuredParams = {
+    page: 1,
+    pageSize: 3,
     sortField: "release_at",
-    sortOrder: "desc",
+    sortOrder: "desc" as const,
     filters: [
       "is_featured==true",
       "is_hidden==false",
       "is_active==true",
       "type==news",
     ].join(","),
-  });
-  const tinVcciQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.tinVcci, "6");
-  const tinKinhTeQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.tinKinhTe, "6");
-  const chuyenDeQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chuyenDe, "6");
-  const eventQuery = createMultiCategoryPostsQuery(
+  };
+  const tinVcciParams = createCategoryPostsParams(HOME_CATEGORY_IDS.tinVcci, "6");
+  const tinKinhTeParams = createCategoryPostsParams(HOME_CATEGORY_IDS.tinKinhTe, "6");
+  const chuyenDeParams = createCategoryPostsParams(HOME_CATEGORY_IDS.chuyenDe, "6");
+  const eventParams = createMultiCategoryPostsParams(
     [HOME_CATEGORY_IDS.suKien, HOME_CATEGORY_IDS.daoTao],
     "5"
   );
-  const policyQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.chinhSachPhapLuat, "6");
-  const quickLinksQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.lienKetNhanh, "6");
-  const trainingQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.daoTao, "10");
-  const businessQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.coHoiKinhDoanh, "10");
-  const memberConnectionQuery = createCategoryPostsQuery(HOME_CATEGORY_IDS.ketNoiHoiVien, "10");
+  const policyParams = createCategoryPostsParams(HOME_CATEGORY_IDS.chinhSachPhapLuat, "6");
+  const quickLinksParams = createCategoryPostsParams(HOME_CATEGORY_IDS.lienKetNhanh, "6");
+  const trainingParams = createCategoryPostsParams(HOME_CATEGORY_IDS.daoTao, "10");
+  const businessParams = createCategoryPostsParams(HOME_CATEGORY_IDS.coHoiKinhDoanh, "10");
+  const memberConnectionParams = createCategoryPostsParams(HOME_CATEGORY_IDS.ketNoiHoiVien, "10");
 
   const [
     featuredRows,
@@ -349,16 +360,16 @@ async function fetchHomePostsFromApi() {
     businessRows,
     memberConnectionRows,
   ] = await Promise.all([
-    fetchHomePostRows(`/post?${featuredQuery.toString()}`),
-    fetchHomePostRows(`/post?${tinVcciQuery.toString()}`),
-    fetchHomePostRows(`/post?${tinKinhTeQuery.toString()}`),
-    fetchHomePostRows(`/post?${chuyenDeQuery.toString()}`),
-    fetchHomePostRows(`/post?${policyQuery.toString()}`),
-    fetchHomePostRows(`/post?${eventQuery.toString()}`),
-    fetchHomePostRows(`/post?${quickLinksQuery.toString()}`),
-    fetchHomePostRows(`/post?${trainingQuery.toString()}`),
-    fetchHomePostRows(`/post?${businessQuery.toString()}`),
-    fetchHomePostRows(`/post?${memberConnectionQuery.toString()}`),
+    fetchHomePostRows(featuredParams),
+    fetchHomePostRows(tinVcciParams),
+    fetchHomePostRows(tinKinhTeParams),
+    fetchHomePostRows(chuyenDeParams),
+    fetchHomePostRows(policyParams),
+    fetchHomePostRows(eventParams),
+    fetchHomePostRows(quickLinksParams),
+    fetchHomePostRows(trainingParams),
+    fetchHomePostRows(businessParams),
+    fetchHomePostRows(memberConnectionParams),
   ]);
 
   const rows = [
@@ -401,9 +412,9 @@ async function fetchHomePostsFromApi() {
         summary: String(item.summary ?? item.content ?? ""),
         contentText: String(
           item.content_structure?.post_content?.[0]?.content ??
-            item.summary ??
-            item.content ??
-            ""
+          item.summary ??
+          item.content ??
+          ""
         ),
         createdAt: String(item.created_at ?? ""),
         publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
@@ -424,9 +435,9 @@ async function fetchHomePostsFromApi() {
         categories,
         thumbnail: thumbnailPath
           ? {
-              url: resolveAssetUrl(thumbnailPath),
-              alt: title,
-            }
+            url: resolveAssetUrl(thumbnailPath),
+            alt: title,
+          }
           : null,
       };
     })
@@ -591,125 +602,108 @@ export function useHomePosts() {
 }
 
 export function useEventCalendarPosts(currentMonth: Date) {
-  const query = useQuery({
-    queryKey: ["event-calendar-posts", currentMonth.getFullYear(), currentMonth.getMonth()],
-    queryFn: async () => {
-      const queryParams = createEventCalendarQuery(currentMonth);
+  const params = createEventCalendarParams(currentMonth);
+  const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+  const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
 
-      try {
-        const response = await useCustomClient<HomeEnvelope<HomePagedResult<RawHomePost>>>(
-          `/post?${queryParams.toString()}`,
-        );
+  const query = useGetApiV10Post<HomePostItem[]>(
+    params,
+    {
+      query: {
+        staleTime: 5 * 60 * 1000,
+        select: (response): HomePostItem[] => {
+          const mappedPosts = ((response?.responseData?.rows ?? []) as unknown as RawHomePost[]).map((item) => {
+            const categories = (item.categories ?? [])
+              .filter((category) => category?.id && category?.name)
+              .map((category) => ({
+                id: String(category.id),
+                name: String(category.name),
+                slug: String(category.slug ?? ""),
+                url: normalizeLink(category.url, "#"),
+                type: String(category.type ?? ""),
+              }));
 
-        const monthStart = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-        const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+            const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
+            const title = String(item.title ?? "").trim();
+            const externalLink = buildPostLink(
+              item.external_link || (title ? `/${title}` : undefined),
+              item.id ? String(item.id) : "",
+              "#",
+            );
 
-        const mappedPosts = (response.responseData?.rows ?? []).map((item) => {
-          const categories = (item.categories ?? [])
-            .filter((category) => category?.id && category?.name)
-            .map((category) => ({
-              id: String(category.id),
-              name: String(category.name),
-              slug: String(category.slug ?? ""),
-              url: normalizeLink(category.url, "#"),
-              type: String(category.type ?? ""),
-            }));
-
-          const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
-          const title = String(item.title ?? "").trim();
-          const externalLink = buildPostLink(
-            item.external_link || (title ? `/${title}` : undefined),
-            item.id ? String(item.id) : "",
-            "#",
-          );
-
-          return {
-            id: String(item.id ?? ""),
-            title,
-            externalLink,
-            summary: String(item.summary ?? item.content ?? ""),
-            contentText: String(
-              item.content_structure?.post_content?.[0]?.content ??
+            return {
+              id: String(item.id ?? ""),
+              title,
+              externalLink,
+              summary: String(item.summary ?? item.content ?? ""),
+              contentText: String(
+                item.content_structure?.post_content?.[0]?.content ??
                 item.summary ??
                 item.content ??
                 ""
-            ),
-            createdAt: String(item.created_at ?? ""),
-            publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
-            startedAt: String(item.started_at ?? ""),
-            endedAt: String(item.ended_at ?? ""),
-            registrationDeadline: String(item.registration_deadline ?? ""),
-            location: String(item.location ?? ""),
-            participationFee: String(item.participation_fee ?? ""),
-            expiredAt: String(item.expired_at ?? ""),
-            isFeatured: Boolean(item.is_featured),
-            isHidden: Boolean(item.is_hidden),
-            isActive: item.is_active !== false,
-            status: String(item.status ?? ""),
-            type: String(item.type ?? ""),
-            eventDates: Array.isArray(item.event_dates)
-              ? item.event_dates.filter((d): d is string => typeof d === "string")
-              : [],
-            categories,
-            thumbnail: thumbnailPath
-              ? {
+              ),
+              createdAt: String(item.created_at ?? ""),
+              publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+              startedAt: String(item.started_at ?? ""),
+              endedAt: String(item.ended_at ?? ""),
+              registrationDeadline: String(item.registration_deadline ?? ""),
+              location: String(item.location ?? ""),
+              participationFee: String(item.participation_fee ?? ""),
+              expiredAt: String(item.expired_at ?? ""),
+              isFeatured: Boolean(item.is_featured),
+              isHidden: Boolean(item.is_hidden),
+              isActive: item.is_active !== false,
+              status: String(item.status ?? ""),
+              type: String(item.type ?? ""),
+              eventDates: Array.isArray(item.event_dates)
+                ? item.event_dates.filter((d): d is string => typeof d === "string")
+                : [],
+              categories,
+              thumbnail: thumbnailPath
+                ? {
                   url: resolveAssetUrl(thumbnailPath),
                   alt: title,
                 }
-              : null,
-          } satisfies HomePostItem;
-        });
+                : null,
+            } satisfies HomePostItem;
+          });
 
-        // Filter posts that have at least one date (eventDates, startedAt,
-        // endedAt, or registrationDeadline) falling within the current month
-        return mappedPosts.filter((item) => {
-          const startedAt = item.startedAt ? dayjs(item.startedAt) : null;
-          const endedAt = item.endedAt ? dayjs(item.endedAt) : null;
-          const registrationDeadline = item.registrationDeadline ? dayjs(item.registrationDeadline) : null;
-          const eventDates = (item.eventDates ?? []).map((d) => dayjs(d)).filter((d) => d.isValid());
+          return mappedPosts.filter((item) => {
+            const startedAt = item.startedAt ? dayjs(item.startedAt) : null;
+            const endedAt = item.endedAt ? dayjs(item.endedAt) : null;
+            const registrationDeadline = item.registrationDeadline ? dayjs(item.registrationDeadline) : null;
+            const eventDates = (item.eventDates ?? []).map((d) => dayjs(d)).filter((d) => d.isValid());
 
-          // If no dates at all, exclude
-          if (!startedAt && !endedAt && !registrationDeadline && eventDates.length === 0) return false;
+            if (!startedAt && !endedAt && !registrationDeadline && eventDates.length === 0) return false;
 
-          const monthStartDay = dayjs(monthStart);
-          const monthEndDay = dayjs(monthEnd);
+            const monthStartDay = dayjs(monthStart);
+            const monthEndDay = dayjs(monthEnd);
 
-          // Check if any date falls within the current month
-          const hasDateInMonth = (date: dayjs.Dayjs | null): boolean => {
-            return date !== null && !date.isBefore(monthStartDay, "day") && !date.isAfter(monthEndDay, "day");
-          };
+            const hasDateInMonth = (date: dayjs.Dayjs | null): boolean => {
+              return date !== null && !date.isBefore(monthStartDay, "day") && !date.isAfter(monthEndDay, "day");
+            };
 
-          // If specific event_dates are set, only check those (they take
-          // priority over the started_at/ended_at range — same rule the
-          // calendar rendering uses in getEventDateRange).
-          if (eventDates.length > 0) {
-            return eventDates.some((d) => hasDateInMonth(d));
-          }
+            if (eventDates.length > 0) {
+              return eventDates.some((d) => hasDateInMonth(d));
+            }
 
-          // Check if event overlaps with current month (spans across the month)
-          const eventStartDate = startedAt || registrationDeadline;
-          const eventEndDate = endedAt || registrationDeadline || startedAt;
+            const eventStartDate = startedAt || registrationDeadline;
+            const eventEndDate = endedAt || registrationDeadline || startedAt;
 
-          if (eventStartDate && eventEndDate) {
-            // Event overlaps with month if it starts before month end AND ends after month start
-            return !eventStartDate.isAfter(monthEndDay, "day") && !eventEndDate.isBefore(monthStartDay, "day");
-          }
+            if (eventStartDate && eventEndDate) {
+              return !eventStartDate.isAfter(monthEndDay, "day") && !eventEndDate.isBefore(monthStartDay, "day");
+            }
 
-          // Fallback: check individual dates
-          if (startedAt && hasDateInMonth(startedAt)) return true;
-          if (endedAt && hasDateInMonth(endedAt)) return true;
-          if (registrationDeadline && hasDateInMonth(registrationDeadline)) return true;
+            if (startedAt && hasDateInMonth(startedAt)) return true;
+            if (endedAt && hasDateInMonth(endedAt)) return true;
+            if (registrationDeadline && hasDateInMonth(registrationDeadline)) return true;
 
-          return false;
-        });
-      } catch (error) {
-        // eslint-disable-next-line no-console
-        console.warn("[useEventCalendarPosts] CMS unavailable, falling back to mock data", error);
-        return MOCK_HOME_POSTS;
-      }
+            return false;
+          });
+        },
+      },
     },
-    staleTime: 5 * 60 * 1000,
-  });
+  );
 
   return query;
 }

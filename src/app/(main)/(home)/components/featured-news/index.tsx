@@ -5,7 +5,9 @@ import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useMemo } from "react";
 import HorizontalAdBanner from "@/app/(main)/(home)/components/horizontal-ad-banner";
+import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
 
 const FALLBACK_CATEGORY_LINK = "/hoat-dong/tin-tuc";
 
@@ -16,6 +18,12 @@ function FeaturedNews() {
   const secondarySlots = Array.from({ length: 2 }, (_, index) => secondaryItems[index] ?? null);
   const featuredOverviewLink =
     categoryLinks.get(categoryNames.tinVcci.toLowerCase()) ?? FALLBACK_CATEGORY_LINK;
+
+  const primaryFallback = useMemo(() => getRandomFallbackImage(), []);
+  const secondaryFallbacks = useMemo(
+    () => [getRandomFallbackImage(), getRandomFallbackImage()],
+    [],
+  );
 
   return (
     <section className="py-8 md:py-10">
@@ -45,7 +53,7 @@ function FeaturedNews() {
             >
               <div className="relative h-full min-h-[195px] md:min-h-[320px] lg:min-h-[380px]">
                 <ImageNext
-                  src={primaryItem.thumbnail?.url ?? "/thumbnail.png"}
+                  src={primaryItem.thumbnail?.url ?? primaryFallback}
                   alt={primaryItem.thumbnail?.alt || primaryItem.title}
                   width={1200}
                   height={800}
@@ -91,7 +99,7 @@ function FeaturedNews() {
                   >
                     <div className="relative flex h-full min-h-[165px]">
                       <ImageNext
-                        src={item.thumbnail?.url ?? "/thumbnail.png"}
+                        src={item.thumbnail?.url ?? secondaryFallbacks[index]}
                         alt={item.thumbnail?.alt || item.title}
                         width={600}
                         height={420}
