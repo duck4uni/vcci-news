@@ -677,7 +677,7 @@ export default function AdminBaseConfigPage() {
       } catch (error) {
         console.error(error);
         if (mounted) {
-          toast.error("KhÃ´ng thá»ƒ táº£i danh sÃ¡ch banner");
+          toast.error("Không thể tải danh sách banner");
         }
       }
     };

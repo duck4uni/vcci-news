@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 cd .ci
 sudo docker build -t $image_name:$tag -f $docker_path/build.Dockerfile ../
 sudo docker logout registry.gitlab.com
