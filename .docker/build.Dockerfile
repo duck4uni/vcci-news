@@ -13,9 +13,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy toàn bộ source (đã được .dockerignore lọc trừ node_modules / .next / openapi)
 COPY . .
 
-# Generate API client + build
-RUN node scripts/generate-api.mjs
-RUN pnpm run build
+RUN npm run build
 
 # ----------------- Production stage -----------------
 FROM node:22-alpine AS production
