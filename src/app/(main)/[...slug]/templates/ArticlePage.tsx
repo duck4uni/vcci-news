@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
 import { Spinner } from "@/components/ui";
 import { Pagination } from "@/components/base/pagination";
 import ImageNext from "@/components/shared/image-next";
@@ -16,7 +15,7 @@ import {
   buildDynamicPostHref,
   buildDynamicCategoryMenu,
   buildVisibleNewsFilters,
-  fetchDynamicPostList,
+  useDynamicPostList,
   findDisplayCategoryForPost,
   getDynamicPostExcerpt,
   resolveDynamicPostImage,
@@ -91,17 +90,13 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
     }
   }, [page, pathname, router, searchParamsString]);
 
-  const postsQuery = useQuery({
-    queryKey: ["dynamic-posts", category.id, page, pageSize, keyword],
-    queryFn: () =>
-      fetchDynamicPostList({
-        page,
-        pageSize,
-        filters: buildVisibleNewsFilters([
-          `category.id==${category.id}`,
-          keyword ? `title@=${keyword}` : null,
-        ]),
-      }),
+  const postsQuery = useDynamicPostList({
+    page,
+    pageSize,
+    filters: buildVisibleNewsFilters([
+      `category.id==${category.id}`,
+      keyword ? `title@=${keyword}` : null,
+    ]),
     staleTime: 60 * 1000,
   });
 

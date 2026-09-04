@@ -4,39 +4,21 @@ import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import ImageNext from "@/components/shared/image-next";
 import memberImages from "@/constants/memberImages";
 import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/app/api/mock-data";
+import { useGetOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
+import type { Organization } from "@/api/vcci-hcm/models";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import dayjs from "dayjs";
 
 const MEMBER_CONNECTION_FALLBACK_IMAGE = "/home/20-2048x1365.webp";
-const FEATURED_MEMBER_API_URL =
-  "https://vccihcm.vn/api/v1.0/organizations" +
-  "?filters=users.status_id+%3D%3D+36ca1cc5-7b6e-4f9f-b973-69c5207deb62" +
-  "&pageSize=12&sortField=created_at&sortOrder=ASC";
+const VCCI_HCM_SITE_URL = "https://vccihcm.vn";
 const FEATURED_MEMBER_MORE_URL =
-  "https://vccihcm.vn/giao-thuong-b2b?filters=users.status_id+%3D%3D+36ca1cc5-7b6e-4f9f-b973-69c5207deb62&sortField=created_at&sortOrder=ASC";
-const VCCI_HCM_ORIGIN = "https://vccihcm.vn";
+  `${VCCI_HCM_SITE_URL}/giao-thuong-b2b?filters=users.status_id+%3D%3D+36ca1cc5-7b6e-4f9f-b973-69c5207deb62&sortField=created_at&sortOrder=ASC`;
 
-type FeaturedMember = {
-  id: string;
-  name: string;
-  avatar?: string | null;
-  org_link?: string | null;
-};
-
-type FeaturedMembersResponse = {
-  responseData?: {
-    rows?: FeaturedMember[];
-  };
-};
-
-type FeaturedMemberState =
-  | { status: "loading" }
-  | { status: "empty" }
-  | { status: "ready"; rows: FeaturedMember[] };
+const MOCK_FEATURED_MEMBER_ROWS =
+  MOCK_FEATURED_MEMBERS_RESPONSE.responseData?.rows as unknown as Organization[] ?? [];
 
 const resolveMemberImage = (avatar: string | null | undefined, index: number) => {
   if (avatar?.startsWith("http://") || avatar?.startsWith("https://")) {
@@ -44,7 +26,7 @@ const resolveMemberImage = (avatar: string | null | undefined, index: number) =>
   }
 
   if (avatar?.startsWith("/")) {
-    return `${VCCI_HCM_ORIGIN}${avatar}`;
+    return `${VCCI_HCM_SITE_URL}${avatar}`;
   }
 
   return memberImages[index % memberImages.length] ?? "/img-error.png";
@@ -52,74 +34,41 @@ const resolveMemberImage = (avatar: string | null | undefined, index: number) =>
 
 const getMemberDetailUrl = (orgLink: string | null | undefined) => {
   if (orgLink) {
-    return `${VCCI_HCM_ORIGIN}/giao-thuong-b2b/doanh-nghiep/${orgLink}`;
+    return `${VCCI_HCM_SITE_URL}/giao-thuong-b2b/doanh-nghiep/${orgLink}`;
   }
   return null;
 };
 
 function Members() {
   const { memberConnectionPosts, categoryLinks, categoryNames } = useHomePosts();
-  const [featuredMembers, setFeaturedMembers] = useState<FeaturedMemberState>({
-    status: "loading",
-  });
   const connectionPosts = memberConnectionPosts.slice(0, 2);
   const sectionLink =
     categoryLinks.get(categoryNames.ketNoiHoiVien.toLowerCase()) ?? "/hoi-vien/ket-noi-hoi-vien";
-  const displayMembers =
-    featuredMembers.status === "ready" ? featuredMembers.rows.slice(0, 9) : [];
 
-  useEffect(() => {
-    let isMounted = true;
+  const { data: organizationsResponse, isLoading: featuredMembersLoading } =
+    useGetOrganizations<Organization[] | undefined>(
+      {
+        filters: "users.status_id==36ca1cc5-7b6e-4f9f-b973-69c5207deb62",
+        pageSize: "12",
+        sortField: "created_at",
+        sortOrder: "ASC",
+      },
+      {
+        query: {
+          staleTime: 60 * 1000,
+          select: (response) => {
+            const rows = (response as any)?.responseData?.rows ?? [];
+            return rows.length > 0 ? rows : MOCK_FEATURED_MEMBER_ROWS;
+          },
+        },
+      },
+    );
 
-    const fetchFeaturedMembers = async () => {
-      try {
-        const response = await fetch(FEATURED_MEMBER_API_URL, {
-          cache: "no-store",
-        });
-
-        if (!response.ok) {
-          throw new Error(`Cannot load featured members: ${response.status}`);
-        }
-
-        const data = (await response.json()) as FeaturedMembersResponse;
-        const rows = data.responseData?.rows ?? [];
-
-        if (isMounted) {
-          if (rows.length > 0) {
-            setFeaturedMembers({ status: "ready", rows });
-          } else {
-            // API trả về rỗng → dùng mock data
-            const mockRows = MOCK_FEATURED_MEMBERS_RESPONSE.responseData?.rows ?? [];
-            setFeaturedMembers(
-              mockRows.length > 0
-                ? { status: "ready", rows: mockRows as FeaturedMember[] }
-                : { status: "empty" },
-            );
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        if (isMounted) {
-          // Fallback: dùng mock data thay vì hiển thị "Chưa có thông tin"
-          const mockRows = MOCK_FEATURED_MEMBERS_RESPONSE.responseData?.rows ?? [];
-          setFeaturedMembers(
-            mockRows.length > 0
-              ? { status: "ready", rows: mockRows as FeaturedMember[] }
-              : { status: "empty" },
-          );
-        }
-      }
-    };
-
-    fetchFeaturedMembers();
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const featuredMembers = organizationsResponse ?? MOCK_FEATURED_MEMBER_ROWS;
+  const displayMembers = featuredMembers.slice(0, 9);
 
   const renderMemberContent = () => {
-    if (featuredMembers.status === "loading") {
+    if (featuredMembersLoading) {
       return (
         <div className="rounded-[16px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
           Đang tải dữ liệu...
@@ -127,7 +76,7 @@ function Members() {
       );
     }
 
-    if (featuredMembers.status === "empty" || displayMembers.length === 0) {
+    if (displayMembers.length === 0) {
       return (
         <div className="rounded-[16px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
           Chưa có thông tin.

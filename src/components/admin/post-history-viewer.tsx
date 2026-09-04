@@ -2,8 +2,8 @@
 
 import * as React from "react";
 import { Clock, ChevronDown, ChevronUp, User, Plus, Pencil, Trash2, Loader2 } from "lucide-react";
-import { useGetApiV10PostIdHistory } from "@/api/endpoints/post-history";
-import type { PostHistoryItem, PostHistoryAction } from "@/api/types/post-history";
+import { useGetApiV10PostIdHistory } from "@/api/vcci-news/endpoints/post";
+import type { PostHistoryItem, PostHistoryAction } from "@/api/vcci-news/types/post-history";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";

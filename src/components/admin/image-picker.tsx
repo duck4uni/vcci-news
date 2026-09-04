@@ -14,11 +14,8 @@ import {
 } from "@/components/ui/dialog";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
-import {
-  fetchCmsFiles,
-  toAdminMediaItem,
-  uploadCmsFile,
-} from "@/lib/api/files";
+import { toAdminMediaItem } from "@/lib/utils/file";
+import { getApiV10File, postApiV10FileUpload } from "@/api/vcci-news/endpoints/file";
 import { Pagination } from "@/components/base/pagination";
 import { cn } from "@/lib/utils";
 
@@ -58,14 +55,23 @@ export function AdminImagePicker({
     setReady(false);
 
     try {
-      const result = await fetchCmsFiles({
+      const keyword = search.trim();
+      const filters = [
+        "mime@=image",
+        keyword ? `original@=${keyword}|path@=${keyword}` : "",
+      ].filter(Boolean).join(",");
+
+      const response = await getApiV10File({
         page,
         pageSize: PAGE_SIZE,
-        search,
+        sortField: "created_at",
+        sortOrder: "desc",
+        filters,
       });
+      const pageData = response.responseData ?? {};
 
-      setItems(result.rows.map(toAdminMediaItem));
-      setTotal(result.count);
+      setItems((pageData.rows ?? []).map(toAdminMediaItem));
+      setTotal(pageData.count ?? 0);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể tải thư viện hình ảnh");
       setItems([]);
@@ -93,10 +99,11 @@ export function AdminImagePicker({
     setUploading(true);
 
     try {
-      const uploaded = await uploadCmsFile({
+      const response = await postApiV10FileUpload({
         file,
         original: file.name,
       });
+      const uploaded = response.responseData ?? null;
 
       if (!uploaded) {
         throw new Error("Không thể tải hình ảnh lên");

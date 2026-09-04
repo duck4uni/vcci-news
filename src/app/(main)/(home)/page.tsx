@@ -12,14 +12,13 @@ import Banner from "./components/banner";
 import Members from './components/members';
 import VideoAndPartners from './components/video-and-patners';
 
-const Page = () => {
+export default function HomePage() {
   return (
     <div>
       <Banner />
       {/* contents */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-10 space-y-6">
         <FeaturedNews />
-
 
         <section className="flex flex-col xl:flex-row pb-8 gap-5 mb-0">
           <News />
@@ -73,5 +72,3 @@ const Page = () => {
     </div>
   );
 };
-
-export default Page;

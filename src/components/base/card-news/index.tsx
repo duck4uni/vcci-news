@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import { resolveUploadUrl } from "@links/index";
-import { NewsItem } from "@/api/types/news";
+import links from "@/links";
+import { NewsItem } from "@/api/vcci-news/types/news";
 
 const stripImagesAndHtml = (html?: string) => {
   if (!html) return "";
@@ -21,7 +21,7 @@ const stripImagesAndHtml = (html?: string) => {
 
 const resolveThumbnail = (thumbnail?: string) => {
   if (!thumbnail) return "/img-error.png";
-  return resolveUploadUrl(thumbnail);
+  return links.resolveImageUrl(thumbnail);
 };
 
 const CardNews = ({ news, link }: { news: NewsItem; link: string }) => {

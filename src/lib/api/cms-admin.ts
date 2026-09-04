@@ -1,9 +1,33 @@
 ﻿"use client";
 
-import { useCustomClient } from "@/api/mutator/custom-client";
 import { toCmsSlug } from "@/lib/utils/cms-slug";
-import { resolveUploadUrl } from "@/links";
+import links from "@/links";
 import { categoryFallbackRows } from "@/mockdata/categories";
+import {
+  getApiV10Tag,
+  postApiV10Tag,
+  patchApiV10TagId,
+  deleteApiV10TagId,
+  postApiV10TagIds,
+} from "@/api/vcci-news/endpoints/tag";
+import {
+  getApiV10Category,
+  postApiV10Category,
+  putApiV10CategoryId,
+  deleteApiV10CategoryId,
+} from "@/api/vcci-news/endpoints/category";
+import {
+  getApiV10Post,
+  getApiV10PostId,
+  postApiV10Post,
+  putApiV10PostId,
+  deleteApiV10PostId,
+} from "@/api/vcci-news/endpoints/post";
+import {
+  getApiV10PostTagPostId,
+  postApiV10PostTagPostIdBulk,
+  deleteApiV10PostTagPostId,
+} from "@/api/vcci-news/endpoints/post-tag";
 
 export type CmsHeaderCategoryType = "category" | "page" | "news";
 
@@ -117,16 +141,6 @@ export interface CmsHeaderCategoryItem {
   updated_at?: string;
 }
 
-interface CmsApiEnvelope<T> {
-  message?: string;
-  message_en?: string;
-  responseData?: T;
-  data?: T;
-  error?: string;
-  status?: string;
-  violation?: Array<{ field?: string; message?: string }>;
-}
-
 interface CmsPagedResult<T> {
   count: number;
   page?: number;
@@ -205,9 +219,6 @@ interface CmsPivotItem {
   created_at?: string;
 }
 
-const isObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === "object" && value !== null && !Array.isArray(value);
-
 const normalizeUser = (user: CmsRawUser | null | undefined): CmsUserSummary | null => {
   if (!user || typeof user !== "object" || !user.id) return null;
   const firstName = String(user.first_name ?? "").trim();
@@ -227,44 +238,6 @@ const normalizeUser = (user: CmsRawUser | null | undefined): CmsUserSummary | nu
     avatar_url: user.avatar_url ? String(user.avatar_url) : null,
   };
 };
-
-const readMessage = (payload: unknown) => {
-  if (!isObject(payload)) return "Request failed";
-  if (typeof payload.message === "string" && payload.message.trim()) return payload.message;
-  if (typeof payload.error === "string" && payload.error.trim()) return payload.error;
-  return "Request failed";
-};
-
-const authHeaders = (withJson = true) => {
-  const headers = new Headers();
-
-  if (withJson) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  return headers;
-};
-
-async function cmsRequest<T>(path: string, init?: RequestInit): Promise<T> {
-  const payload = await useCustomClient<CmsApiEnvelope<T> | T>(path, {
-    ...init,
-    headers: init?.headers ?? authHeaders(init?.body !== undefined),
-  });
-
-  if (isObject(payload) && "statusCode" in payload) {
-    const statusCode = Number(payload.statusCode);
-
-    if (statusCode >= 400) {
-      throw new Error(readMessage(payload));
-    }
-  }
-
-  if (isObject(payload) && ("responseData" in payload || "data" in payload)) {
-    return ((payload.responseData ?? payload.data) as T) ?? ({} as T);
-  }
-
-  return (payload ?? {}) as T;
-}
 
 const normalizeDateTimeInput = (value?: string | null) => {
   if (!value) return "";
@@ -386,8 +359,8 @@ const transformPost = (
     summary: post.summary ?? "",
     type:
       post.type === "page" ||
-      primaryCategoryType === "post" ||
-      primaryCategoryType === "page"
+        primaryCategoryType === "post" ||
+        primaryCategoryType === "page"
         ? "baiviettrang"
         : "tintuc",
     header_category_id: primaryCategory?.id ?? "",
@@ -397,11 +370,11 @@ const transformPost = (
     is_featured: Boolean(post.is_featured),
     thumbnail: post.thumbnail?.id
       ? {
-          id: post.thumbnail.id,
-          name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
-          alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
-          url: resolveUploadUrl(post.thumbnail.path),
-        }
+        id: post.thumbnail.id,
+        name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+        alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+        url: links.resolveImageUrl(post.thumbnail.path),
+      }
       : null,
     is_hidden: Boolean(post.is_hidden),
     created_at: post.created_at ?? "",
@@ -423,23 +396,25 @@ const transformPost = (
 };
 
 async function fetchAllTagsInternal() {
-  const result = await cmsRequest<CmsPagedResult<CmsTagItem>>(
-    "/tag?page=1&pageSize=10&sortField=name&sortOrder=ASC",
-  );
+  const response = await getApiV10Tag({
+    page: 1,
+    pageSize: 10,
+    sortField: "name",
+    sortOrder: "asc",
+  });
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsTagItem>;
   return result.rows ?? [];
 }
 
 async function fetchTagsForPost(postId: string) {
-  const result = await cmsRequest<CmsPagedResult<CmsPivotItem>>(`/postTag/${postId}`);
+  const response = await getApiV10PostTagPostId(postId);
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsPivotItem>;
   const tagIds = (result.rows ?? []).map((item) => item.tag_id).filter(Boolean) as string[];
 
   if (tagIds.length === 0) return [];
 
-  return cmsRequest<CmsTagItem[]>("/tag/ids", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({ tag_ids: tagIds }),
-  });
+  const tagsResponse = await postApiV10TagIds({ tag_ids: tagIds });
+  return (tagsResponse.responseData ?? []) as CmsTagItem[];
 }
 
 function buildHeaderItemsFromTree(
@@ -567,14 +542,20 @@ const toCategoryApiType = (type: CmsHeaderCategoryType) => {
 const toTagSlug = (value: string) => toCmsSlug(value);
 
 export async function fetchCmsCategories() {
-  const result = await cmsRequest<CmsPagedResult<CmsCategoryItem>>(
-    "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
-  ).catch(() => ({
-    count: categoryFallbackRows.length,
+  const response = await getApiV10Category({
     page: 1,
-    pageSize: 50,
-    rows: categoryFallbackRows as CmsCategoryItem[],
+    pageSize: 200,
+    sortField: "sort_order",
+    sortOrder: "asc",
+  }).catch(() => ({
+    responseData: {
+      count: categoryFallbackRows.length,
+      page: 1,
+      pageSize: 50,
+      rows: categoryFallbackRows as CmsCategoryItem[],
+    },
   }));
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsCategoryItem>;
 
   return (result.rows ?? []).filter((item) => item.type !== "category");
 }
@@ -588,20 +569,14 @@ export async function fetchCmsTagsPage(params?: {
   pageSize?: number;
   filters?: string;
 }) {
-  const searchParams = new URLSearchParams({
-    page: String(params?.page ?? 1),
-    pageSize: String(params?.pageSize ?? 10),
+  const response = await getApiV10Tag({
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 10,
     sortField: "name",
-    sortOrder: "ASC",
+    sortOrder: "asc",
+    filters: params?.filters?.trim() || undefined,
   });
-
-  if (params?.filters?.trim()) {
-    searchParams.set("filters", params.filters.trim());
-  }
-
-  const result = await cmsRequest<CmsPagedResult<CmsTagItem>>(
-    `/tag?${searchParams.toString()}`,
-  );
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsTagItem>;
 
   return {
     items: result.rows ?? [],
@@ -612,35 +587,26 @@ export async function fetchCmsTagsPage(params?: {
 }
 
 export async function createCmsTag(input: { name: string; slug?: string }) {
-  return cmsRequest<CmsTagItem>("/tag", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({
-      name: input.name.trim(),
-      slug: input.slug?.trim() || toTagSlug(input.name),
-    }),
+  const response = await postApiV10Tag({
+    name: input.name.trim(),
+    slug: input.slug?.trim() || toTagSlug(input.name),
   });
+  return response.responseData as CmsTagItem;
 }
 
 export async function updateCmsTag(
   id: string,
   input: { name: string; slug?: string },
 ) {
-  return cmsRequest<CmsTagItem>(`/tag/${id}`, {
-    method: "PATCH",
-    headers: authHeaders(),
-    body: JSON.stringify({
-      name: input.name.trim(),
-      slug: input.slug?.trim() || toTagSlug(input.name),
-    }),
+  const response = await patchApiV10TagId(id, {
+    name: input.name.trim(),
+    slug: input.slug?.trim() || toTagSlug(input.name),
   });
+  return response.responseData as CmsTagItem;
 }
 
 export async function deleteCmsTag(id: string) {
-  await cmsRequest(`/tag/${id}`, {
-    method: "DELETE",
-    headers: authHeaders(false),
-  });
+  await deleteApiV10TagId(id);
 }
 
 export async function ensureTagsExist(names: string[]) {
@@ -656,15 +622,11 @@ export async function ensureTagsExist(names: string[]) {
     const key = name.toLowerCase();
     if (tagMap.has(key)) continue;
 
-    const created = await cmsRequest<CmsTagItem>("/tag", {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({
-        name,
-        slug: toTagSlug(name),
-      }),
+    const response = await postApiV10Tag({
+      name,
+      slug: toTagSlug(name),
     });
-
+    const created = response.responseData as CmsTagItem;
     tagMap.set(key, created);
   }
 
@@ -674,9 +636,10 @@ export async function ensureTagsExist(names: string[]) {
 }
 
 export async function syncPostTags(postId: string, tagIds: string[]) {
-  const current = await cmsRequest<CmsPagedResult<CmsPivotItem>>(`/postTag/${postId}`);
+  const response = await getApiV10PostTagPostId(postId);
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsPivotItem>;
   const currentIds = new Set(
-    (current.rows ?? []).map((item) => item.tag_id).filter(Boolean) as string[],
+    (result.rows ?? []).map((item) => item.tag_id).filter(Boolean) as string[],
   );
   const nextIds = new Set(tagIds.filter(Boolean));
 
@@ -684,32 +647,31 @@ export async function syncPostTags(postId: string, tagIds: string[]) {
   const toDelete = Array.from(currentIds).filter((id) => !nextIds.has(id));
 
   if (toCreate.length > 0) {
-    await cmsRequest(`/postTag/${postId}/bulk`, {
-      method: "POST",
-      headers: authHeaders(),
-      body: JSON.stringify({ tag_ids: toCreate }),
-    });
+    await postApiV10PostTagPostIdBulk(postId, { tag_ids: toCreate });
   }
 
   await Promise.all(
     toDelete.map((tagId) =>
-      cmsRequest(`/postTag/${postId}?tag_id=${encodeURIComponent(tagId)}`, {
-        method: "DELETE",
-        headers: authHeaders(false),
-      }),
+      deleteApiV10PostTagPostId(postId, { tag_id: tagId }),
     ),
   );
 }
 
 export async function fetchHeaderConfigItems() {
-  const result = await cmsRequest<CmsPagedResult<CmsCategoryItem>>(
-    "/category?page=1&pageSize=200&sortField=sort_order&sortOrder=ASC",
-  ).catch(() => ({
-    count: categoryFallbackRows.length,
+  const response = await getApiV10Category({
     page: 1,
-    pageSize: 50,
-    rows: categoryFallbackRows as CmsCategoryItem[],
+    pageSize: 200,
+    sortField: "sort_order",
+    sortOrder: "asc",
+  }).catch(() => ({
+    responseData: {
+      count: categoryFallbackRows.length,
+      page: 1,
+      pageSize: 50,
+      rows: categoryFallbackRows as CmsCategoryItem[],
+    },
   }));
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsCategoryItem>;
   const roots = buildCategoryTree(result.rows ?? []);
   const items = buildHeaderItemsFromCategories(roots);
 
@@ -738,11 +700,8 @@ export async function createHeaderConfigItem(input: {
     type: toCategoryApiType(input.type),
   };
 
-  return cmsRequest<CmsCategoryItem>("/category", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
+  const response = await postApiV10Category(payload);
+  return response.responseData as CmsCategoryItem;
 }
 
 export async function updateHeaderConfigItem(
@@ -765,18 +724,12 @@ export async function updateHeaderConfigItem(
     type: toCategoryApiType(input.type),
   };
 
-  return cmsRequest<CmsCategoryItem>(`/category/${id}`, {
-    method: "PUT",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
+  const response = await putApiV10CategoryId(id, payload);
+  return response.responseData as CmsCategoryItem;
 }
 
 export async function deleteHeaderConfigItem(id: string) {
-  await cmsRequest(`/category/${id}`, {
-    method: "DELETE",
-    headers: authHeaders(false),
-  });
+  await deleteApiV10CategoryId(id);
 }
 
 export async function fetchCmsNewsItems(params?: {
@@ -786,20 +739,14 @@ export async function fetchCmsNewsItems(params?: {
   sortOrder?: string;
   filters?: string;
 }) {
-  const queryParams = new URLSearchParams({
-    page: String(params?.page ?? 1),
-    pageSize: String(params?.pageSize ?? 10),
+  const response = await getApiV10Post({
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 10,
     sortField: params?.sortField ?? "created_at",
-    sortOrder: params?.sortOrder ?? "desc",
+    sortOrder: (params?.sortOrder ?? "desc") as "asc" | "desc",
+    filters: params?.filters?.trim() || undefined,
   });
-
-  if (params?.filters?.trim()) {
-    queryParams.set("filters", params.filters.trim());
-  }
-
-  const result = await cmsRequest<CmsPagedResult<CmsRawPostItem>>(
-    `/post?${queryParams.toString()}`,
-  );
+  const result = (response.responseData ?? {}) as CmsPagedResult<CmsRawPostItem>;
 
   const rows = result.rows ?? [];
 
@@ -812,24 +759,19 @@ export async function fetchCmsNewsItems(params?: {
 }
 
 export async function fetchCmsPostCount(filters?: string) {
-  const queryParams = new URLSearchParams();
-
-  if (filters?.trim()) {
-    queryParams.set("filters", filters.trim());
-  }
-
-  queryParams.set("page", "1");
-  queryParams.set("pageSize", "1");
-
-  const result = await cmsRequest<CmsPagedResult<CmsRawPostItem>>(
-    `/post?${queryParams.toString()}`,
-  );
+  const response = await getApiV10Post({
+    page: 1,
+    pageSize: 1,
+    filters: filters?.trim() || undefined,
+  });
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsRawPostItem>;
 
   return result.count ?? 0;
 }
 
 export async function fetchCmsNewsItem(id: string) {
-  const post = await cmsRequest<CmsRawPostItem>(`/post/${id}`);
+  const response = await getApiV10PostId(id);
+  const post = (response.responseData ?? {}) as CmsRawPostItem;
   const tags = post.id ? await fetchTagsForPost(post.id) : [];
   const tagMap = new Map<string, CmsTagItem[]>([[post.id ?? "", tags]]);
   return transformPost(post, tagMap);
@@ -883,11 +825,8 @@ export async function createCmsNewsItem(input: {
     },
   };
 
-  const created = await cmsRequest<CmsRawPostItem>("/post", {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
+  const response = await postApiV10Post(payload as any);
+  const created = (response.responseData ?? {}) as CmsRawPostItem;
 
   if (created.id) {
     await syncPostTags(created.id, input.tag_ids);
@@ -947,11 +886,8 @@ export async function updateCmsNewsItem(
     },
   };
 
-  const updated = await cmsRequest<CmsRawPostItem>(`/post/${id}`, {
-    method: "PUT",
-    headers: authHeaders(),
-    body: JSON.stringify(payload),
-  });
+  const response = await putApiV10PostId(id, payload as any);
+  const updated = (response.responseData ?? {}) as CmsRawPostItem;
 
   await syncPostTags(id, input.tag_ids);
 
@@ -959,19 +895,13 @@ export async function updateCmsNewsItem(
 }
 
 export async function deleteCmsNewsItem(id: string) {
-  await cmsRequest(`/post/${id}`, {
-    method: "DELETE",
-    headers: authHeaders(false),
-  });
+  await deleteApiV10PostId(id);
 }
 
 export async function toggleCmsNewsVisibility(id: string, isHidden: boolean) {
-  return cmsRequest<CmsRawPostItem>(`/post/${id}`, {
-    method: "PUT",
-    headers: authHeaders(),
-    body: JSON.stringify({
-      is_hidden: isHidden,
-      is_active: !isHidden,
-    }),
-  });
+  const response = await putApiV10PostId(id, {
+    is_hidden: isHidden,
+    is_active: !isHidden,
+  } as any);
+  return (response.responseData ?? {}) as CmsRawPostItem;
 }

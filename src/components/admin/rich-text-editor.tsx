@@ -5,7 +5,7 @@ import * as React from "react";
 import { useMemo, useRef } from "react";
 import type { JoditEditorProps } from "jodit-react";
 import useAuthStore from "@/store/useAuthStore";
-import links, { resolveUploadUrl } from "@/links";
+import links from "@/links";
 
 const JoditEditor = dynamic(() => import("jodit-react").then((mod) => mod.default), {
   ssr: false,
@@ -383,11 +383,7 @@ export function AdminRichTextEditor({
             (typeof responseData?.link === "string" && responseData.link) ||
             (typeof responseData?.src === "string" && responseData.src) ||
             "";
-          // Resolve to a full URL so the image preview renders inside the editor.
-          const resolvedUrl = rawUrl ? resolveUploadUrl(rawUrl) : "";
-          // isImages tells Jodit's defaultHandlerSuccess to insert an <img>
-          // tag instead of an <a> link. Without it, uploaded images render as
-          // plain text links inside the editor and on the client.
+          const resolvedUrl = rawUrl ? links.resolveImageUrl(rawUrl) : "";
           const mime = typeof responseData?.mime === "string" ? responseData.mime : "";
           const isImage = mime.startsWith("image/") || /\.(png|jpe?g|gif|webp|svg|bmp|avif)$/i.test(resolvedUrl);
           return {

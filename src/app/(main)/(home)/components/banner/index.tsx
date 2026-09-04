@@ -7,9 +7,9 @@ import { Swiper as SwiperType } from "swiper/types";
 import { useRef } from "react";
 import "swiper/css";
 
-import { getApiV10Banner } from "@/api/endpoints/banner";
-import { useQuery } from "@tanstack/react-query";
-import { fetchCmsFileById, resolveCmsFileUrl } from "@/lib/api/files";
+import { useGetApiV10Banner } from "@/api/vcci-news/endpoints/banner";
+import { resolveCmsFileUrl } from "@/lib/utils/file";
+import { useGetApiV10FileId } from "@/api/vcci-news/endpoints/file";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ApiEnvelope<T> = {
@@ -64,10 +64,11 @@ function BannerSlideItem({
   alt: string;
   fileId?: string | null;
 }) {
-  const { data: file, isPending } = useQuery({
-    queryKey: ["cms-file", fileId],
-    queryFn: () => fetchCmsFileById(fileId!),
-    enabled: !!fileId,
+  const { data: file, isPending } = useGetApiV10FileId(fileId!, {
+    query: {
+      enabled: !!fileId,
+      select: (response) => response?.responseData ?? null,
+    },
   });
 
   if (isPending) {
@@ -98,16 +99,18 @@ function BannerSlideItem({
 const Banner = () => {
   const swiperRef = useRef<SwiperType | null>(null);
 
-  const { data: bannerData, isPending, isError } = useQuery({
-    queryKey: ["home-banner"],
-    queryFn: () =>
-      getApiV10Banner({
-        filters: "status@=ACTIVE",
-        sortField: "display_order",
-        sortOrder: "asc",
-      }),
-    staleTime: 60 * 1000,
-  });
+  const { data: bannerData, isPending, isError } = useGetApiV10Banner(
+    {
+      filters: "status@=ACTIVE",
+      sortField: "display_order",
+      sortOrder: "asc",
+    },
+    {
+      query: {
+        staleTime: 60 * 1000,
+      },
+    },
+  );
 
   const pageData = bannerData
     ? getEnvelopeData<{ rows?: BannerRow[] }>(bannerData as unknown as ApiEnvelope<{ rows?: BannerRow[] }>)

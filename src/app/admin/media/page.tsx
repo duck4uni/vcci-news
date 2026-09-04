@@ -25,11 +25,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   type CmsFileItem,
-  deleteCmsFile,
-  fetchCmsFiles,
   resolveCmsFileUrl,
-  uploadCmsFile,
-} from "@/lib/api/files";
+} from "@/lib/utils/file";
+import {
+  deleteApiV10FileId,
+  getApiV10File,
+  postApiV10FileUpload,
+} from "@/api/vcci-news/endpoints/file";
 
 const PAGE_SIZE = 10;
 
@@ -314,14 +316,23 @@ export default function AdminMediaPage() {
     setReady(false);
 
     try {
-      const result = await fetchCmsFiles({
+      const keyword = search.trim();
+      const filters = [
+        "mime@=image",
+        keyword ? `original@=${keyword}|path@=${keyword}` : "",
+      ].filter(Boolean).join(",");
+
+      const response = await getApiV10File({
         page,
         pageSize: PAGE_SIZE,
-        search,
+        sortField: "created_at",
+        sortOrder: "desc",
+        filters,
       });
+      const pageData = response.responseData ?? {};
 
-      setItems(result.rows);
-      setTotal(result.count);
+      setItems((pageData.rows ?? []) as CmsFileItem[]);
+      setTotal(pageData.count ?? 0);
     } catch (error) {
       toast.error(resolveApiError(error, "Không thể tải danh sách ảnh"));
       setItems([]);
@@ -351,7 +362,7 @@ export default function AdminMediaPage() {
     setSaving(true);
 
     try {
-      await uploadCmsFile({
+      await postApiV10FileUpload({
         file: data.file,
         original: data.name,
       });
@@ -369,7 +380,7 @@ export default function AdminMediaPage() {
     if (!deleteTarget) return;
 
     try {
-      await deleteCmsFile(deleteTarget.id);
+      await deleteApiV10FileId(deleteTarget.id ?? "");
       toast.success("Đã xóa ảnh thành công");
       setDeleteTarget(null);
       await load();
@@ -414,13 +425,13 @@ export default function AdminMediaPage() {
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
               {items.map((item) => (
                 <article
-                  key={item.id}
+                  key={item.id ?? ""}
                   className="group overflow-hidden rounded-[28px] border border-[#063e8e]/10 bg-white shadow-[0_18px_45px_rgba(6,62,142,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(6,62,142,0.14)]"
                 >
                   <div className="relative aspect-square overflow-hidden bg-[radial-gradient(circle_at_top,#dce9ff_0%,#f8fbff_55%,#ffffff_100%)]">
                     <SafeNextImage
                       src={resolveCmsFileUrl(item.path)}
-                      alt={item.original}
+                      alt={item.original ?? ""}
                       fill
                       className="object-contain p-4 transition duration-300 group-hover:scale-[1.03]"
                     />
@@ -429,7 +440,7 @@ export default function AdminMediaPage() {
 
                     <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 p-4 opacity-0 transition duration-300 group-hover:opacity-100">
                       <div className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur">
-                        {item.mime.split("/")[1]?.toUpperCase() || "IMG"}
+                        {(item.mime ?? "").split("/")[1]?.toUpperCase() || "IMG"}
                       </div>
                       <Button
                         type="button"

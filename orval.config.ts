@@ -1,170 +1,69 @@
+import 'dotenv/config'
 import { defineConfig } from "orval";
-import axios from "axios";
-import fs from "fs";
-import path from "path";
+import links from "./src/links/index";
 
-function loadEnvFile(filePath: string) {
-  if (!fs.existsSync(filePath)) return;
-
-  const content = fs.readFileSync(filePath, "utf8");
-  content.split(/\r?\n/).forEach((line) => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) return;
-
-    const equalsIndex = trimmed.indexOf("=");
-    if (equalsIndex < 0) return;
-
-    const key = trimmed.slice(0, equalsIndex).trim();
-    const value = trimmed.slice(equalsIndex + 1).trim().replace(/^['"]|['"]$/g, "");
-
-    if (key && process.env[key] === undefined) {
-      process.env[key] = value;
-    }
-  });
-}
-
-loadEnvFile(path.resolve(process.cwd(), ".env"));
-const backendHost = process.env.NEXT_PUBLIC_BACKEND_HOST;
-const siteURL = process.env.NEXT_PUBLIC_FRONTEND_HOST;
-
-const swaggerCandidates = [
-  // 1) Explicit override (highest priority)
-  process.env.ORVAL_SWAGGER_URL,
-  // 2) Sibling backend repo (local dev with both repos checked out)
-  path.resolve(process.cwd(), "..", "vietprodev-cms-backend", "storage", "swagger", "swagger-output.json"),
-  // 3) Committed spec in repo — deterministic source for CI builds.
-  //    Must be tried BEFORE HTTP URLs: production backend doesn't serve swagger
-  //    and ${backendHost}/swagger/swagger-output.json may return a stale/wrong spec.
-  path.resolve(process.cwd(), "openapi", "swagger-output.json"),
-  // 4) HTTP fallbacks (last resort)
-  `${backendHost}/swagger-output.json`,
-  `${backendHost}/swagger/swagger-output.json`,
-  `${backendHost}/swagger.json`,
-  `${backendHost}/openapi.json`,
-  `${backendHost}/api/swagger/swagger-output.json`,
-  `${backendHost}/vcci/swagger/swagger-output.json`,
-].filter(Boolean) as string[];
-
-async function fetchSwagger() {
-  for (const url of swaggerCandidates) {
-    if (!url) continue;
-
-    // 1) Local file path
-    if (fs.existsSync(url) && fs.statSync(url).isFile()) {
-      const raw = fs.readFileSync(url, "utf8");
-      try {
-        return JSON.parse(raw);
-      } catch (error) {
-        throw new Error(`Swagger spec tại ${url} không phải JSON hợp lệ: ${error}`);
-      }
-    }
-    // 2) HTTP fetch — chỉ chấp nhận JSON, bỏ qua HTML (404, page app,...)
-    if (/^https?:\/\//i.test(url)) {
-      try {
-        const { data, headers } = await axios.get(url, {
-          headers: { Origin: siteURL },
-          // Ngăn axios tự nhận HTML là JSON — ép raw response để check Content-Type
-          responseType: "json",
-          validateStatus: (status) => status >= 200 && status < 400,
-        });
-
-        const contentType = String(headers?.["content-type"] ?? "").toLowerCase();
-        if (!contentType.includes("application/json") && typeof data === "string") {
-          // Phản hồi không phải JSON (thường là HTML 404) — bỏ qua candidate này
-          continue;
-        }
-
-        if (data && typeof data === "object") {
-          return data;
-        }
-      } catch {
-        continue;
-      }
-    }
-  }
-
-  // 3) Fallback cuối: openapi/swagger-output.json nằm trong repo
-  const localSwagger = path.resolve(process.cwd(), "openapi/swagger-output.json");
-  if (fs.existsSync(localSwagger)) {
-    const raw = fs.readFileSync(localSwagger, "utf8");
-    try {
-      return JSON.parse(raw);
-    } catch (error) {
-      throw new Error(`Swagger spec tại ${localSwagger} không phải JSON hợp lệ: ${error}`);
-    }
-  }
-
-  throw new Error(
-    `Unable to load Swagger/OpenAPI JSON. Tried: ${swaggerCandidates.join(", ")}`,
-  );
-}
-
-const orvalConfig = async () => {
-  const swagger = await fetchSwagger();
-
-  return defineConfig({
-    "saigon-business": {
-      output: {
-        mode: "tags",
-        target: "src/api/endpoints/index.ts",
-        schemas: "src/api/models",
-        client: "react-query",
-        prettier: true,
-        override: {
-          mutator: {
-            path: "src/api/mutator/custom-client.ts",
-            name: "useCustomClient",
-          },
-          query: {
-            useQuery: true,
-            useInfinite: true,
-            usePrefetch: true,
-            // useSuspenseQuery: true,
-            options: {
-              retry: 3,
-              retryDelay: 1000,
-            }
-          },
-        }
-      },
-      input: {
-        target: swagger,
-        filters: {
-          // Tag whitelist dùng tên CHÍNH XÁT trong OpenAPI spec — lấy từ openapi/swagger-output.json.
-          // Cập nhật khi backend thêm/xóa tag. Bỏ hết filter nếu muốn generate toàn bộ.
-          tags: [
-            'Authentication',
-            'Advertisement',
-            'Banner',
-            'Business',
-            'Category',
-            'CategoryTag',
-            'Contact',
-            'File',
-            'Logo',
-            'Member',
-            'NewsletterSubscription',
-            'PageConfig',
-            'PasswordResetRequest',
-            'Permission',
-            'Position',
-            'Post',
-            'PostCategory',
-            'PostTag',
-            'Role',
-            'RolePermission',
-            'SiteInformation',
-            'Tag',
-            'Term',
-            'User',
-            'UserRole',
-            'VCCI',
-            'Video',
-          ],
+const orvalConfig = defineConfig({
+  // VCCI News API
+  "vcci-news": {
+    output: {
+      mode: "tags",
+      target: "src/api/vcci-news/endpoints/index.ts",
+      schemas: "src/api/vcci-news/models",
+      client: "react-query",
+      override: {
+        query: {
+          useInfinite: true,
+          usePrefetch: true,
+          options: {
+            retry: 3,
+            retryDelay: 1000,
+          }
         },
+        mutator: {
+          path: "src/api/vcci-news/mutator/custom-client.ts",
+          name: "useCustomClient",
+        },
+      }
+    },
+    input: {
+      target: `${links.apiEndpoint}/swagger-output.json`,
+      filters: {
+        tags: undefined,
       },
     },
-  });
-}
+  },
+
+  // VCCI HCM API
+  "vcci-hcm": {
+    output: {
+      mode: "tags",
+      target: "src/api/vcci-hcm/endpoints/index.ts",
+      schemas: "src/api/vcci-hcm/models",
+      client: "react-query",
+      override: {
+        query: {
+          useInfinite: true,
+          usePrefetch: true,
+          options: {
+            retry: 3,
+            retryDelay: 1000,
+          }
+        },
+        mutator: {
+          path: "src/api/vcci-hcm/mutator/custom-client.ts",
+          name: "useCustomClient",
+        },
+      }
+    },
+    input: {
+      target: `${links.externalApiEndpoint}/swagger-output.json`,
+      validation: false,
+      parserOptions: { validate: false },
+      filters: {
+        tags: ["Organizations"],
+      },
+    },
+  }
+});
 
 export default orvalConfig
