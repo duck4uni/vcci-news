@@ -1,7 +1,7 @@
-import Header from "@/app/(main)/_lib/layout/header";
-import Footer from "@/app/(main)/_lib/layout/footer";
+import Header from "@/components/layout/main/header";
+import Footer from "@/components/layout/main/footer";
 import React from "react";
-import ScrollToTopButton from "./_lib/layout/ScrollToTopButton";
+import ScrollToTopButton from "../../components/layout/main/ScrollToTopButton";
 
 export default function Layout({
   children,

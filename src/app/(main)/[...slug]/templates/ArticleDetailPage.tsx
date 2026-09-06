@@ -255,7 +255,7 @@ export default function ArticleDetailPage({
 
           <aside className="space-y-5 xl:pt-0">
             <EventsCalendar compact className="xl:w-full xl:min-w-0" />
-            <SidebarAdvertisements count={5} startIndex={0} />
+            <SidebarAdvertisements count={3} startIndex={0} />
           </aside>
         </div>
       </div>

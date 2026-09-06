@@ -30,10 +30,10 @@ function News() {
     (tab === "all"
       ? categoryLinks.get(categoryNames.tinVcci.toLowerCase())
       : tab === "tin-kinh-te"
-      ? categoryLinks.get(categoryNames.tinKinhTe.toLowerCase())
-      : tab === "chuyen-de"
-        ? categoryLinks.get(categoryNames.chuyenDe.toLowerCase())
-        : categoryLinks.get(categoryNames.tinVcci.toLowerCase())) ?? "/hoat-dong/tin-tuc";
+        ? categoryLinks.get(categoryNames.tinKinhTe.toLowerCase())
+        : tab === "chuyen-de"
+          ? categoryLinks.get(categoryNames.chuyenDe.toLowerCase())
+          : categoryLinks.get(categoryNames.tinVcci.toLowerCase())) ?? "/hoat-dong/tin-tuc";
 
   return (
     <div className="flex-1">
@@ -54,11 +54,10 @@ function News() {
                 key={item.id}
                 type="button"
                 onClick={() => setTab(item.id)}
-                className={`rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all ${
-                  active
+                className={`rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all ${active
                     ? "bg-[#1f5ba9] text-white shadow-[0_10px_20px_rgba(31,91,169,0.18)]"
                     : "bg-[#f4f7fb] text-[#7f8eab] hover:bg-[#eaf0f8]"
-                }`}
+                  }`}
               >
                 {item.label}
               </button>
@@ -360,14 +359,14 @@ function News() {
         </div>
       </div>
 
-      <div className="mt-4 hidden justify-end xl:flex">
+      {/* <div className="mt-4 hidden justify-end xl:flex">
         <Link
           href={overviewLink}
           className="text-sm font-semibold text-[#24469c] transition-colors hover:text-[#1b55a1]"
         >
           Xem tất cả
         </Link>
-      </div>
+      </div> */}
     </div>
   );
 }

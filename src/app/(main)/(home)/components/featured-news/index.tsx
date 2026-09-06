@@ -7,7 +7,7 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import HorizontalAdBanner from "@/app/(main)/(home)/components/horizontal-ad-banner";
-import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
+import { getFallbackImage } from "@/lib/utils/fallback-image";
 
 const FALLBACK_CATEGORY_LINK = "/hoat-dong/tin-tuc";
 
@@ -19,9 +19,9 @@ function FeaturedNews() {
   const featuredOverviewLink =
     categoryLinks.get(categoryNames.tinVcci.toLowerCase()) ?? FALLBACK_CATEGORY_LINK;
 
-  const primaryFallback = useMemo(() => getRandomFallbackImage(), []);
+  const primaryFallback = useMemo(() => getFallbackImage(0), []);
   const secondaryFallbacks = useMemo(
-    () => [getRandomFallbackImage(), getRandomFallbackImage()],
+    () => [getFallbackImage(1), getFallbackImage(2)],
     [],
   );
 
