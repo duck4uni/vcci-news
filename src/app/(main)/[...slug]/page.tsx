@@ -6,9 +6,22 @@ import {
   getDynamicPostSeoImage,
   getDynamicPostExcerpt,
   stripHtml,
-  toOptimizedSeoImageUrl,
 } from "./templates/data";
 import DynamicPageClient from "./DynamicPageClient";
+
+/**
+ * Build an absolute og:image URL routed through the custom /api/seo-image
+ * endpoint which resizes the source image to 1200x630 JPEG (~a few hundred KB)
+ * so social media crawlers receive a reasonably-sized image instead of the
+ * original full-resolution upload (which can be 5+ MB and get rejected by
+ * Twitter/Zalo/Facebook).
+ */
+function toSeoImageUrl(imageUrl: string): string {
+  if (!imageUrl) return "";
+  const origin = (links.siteURL || "").replace(/\/+$/, "");
+  const encoded = encodeURIComponent(imageUrl);
+  return `${origin}/api/seo-image?url=${encoded}`;
+}
 
 type GenerateMetadataArgs = {
   params: Promise<{ slug: string[] }>;
@@ -75,9 +88,9 @@ export async function generateMetadata({
     "Tin tức từ VCCI HCM";
   const rawImageUrl = getDynamicPostSeoImage(post);
   const isImageValid = await isRemoteImageValid(rawImageUrl);
-  const imageUrl = isImageValid
-    ? toOptimizedSeoImageUrl(rawImageUrl)
-    : toOptimizedSeoImageUrl("/thumbnail.png");
+  const imageUrl = toSeoImageUrl(
+    isImageValid ? rawImageUrl : "/thumbnail.png",
+  );
   const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}${postId || categoryIdParam
     ? `?${new URLSearchParams({
       ...(postId && { id: postId }),
