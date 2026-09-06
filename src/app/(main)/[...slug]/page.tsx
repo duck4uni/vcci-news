@@ -10,17 +10,15 @@ import {
 import DynamicPageClient from "./DynamicPageClient";
 
 /**
- * Build an absolute og:image URL routed through the custom /api/seo-image
- * endpoint which resizes the source image to 1200x630 JPEG (~a few hundred KB)
- * so social media crawlers receive a reasonably-sized image instead of the
- * original full-resolution upload (which can be 5+ MB and get rejected by
- * Twitter/Zalo/Facebook).
+ * Build an absolute og:image URL. Relative paths (e.g. "/thumbnail.png") are
+ * resolved against the site origin so social crawlers always receive an
+ * absolute URL. Absolute URLs are returned as-is.
  */
-function toSeoImageUrl(imageUrl: string): string {
+function toAbsoluteSeoImageUrl(imageUrl: string): string {
   if (!imageUrl) return "";
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
   const origin = (links.siteURL || "").replace(/\/+$/, "");
-  const encoded = encodeURIComponent(imageUrl);
-  return `${origin}/api/seo-image?url=${encoded}`;
+  return `${origin}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
 }
 
 type GenerateMetadataArgs = {
@@ -59,11 +57,10 @@ export async function generateMetadata({
   searchParams,
 }: GenerateMetadataArgs): Promise<Metadata> {
   const { slug } = await params;
-  const { id, categoryId } = await searchParams;
+  const { id } = await searchParams;
 
   const path = `/${(slug ?? []).join("/")}`;
   const postId = id?.trim() ?? "";
-  const categoryIdParam = categoryId?.trim() ?? "";
 
   let post = null;
   try {
@@ -88,16 +85,10 @@ export async function generateMetadata({
     "Tin tức từ VCCI HCM";
   const rawImageUrl = getDynamicPostSeoImage(post);
   const isImageValid = await isRemoteImageValid(rawImageUrl);
-  const imageUrl = toSeoImageUrl(
+  const imageUrl = toAbsoluteSeoImageUrl(
     isImageValid ? rawImageUrl : "/thumbnail.png",
   );
-  const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}${postId || categoryIdParam
-    ? `?${new URLSearchParams({
-      ...(postId && { id: postId }),
-      ...(categoryIdParam && { categoryId: categoryIdParam }),
-    }).toString()}`
-    : ""
-    }`;
+  const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}`;
 
   return {
     title,
