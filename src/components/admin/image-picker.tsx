@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import { toAdminMediaItem } from "@/lib/utils/file";
 import { getApiV10File, postApiV10FileUpload } from "@/api/vcci-news/endpoints/file";
@@ -210,7 +210,7 @@ export function AdminImagePicker({
                   )}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-[#063e8e]/[0.04]">
-                    <SafeNextImage
+                    <SafeImage
                       src={item.url}
                       alt={item.alt || item.name}
                       fill

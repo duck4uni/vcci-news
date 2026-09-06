@@ -16,7 +16,7 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -439,7 +439,7 @@ export default function AdminDashboardPage() {
               >
                 <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#eef4ff]">
                   {item.thumbnail ? (
-                    <SafeNextImage
+                    <SafeImage
                       src={item.thumbnail.url}
                       alt={item.thumbnail.alt || item.thumbnail.name}
                       fill
@@ -493,7 +493,7 @@ export default function AdminDashboardPage() {
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {mediaItems.slice(0, 3).map((item) => (
                   <div key={item.id} className="relative aspect-square overflow-hidden rounded-2xl bg-[#eef4ff]">
-                    <SafeNextImage
+                    <SafeImage
                       src={item.url}
                       alt={item.alt || item.name}
                       fill

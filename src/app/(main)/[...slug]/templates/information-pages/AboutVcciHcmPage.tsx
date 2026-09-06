@@ -6,7 +6,7 @@ import { ShieldCheck, Target, Zap } from "lucide-react";
 import parse from "html-react-parser";
 import Link from "next/link";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { buildDynamicPostHref, buildVisibleNewsFilters, stripHtml } from "../data";
 import links from "@/links";
 import StructuredPostContent from "../StructuredPostContent";
@@ -325,7 +325,7 @@ export default function AboutVcciHcmPage({
                 className="group overflow-hidden rounded-[22px] bg-white shadow-[0_18px_38px_rgba(28,52,120,0.16)] transition-transform hover:-translate-y-1"
               >
                 <div className="relative aspect-[1.28] overflow-hidden">
-                  <Image
+                  <SafeImage
                     src={item.thumbnailUrl}
                     alt={item.thumbnailAlt}
                     width={720}

@@ -1,6 +1,6 @@
 'use client';
 
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
@@ -48,8 +48,9 @@ function Events() {
             className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[14px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
           >
             <div className="relative h-[180px] overflow-hidden md:h-[220px] xl:h-[248px]">
-              <Image
-                src={featuredEvent.thumbnail?.url ?? featuredFallback}
+              <SafeImage
+                src={featuredEvent.thumbnail?.url}
+                fallbackSrc={featuredFallback}
                 alt={featuredEvent.thumbnail?.alt || featuredEvent.title}
                 width={720}
                 height={520}
@@ -114,8 +115,9 @@ function Events() {
                 className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[14px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
               >
                 <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[14px]">
-                  <Image
-                    src={item.thumbnail?.url ?? sideFallbacks[index]}
+                  <SafeImage
+                    src={item.thumbnail?.url}
+                    fallbackSrc={sideFallbacks[index]}
                     alt={item.thumbnail?.alt || item.title}
                     width={160}
                     height={160}

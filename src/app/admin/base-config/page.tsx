@@ -14,7 +14,7 @@ import {
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminImagePicker } from "@/components/admin/image-picker";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -845,7 +845,7 @@ export default function AdminBaseConfigPage() {
                   <div className="relative flex min-h-[320px] items-center justify-center overflow-hidden rounded-[24px] border border-dashed border-[#063e8e]/18 bg-[#eef4ff]">
                     {currentLogoMedia ? (
                       <div className="relative h-[220px] w-[220px]">
-                        <SafeNextImage
+                        <SafeImage
                           src={currentLogoMedia.url}
                           alt={currentLogoMedia.alt || currentLogoMedia.name}
                           fill
@@ -993,7 +993,7 @@ export default function AdminBaseConfigPage() {
               <div className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-4 sm:p-5">
                 <div className="relative aspect-[16/6] overflow-hidden rounded-[24px] border border-[#063e8e]/12 bg-[#eef4ff]">
                   {currentBannerMedia ? (
-                    <SafeNextImage
+                    <SafeImage
                       src={currentBannerMedia.url}
                       alt={currentBannerMedia.alt || currentBannerMedia.name}
                       fill

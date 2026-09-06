@@ -1,8 +1,7 @@
 'use client';
 
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
-import { useState } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
 import links from "@/links";
 
@@ -14,16 +13,8 @@ function HorizontalAdBanner() {
   const ad = ads[0];
 
   const href = ad?.link || FALLBACK_HREF;
-  const initialSrc = ad?.file?.path ? links.resolveImageUrl(ad.file.path) : FALLBACK_SRC;
-  const [src, setSrc] = useState(initialSrc);
-  const [errored, setErrored] = useState(false);
+  const src = ad?.file?.path ? links.resolveImageUrl(ad.file.path) : FALLBACK_SRC;
 
-  // Reset state khi ad thay đổi
-  if (ad?.file?.path && !errored && src !== initialSrc) {
-    setSrc(initialSrc);
-  }
-
-  const isGif = src.toLowerCase().endsWith(".gif");
   const title = ad?.name || "Quảng cáo VCCI HCM";
   const alt = ad?.alt || title;
 
@@ -36,19 +27,13 @@ function HorizontalAdBanner() {
       style={{ aspectRatio: "1600 / 200" }}
       title={title}
     >
-      <Image
+      <SafeImage
         src={src}
+        fallbackSrc={FALLBACK_SRC}
         alt={alt}
         fill
         sizes="100vw"
         className="object-cover"
-        unoptimized={isGif}
-        onError={() => {
-          if (src !== FALLBACK_SRC) {
-            setSrc(FALLBACK_SRC);
-            setErrored(true);
-          }
-        }}
       />
     </Link>
   );

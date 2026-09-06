@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminPostContentEditor } from "@/components/admin/post-content-editor";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -351,7 +351,7 @@ export function AdminMemberForm({ memberId }: AdminMemberFormProps) {
             {form.image ? (
               <div className="space-y-3">
                 <div className="relative aspect-video overflow-hidden rounded-xl border border-[#063e8e]/15">
-                  <SafeNextImage
+                  <SafeImage
                     src={form.image.url}
                     alt={form.image.alt || form.image.name}
                     fill

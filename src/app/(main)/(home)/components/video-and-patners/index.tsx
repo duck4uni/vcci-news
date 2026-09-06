@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import partnerImages from "@/constants/partnerImages";
 import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
@@ -68,8 +68,9 @@ const renderPartnerContent = (partners: Organization[]) => {
                 className="block"
               >
                 <div className="flex h-[96px] items-center justify-center rounded-[16px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(31,59,124,0.1)] xl:h-[151px]">
-                  <Image
-                    src={resolvePartnerImage(partner.avatar, index) ?? "/img-error.png"}
+                  <SafeImage
+                    src={resolvePartnerImage(partner.avatar, index)}
+                    fallbackSrc="/img-error.png"
                     alt={partner.name ?? ""}
                     width={140}
                     height={72}
@@ -79,8 +80,9 @@ const renderPartnerContent = (partners: Organization[]) => {
               </a>
             ) : (
               <div className="flex h-[96px] items-center justify-center rounded-[16px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-[151px]">
-                <Image
-                  src={resolvePartnerImage(partner.avatar, index) ?? "/img-error.png"}
+                <SafeImage
+                  src={resolvePartnerImage(partner.avatar, index)}
+                  fallbackSrc="/img-error.png"
                   alt={partner.name ?? ""}
                   width={140}
                   height={72}
@@ -179,7 +181,7 @@ function VideoAndPartners() {
                 className="overflow-hidden rounded-[16px] border border-[#e5ebf4] bg-white shadow-[0_10px_22px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(31,59,124,0.12)]"
               >
                 <div className="group relative aspect-[1.95/1] overflow-hidden">
-                  <Image
+                  <SafeImage
                     src={video.thumbnail}
                     alt={video.name}
                     width={640}

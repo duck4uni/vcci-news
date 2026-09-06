@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui";
 import { Pagination } from "@/components/base/pagination";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ListCategory from "@/components/base/list-category";
@@ -155,7 +155,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
                           className="group grid items-center gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
                         >
                           <div className="relative overflow-hidden rounded-md bg-[#edf1f5] aspect-[25/15] sm:aspect-[5/3]">
-                            <Image
+                            <SafeImage
                               src={resolveDynamicPostImage(item.thumbnail)}
                               alt={item.title}
                               width={520}

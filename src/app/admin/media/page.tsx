@@ -9,7 +9,7 @@ import {
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Pagination } from "@/components/base/pagination";
 import { Button } from "@/components/ui/button";
 import {
@@ -161,7 +161,7 @@ export default function AdminMediaPage() {
                   className="group overflow-hidden rounded-[28px] border border-[#063e8e]/10 bg-white shadow-[0_18px_45px_rgba(6,62,142,0.08)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(6,62,142,0.14)]"
                 >
                   <div className="relative aspect-square overflow-hidden bg-[radial-gradient(circle_at_top,#dce9ff_0%,#f8fbff_55%,#ffffff_100%)]">
-                    <SafeNextImage
+                    <SafeImage
                       src={resolveCmsFileUrl(item.path)}
                       alt={item.original ?? ""}
                       fill

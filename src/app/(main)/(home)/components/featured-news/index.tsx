@@ -1,6 +1,6 @@
 'use client';
 
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import { ChevronRight } from "lucide-react";
@@ -51,8 +51,9 @@ function FeaturedNews() {
               className="group relative block cursor-pointer overflow-hidden rounded-[16px] bg-[#0d2f5f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] md:rounded-[16px] md:min-h-[320px] lg:min-h-[380px]"
             >
               <div className="relative h-full min-h-[195px] md:min-h-[320px] lg:min-h-[380px]">
-                <Image
-                  src={primaryItem.thumbnail?.url ?? primaryFallback}
+                <SafeImage
+                  src={primaryItem.thumbnail?.url}
+                  fallbackSrc={primaryFallback}
                   alt={primaryItem.thumbnail?.alt || primaryItem.title}
                   width={1200}
                   height={800}
@@ -97,8 +98,9 @@ function FeaturedNews() {
                     className="group relative block cursor-pointer overflow-hidden rounded-[16px] bg-[#27447f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] min-h-[165px]"
                   >
                     <div className="relative flex h-full min-h-[165px]">
-                      <Image
-                        src={item.thumbnail?.url ?? secondaryFallbacks[index]}
+                      <SafeImage
+                        src={item.thumbnail?.url}
+                        fallbackSrc={secondaryFallbacks[index]}
                         alt={item.thumbnail?.alt || item.title}
                         width={600}
                         height={420}

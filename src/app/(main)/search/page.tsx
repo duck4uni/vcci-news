@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import { Pagination } from "@components/base/pagination";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ function SearchResultItem({ item, index }: { item: DynamicPostItem; index: numbe
         className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
       >
         <div className="overflow-hidden rounded-md bg-[#edf1f5]">
-          <Image
+          <SafeImage
             src={resolveDynamicPostImage(item.thumbnail)}
             alt={item.title}
             width={520}

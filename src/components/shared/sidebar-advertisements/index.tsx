@@ -1,8 +1,8 @@
 'use client';
 
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
 import links from "@/links";
 import type { Advertisement } from "@/api/vcci-news/models/advertisement";
@@ -11,8 +11,7 @@ import { getFallbackImage } from "@/lib/utils/fallback-image";
 const FALLBACK_HREF = "https://vcci-hcm.org.vn";
 
 function SidebarAdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: string }) {
-  const initialSrc = item.file?.path ? links.resolveImageUrl(item.file.path) : fallbackSrc;
-  const [src, setSrc] = useState(initialSrc);
+  const src = item.file?.path ? links.resolveImageUrl(item.file.path) : fallbackSrc;
 
   return (
     <Link
@@ -23,15 +22,13 @@ function SidebarAdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc
       title={item.name}
     >
       <div className="relative aspect-[16/10]">
-        <Image
+        <SafeImage
           src={src}
+          fallbackSrc={fallbackSrc}
           alt={item.alt || item.name}
           fill
           sizes="(max-width: 768px) 100vw, 300px"
           className="h-full w-full object-cover"
-          onError={() => {
-            if (src !== fallbackSrc) setSrc(fallbackSrc);
-          }}
         />
       </div>
     </Link>
@@ -48,7 +45,7 @@ function FallbackSidebarAdItem({ src }: { src: string }) {
       title="Quảng cáo VCCI HCM"
     >
       <div className="relative aspect-[16/10]">
-        <Image
+        <SafeImage
           src={src}
           alt="Quảng cáo VCCI HCM"
           fill

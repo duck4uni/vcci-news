@@ -1,6 +1,6 @@
 'use client';
 
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
@@ -83,8 +83,9 @@ function News() {
               className="group block cursor-pointer overflow-hidden rounded-[16px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
             >
               <div className="relative aspect-[1.4/1] overflow-hidden">
-                <Image
-                  src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
+                <SafeImage
+                  src={featuredArticle.thumbnail?.url}
+                  fallbackSrc="/thumbnail.png"
                   alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
                   width={720}
                   height={580}
@@ -151,8 +152,9 @@ function News() {
                   className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[16px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)]"
                 >
                   <div className="h-20 w-20 shrink-0 overflow-hidden rounded-[14px]">
-                    <Image
-                      src={news.thumbnail?.url ?? "/thumbnail.png"}
+                    <SafeImage
+                      src={news.thumbnail?.url}
+                      fallbackSrc="/thumbnail.png"
                       alt={news.thumbnail?.alt || news.title}
                       width={160}
                       height={160}
@@ -227,8 +229,9 @@ function News() {
             className="group block cursor-pointer overflow-hidden rounded-[16px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
           >
             <div className="relative aspect-[16/9] overflow-hidden">
-              <Image
-                src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
+              <SafeImage
+                src={featuredArticle.thumbnail?.url}
+                fallbackSrc="/thumbnail.png"
                 alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
                 width={720}
                 height={580}
@@ -292,8 +295,9 @@ function News() {
                 className="group flex cursor-pointer items-center gap-3 rounded-[16px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)]"
               >
                 <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[14px]">
-                  <Image
-                    src={news.thumbnail?.url ?? "/thumbnail.png"}
+                  <SafeImage
+                    src={news.thumbnail?.url}
+                    fallbackSrc="/thumbnail.png"
                     alt={news.thumbnail?.alt || news.title}
                     width={160}
                     height={160}
