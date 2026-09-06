@@ -1,16 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
   Edit,
-  Globe,
   ImagePlus,
-  Mail,
-  MapPin,
-  Phone,
   Plus,
   Save,
   Trash2,
@@ -28,14 +24,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -65,18 +53,13 @@ import {
 } from "@/api/vcci-news/endpoints/banner";
 import type {
   Banner,
-  BannerMutate,
   Logo,
   SiteInformationBranch,
-  SiteInformationBranchMutate,
   SiteInformationData,
-  SiteInformationSocialLink,
-  SiteInformationSocialMutate,
 } from "@/api/vcci-news/models";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import { toAdminMediaItem } from "@/lib/utils/file";
 import { getApiV10FileId } from "@/api/vcci-news/endpoints/file";
-import links from "@/links";
 import {
   type BaseConfigBannerItem,
   type BaseConfigBranchItem,
@@ -92,474 +75,57 @@ import {
   sortBaseConfigBranches,
   sortBaseConfigSocials,
 } from "@/mockdata/base-config";
-
-const fieldClassName =
-  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
-
-type ConfigItemMode = "logo" | "banner";
-type ApiEnvelope<T> = {
-  responseData?: T;
-  data?: {
-    responseData?: T;
-  };
-};
-
-type LogoMediaItem = AdminMediaItem & {
-  logoId?: string;
-};
-
-type LogoListResponse = {
-  rows?: Logo[];
-};
-
-type PageEnvelope<T> = {
-  rows?: T[];
-  count?: number;
-  page?: number;
-  pageSize?: number;
-};
-
-type ConfigItemForm = {
-  name: string;
-  imageId: string;
-  isActive: boolean;
-  displayTimeSeconds: number;
-  sortOrder: number;
-};
-
-function emptyItemForm(): ConfigItemForm {
-  return {
-    name: "",
-    imageId: "",
-    isActive: true,
-    displayTimeSeconds: 5,
-    sortOrder: 1,
-  };
-}
-
-function resolveMediaItem(
-  mediaMap: Map<string, AdminMediaItem>,
-  imageId: string,
-) {
-  return mediaMap.get(imageId) ?? null;
-}
-
-function getEnvelopeData<T>(payload: unknown): T | undefined {
-  const root = payload as ApiEnvelope<T>;
-  return root.responseData ?? root.data?.responseData;
-}
-
-function mapApiBranchToConfig(
-  branch: SiteInformationBranch,
-): BaseConfigBranchItem {
-  return {
-    id: branch.id ?? createBaseConfigItemId("branch"),
-    branchName: branch.branch_name ?? "",
-    address: branch.address ?? "",
-    hotline: branch.hotline ?? branch.telephone ?? "",
-    email: branch.email ?? "",
-    fax: branch.fax ?? "",
-    mapsEmbedUrl: branch.googlemap_link ?? "",
-    sortOrder: branch.sort_order ?? 1,
-    isVisible: branch.is_active ?? true,
-  };
-}
-
-function mapConfigBranchToApi(
-  branch: BaseConfigBranchItem,
-  index: number,
-): SiteInformationBranchMutate {
-  return {
-    branch_name: branch.branchName.trim() || null,
-    address: branch.address.trim() || null,
-    hotline: branch.hotline.trim() || null,
-    email: branch.email.trim() || null,
-    fax: branch.fax.trim() || null,
-    googlemap_link: branch.mapsEmbedUrl.trim() || null,
-    sort_order: Number.isFinite(branch.sortOrder)
-      ? branch.sortOrder
-      : index + 1,
-    is_active: branch.isVisible,
-  };
-}
-
-function mapApiSocialToConfig(
-  social: SiteInformationSocialLink,
-): BaseConfigSocialItem {
-  return {
-    id: social.id,
-    label: social.label,
-    url: social.url ?? "",
-    isVisible: social.is_active,
-    sortOrder: social.sort_order,
-  };
-}
-
-function mapConfigSocialToApi(
-  social: BaseConfigSocialItem,
-): SiteInformationSocialMutate {
-  return {
-    url: social.url.trim() || null,
-    sort_order: social.sortOrder,
-    is_active: social.isVisible,
-  };
-}
-
-function mapApiBannerToConfig(banner: Banner): BaseConfigBannerItem {
-  return {
-    id: banner.id ?? createBaseConfigItemId("banner"),
-    name: banner.banner_name ?? "",
-    imageId: banner.file_id ?? "",
-    isActive: banner.status !== "INACTIVE",
-    displayTimeSeconds: banner.display_time ?? 5,
-    sortOrder: banner.display_order ?? 1,
-  };
-}
-
-function mapConfigBannerToApi(banner: BaseConfigBannerItem): BannerMutate {
-  return {
-    banner_name: banner.name.trim(),
-    file_id: banner.imageId,
-    display_order: banner.sortOrder,
-    display_time: Math.max(1, banner.displayTimeSeconds || 1),
-    status: banner.isActive ? "ACTIVE" : "INACTIVE",
-  };
-}
-
-function mapApiLogoToConfig(logo: Logo): {
-  logo: BaseConfigLogoItem | null;
-  media: LogoMediaItem | null;
-} | null {
-  const media: LogoMediaItem = {
-    id: logo.file_id,
-    logoId: logo.id,
-    name: logo.logo_name,
-    alt: logo.logo_name,
-    url: links.resolveImageUrl(logo.logo_url) || "/img-error.png",
-    mime: "image/*",
-    size: 0,
-    created_at: logo.created_at,
-    updated_at: logo.updated_at,
-    source: "upload",
-  };
-
-  return {
-    logo: {
-      id: logo.id,
-      name: logo.logo_name,
-      imageId: logo.file_id,
-      isActive: true,
-    },
-    media,
-  };
-}
-
-function applySiteInformationToConfig(
-  baseConfig: BaseConfigData,
-  siteInformation: SiteInformationData,
-  logo?: Logo | null,
-): BaseConfigData {
-  const logoConfig = logo ? mapApiLogoToConfig(logo) : null;
-
-  return {
-    ...baseConfig,
-    logo: logoConfig?.logo ?? baseConfig.logo,
-    websiteName: siteInformation.website_name ?? baseConfig.websiteName,
-    websiteLink: siteInformation.website_link ?? baseConfig.websiteLink,
-    branches: Array.isArray(siteInformation.branches)
-      ? siteInformation.branches.map(mapApiBranchToConfig)
-      : baseConfig.branches,
-    socials: Array.isArray(siteInformation.socials)
-      ? siteInformation.socials.map(mapApiSocialToConfig)
-      : baseConfig.socials,
-  };
-}
-
-function ConfigItemPreview({
-  title,
-  item,
-  media,
-  current,
-  onSelect,
-}: {
-  title: string;
-  item: BaseConfigBannerItem;
-  media: AdminMediaItem | null;
-  current: boolean;
-  onSelect: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={`overflow-hidden rounded-3xl border text-left transition-all ${current
-        ? "border-[#063e8e]/35 bg-[#edf4ff] shadow-[0_10px_24px_rgba(6,62,142,0.12)]"
-        : "border-[#063e8e]/10 bg-white hover:border-[#063e8e]/25 hover:shadow-sm"
-        }`}
-    >
-      <div className="relative aspect-[16/10] overflow-hidden bg-[#eef4ff]">
-        {media ? (
-          <SafeNextImage
-            src={media.url}
-            alt={media.alt || media.name}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-gray-500">
-            Chưa chọn hình ảnh
-          </div>
-        )}
-      </div>
-      <div className="space-y-2 px-4 py-3">
-        <div className="line-clamp-1 text-sm font-semibold text-[#163b73]">
-          {title}
-        </div>
-        <div className="line-clamp-2 text-sm text-gray-600">{item.name}</div>
-      </div>
-    </button>
-  );
-}
-
-function ConfigItemDialog({
-  open,
-  mode,
-  form,
-  previewMedia,
-  saving,
-  title,
-  description,
-  onOpenChange,
-  onChange,
-  onPickImage,
-  onSubmit,
-}: {
-  open: boolean;
-  mode: ConfigItemMode;
-  form: ConfigItemForm;
-  previewMedia: AdminMediaItem | null;
-  saving: boolean;
-  title: string;
-  description: string;
-  onOpenChange: (open: boolean) => void;
-  onChange: <K extends keyof ConfigItemForm>(
-    key: K,
-    value: ConfigItemForm[K],
-  ) => void;
-  onPickImage: () => void;
-  onSubmit: () => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[88vh] max-w-xl flex-col overflow-hidden rounded-3xl border-[#063e8e]/15 bg-white p-0">
-        <DialogHeader>
-          <div className="border-b border-[#063e8e]/10 px-6 py-5">
-            <DialogTitle className="text-xl text-[#063e8e]">
-              {title}
-            </DialogTitle>
-            <DialogDescription className="mt-2 text-sm text-gray-600">
-              {description}
-            </DialogDescription>
-          </div>
-        </DialogHeader>
-
-        <div className="scrollbar min-h-0 flex-1 overflow-y-auto px-6 py-5">
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <Label className="text-gray-700">Tên hiển thị</Label>
-              <Input
-                value={form.name}
-                onChange={(event) => onChange("name", event.target.value)}
-                placeholder={
-                  mode === "logo" ? "Nhập tên logo..." : "Nhập tên banner..."
-                }
-                className={fieldClassName}
-              />
-            </div>
-
-            {mode === "banner" ? (
-              <div className="space-y-2">
-                <Label className="text-gray-700">
-                  Thời gian hiển thị (giây)
-                </Label>
-                <Input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={form.displayTimeSeconds}
-                  onChange={(event) =>
-                    onChange(
-                      "displayTimeSeconds",
-                      Number(event.target.value || 1),
-                    )
-                  }
-                  className={fieldClassName}
-                />
-              </div>
-            ) : null}
-
-            {mode === "banner" ? (
-              <div className="space-y-2">
-                <Label className="text-gray-700">Thứ tự hiển thị</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  value={form.sortOrder}
-                  onChange={(event) =>
-                    onChange("sortOrder", Number(event.target.value || 1))
-                  }
-                  className={fieldClassName}
-                />
-              </div>
-            ) : null}
-
-            <div className="space-y-3">
-              <Label className="text-gray-700">Hình ảnh</Label>
-              <div className="overflow-hidden rounded-3xl border border-dashed border-[#063e8e]/20 bg-[#eef4ff]/60">
-                <div className="relative aspect-[16/9]">
-                  {previewMedia ? (
-                    <SafeNextImage
-                      src={previewMedia.url}
-                      alt={previewMedia.alt || previewMedia.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-gray-500">
-                      Chưa chọn hình ảnh
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onPickImage}
-                className="rounded-xl border-[#063e8e]/15 text-gray-700 hover:bg-[#edf4ff]"
-              >
-                <ImagePlus className="mr-2 h-4 w-4" />
-                Chọn từ thư viện
-              </Button>
-            </div>
-
-            {mode === "banner" ? (
-              <div className="flex items-center justify-between rounded-2xl border border-[#063e8e]/10 bg-[#f7faff] px-4 py-3">
-                <div>
-                  <div className="text-sm font-medium text-[#163b73]">
-                    Trạng thái hiển thị
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {form.isActive ? "Đang bật hiển thị" : "Đang tắt hiển thị"}
-                  </div>
-                </div>
-                <Switch
-                  checked={form.isActive}
-                  onCheckedChange={(value) => onChange("isActive", value)}
-                />
-              </div>
-            ) : null}
-          </div>
-        </div>
-
-        <DialogFooter className="border-t border-[#063e8e]/10 px-6 py-4">
-          <div className="flex w-full justify-end gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="rounded-xl border-[#063e8e]/15 text-gray-700"
-            >
-              Hủy
-            </Button>
-            <Button
-              type="button"
-              onClick={onSubmit}
-              disabled={saving}
-              className="rounded-xl bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-            >
-              <Save className="mr-2 h-4 w-4" />
-              {saving ? "Đang lưu..." : "Lưu cấu hình"}
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function BranchCard({
-  branch,
-  current,
-  onSelect,
-  onDelete,
-}: {
-  branch: BaseConfigBranchItem;
-  current: boolean;
-  onSelect: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div
-      className={`rounded-3xl border p-4 transition-all ${current
-        ? "border-[#063e8e]/30 bg-[#eef5ff] shadow-[0_10px_24px_rgba(6,62,142,0.1)]"
-        : "border-[#063e8e]/10 bg-white"
-        }`}
-    >
-      <button type="button" onClick={onSelect} className="w-full text-left">
-        <div className="text-sm font-semibold text-[#163b73]">
-          {branch.branchName || "Chi nhánh mới"}
-        </div>
-        <div className="mt-2 line-clamp-2 text-sm leading-6 text-slate-600">
-          {branch.address || "Chưa cập nhật địa chỉ"}
-        </div>
-      </button>
-
-      <div className="mt-4 flex items-center justify-between">
-        <div className="text-xs text-slate-500">
-          {branch.hotline || "Chưa có hotline"}
-        </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          onClick={onDelete}
-          className="h-8 w-8 text-red-600 hover:bg-red-50"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-}
+import { BranchCard } from "./_components/branch-card";
+import { ConfigItemDialog } from "./_components/config-item-dialog";
+import { ConfigItemPreview } from "./_components/config-item-preview";
+import {
+  fieldClassName,
+  type ConfigItemForm,
+  type ConfigItemMode,
+  type LogoListResponse,
+  type PageEnvelope,
+} from "./_components/types";
+import {
+  applySiteInformationToConfig,
+  emptyItemForm,
+  getEnvelopeData,
+  mapApiBannerToConfig,
+  mapApiBranchToConfig,
+  mapApiLogoToConfig,
+  mapConfigBannerToApi,
+  mapConfigBranchToApi,
+  mapConfigSocialToApi,
+  resolveMediaItem,
+} from "./_components/utils";
 
 export default function AdminBaseConfigPage() {
   const queryClient = useQueryClient();
-  const [config, setConfig] = React.useState<BaseConfigData | null>(null);
-  const [mediaItems, setMediaItems] = React.useState<AdminMediaItem[]>([]);
-  const [currentBannerIndex, setCurrentBannerIndex] = React.useState(0);
-  const [currentBranchIndex, setCurrentBranchIndex] = React.useState(0);
-  const [currentBranchId, setCurrentBranchId] = React.useState<string | null>(
+  const [config, setConfig] = useState<BaseConfigData | null>(null);
+  const [mediaItems, setMediaItems] = useState<AdminMediaItem[]>([]);
+  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const [currentBranchIndex, setCurrentBranchIndex] = useState(0);
+  const [currentBranchId, setCurrentBranchId] = useState<string | null>(
     null,
   );
-  const [activeTab, setActiveTab] = React.useState("branding");
-  const [itemDialogOpen, setItemDialogOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = useState("branding");
+  const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [itemDialogMode, setItemDialogMode] =
-    React.useState<ConfigItemMode>("logo");
-  const [editingItemId, setEditingItemId] = React.useState<string | null>(null);
+    useState<ConfigItemMode>("logo");
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [itemForm, setItemForm] =
-    React.useState<ConfigItemForm>(emptyItemForm());
-  const [imagePickerOpen, setImagePickerOpen] = React.useState(false);
-  const [savingItem, setSavingItem] = React.useState(false);
-  const [savingWebsiteInfo, setSavingWebsiteInfo] = React.useState(false);
-  const [savingContact, setSavingContact] = React.useState(false);
-  const [savingSocials, setSavingSocials] = React.useState(false);
-  const [deleteTarget, setDeleteTarget] = React.useState<{
+    useState<ConfigItemForm>(emptyItemForm());
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
+  const [savingItem, setSavingItem] = useState(false);
+  const [savingWebsiteInfo, setSavingWebsiteInfo] = useState(false);
+  const [savingContact, setSavingContact] = useState(false);
+  const [savingSocials, setSavingSocials] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{
     mode: ConfigItemMode;
     id: string;
     name: string;
   } | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     let mounted = true;
     const baseConfig = readBaseConfig();
     setConfig(baseConfig);
@@ -689,19 +255,19 @@ export default function AdminBaseConfigPage() {
     };
   }, []);
 
-  const mediaMap = React.useMemo(
+  const mediaMap = useMemo(
     () => new Map(mediaItems.map((item) => [item.id, item])),
     [mediaItems],
   );
-  const sortedBanners = React.useMemo(
+  const sortedBanners = useMemo(
     () => (config ? sortBaseConfigBanners(config.banners) : []),
     [config],
   );
-  const sortedSocials = React.useMemo(
+  const sortedSocials = useMemo(
     () => (config ? sortBaseConfigSocials(config.socials) : []),
     [config],
   );
-  const sortedBranches = React.useMemo(
+  const sortedBranches = useMemo(
     () => (config ? sortBaseConfigBranches(config.branches) : []),
     [config],
   );
@@ -722,7 +288,7 @@ export default function AdminBaseConfigPage() {
     : null;
   const previewMedia = resolveMediaItem(mediaMap, itemForm.imageId);
 
-  const saveConfig = React.useCallback((nextConfig: BaseConfigData) => {
+  const saveConfig = useCallback((nextConfig: BaseConfigData) => {
     setConfig(nextConfig);
     persistBaseConfig(nextConfig);
   }, []);

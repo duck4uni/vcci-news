@@ -1,9 +1,10 @@
 'use client';
 
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 import memberImages from "@/constants/memberImages";
-import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/app/api/mock-data";
+import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/mockdata/bff-fallback";
 import { useGetOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
 import type { Organization } from "@/api/vcci-hcm/models";
 import Link from "next/link";
@@ -70,7 +71,7 @@ function Members() {
   const renderMemberContent = () => {
     if (featuredMembersLoading) {
       return (
-        <div className="rounded-[16px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
+        <div className="rounded-[14px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
           Đang tải dữ liệu...
         </div>
       );
@@ -78,7 +79,7 @@ function Members() {
 
     if (displayMembers.length === 0) {
       return (
-        <div className="rounded-[16px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
+        <div className="rounded-[14px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
           Chưa có thông tin.
         </div>
       );
@@ -102,7 +103,7 @@ function Members() {
               key={member.id}
               className="!h-auto !w-full md:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
             >
-              <article className="rounded-[20px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
+              <article className="rounded-[14px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
                 {detailUrl ? (
                   <a
                     href={detailUrl}
@@ -112,9 +113,9 @@ function Members() {
                   >
                     <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
                       <div className="flex h-full w-full max-w-[260px] items-center justify-center">
-                        <ImageNext
-                          src={resolveMemberImage(member.avatar, index)}
-                          alt={member.name}
+                        <Image
+                          src={resolveMemberImage(member.avatar, index) ?? "/img-error.png"}
+                          alt={member.name ?? ""}
                           width={260}
                           height={180}
                           className="h-[180px] w-[260px] max-w-full object-contain"
@@ -129,9 +130,9 @@ function Members() {
                   <>
                     <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
                       <div className="flex h-full w-full max-w-[260px] items-center justify-center">
-                        <ImageNext
-                          src={resolveMemberImage(member.avatar, index)}
-                          alt={member.name}
+                        <Image
+                          src={resolveMemberImage(member.avatar, index) ?? "/img-error.png"}
+                          alt={member.name ?? ""}
                           width={260}
                           height={180}
                           className="h-[180px] w-[260px] max-w-full object-contain"
@@ -153,8 +154,8 @@ function Members() {
 
   return (
     <section className="flex flex-col gap-5 pb-8 xl:flex-row xl:items-stretch">
-      <aside className="flex-1 rounded-[22px] bg-[#f7b500] p-4 shadow-[0_18px_34px_rgba(247,181,0,0.18)] md:p-5">
-        <div className="flex items-start justify-between gap-3">
+      <aside className="flex-1 rounded-[16px] bg-[#f7b500] p-4 shadow-[0_18px_34px_rgba(247,181,0,0.18)] md:p-5">
+        <div className="flex items-center justify-between gap-3 pb-10">
           <div>
             <h2 className="client-section-title uppercase text-[#20449a]">
               Hội viên tiêu biểu
@@ -166,19 +167,17 @@ function Members() {
             href={FEATURED_MEMBER_MORE_URL}
             target="_blank"
             rel="noreferrer"
-            className="pt-1 text-sm font-semibold text-[#1e2f5e] transition-colors hover:text-[#20449a]"
+            className="text-[#1e2f5e] transition-colors hover:text-[#20449a]"
           >
-            Xem thêm
+            <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
-
-        <div className="mt-4 border-t border-[#e7aa00] pt-5" />
 
         {renderMemberContent()}
       </aside>
 
       <aside className="w-full xl:w-[31%] xl:min-w-[320px]">
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="client-section-title uppercase text-[#24469c]">
               Kết nối hội viên
@@ -188,9 +187,9 @@ function Members() {
 
           <Link
             href={sectionLink}
-            className="pt-1 text-sm font-semibold text-[#24469c] transition-colors hover:text-[#1b55a1]"
+            className="text-[#24469c] transition-colors hover:text-[#1b55a1]"
           >
-            Xem tất cả
+            <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
 
@@ -204,16 +203,16 @@ function Members() {
                   autoplay={{ delay: 4000, disableOnInteraction: false }}
                   loop={connectionPosts.length > 1}
                   slidesPerView={1}
-                  className="w-full overflow-hidden rounded-[20px]"
+                  className="w-full overflow-hidden rounded-[14px]"
                 >
                   {connectionPosts.map((item) => (
                     <SwiperSlide key={item.id}>
                       <Link
                         href={item.externalLink}
-                        className="group relative block cursor-pointer overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+                        className="group relative block cursor-pointer overflow-hidden rounded-[14px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
                       >
                         <div className="aspect-[16/10] overflow-hidden xl:aspect-[1.25/1]">
-                          <ImageNext
+                          <Image
                             src={item.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE}
                             alt={item.thumbnail?.alt || item.title}
                             width={520}
@@ -252,10 +251,10 @@ function Members() {
                   <Link
                     key={item.id}
                     href={item.externalLink}
-                    className="group relative block cursor-pointer overflow-hidden rounded-[20px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+                    className="group relative block cursor-pointer overflow-hidden rounded-[14px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
                   >
                     <div className="aspect-[16/10] overflow-hidden">
-                      <ImageNext
+                      <Image
                         src={item.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE}
                         alt={item.thumbnail?.alt || item.title}
                         width={520}
@@ -287,7 +286,7 @@ function Members() {
               </div>
             </>
           ) : (
-            <div className="rounded-[16px] bg-[#eef3fb] px-5 py-10 text-center text-sm text-[#7f8eab]">
+            <div className="rounded-[14px] bg-[#eef3fb] px-5 py-10 text-center text-sm text-[#7f8eab]">
               Chưa có thông tin.
             </div>
           )}

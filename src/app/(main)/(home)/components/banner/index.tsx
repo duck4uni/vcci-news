@@ -1,6 +1,6 @@
 "use client";
 
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { Swiper as SwiperType } from "swiper/types";
@@ -84,13 +84,18 @@ function BannerSlideItem({
       : "/thumbnail.png";
 
   return (
-    <ImageNext
+    <Image
       src={url}
       alt={alt}
       width={2560}
       height={720}
       sizes="100vw"
-      fallback="/thumbnail.png"
+      onError={(e) => {
+        const img = e.currentTarget as HTMLImageElement;
+        if (!img.src.includes("thumbnail.png")) {
+          img.src = "/thumbnail.png";
+        }
+      }}
       className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] object-cover"
     />
   );

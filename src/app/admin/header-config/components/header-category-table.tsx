@@ -220,39 +220,39 @@ export function HeaderCategoryTable({
                       actions={[
                         ...(!isProtectedHomeCategory
                           ? [
-                              {
-                                kind: "edit" as const,
-                                label: "Chỉnh sửa danh mục",
-                                onClick: () => onEdit(item),
-                              },
-                            ]
+                            {
+                              kind: "edit" as const,
+                              label: "Chỉnh sửa danh mục",
+                              onClick: () => onEdit(item),
+                            },
+                          ]
                           : []),
                         ...(canManagePosts
                           ? [
-                              {
-                                kind: "manage" as const,
-                                label: "Quản lý bài viết",
-                                href: `/admin/header-config/${item.id}/posts`,
-                              },
-                            ]
+                            {
+                              kind: "manage" as const,
+                              label: "Quản lý bài viết",
+                              href: `/admin/header-config/${item.id}`,
+                            },
+                          ]
                           : []),
                         ...(canCreateChild
                           ? [
-                              {
-                                kind: "create-child" as const,
-                                label: "Thêm danh mục con",
-                                onClick: () => onCreateChild(item),
-                              },
-                            ]
+                            {
+                              kind: "create-child" as const,
+                              label: "Thêm danh mục con",
+                              onClick: () => onCreateChild(item),
+                            },
+                          ]
                           : []),
                         ...(!isProtectedHomeCategory
                           ? [
-                              {
-                                kind: "delete" as const,
-                                label: "Xóa danh mục",
-                                onClick: () => onDelete(item),
-                              },
-                            ]
+                            {
+                              kind: "delete" as const,
+                              label: "Xóa danh mục",
+                              onClick: () => onDelete(item),
+                            },
+                          ]
                           : []),
                       ]}
                     />

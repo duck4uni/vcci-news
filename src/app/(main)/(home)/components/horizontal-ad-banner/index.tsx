@@ -32,7 +32,7 @@ function HorizontalAdBanner() {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="relative block overflow-hidden rounded-[10px] shadow-[0_16px_32px_rgba(28,52,120,0.2)] lg:rounded-[20px]"
+      className="relative block overflow-hidden rounded-[16px] shadow-[0_16px_32px_rgba(28,52,120,0.2)]"
       style={{ aspectRatio: "1600 / 200" }}
       title={title}
     >
@@ -40,6 +40,7 @@ function HorizontalAdBanner() {
         src={src}
         alt={alt}
         fill
+        sizes="100vw"
         className="object-cover"
         unoptimized={isGif}
         onError={() => {

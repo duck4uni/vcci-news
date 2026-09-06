@@ -1,4 +1,4 @@
-import { AdminMemberForm } from "@/components/admin/member-form";
+import { AdminMemberForm } from "./_components/member-form";
 
 interface AdminMemberDetailPageProps {
   params: Promise<{ id: string }>;

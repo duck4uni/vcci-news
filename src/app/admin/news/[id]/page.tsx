@@ -1,20 +1,16 @@
-import { AdminNewsForm } from "@/components/admin/news-form";
+import { Suspense } from "react";
+import { AdminNewsFormContent } from "./_components/admin-news-form-content";
 
-interface AdminNewsDetailPageProps {
-  params: Promise<{
-    id: string;
-  }>;
-  searchParams: Promise<{
-    returnTo?: string;
-  }>;
-}
-
-export default async function AdminNewsDetailPage({
-  params,
-  searchParams,
-}: AdminNewsDetailPageProps) {
-  const { id } = await params;
-  const { returnTo } = await searchParams;
-
-  return <AdminNewsForm newsId={id} returnPath={returnTo || "/admin/news"} />;
+export default function AdminNewsDetailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="rounded-2xl border border-[#063e8e]/15 bg-white p-8 text-center text-sm text-gray-700">
+          Đang tải...
+        </div>
+      }
+    >
+      <AdminNewsFormContent />
+    </Suspense>
+  );
 }

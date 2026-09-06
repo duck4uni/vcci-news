@@ -1,7 +1,7 @@
 "use client";
 
 import parse from "html-react-parser";
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { getDynamicPostBodyHtml } from "./data";
 import type { DynamicPostContentSection, DynamicPostItem } from "./types";
 
@@ -32,7 +32,7 @@ function StructuredImageSection({ section }: { section: DynamicPostContentSectio
             key={`${section.id}-${image.id || image.url}-${item.position}`}
             className="overflow-hidden rounded-[18px] bg-white"
           >
-            <ImageNext
+            <Image
               src={image.url}
               alt={image.alt || image.name || "Hình ảnh bài viết"}
               width={1200}

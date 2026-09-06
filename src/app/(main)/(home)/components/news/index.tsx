@@ -1,9 +1,10 @@
 'use client';
 
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
 
 const tabs = [
@@ -37,7 +38,7 @@ function News() {
 
   return (
     <div className="flex-1">
-      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+      <div className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h2 className="client-section-title uppercase text-[#24469c]">
             Tin tức
@@ -55,8 +56,8 @@ function News() {
                 type="button"
                 onClick={() => setTab(item.id)}
                 className={`rounded-full px-5 py-2.5 text-[14px] font-semibold transition-all ${active
-                    ? "bg-[#1f5ba9] text-white shadow-[0_10px_20px_rgba(31,91,169,0.18)]"
-                    : "bg-[#f4f7fb] text-[#7f8eab] hover:bg-[#eaf0f8]"
+                  ? "bg-[#1f5ba9] text-white shadow-[0_10px_20px_rgba(31,91,169,0.18)]"
+                  : "bg-[#f4f7fb] text-[#7f8eab] hover:bg-[#eaf0f8]"
                   }`}
               >
                 {item.label}
@@ -65,9 +66,9 @@ function News() {
           })}
           <Link
             href={overviewLink}
-            className="ml-auto text-sm font-semibold text-[#24469c] transition-colors hover:text-[#1b55a1] xl:hidden"
+            className="ml-auto text-[#24469c] transition-colors hover:text-[#1b55a1] xl:hidden"
           >
-            Xem tất cả
+            <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
       </div>
@@ -79,10 +80,10 @@ function News() {
           {featuredArticle ? (
             <Link
               href={featuredArticle.externalLink}
-              className="group block cursor-pointer overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
+              className="group block cursor-pointer overflow-hidden rounded-[16px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
             >
               <div className="relative aspect-[1.4/1] overflow-hidden">
-                <ImageNext
+                <Image
                   src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
                   alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
                   width={720}
@@ -128,7 +129,7 @@ function News() {
               </div>
             </Link>
           ) : (
-            <div className="overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]">
+            <div className="overflow-hidden rounded-[16px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]">
               <div className="aspect-[1.75/1] bg-[#eef3fb]" />
               <div className="space-y-2 p-3">
                 <div className="h-5 w-24 rounded bg-[#eef3fb]" />
@@ -147,10 +148,10 @@ function News() {
                 <Link
                   key={news.id}
                   href={news.externalLink}
-                  className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)]"
+                  className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[16px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)]"
                 >
-                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                    <ImageNext
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-[14px]">
+                    <Image
                       src={news.thumbnail?.url ?? "/thumbnail.png"}
                       alt={news.thumbnail?.alt || news.title}
                       width={160}
@@ -203,9 +204,9 @@ function News() {
               ) : (
                 <div
                   key={`news-placeholder-${index}`}
-                  className="flex flex-1 items-center gap-3 rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.06)]"
+                  className="flex flex-1 items-center gap-3 rounded-[16px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.06)]"
                 >
-                  <div className="h-16 w-16 shrink-0 rounded-xl bg-[#eef3fb]" />
+                  <div className="h-20 w-20 shrink-0 rounded-[14px] bg-[#eef3fb]" />
                   <div className="min-w-0 flex-1">
                     <div className="h-5 w-5/6 rounded bg-[#eef3fb]" />
                     <div className="mt-1 h-4 w-24 rounded bg-[#f4f7fb]" />
@@ -223,10 +224,10 @@ function News() {
         {featuredArticle ? (
           <Link
             href={featuredArticle.externalLink}
-            className="group block cursor-pointer overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
+            className="group block cursor-pointer overflow-hidden rounded-[16px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]"
           >
             <div className="relative aspect-[16/9] overflow-hidden">
-              <ImageNext
+              <Image
                 src={featuredArticle.thumbnail?.url ?? "/thumbnail.png"}
                 alt={featuredArticle.thumbnail?.alt || featuredArticle.title}
                 width={720}
@@ -272,7 +273,7 @@ function News() {
             </div>
           </Link>
         ) : (
-          <div className="overflow-hidden rounded-[22px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]">
+          <div className="overflow-hidden rounded-[16px] border border-[#dbe4f2] bg-white shadow-[0_8px_24px_rgba(31,59,124,0.08)]">
             <div className="aspect-[16/9] bg-[#eef3fb]" />
             <div className="space-y-2 p-3">
               <div className="h-5 w-24 rounded bg-[#eef3fb]" />
@@ -288,10 +289,10 @@ function News() {
               <Link
                 key={news.id}
                 href={news.externalLink}
-                className="group flex cursor-pointer items-center gap-3 rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)]"
+                className="group flex cursor-pointer items-center gap-3 rounded-[16px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_28px_rgba(31,59,124,0.12)]"
               >
-                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl">
-                  <ImageNext
+                <div className="h-16 w-16 shrink-0 overflow-hidden rounded-[14px]">
+                  <Image
                     src={news.thumbnail?.url ?? "/thumbnail.png"}
                     alt={news.thumbnail?.alt || news.title}
                     width={160}
@@ -346,9 +347,9 @@ function News() {
             ) : (
               <div
                 key={`news-placeholder-${index}`}
-                className="flex items-center gap-3 rounded-[18px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.06)]"
+                className="flex items-center gap-3 rounded-[16px] border border-[#dbe4f2] bg-white px-4 py-2.5 shadow-[0_8px_24px_rgba(31,59,124,0.06)]"
               >
-                <div className="h-16 w-16 shrink-0 rounded-xl bg-[#eef3fb]" />
+                <div className="h-20 w-20 shrink-0 rounded-[14px] bg-[#eef3fb]" />
                 <div className="min-w-0 flex-1">
                   <div className="h-5 w-5/6 rounded bg-[#eef3fb]" />
                   <div className="mt-2 h-3 w-24 rounded bg-[#f4f7fb]" />

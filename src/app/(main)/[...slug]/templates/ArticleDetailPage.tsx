@@ -1,7 +1,6 @@
 ﻿'use client';
 
 import dayjs from "dayjs";
-import ImageNext from "@/components/shared/image-next";
 import AppEditorContent from "@/components/shared/editor-content";
 import ListCategory from "@/components/base/list-category";
 import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";

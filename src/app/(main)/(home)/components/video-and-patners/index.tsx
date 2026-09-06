@@ -1,6 +1,6 @@
 "use client";
 
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import partnerImages from "@/constants/partnerImages";
 import { ChevronRight, Play } from "lucide-react";
 import Link from "next/link";
@@ -8,7 +8,7 @@ import { useGetOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
 import type { Organization } from "@/api/vcci-hcm/models";
 import { useGetApiV10Video } from "@/api/vcci-news/endpoints/video";
 import type { Video } from "@/api/vcci-news/models/video";
-import { MOCK_PARTNERS_RESPONSE } from "@/app/api/mock-data";
+import { MOCK_PARTNERS_RESPONSE } from "@/mockdata/bff-fallback";
 import { getVideoThumbnail, normalizeVideoUrl } from "@/lib/utils/video";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
@@ -67,10 +67,10 @@ const renderPartnerContent = (partners: Organization[]) => {
                 rel="noreferrer"
                 className="block"
               >
-                <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(31,59,124,0.1)] xl:h-[151px]">
-                  <ImageNext
-                    src={resolvePartnerImage(partner.avatar, index)}
-                    alt={partner.name}
+                <div className="flex h-[96px] items-center justify-center rounded-[16px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] transition-all hover:-translate-y-0.5 hover:shadow-[0_14px_24px_rgba(31,59,124,0.1)] xl:h-[151px]">
+                  <Image
+                    src={resolvePartnerImage(partner.avatar, index) ?? "/img-error.png"}
+                    alt={partner.name ?? ""}
                     width={140}
                     height={72}
                     className="max-h-full w-full object-contain"
@@ -78,10 +78,10 @@ const renderPartnerContent = (partners: Organization[]) => {
                 </div>
               </a>
             ) : (
-              <div className="flex h-[96px] items-center justify-center rounded-[14px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-[151px]">
-                <ImageNext
-                  src={resolvePartnerImage(partner.avatar, index)}
-                  alt={partner.name}
+              <div className="flex h-[96px] items-center justify-center rounded-[16px] border border-[#edf1f7] bg-white px-5 py-4 shadow-[0_8px_20px_rgba(31,59,124,0.05)] xl:h-[151px]">
+                <Image
+                  src={resolvePartnerImage(partner.avatar, index) ?? "/img-error.png"}
+                  alt={partner.name ?? ""}
                   width={140}
                   height={72}
                   className="max-h-full w-full object-contain"
@@ -95,7 +95,7 @@ const renderPartnerContent = (partners: Organization[]) => {
   }
 
   return (
-    <div className="rounded-[14px] border border-[#edf1f7] bg-white px-5 py-10 text-center text-sm text-gray-500">
+    <div className="rounded-[16px] border border-[#edf1f7] bg-white px-5 py-10 text-center text-sm text-gray-500">
       Chưa có thông tin.
     </div>
   );
@@ -179,7 +179,7 @@ function VideoAndPartners() {
                 className="overflow-hidden rounded-[16px] border border-[#e5ebf4] bg-white shadow-[0_10px_22px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_16px_30px_rgba(31,59,124,0.12)]"
               >
                 <div className="group relative aspect-[1.95/1] overflow-hidden">
-                  <ImageNext
+                  <Image
                     src={video.thumbnail}
                     alt={video.name}
                     width={640}

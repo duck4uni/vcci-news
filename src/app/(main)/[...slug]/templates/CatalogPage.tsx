@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui";
 import { Pagination } from "@/components/base/pagination";
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ListCategory from "@/components/base/list-category";
@@ -108,7 +108,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                       >
                         <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">
                           <div className="relative aspect-3/4 overflow-hidden bg-white">
-                            <ImageNext
+                            <Image
                               src={resolveDynamicPostImage(item.thumbnail)}
                               alt={item.title}
                               width={520}

@@ -1,7 +1,6 @@
 "use client";
 
 import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -9,40 +8,17 @@ import {
   Eye,
   EyeOff,
   LoaderCircle,
-  LockKeyhole,
   Mail,
-  ShieldCheck,
 } from "lucide-react";
 import { toast } from "sonner";
-import { useQuery } from "@tanstack/react-query";
-import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
 import { usePostApiV10AuthForgotPasswordRequest } from "@/api/vcci-news/endpoints/authentication";
-import type { Logo } from "@/api/vcci-news/models/logo";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
-
-type AuthMode = "login" | "forgot";
-
-type ApiEnvelope<T = unknown> = {
-  responseData?: T;
-  data?: {
-    responseData?: T;
-  };
-  message?: string | null;
-  message_en?: string | null;
-};
-
-type LogoListEnvelope = {
-  data?: {
-    responseData?: {
-      rows?: Logo[];
-    };
-  };
-};
+import { AuthShell, type AuthMode } from "./_components/auth-shell";
 
 type ErrorResponse = {
   message?: string;
@@ -55,7 +31,6 @@ type ErrorResponse = {
 };
 
 const DEFAULT_REDIRECT = "/admin";
-const ADMIN_BLUE = "#063e8e";
 const authFieldClassName =
   "h-11 rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-400 shadow-sm focus-visible:ring-[#063e8e]/30";
 const authButtonClassName =
@@ -74,10 +49,6 @@ function normalizeRedirectPath(redirect: string | null) {
   return redirect;
 }
 
-function getResponseData<T>(response: ApiEnvelope<T>) {
-  return response.responseData ?? response.data?.responseData;
-}
-
 function getAuthErrorMessage(error: unknown, fallback: string) {
   const apiError = error as {
     response?: {
@@ -94,193 +65,7 @@ function getAuthErrorMessage(error: unknown, fallback: string) {
   );
 }
 
-function AuthShell({
-  mode,
-  children,
-}: {
-  mode: AuthMode;
-  children: React.ReactNode;
-}) {
-  const { data: logoData } = useGetApiV10Logo(
-    {
-      page: 1,
-      pageSize: 1,
-      sortField: "updated_at",
-      sortOrder: "desc",
-    },
-    {
-      query: {
-        select: (response: any) => {
-          const responseData = response?.responseData ?? response?.data?.responseData;
-          return (responseData?.rows?.[0] as Logo | undefined) ?? null;
-        },
-      },
-    }
-  );
-
-  // Always use the static /logo.png from public/ for the login screen so the
-  // logo renders reliably regardless of backend logo/upload state.
-  const logoSrc = "/logo.png";
-
-  const title =
-    mode === "login"
-      ? "Đăng nhập quản trị"
-      : "Khôi phục mật khẩu";
-
-  const description =
-    mode === "login"
-      ? "Truy cập khu vực quản trị nội dung VCCI News."
-      : "Gửi yêu cầu reset mật khẩu cho ban quản trị.";
-
-  return (
-    <div className="min-h-screen bg-[#f6f9ff] px-4 py-8 text-gray-700">
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center">
-        <div className="grid w-full overflow-hidden rounded-[28px] border border-[#063e8e]/10 bg-white shadow-[0_20px_60px_rgba(6,62,142,0.10)] lg:grid-cols-[0.95fr_1.05fr]">
-          <section className="relative hidden border-r border-[#063e8e]/10 bg-[#edf4ff] px-10 py-10 lg:block">
-            <div className="absolute inset-x-0 top-0 h-1 bg-[#063e8e]" />
-            <div className="flex h-full flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-4">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-white shadow-sm">
-                    <Image
-                      src={logoSrc}
-                      alt={logoData?.logo_name || "VCCI HCM"}
-                      width={48}
-                      height={48}
-                      className="h-12 w-12 object-contain"
-                      priority
-                    />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#063e8e]">
-                      {logoData?.logo_name || "VCCI News"}
-                    </div>
-                    <div className="mt-1 text-sm text-gray-700">
-                      Trang quản trị website
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-14 max-w-md">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#063e8e]/15 bg-white px-3 py-1.5 text-sm font-medium text-[#063e8e]">
-                    <ShieldCheck className="h-4 w-4" />
-                    Khu vực bảo mật
-                  </div>
-                  <h1 className="mt-6 text-4xl font-bold leading-tight text-gray-900">
-                    Quản lý nội dung với giao diện riêng cho admin.
-                  </h1>
-                  <p className="mt-5 text-base leading-7 text-gray-700">
-                    Hệ thống sử dụng tài khoản quản trị để bảo vệ cấu hình
-                    website, bài viết, media và các dữ liệu vận hành.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                {["Cấu hình", "Bài viết", "Liên hệ"].map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-2xl border border-[#063e8e]/10 bg-white px-4 py-3"
-                  >
-                    <div className="text-sm font-semibold text-[#063e8e]">
-                      {item}
-                    </div>
-                    <div className="mt-1 h-1.5 rounded-full bg-[#dbe8ff]" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
-
-          <section className="px-5 py-6 sm:px-8 lg:px-12 lg:py-12">
-            <div className="mx-auto w-full max-w-md">
-              <div className="mb-8 flex items-center gap-3 lg:hidden">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#063e8e]/10 bg-[#f8fbff]">
-                  <Image
-                    src={logoSrc}
-                    alt={logoData?.logo_name || "VCCI HCM"}
-                    width={36}
-                    height={36}
-                    className="h-9 w-9 object-contain"
-                    priority
-                  />
-                </div>
-                <div>
-                  <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#063e8e]">
-                    {logoData?.logo_name || "VCCI News"}
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    Trang quản trị website
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-8">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#063e8e]">
-                  <LockKeyhole className="h-6 w-6" />
-                </div>
-                <h2 className="mt-5 text-2xl font-bold text-gray-900">
-                  {title}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-gray-700">
-                  {description}
-                </p>
-              </div>
-
-              {children}
-            </div>
-          </section>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function PasswordInput({
-  id,
-  value,
-  onChange,
-  placeholder,
-  autoComplete,
-}: {
-  id: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  autoComplete: string;
-}) {
-  const [visible, setVisible] = useState(false);
-
-  return (
-    <div className="relative">
-      <Input
-        id={id}
-        type={visible ? "text" : "password"}
-        autoComplete={autoComplete}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className={`${authFieldClassName} pr-11`}
-        required
-      />
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        onClick={() => setVisible((current) => !current)}
-        className="absolute right-1 top-1 h-9 w-9 rounded-lg text-gray-700 hover:bg-[#edf4ff] hover:text-[#063e8e]"
-        title={visible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-      >
-        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-      </Button>
-    </div>
-  );
-}
-
-function InlineMessage({
-  type,
-  message,
-}: {
+function InlineMessage({ type, message }: {
   type: "error" | "success";
   message: string;
 }) {
@@ -302,8 +87,14 @@ function InlineMessage({
   );
 }
 
-function AdminLoginPageContent({ redirect }: { redirect: string }) {
+function AdminLoginPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirect = useMemo(
+    () => normalizeRedirectPath(searchParams.get("redirect")),
+    [searchParams],
+  );
+
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
   const rememberState = useAuthStore((state) => state.appUserRemember);
@@ -312,11 +103,11 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const [remember, setRemember] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
-  // Forgot password state
   const [forgotNote, setForgotNote] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
@@ -333,7 +124,6 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
   useEffect(() => {
     if (!hasHydrated || !isLoggedIn) return;
 
-    // Nếu user phải đổi mật khẩu → luôn redirect sang change-password
     const currentUser = useAuthStore.getState().appUser;
     if (currentUser?.must_change_password) {
       router.replace("/admin/change-password");
@@ -355,7 +145,6 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
         remember,
       );
 
-      // Nếu BE báo phải đổi mật khẩu → redirect sang trang đổi mật khẩu
       if (loginData?.must_change_password) {
         toast.success("Đăng nhập thành công. Vui lòng đổi mật khẩu để tiếp tục.");
         router.replace("/admin/change-password");
@@ -463,13 +252,32 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
             <Label htmlFor="admin-password" className="text-gray-700">
               Mật khẩu
             </Label>
-            <PasswordInput
-              id="admin-password"
-              value={password}
-              onChange={setPassword}
-              placeholder="Nhập mật khẩu"
-              autoComplete="current-password"
-            />
+            <div className="relative">
+              <Input
+                id="admin-password"
+                type={passwordVisible ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Nhập mật khẩu"
+                className={`${authFieldClassName} pr-11`}
+                required
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => setPasswordVisible((current) => !current)}
+                className="absolute right-1 top-1 h-9 w-9 rounded-lg text-gray-700 hover:bg-[#edf4ff] hover:text-[#063e8e]"
+                title={passwordVisible ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+              >
+                {passwordVisible ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           </div>
 
           <div className="flex items-center justify-between gap-3">
@@ -590,16 +398,6 @@ function AdminLoginPageContent({ redirect }: { redirect: string }) {
   );
 }
 
-function SearchParamsContainer() {
-  const searchParams = useSearchParams();
-  const redirectPath = useMemo(
-    () => normalizeRedirectPath(searchParams.get("redirect")),
-    [searchParams],
-  );
-
-  return <AdminLoginPageContent redirect={redirectPath} />;
-}
-
 export default function AdminLoginPage() {
   return (
     <Suspense
@@ -609,7 +407,7 @@ export default function AdminLoginPage() {
         </div>
       }
     >
-      <SearchParamsContainer />
+      <AdminLoginPageContent />
     </Suspense>
   );
 }
