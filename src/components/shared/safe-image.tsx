@@ -1,23 +1,23 @@
 "use client";
 
 import Image, { type ImageProps } from "next/image";
-import * as React from "react";
+import { useEffect, useState } from "react";
 
-interface SafeNextImageProps extends Omit<ImageProps, "src"> {
+interface SafeImageProps extends Omit<ImageProps, "src"> {
   src?: string | null;
   fallbackSrc?: string;
 }
 
-export function SafeNextImage({
+export function SafeImage({
   src,
   alt,
   fallbackSrc = "/img-error.png",
   ...props
-}: SafeNextImageProps) {
-  const [currentSrc, setCurrentSrc] = React.useState(src || fallbackSrc);
-  const [hasFailed, setHasFailed] = React.useState(false);
+}: SafeImageProps) {
+  const [currentSrc, setCurrentSrc] = useState(src || fallbackSrc);
+  const [hasFailed, setHasFailed] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setCurrentSrc(src || fallbackSrc);
     setHasFailed(false);
   }, [fallbackSrc, src]);

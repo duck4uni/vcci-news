@@ -1,7 +1,7 @@
 "use client";
 
 import { ImagePlus, Save } from "lucide-react";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -114,7 +114,7 @@ export function ConfigItemDialog({
               <div className="overflow-hidden rounded-3xl border border-dashed border-[#063e8e]/20 bg-[#eef4ff]/60">
                 <div className="relative aspect-[16/9]">
                   {previewMedia ? (
-                    <SafeNextImage
+                    <SafeImage
                       src={previewMedia.url}
                       alt={previewMedia.alt || previewMedia.name}
                       fill

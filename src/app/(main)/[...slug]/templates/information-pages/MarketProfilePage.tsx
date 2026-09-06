@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FileText, Globe2, Newspaper, TrendingUp } from "lucide-react";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import type { DynamicPostItem } from "../types";
 
 type MarketProfilePageProps = {
@@ -256,7 +256,7 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
                 })}
               </div>
 
-              <Image
+              <SafeImage
                 src={activeRegion.image}
                 alt={activeRegion.imageAlt}
                 width={1200}

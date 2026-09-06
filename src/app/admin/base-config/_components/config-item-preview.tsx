@@ -2,7 +2,7 @@
 
 import type { BaseConfigBannerItem } from "@/mockdata/base-config";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 
 export function ConfigItemPreview({
   title,
@@ -28,7 +28,7 @@ export function ConfigItemPreview({
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-[#eef4ff]">
         {media ? (
-          <SafeNextImage
+          <SafeImage
             src={media.url}
             alt={media.alt || media.name}
             fill

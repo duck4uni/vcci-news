@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Facebook, Linkedin, Menu, Twitter, X, Youtube } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import Image from "next/image";
+import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
 const fallbackLogo = "/logo.png";
 import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
@@ -335,18 +335,14 @@ function Header() {
             href="/"
             className="flex w-[136px] shrink-0 items-center xl:w-[152px]"
           >
-            <Image
+            <SafeImage
               width={108}
               height={40}
               className="h-auto max-h-10 w-[108px] object-contain"
               src={currentLogo?.logo_url ? links.resolveImageUrl(currentLogo.logo_url) : fallbackLogo}
+              fallbackSrc={fallbackLogo}
               alt={currentLogo?.logo_name || "VCCI-HCM"}
               priority
-              unoptimized={Boolean(currentLogo?.logo_url)}
-              onError={(e) => {
-                const img = e.currentTarget;
-                if (img.src !== fallbackLogo) img.src = fallbackLogo;
-              }}
             />
           </Link>
 
@@ -394,18 +390,14 @@ function Header() {
               className="flex w-[136px] shrink-0 items-center"
               onClick={() => setToggleMenu(false)}
             >
-              <Image
+              <SafeImage
                 width={108}
                 height={40}
                 className="h-auto max-h-10 w-[108px] object-contain"
                 src={currentLogo?.logo_url ? links.resolveImageUrl(currentLogo.logo_url) : fallbackLogo}
+                fallbackSrc={fallbackLogo}
                 alt={currentLogo?.logo_name || "VCCI-HCM"}
                 priority
-                unoptimized={Boolean(currentLogo?.logo_url)}
-                onError={(e) => {
-                  const img = e.currentTarget;
-                  if (img.src !== fallbackLogo) img.src = fallbackLogo;
-                }}
               />
             </Link>
             <button

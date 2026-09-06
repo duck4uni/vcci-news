@@ -15,7 +15,7 @@ import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -449,7 +449,7 @@ export default function AdminNewsPage() {
                       <TableCell className="text-center">
                         <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.03]">
                           {item.thumbnail ? (
-                            <SafeNextImage
+                            <SafeImage
                               src={item.thumbnail.url}
                               alt={item.thumbnail.alt || item.thumbnail.name}
                               fill

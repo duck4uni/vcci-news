@@ -8,7 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { toast } from "sonner";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -103,7 +103,7 @@ export function MediaFormDialog({
               <div className="overflow-hidden rounded-[28px] border border-[#063e8e]/10 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
                 <div className="relative aspect-[16/10] bg-[radial-gradient(circle_at_top,#d9e8ff_0%,#f7faff_58%,#ffffff_100%)]">
                   {form.previewUrl ? (
-                    <SafeNextImage
+                    <SafeImage
                       src={form.previewUrl}
                       alt={form.name}
                       fill

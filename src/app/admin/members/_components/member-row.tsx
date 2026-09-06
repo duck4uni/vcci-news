@@ -1,7 +1,7 @@
 "use client";
 
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { Badge } from "@/components/ui/badge";
 import {
   TableCell,
@@ -47,7 +47,7 @@ export function MemberRow({
       <TableCell className="px-4 py-3 text-center">
         {item.image ? (
           <div className="mx-auto h-12 w-16 overflow-hidden rounded-lg border border-[#063e8e]/15">
-            <SafeNextImage
+            <SafeImage
               src={item.image.url}
               alt={item.image.alt || item.name}
               width={64}

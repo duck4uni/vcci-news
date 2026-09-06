@@ -15,7 +15,7 @@ import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminPostContentEditor } from "@/components/admin/post-content-editor";
 import { PostHistoryViewer } from "./post-history-viewer";
 import { AdminRichTextEditor } from "@/components/shared/rich-text-editor";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
+import { SafeImage } from "@/components/shared/safe-image";
 import { PermissionGate } from "@/components/shared/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -530,7 +530,7 @@ export function AdminNewsFormContent() {
                 <div className="relative overflow-hidden rounded-2xl border border-[#063e8e]/15 bg-white">
                   <div className="relative aspect-[16/11]">
                     {form.thumbnail ? (
-                      <SafeNextImage
+                      <SafeImage
                         src={form.thumbnail.url}
                         alt={form.thumbnail.alt || form.thumbnail.name}
                         fill
