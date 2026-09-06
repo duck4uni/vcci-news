@@ -22,7 +22,7 @@ export default function HomePage() {
 
         <section className="flex flex-col xl:flex-row pb-8 gap-5 mb-0">
           <News />
-          <Advertisements count={3} startIndex={0} />
+          <Advertisements count={2} startIndex={0} />
         </section >
 
         <HorizontalAdBanner />
@@ -34,17 +34,6 @@ export default function HomePage() {
 
         <div className="flex flex-col lg:flex-row gap-5" >
           <div className="flex flex-col flex-1">
-            {/* <div>
-              <Link href="https://vcci-hcm.org.vn/wp-content/uploads/2022/11/MEDIA-KIT_VCCI-HCM-2022-Final.pdf">
-                <ImageNext
-                  src="/home/Standard-Banner-1-2024.png.webp"
-                  alt="banner"
-                  width={2560}
-                  height={720}
-                />
-              </Link>
-            </div> */}
-
             <section className="flex flex-col xl:flex-row gap-5">
               <div className="flex flex-col md:flex-row gap-5 pt-8 flex-1 order-2 xl:order-1">
                 <BusinessOpportunities />
@@ -53,17 +42,6 @@ export default function HomePage() {
               <Advertisements count={2} startIndex={3} />
             </section>
           </div>
-
-          {/* <div className="w-full lg:w-[30%] justify-center items-start flex">
-            <Link href="https://smartgara.ecaraid.com/">
-              <ImageNext
-                src="/home/eCarAid_web_banner_600x400.webp"
-                alt="banner"
-                width={600}
-                height={400}
-              />
-            </Link>
-          </div> */}
         </div >
 
         <Members />

@@ -551,6 +551,45 @@ export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
   return "/thumbnail.png";
 }
 
+/**
+ * Wrap an image URL through Next.js's built-in image optimizer so social media
+ * crawlers receive a reasonably-sized image (max ~a few hundred KB) instead of
+ * the original full-resolution upload (which can be 5+ MB and get rejected by
+ * Twitter/Zalo/Facebook).
+ *
+ * Only absolute URLs on the configured remotePatterns host are optimized.
+ * Relative paths (e.g. "/thumbnail.png") and unsupported hosts are returned
+ * as-is so we never produce a broken og:image.
+ */
+export function toOptimizedSeoImageUrl(imageUrl: string): string {
+  if (!imageUrl) return imageUrl;
+
+  // Already optimized, data/blob URIs, or relative paths -> use as-is
+  if (
+    imageUrl.startsWith("/_next/image") ||
+    imageUrl.startsWith("data:") ||
+    imageUrl.startsWith("blob:")
+  ) {
+    return imageUrl;
+  }
+
+  if (!/^https?:\/\//i.test(imageUrl)) return imageUrl;
+
+  // Only optimize URLs whose host is allowed by next.config images.remotePatterns
+  const allowedHosts = ["vcci-hcm.org.vn", "vccihcm.vn"];
+  const parsed = (() => {
+    try {
+      return new URL(imageUrl);
+    } catch {
+      return null;
+    }
+  })();
+  if (!parsed || !allowedHosts.includes(parsed.hostname)) return imageUrl;
+
+  const siteUrl = (Links.siteURL || "").replace(/\/+$/, "");
+  return `${siteUrl}/_next/image?url=${encodeURIComponent(imageUrl)}&w=1200&q=75`;
+}
+
 export function stripHtml(value?: string | null) {
   if (!value) return "";
 

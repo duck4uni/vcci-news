@@ -5,7 +5,7 @@ import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useMemo } from "react";
-import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
+import { getFallbackImage } from "@/lib/utils/fallback-image";
 
 function Events() {
   const { eventPosts, categoryLinks, categoryNames } = useHomePosts();
@@ -16,9 +16,9 @@ function Events() {
   const eventsLink =
     categoryLinks.get(categoryNames.suKien.toLowerCase()) ?? "/hoat-dong/su-kien";
 
-  const featuredFallback = useMemo(() => getRandomFallbackImage(), []);
+  const featuredFallback = useMemo(() => getFallbackImage(0), []);
   const sideFallbacks = useMemo(
-    () => Array.from({ length: 4 }, () => getRandomFallbackImage()),
+    () => Array.from({ length: 4 }, (_, i) => getFallbackImage(i + 1)),
     [],
   );
 

@@ -1,8 +1,3 @@
-/**
- * Danh sách ảnh fallback trong /public/fallback.
- * Dùng khi API không trả thumbnail hoặc ảnh lỗi.
- * Random 1 ảnh mỗi lần gọi để tránh nhàm chán.
- */
 const FALLBACK_IMAGES = [
   "/fallback/file-1787627024817-122290329.jpg",
   "/fallback/file-1787628149029-832000088.jpg",
@@ -13,6 +8,6 @@ const FALLBACK_IMAGES = [
   "/fallback/thumbnail.png",
 ] as const;
 
-export const getRandomFallbackImage = (): string => {
-  return FALLBACK_IMAGES[Math.floor(Math.random() * FALLBACK_IMAGES.length)];
+export const getFallbackImage = (index = 0): string => {
+  return FALLBACK_IMAGES[Math.abs(index) % FALLBACK_IMAGES.length];
 };

@@ -6,6 +6,7 @@ import {
   getDynamicPostSeoImage,
   getDynamicPostExcerpt,
   stripHtml,
+  toOptimizedSeoImageUrl,
 } from "./templates/data";
 import DynamicPageClient from "./DynamicPageClient";
 
@@ -13,6 +14,32 @@ type GenerateMetadataArgs = {
   params: Promise<{ slug: string[] }>;
   searchParams: Promise<{ id?: string; categoryId?: string }>;
 };
+
+/**
+ * Verify that a remote image URL actually serves an image (not an HTML 404
+ * page or redirect). Returns true for relative paths and on network errors
+ * (benefit of the doubt) so we only fall back when we're certain the URL is
+ * not an image.
+ */
+async function isRemoteImageValid(url: string): Promise<boolean> {
+  if (!url || !/^https?:\/\//i.test(url)) return true;
+
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(5000),
+      redirect: "follow",
+    });
+
+    // If the server rejects HEAD, give the benefit of the doubt
+    if (!response.ok) return true;
+
+    const contentType = response.headers.get("content-type") ?? "";
+    return contentType.startsWith("image/");
+  } catch {
+    return true;
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -46,15 +73,18 @@ export async function generateMetadata({
     stripHtml(post.summary) ||
     getDynamicPostExcerpt(post).slice(0, 160) ||
     "Tin tức từ VCCI HCM";
-  const imageUrl = getDynamicPostSeoImage(post);
-  const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}${
-    postId || categoryIdParam
-      ? `?${new URLSearchParams({
-          ...(postId && { id: postId }),
-          ...(categoryIdParam && { categoryId: categoryIdParam }),
-        }).toString()}`
-      : ""
-  }`;
+  const rawImageUrl = getDynamicPostSeoImage(post);
+  const isImageValid = await isRemoteImageValid(rawImageUrl);
+  const imageUrl = isImageValid
+    ? toOptimizedSeoImageUrl(rawImageUrl)
+    : toOptimizedSeoImageUrl("/thumbnail.png");
+  const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}${postId || categoryIdParam
+    ? `?${new URLSearchParams({
+      ...(postId && { id: postId }),
+      ...(categoryIdParam && { categoryId: categoryIdParam }),
+    }).toString()}`
+    : ""
+    }`;
 
   return {
     title,

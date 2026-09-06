@@ -5,9 +5,9 @@ import { usePathname } from 'next/navigation';
 import {
   AdminAuthLoadingScreen,
   useAdminAuthStatus,
-} from '@/components/shared/admin-auth-guard';
-import { AdminSidebar } from '@/components/shared/admin-sidebar';
-import { AdminHeader } from '@/components/shared/admin-header';
+} from '@/components/layout/admin/admin-auth-guard';
+import { AdminSidebar } from '@/components/layout/admin/admin-sidebar';
+import { AdminHeader } from '@/components/layout/admin/admin-header';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
 import { cn } from '@/lib/utils';
 

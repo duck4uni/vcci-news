@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
 import links from "@/links";
 import type { Advertisement } from "@/api/vcci-news/models/advertisement";
-import { getRandomFallbackImage } from "@/lib/utils/fallback-image";
+import { getFallbackImage } from "@/lib/utils/fallback-image";
 
 const FALLBACK_HREF = links.externalApiOrigin;
 
@@ -65,9 +65,8 @@ function Advertisements({ count = 2, startIndex = 0 }: { count?: number; startIn
   const ads = useAdvertisements("square");
   const visibleAds = ads.slice(startIndex, startIndex + count);
 
-  // Random fallback images ổn định trong 1 session render
   const fallbackSrcs = useMemo(
-    () => Array.from({ length: count }, () => getRandomFallbackImage()),
+    () => Array.from({ length: count }, (_, i) => getFallbackImage(i)),
     [count],
   );
 
