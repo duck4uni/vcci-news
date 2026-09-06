@@ -127,26 +127,10 @@ const normalizePath = (value?: string | null) => {
 
 export const buildDynamicPostHref = (
   path?: string | null,
-  id?: string | null,
-  categoryId?: string | null,
+  _id?: string | null,
+  _categoryId?: string | null,
 ) => {
-  const normalizedPath = normalizePath(path);
-  const trimmedId = id?.trim() ?? "";
-  const trimmedCategoryId = categoryId?.trim() ?? "";
-
-  if ((!trimmedId && !trimmedCategoryId) || normalizedPath === "/") {
-    return normalizedPath;
-  }
-
-  const params = new URLSearchParams();
-  if (trimmedId) {
-    params.set("id", trimmedId);
-  }
-  if (trimmedCategoryId) {
-    params.set("categoryId", trimmedCategoryId);
-  }
-
-  return `${normalizedPath}?${params.toString()}`;
+  return normalizePath(path);
 };
 
 const getSlugFromPath = (value?: string | null) => {
