@@ -1,23 +1,12 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Plus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
-import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
-import { SafeNextImage } from "@/components/admin/safe-next-image";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -35,46 +24,29 @@ import {
   readMemberRegions,
   readMembers,
 } from "@/mockdata/members";
-
-const selectTriggerClassName =
-  "w-full border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[200px]";
-
-const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
-
-const selectItemClassName = "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
-
-function MemberTableLoading() {
-  return Array.from({ length: 3 }).map((_, index) => (
-    <TableRow
-      key={`loading-${index}`}
-      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
-    >
-      <TableCell colSpan={7} className="px-4 py-4">
-        <div className="h-16 animate-pulse rounded-2xl bg-[#063e8e]/10" />
-      </TableCell>
-    </TableRow>
-  ));
-}
+import { MemberFilters } from "./_components/member-filters";
+import { MemberRow } from "./_components/member-row";
+import { MemberTableLoading } from "./_components/member-table-loading";
 
 export default function AdminMembersPage() {
   const router = useRouter();
-  const [items, setItems] = React.useState<MemberItem[]>([]);
-  const [fields, setFields] = React.useState<MemberField[]>([]);
-  const [regions, setRegions] = React.useState<MemberRegion[]>([]);
-  const [search, setSearch] = React.useState("");
-  const [fieldFilter, setFieldFilter] = React.useState("all");
-  const [regionFilter, setRegionFilter] = React.useState("all");
-  const [deleteTarget, setDeleteTarget] = React.useState<MemberItem | null>(null);
-  const [ready, setReady] = React.useState(false);
+  const [items, setItems] = useState<MemberItem[]>([]);
+  const [fields, setFields] = useState<MemberField[]>([]);
+  const [regions, setRegions] = useState<MemberRegion[]>([]);
+  const [search, setSearch] = useState("");
+  const [fieldFilter, setFieldFilter] = useState("all");
+  const [regionFilter, setRegionFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState<MemberItem | null>(null);
+  const [ready, setReady] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setItems(readMembers());
     setFields(readMemberFields());
     setRegions(readMemberRegions());
     setReady(true);
   }, []);
 
-  const filtered = React.useMemo(() => {
+  const filtered = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
     return items.filter((item) => {
@@ -91,7 +63,7 @@ export default function AdminMembersPage() {
     });
   }, [items, search, fieldFilter, regionFilter]);
 
-  const stats = React.useMemo(
+  const stats = useMemo(
     () => [
       {
         label: "Tổng hội viên",
@@ -112,12 +84,12 @@ export default function AdminMembersPage() {
     [items, fields, regions],
   );
 
-  const fieldMap = React.useMemo(
+  const fieldMap = useMemo(
     () => Object.fromEntries(fields.map((f) => [f.id, f.name])),
     [fields],
   );
 
-  const regionMap = React.useMemo(
+  const regionMap = useMemo(
     () => Object.fromEntries(regions.map((r) => [r.id, r.name])),
     [regions],
   );
@@ -143,39 +115,14 @@ export default function AdminMembersPage() {
         onSearchChange={setSearch}
         onActionClick={() => router.push("/admin/members/new")}
         filters={
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-            <Select value={fieldFilter} onValueChange={setFieldFilter}>
-              <SelectTrigger className={selectTriggerClassName}>
-                <SelectValue placeholder="Lĩnh vực" />
-              </SelectTrigger>
-              <SelectContent className={selectContentClassName}>
-                <SelectItem value="all" className={selectItemClassName}>
-                  Tất cả lĩnh vực
-                </SelectItem>
-                {fields.map((f) => (
-                  <SelectItem key={f.id} value={f.id} className={selectItemClassName}>
-                    {f.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={regionFilter} onValueChange={setRegionFilter}>
-              <SelectTrigger className={selectTriggerClassName}>
-                <SelectValue placeholder="Khu vực" />
-              </SelectTrigger>
-              <SelectContent className={selectContentClassName}>
-                <SelectItem value="all" className={selectItemClassName}>
-                  Tất cả khu vực
-                </SelectItem>
-                {regions.map((r) => (
-                  <SelectItem key={r.id} value={r.id} className={selectItemClassName}>
-                    {r.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <MemberFilters
+            fields={fields}
+            regions={regions}
+            fieldFilter={fieldFilter}
+            regionFilter={regionFilter}
+            onFieldFilterChange={setFieldFilter}
+            onRegionFilterChange={setRegionFilter}
+          />
         }
       >
         <div className="overflow-x-auto">
@@ -202,72 +149,15 @@ export default function AdminMembersPage() {
                 </TableRow>
               ) : (
                 filtered.map((item, index) => (
-                  <TableRow
+                  <MemberRow
                     key={item.id}
-                    className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
-                  >
-                    <TableCell className="px-4 py-3 text-sm font-medium text-gray-800">
-                      <div className="space-y-1">
-                        <div>{item.name}</div>
-                        {item.is_featured ? (
-                          <Badge
-                            variant="outline"
-                            className="border-[#063e8e]/25 bg-[#063e8e]/[0.04] text-[#063e8e]"
-                          >
-                            Hội viên tiêu biểu
-                          </Badge>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center">
-                      {item.image ? (
-                        <div className="mx-auto h-12 w-16 overflow-hidden rounded-lg border border-[#063e8e]/15">
-                          <SafeNextImage
-                            src={item.image.url}
-                            alt={item.image.alt || item.name}
-                            width={64}
-                            height={48}
-                            className="h-full w-full object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div className="mx-auto flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-[#063e8e]/20 bg-[#063e8e]/5 text-xs text-gray-400">
-                          Chưa có
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
-                      {regionMap[item.region_id] ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
-                      {fieldMap[item.field_id] ?? "—"}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
-                      {item.phone && <div>{item.phone}</div>}
-                      {item.email && (
-                        <div className="truncate text-xs text-[#063e8e]">{item.email}</div>
-                      )}
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
-                      <span className="line-clamp-2">{item.address || "—"}</span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-center">
-                      <AdminRowActions
-                        actions={[
-                          {
-                            kind: "edit",
-                            label: "Chỉnh sửa hội viên",
-                            onClick: () => router.push(`/admin/members/${item.id}`),
-                          },
-                          {
-                            kind: "delete",
-                            label: "Xóa hội viên",
-                            onClick: () => setDeleteTarget(item),
-                          },
-                        ]}
-                      />
-                    </TableCell>
-                  </TableRow>
+                    item={item}
+                    index={index}
+                    fieldName={fieldMap[item.field_id]}
+                    regionName={regionMap[item.region_id]}
+                    onEdit={() => router.push(`/admin/members/${item.id}`)}
+                    onDelete={() => setDeleteTarget(item)}
+                  />
                 ))
               )}
             </TableBody>

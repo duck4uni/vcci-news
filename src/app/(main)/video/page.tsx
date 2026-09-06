@@ -3,7 +3,7 @@
 import { Suspense } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Play } from "lucide-react";
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { Pagination } from "@/components/base/pagination";
 import { Spinner } from "@/components/ui/spinner";
 import { useGetApiV10Video } from "@/api/vcci-news/endpoints/video";
@@ -106,7 +106,7 @@ function VideoPageContent() {
                   className="group overflow-hidden rounded-[18px] border border-[#e5ebf4] bg-white shadow-[0_12px_30px_rgba(31,59,124,0.08)] transition-all hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(31,59,124,0.14)]"
                 >
                   <div className="relative aspect-video overflow-hidden bg-[#edf1f5]">
-                    <ImageNext
+                    <Image
                       src={video.thumbnail}
                       alt={video.name}
                       width={900}

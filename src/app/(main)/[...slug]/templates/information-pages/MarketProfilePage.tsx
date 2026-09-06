@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FileText, Globe2, Newspaper, TrendingUp } from "lucide-react";
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import type { DynamicPostItem } from "../types";
 
 type MarketProfilePageProps = {
@@ -235,10 +235,10 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
 
           <div className="mt-7 overflow-hidden rounded-[30px] border border-[#dce7f7] bg-white shadow-[0_18px_42px_rgba(17,24,39,0.06)]">
             <div className="relative min-h-[280px] bg-[#f3f7ff] p-4 sm:p-5">
-                <div className="absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2 sm:inset-x-6 sm:top-6">
-                  {activeRegion.markets.map((item) => {
-                    const hasDoc = item.href && item.href !== "#";
-                    return (
+              <div className="absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2 sm:inset-x-6 sm:top-6">
+                {activeRegion.markets.map((item) => {
+                  const hasDoc = item.href && item.href !== "#";
+                  return (
                     <a
                       key={`${activeRegion.key}-${item.name}`}
                       href={item.href}
@@ -252,19 +252,19 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
                         <FileText className="h-3.5 w-3.5 text-[#2450b5]" />
                       )}
                     </a>
-                    );
-                  })}
-                </div>
-
-                <ImageNext
-                  src={activeRegion.image}
-                  alt={activeRegion.imageAlt}
-                  width={1200}
-                  height={900}
-                  className="h-full min-h-[280px] w-full rounded-[24px] object-cover object-center transition-all duration-300"
-                />
+                  );
+                })}
               </div>
+
+              <Image
+                src={activeRegion.image}
+                alt={activeRegion.imageAlt}
+                width={1200}
+                height={900}
+                className="h-full min-h-[280px] w-full rounded-[24px] object-cover object-center transition-all duration-300"
+              />
             </div>
+          </div>
         </div>
 
         <aside className="rounded-[28px] border border-[#e6eefb] bg-[#fbfcff] p-6 shadow-[0_18px_42px_rgba(17,24,39,0.05)] xl:sticky xl:top-24">

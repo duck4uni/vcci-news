@@ -6,8 +6,9 @@ import { ShieldCheck, Target, Zap } from "lucide-react";
 import parse from "html-react-parser";
 import Link from "next/link";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { buildDynamicPostHref, buildVisibleNewsFilters, stripHtml } from "../data";
+import links from "@/links";
 import StructuredPostContent from "../StructuredPostContent";
 import type { DynamicPostItem } from "../types";
 
@@ -121,10 +122,12 @@ export default function AboutVcciHcmPage({
             externalLink: buildDynamicPostHref(item.external_link?.trim() || "#", item.id ? String(item.id) : ""),
             publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
             thumbnailUrl:
-              item.thumbnail?.url?.trim() ||
-              item.thumbnail?.path?.trim() ||
-              item.thumbnail?.original?.trim() ||
-              "/thumbnail.png",
+              links.resolveImageUrl(
+                item.thumbnail?.url?.trim() ||
+                item.thumbnail?.path?.trim() ||
+                item.thumbnail?.original?.trim() ||
+                "",
+              ) || "/thumbnail.png",
             thumbnailAlt: String(item.title ?? "").trim() || "Tin VCCI",
           })),
       },
@@ -322,7 +325,7 @@ export default function AboutVcciHcmPage({
                 className="group overflow-hidden rounded-[22px] bg-white shadow-[0_18px_38px_rgba(28,52,120,0.16)] transition-transform hover:-translate-y-1"
               >
                 <div className="relative aspect-[1.28] overflow-hidden">
-                  <ImageNext
+                  <Image
                     src={item.thumbnailUrl}
                     alt={item.thumbnailAlt}
                     width={720}

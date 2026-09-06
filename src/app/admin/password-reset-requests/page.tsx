@@ -1,8 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
-  Loader2,
   CheckCircle,
   XCircle,
   Clock,
@@ -10,22 +9,10 @@ import {
   KeyRound,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  EyeOff,
-  Copy,
-  CheckCheck,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -44,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { usePermission } from "@/hooks/usePermission";
 import { NoPermissionMessage } from "@/components/shared/permission-gate";
 import {
@@ -53,50 +39,13 @@ import {
   usePostApiV10PasswordResetRequestIdReject,
   getGetApiV10PasswordResetRequestQueryKey,
 } from "@/api/vcci-news/endpoints/password-reset-request";
-
-interface PasswordResetRequest {
-  id: string;
-  email: string;
-  note?: string | null;
-  status: "PENDING" | "RESOLVED" | "REJECTED";
-  resolved_by?: string | null;
-  resolved_at?: string | null;
-  resolve_note?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  resolved_by_user?: {
-    id: string;
-    email: string;
-    first_name: string | null;
-    last_name: string | null;
-  } | null;
-}
-
-interface ListResponse {
-  rows: PasswordResetRequest[];
-  count: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-const PAGE_SIZE = 10;
-const DEFAULT_NEW_PASSWORD = "vcci@2026";
-
-function formatDate(dateStr?: string | null) {
-  if (!dateStr) return "-";
-  try {
-    return new Date(dateStr).toLocaleString("vi-VN", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return "-";
-  }
-}
+import {
+  type PasswordResetRequest,
+  PAGE_SIZE,
+  formatDate,
+} from "./_components/types";
+import { ResolveDialog } from "./_components/resolve-dialog";
+import { RejectDialog } from "./_components/reject-dialog";
 
 export default function PasswordResetRequestsPage() {
   const canRead = usePermission("users", "read");
@@ -108,15 +57,10 @@ export default function PasswordResetRequestsPage() {
   // Resolve dialog
   const [isResolveDialogOpen, setIsResolveDialogOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<PasswordResetRequest | null>(null);
-  const [newPassword, setNewPassword] = useState(DEFAULT_NEW_PASSWORD);
-  const [resolveNote, setResolveNote] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [isResolving, setIsResolving] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   // Reject dialog
   const [isRejectDialogOpen, setIsRejectDialogOpen] = useState(false);
-  const [rejectNote, setRejectNote] = useState("");
   const [isRejecting, setIsRejecting] = useState(false);
 
   const queryClient = useQueryClient();
@@ -135,7 +79,9 @@ export default function PasswordResetRequestsPage() {
     },
   );
 
-  const data = (queryData as any)?.responseData as ListResponse | null;
+  const data = (queryData as any)?.responseData as
+    | { rows: PasswordResetRequest[]; count: number; totalPages: number }
+    | null;
   const rows = data?.rows || [];
   const total = data?.count || 0;
   const totalPages = data?.totalPages || 1;
@@ -175,21 +121,17 @@ export default function PasswordResetRequestsPage() {
 
   const handleOpenResolve = (req: PasswordResetRequest) => {
     setSelectedRequest(req);
-    setNewPassword(DEFAULT_NEW_PASSWORD);
-    setResolveNote("");
-    setShowPassword(false);
     setIsResolveDialogOpen(true);
   };
 
   const handleOpenReject = (req: PasswordResetRequest) => {
     setSelectedRequest(req);
-    setRejectNote("");
     setIsRejectDialogOpen(true);
   };
 
-  const handleConfirmResolve = async () => {
+  const handleConfirmResolve = (newPassword: string, resolveNote: string) => {
     if (!selectedRequest) return;
-    if (!newPassword.trim() || newPassword.length < 6) {
+    if (!newPassword || newPassword.length < 6) {
       toast.error("Mật khẩu mới phải có ít nhất 6 ký tự");
       return;
     }
@@ -197,27 +139,21 @@ export default function PasswordResetRequestsPage() {
     resolveMutation.mutate({
       id: selectedRequest.id,
       data: {
-        newPassword: newPassword.trim(),
-        resolveNote: resolveNote.trim() || undefined,
+        newPassword,
+        resolveNote: resolveNote || undefined,
       },
     });
   };
 
-  const handleConfirmReject = async () => {
+  const handleConfirmReject = (rejectNote: string) => {
     if (!selectedRequest) return;
     setIsRejecting(true);
     rejectMutation.mutate({
       id: selectedRequest.id,
       data: {
-        resolveNote: rejectNote.trim() || undefined,
+        resolveNote: rejectNote || undefined,
       },
     });
-  };
-
-  const handleCopyPassword = () => {
-    navigator.clipboard.writeText(newPassword);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
   };
 
   if (!canRead) {
@@ -415,132 +351,21 @@ export default function PasswordResetRequestsPage() {
         </div>
       )}
 
-      {/* Resolve Dialog */}
-      <Dialog open={isResolveDialogOpen} onOpenChange={setIsResolveDialogOpen}>
-        <DialogContent className="max-w-lg rounded-3xl border-[#063e8e]/15">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-[#163b73]">Reset mật khẩu</DialogTitle>
-            <DialogDescription>
-              Reset mật khẩu cho email{" "}
-              <strong className="text-[#063e8e]">{selectedRequest?.email}</strong>.
-              User sẽ phải đổi mật khẩu khi đăng nhập lần tiếp theo.
-            </DialogDescription>
-          </DialogHeader>
+      <ResolveDialog
+        open={isResolveDialogOpen}
+        onOpenChange={setIsResolveDialogOpen}
+        request={selectedRequest}
+        onConfirm={handleConfirmResolve}
+        isResolving={isResolving}
+      />
 
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Mật khẩu mới</Label>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Ít nhất 6 ký tự"
-                    className="h-10 rounded-xl border-[#063e8e]/15 pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCopyPassword}
-                  className="h-10 rounded-xl border-[#063e8e]/15"
-                  title="Copy mật khẩu"
-                >
-                  {copied ? <CheckCheck className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-                </Button>
-              </div>
-              <p className="text-xs text-slate-500">
-                Mật khẩu mặc định: <code className="rounded bg-slate-100 px-1">{DEFAULT_NEW_PASSWORD}</code>.
-                Bạn có thể đổi sang mật khẩu tùy chỉnh.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Ghi chú (tùy chọn)</Label>
-              <Textarea
-                value={resolveNote}
-                onChange={(e) => setResolveNote(e.target.value)}
-                placeholder="VD: Đã gọi điện xác nhận, đã gửi mật khẩu qua Zalo..."
-                rows={3}
-                className="rounded-xl border-[#063e8e]/15 resize-none"
-              />
-            </div>
-
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              Lưu ý: Sau khi reset, bạn cần gửi mật khẩu mới cho user qua kênh khác
-              (điện thoại, Zalo, email cá nhân, etc.).
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsResolveDialogOpen(false)}
-              className="h-10 rounded-xl border-[#063e8e]/15"
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleConfirmResolve}
-              disabled={isResolving || newPassword.length < 6}
-              className="h-10 rounded-xl bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-            >
-              {isResolving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Reset mật khẩu
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={isRejectDialogOpen} onOpenChange={setIsRejectDialogOpen}>
-        <DialogContent className="max-w-md rounded-3xl border-[#063e8e]/15">
-          <DialogHeader>
-            <DialogTitle className="text-xl text-[#163b73]">Từ chối yêu cầu</DialogTitle>
-            <DialogDescription>
-              Từ chối yêu cầu reset mật khẩu cho email{" "}
-              <strong className="text-[#063e8e]">{selectedRequest?.email}</strong>?
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Lý do từ chối (tùy chọn)</Label>
-            <Textarea
-              value={rejectNote}
-              onChange={(e) => setRejectNote(e.target.value)}
-              placeholder="VD: Email không tồn tại trong hệ thống, không thể xác minh danh tính..."
-              rows={3}
-              className="rounded-xl border-[#063e8e]/15 resize-none"
-            />
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setIsRejectDialogOpen(false)}
-              className="h-10 rounded-xl border-[#063e8e]/15"
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={handleConfirmReject}
-              disabled={isRejecting}
-              className="h-10 rounded-xl bg-red-600 text-white hover:bg-red-700"
-            >
-              {isRejecting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Từ chối
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <RejectDialog
+        open={isRejectDialogOpen}
+        onOpenChange={setIsRejectDialogOpen}
+        request={selectedRequest}
+        onConfirm={handleConfirmReject}
+        isRejecting={isRejecting}
+      />
     </div>
   );
 }

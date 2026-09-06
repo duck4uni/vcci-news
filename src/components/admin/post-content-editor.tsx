@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Image as ImageIcon, Pencil, Plus, Type, Upload, X } from "lucide-react";
 import { AdminImagePicker } from "@/components/admin/image-picker";
-import { AdminRichTextEditor } from "@/components/admin/rich-text-editor";
+import { AdminRichTextEditor } from "@/components/shared/rich-text-editor";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

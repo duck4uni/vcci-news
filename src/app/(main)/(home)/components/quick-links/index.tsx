@@ -19,7 +19,7 @@ function AdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: strin
       href={item.link || FALLBACK_HREF}
       target="_blank"
       rel="noopener noreferrer"
-      className="block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
+      className="block overflow-hidden rounded-[16px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
       title={item.name}
     >
       <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
@@ -45,7 +45,7 @@ function FallbackAdItem({ src }: { src: string }) {
       href={FALLBACK_HREF}
       target="_blank"
       rel="noopener noreferrer"
-      className="block overflow-hidden rounded-[28px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
+      className="block overflow-hidden rounded-[16px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
       title="Quảng cáo VCCI HCM"
     >
       <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">

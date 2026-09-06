@@ -1,6 +1,6 @@
 'use client';
 
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import { ChevronRight } from "lucide-react";
@@ -28,7 +28,7 @@ function FeaturedNews() {
   return (
     <section className="py-8 md:py-10">
       <div className="w-full">
-        <div className="mb-8 flex items-start justify-between gap-4">
+        <div className="mb-8 flex items-center justify-between gap-4">
           <div>
             <h2 className="client-section-title uppercase text-[#24469c]">
               Tin nổi bật
@@ -38,10 +38,9 @@ function FeaturedNews() {
 
           <Link
             href={featuredOverviewLink}
-            className="inline-flex items-center gap-2 pt-2 text-base font-semibold text-[#2b56c0] transition-colors hover:text-[#173f9f]"
+            className="text-[#2b56c0] transition-colors hover:text-[#173f9f]"
           >
-            <span>Xem tất cả</span>
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
 
@@ -49,10 +48,10 @@ function FeaturedNews() {
           {primaryItem ? (
             <Link
               href={primaryItem.externalLink}
-              className="group relative block cursor-pointer overflow-hidden rounded-[20px] bg-[#0d2f5f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] md:rounded-[24px] md:min-h-[320px] lg:min-h-[380px]"
+              className="group relative block cursor-pointer overflow-hidden rounded-[16px] bg-[#0d2f5f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] md:rounded-[16px] md:min-h-[320px] lg:min-h-[380px]"
             >
               <div className="relative h-full min-h-[195px] md:min-h-[320px] lg:min-h-[380px]">
-                <ImageNext
+                <Image
                   src={primaryItem.thumbnail?.url ?? primaryFallback}
                   alt={primaryItem.thumbnail?.alt || primaryItem.title}
                   width={1200}
@@ -79,7 +78,7 @@ function FeaturedNews() {
               </div>
             </Link>
           ) : (
-            <div className="relative overflow-hidden rounded-[20px] bg-[#e9eef8] shadow-[0_16px_32px_rgba(28,52,120,0.12)] md:rounded-3xl md:min-h-[320px] lg:min-h-[380px]">
+            <div className="relative overflow-hidden rounded-[16px] bg-[#e9eef8] shadow-[0_16px_32px_rgba(28,52,120,0.12)] md:rounded-[16px] md:min-h-[320px] lg:min-h-[380px]">
               <div className="flex h-full min-h-[195px] flex-col justify-end p-3.5 md:min-h-80 md:p-5 lg:min-h-[380px]">
                 <span className="mb-2 h-8 w-28 rounded-[10px] bg-white/80" />
                 <div className="h-8 w-3/4 rounded bg-white/90 md:h-10" />
@@ -95,10 +94,10 @@ function FeaturedNews() {
                   <Link
                     key={item.id}
                     href={item.externalLink}
-                    className="group relative block cursor-pointer overflow-hidden rounded-[20px] bg-[#27447f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] min-h-[165px]"
+                    className="group relative block cursor-pointer overflow-hidden rounded-[16px] bg-[#27447f] shadow-[0_16px_32px_rgba(28,52,120,0.2)] min-h-[165px]"
                   >
                     <div className="relative flex h-full min-h-[165px]">
-                      <ImageNext
+                      <Image
                         src={item.thumbnail?.url ?? secondaryFallbacks[index]}
                         alt={item.thumbnail?.alt || item.title}
                         width={600}
@@ -127,7 +126,7 @@ function FeaturedNews() {
                 ) : (
                   <div
                     key={`featured-placeholder-${index}`}
-                    className="rounded-[20px] bg-[#dde5f3] shadow-[0_16px_32px_rgba(28,52,120,0.1)] min-h-[165px]"
+                    className="rounded-[16px] bg-[#dde5f3] shadow-[0_16px_32px_rgba(28,52,120,0.1)] min-h-[165px]"
                   >
                     <div className="flex h-full min-h-[165px] flex-col justify-end p-3.5">
                       <span className="mb-2 h-7 w-24 rounded-[10px] bg-white/80" />

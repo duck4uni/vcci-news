@@ -132,7 +132,7 @@ function EventsCalendar({
   return (
     <aside
       className={cn(
-        "w-full rounded-[28px] bg-white text-[#24469c] shadow-[0_18px_38px_rgba(16,61,130,0.16)]",
+        "w-full rounded-[16px] bg-white text-[#24469c] shadow-[0_18px_38px_rgba(16,61,130,0.16)]",
         compact ? "p-4" : "p-4 md:p-5",
         className ?? "xl:w-[28%] xl:min-w-[320px]",
       )}
@@ -181,9 +181,9 @@ function EventsCalendar({
 
       <div className={cn("mt-3 h-[4px] w-[60px] rounded-full bg-[#f7b500]", compact && "mt-2.5")} />
 
-      <div className={cn("mt-4 border-t border-[#ebf0f8] pt-3.5", compact && "mt-3")}>
+      <div className={cn("mt-4 pt-3.5", compact && "mt-3")}>
         {eventCalendarQuery.isLoading ? (
-          <div className="mb-3 rounded-[16px] bg-[#f7f9fd] p-3 text-[12px] text-[#3d547f]">
+          <div className="mb-3 rounded-[14px] bg-[#f7f9fd] p-3 text-[12px] text-[#3d547f]">
             Đang tải dữ liệu tháng này...
           </div>
         ) : null}
@@ -226,9 +226,9 @@ function EventsCalendar({
                     : "cursor-default",
                   selected && "ring-2 ring-[#f7b500] ring-offset-2 ring-offset-white",
                   isToday &&
-                    selectable &&
-                    !selected &&
-                    "ring-2 ring-[#9fb3db] ring-offset-2 ring-offset-white",
+                  selectable &&
+                  !selected &&
+                  "ring-2 ring-[#9fb3db] ring-offset-2 ring-offset-white",
                 )}
               >
                 {format(day, "d")}
@@ -252,7 +252,7 @@ function EventsCalendar({
                       side="top"
                       align="center"
                       sideOffset={12}
-                      className="hidden w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-[20px] border border-[#d9e3f2] bg-white p-0 text-[#234171] shadow-[0_20px_45px_rgba(16,61,130,0.18)] lg:block"
+                      className="hidden w-[min(360px,calc(100vw-2rem))] overflow-hidden rounded-[14px] border border-[#d9e3f2] bg-white p-0 text-[#234171] shadow-[0_20px_45px_rgba(16,61,130,0.18)] lg:block"
                     >
                       <div className="flex items-center justify-between gap-3 border-b border-[#edf2f9] px-4 py-3">
                         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#7f8eab]">
@@ -268,7 +268,7 @@ function EventsCalendar({
                           <Link
                             key={item.id}
                             href={item.externalLink || "#"}
-                            className="block rounded-[16px] border border-[#e3ebf8] bg-[#fbfdff] px-3.5 py-3 transition-colors hover:border-[#c9d7ee] hover:bg-white"
+                            className="block rounded-[14px] border border-[#e3ebf8] bg-[#fbfdff] px-3.5 py-3 transition-colors hover:border-[#c9d7ee] hover:bg-white"
                           >
                             <div className="flex items-start gap-2.5">
                               <span
@@ -327,7 +327,7 @@ function EventsCalendar({
       </div>
 
       {highlightedEvents.length > 0 ? (
-        <div className="mt-4 rounded-2xl bg-[#f7f9fd] p-3.5 text-[12px] leading-5 text-[#3d547f] lg:hidden">
+        <div className="mt-4 rounded-[14px] bg-[#f7f9fd] p-3.5 text-[12px] leading-5 text-[#3d547f] lg:hidden">
           {selectedEvents.length > 1 ? (
             <div className="mb-3 flex items-center justify-between gap-3 border-b border-[#e5edf8] pb-2.5">
               <p className="text-[12px] font-semibold text-[#24469c]">

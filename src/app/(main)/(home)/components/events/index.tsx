@@ -1,10 +1,11 @@
 'use client';
 
-import ImageNext from "@/components/shared/image-next";
+import Image from "next/image";
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
 import dayjs from "dayjs";
 import Link from "next/link";
 import { useMemo } from "react";
+import { ChevronRight } from "lucide-react";
 import { getFallbackImage } from "@/lib/utils/fallback-image";
 
 function Events() {
@@ -23,8 +24,8 @@ function Events() {
   );
 
   return (
-    <div className="flex-1 rounded-[28px] bg-linear-to-br from-[#14488f] to-[#2d67bf] p-4 text-white shadow-[0_18px_38px_rgba(16,61,130,0.24)] md:p-5">
-      <div className="mb-4 flex items-start justify-between gap-4">
+    <div className="flex-1 rounded-[16px] bg-linear-to-br from-[#14488f] to-[#2d67bf] p-4 text-white shadow-[0_18px_38px_rgba(16,61,130,0.24)] md:p-5">
+      <div className="mb-4 flex items-center justify-between gap-4">
         <div>
           <h2 className="client-section-title uppercase text-white">
             Sự kiện sắp diễn ra
@@ -34,9 +35,9 @@ function Events() {
 
         <Link
           href={eventsLink}
-          className="pt-1.5 text-sm font-semibold text-[#ffd34f] transition-colors hover:text-white"
+          className="text-[#ffd34f] transition-colors hover:text-white"
         >
-          Xem sự kiện
+          <ChevronRight className="h-5 w-5" />
         </Link>
       </div>
 
@@ -44,10 +45,10 @@ function Events() {
         {featuredEvent ? (
           <Link
             href={featuredEvent.externalLink}
-            className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
+            className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[14px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.18)]"
           >
             <div className="relative h-[180px] overflow-hidden md:h-[220px] xl:h-[248px]">
-              <ImageNext
+              <Image
                 src={featuredEvent.thumbnail?.url ?? featuredFallback}
                 alt={featuredEvent.thumbnail?.alt || featuredEvent.title}
                 width={720}
@@ -95,7 +96,7 @@ function Events() {
             </div>
           </Link>
         ) : (
-          <div className="flex h-full flex-col overflow-hidden rounded-[22px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.12)]">
+          <div className="flex h-full flex-col overflow-hidden rounded-[14px] bg-white text-[#20408f] shadow-[0_14px_28px_rgba(10,39,95,0.12)]">
             <div className="h-[180px] bg-[#d7e3f9] md:h-[220px] xl:h-[248px]" />
             <div className="space-y-2 p-3 pt-2.5">
               <div className="h-6 w-5/6 rounded bg-[#e7eefb]" />
@@ -110,10 +111,10 @@ function Events() {
               <Link
                 key={item.id}
                 href={item.externalLink}
-                className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
+                className="group flex flex-1 cursor-pointer items-center gap-3 rounded-[14px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)] backdrop-blur-sm transition-colors hover:bg-white/14"
               >
-                <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[12px]">
-                  <ImageNext
+                <div className="h-[64px] w-[64px] shrink-0 overflow-hidden rounded-[14px]">
+                  <Image
                     src={item.thumbnail?.url ?? sideFallbacks[index]}
                     alt={item.thumbnail?.alt || item.title}
                     width={160}
@@ -170,9 +171,9 @@ function Events() {
             ) : (
               <div
                 key={`event-placeholder-${index}`}
-                className="flex flex-1 items-center gap-3 rounded-[18px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
+                className="flex flex-1 items-center gap-3 rounded-[14px] bg-white/10 p-2.5 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]"
               >
-                <div className="h-[64px] w-[64px] shrink-0 rounded-[12px] bg-white/20" />
+                <div className="h-[64px] w-[64px] shrink-0 rounded-[14px] bg-white/20" />
                 <div className="min-w-0 flex-1">
                   <div className="h-5 w-5/6 rounded bg-white/25" />
                   <div className="mt-2 h-3 w-20 rounded bg-white/20" />

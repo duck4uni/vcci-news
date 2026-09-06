@@ -36,9 +36,8 @@ function PolicyAndLaws() {
             <Link
               key={item.id}
               href={item.externalLink}
-              className={`group flex min-h-[58px] gap-3 rounded-[18px] px-4 py-3 transition-all duration-200 hover:bg-[#f5f7fb] hover:shadow-[0_10px_24px_rgba(36,70,156,0.08)] ${
-                index === 0 ? "pt-3.5" : ""
-              }`}
+              className={`group flex min-h-[58px] gap-3 rounded-[16px] pr-4 py-3 transition-all duration-200 hover:bg-[#f5f7fb] hover:shadow-[0_10px_24px_rgba(36,70,156,0.08)] ${index === 0 ? "pt-3.5" : ""
+                }`}
             >
               <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500] transition-opacity duration-200 group-hover:opacity-0" />
 
@@ -63,7 +62,7 @@ function PolicyAndLaws() {
           ) : (
             <div
               key={`policy-placeholder-${index}`}
-              className={`flex min-h-[58px] gap-3 rounded-[14px] px-0.5 py-1 ${index === 0 ? "pt-0.5" : ""}`}
+              className={`flex min-h-[58px] gap-3 rounded-[16px] px-0.5 py-1 ${index === 0 ? "pt-0.5" : ""}`}
             >
               <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500]/40" />
               <div className="min-w-0 flex-1">

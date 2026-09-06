@@ -1,10 +1,9 @@
 "use client";
 
-import * as React from "react";
-import dayjs from "dayjs";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  Check,
-  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
   Plus,
   Star,
   Tag,
@@ -19,14 +18,6 @@ import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { SafeNextImage } from "@/components/admin/safe-next-image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -49,7 +40,6 @@ import {
   fetchHeaderConfigItems,
   toggleCmsNewsVisibility,
 } from "@/lib/api/cms-admin";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   ADMIN_NEWS_TYPE_LABELS,
   ADMIN_NEWS_TYPE_OPTIONS,
@@ -58,9 +48,15 @@ import {
 import {
   buildHeaderCategoryTree,
   type HeaderCategoryItem,
-  type HeaderCategoryTreeItem,
 } from "@/mockdata/header-config";
-import { cn } from "@/lib/utils";
+import { AdminNewsTableLoading } from "./_components/admin-news-table-loading";
+import { CategoryFilterCombobox } from "./_components/category-filter-combobox";
+import {
+  flattenHeaderTree,
+  formatDateTime,
+  getDisplayCategoryNames,
+  useDebouncedValue,
+} from "./_components/utils";
 
 const selectTriggerClassName =
   "w-full rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[180px]";
@@ -70,189 +66,38 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 const selectItemClassName =
   "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
 
-function flattenHeaderTree(
-  items: HeaderCategoryTreeItem[],
-  depth = 0,
-): Array<HeaderCategoryItem & { depth: number }> {
-  return items.flatMap((item) => [
-    { ...item, depth },
-    ...flattenHeaderTree(item.children, depth + 1),
-  ]);
-}
-
-function formatHeaderCategoryOptionLabel(option: { name: string; depth: number }) {
-  return `${"-- ".repeat(option.depth)}${option.name}`;
-}
-
-function CategoryFilterCombobox({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: Array<HeaderCategoryItem & { depth: number }>;
-  onChange: (value: string) => void;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const selectedOption = options.find((option) => option.id === value) ?? null;
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          className={cn(
-            "h-10 w-full justify-between rounded-xl border-[#063e8e]/15 bg-white px-3 font-normal text-gray-700 hover:bg-white hover:text-gray-700 focus-visible:ring-[#063e8e]/30 lg:w-[220px]",
-            !selectedOption && "text-gray-700",
-          )}
-        >
-          <span className="truncate text-left">
-            {selectedOption
-              ? formatHeaderCategoryOptionLabel(selectedOption)
-              : "T\u1ea5t c\u1ea3 danh m\u1ee5c"}
-          </span>
-          <ChevronsUpDown className="ml-3 h-4 w-4 shrink-0 opacity-60" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] border-[#063e8e]/15 bg-white p-0 text-gray-700"
-      >
-        <Command className="bg-white text-gray-700">
-          <CommandInput
-            placeholder={"T\u00ecm danh m\u1ee5c hi\u1ec3n th\u1ecb"}
-            className="text-gray-700 placeholder:text-gray-500"
-          />
-          <CommandList className="max-h-72">
-            <CommandEmpty className="text-gray-700">
-              {"Kh\u00f4ng t\u00ecm th\u1ea5y danh m\u1ee5c ph\u00f9 h\u1ee3p"}
-            </CommandEmpty>
-            <CommandItem
-              value="all Tat ca danh muc"
-              onSelect={() => {
-                onChange("all");
-                setOpen(false);
-              }}
-              className="gap-3 px-3 py-2 text-gray-700 data-[selected=true]:bg-[#063e8e]/10 data-[selected=true]:text-[#063e8e]"
-            >
-              <Check
-                className={cn(
-                  "h-4 w-4 text-[#063e8e]",
-                  value === "all" ? "opacity-100" : "opacity-0",
-                )}
-              />
-              <span className="truncate">{"T\u1ea5t c\u1ea3 danh m\u1ee5c"}</span>
-            </CommandItem>
-            {options.map((option) => (
-              <CommandItem
-                key={option.id}
-                value={`${option.id} ${option.name} ${option.type}`}
-                onSelect={() => {
-                  onChange(option.id);
-                  setOpen(false);
-                }}
-                className="gap-3 px-3 py-2 text-gray-700 data-[selected=true]:bg-[#063e8e]/10 data-[selected=true]:text-[#063e8e]"
-              >
-                <Check
-                  className={cn(
-                    "h-4 w-4 text-[#063e8e]",
-                    value === option.id ? "opacity-100" : "opacity-0",
-                  )}
-                />
-                <span className="truncate">
-                  {formatHeaderCategoryOptionLabel(option)}
-                </span>
-              </CommandItem>
-            ))}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function formatDateTime(value: string) {
-  return value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "—";
-}
-
-function getDisplayCategoryNames(
-  item: AdminNewsItem,
-  categories: HeaderCategoryItem[],
-) {
-  const categoryIds = Array.from(
-    new Set([
-      ...item.category_ids,
-      ...(item.header_category_id ? [item.header_category_id] : []),
-    ]),
-  );
-
-  return categoryIds
-    .map((categoryId) => categories.find((entry) => entry.id === categoryId)?.name)
-    .filter((name): name is string => Boolean(name));
-}
-
-function useDebouncedValue<T>(value: T, delay = 350) {
-  const [debouncedValue, setDebouncedValue] = React.useState(value);
-
-  React.useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => window.clearTimeout(timeout);
-  }, [delay, value]);
-
-  return debouncedValue;
-}
-
-function AdminNewsTableLoading() {
-  return Array.from({ length: 3 }).map((_, index) => (
-    <TableRow
-      key={`loading-${index}`}
-      className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/[0.03]"}
-    >
-      <TableCell colSpan={7} className="px-4 py-4">
-        <div className="h-20 animate-pulse rounded-2xl bg-[#063e8e]/10" />
-      </TableCell>
-    </TableRow>
-  ));
-}
-
 export default function AdminNewsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [items, setItems] = React.useState<AdminNewsItem[]>([]);
-  const [headerItems, setHeaderItems] = React.useState<HeaderCategoryItem[]>([]);
-  const [search, setSearch] = React.useState(() => searchParams.get("q") ?? "");
-  const [typeFilter, setTypeFilter] = React.useState(
+  const [items, setItems] = useState<AdminNewsItem[]>([]);
+  const [headerItems, setHeaderItems] = useState<HeaderCategoryItem[]>([]);
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+  const [typeFilter, setTypeFilter] = useState(
     () => searchParams.get("type") ?? "all",
   );
-  const [categoryFilter, setCategoryFilter] = React.useState(
+  const [categoryFilter, setCategoryFilter] = useState(
     () => searchParams.get("category") ?? "all",
   );
-  const [statusFilter, setStatusFilter] = React.useState(
+  const [statusFilter, setStatusFilter] = useState(
     () => searchParams.get("status") ?? "all",
   );
-  const [deleteTarget, setDeleteTarget] = React.useState<AdminNewsItem | null>(null);
-  const [ready, setReady] = React.useState(false);
-  const [isDeleting, setIsDeleting] = React.useState(false);
-  const [togglingVisibilityId, setTogglingVisibilityId] = React.useState<string | null>(null);
-  const [page, setPage] = React.useState(() => {
+  const [deleteTarget, setDeleteTarget] = useState<AdminNewsItem | null>(null);
+  const [ready, setReady] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [togglingVisibilityId, setTogglingVisibilityId] = useState<string | null>(null);
+  const [page, setPage] = useState(() => {
     const parsedPage = Number(searchParams.get("page") ?? 1);
     return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   });
-  const [pageSize] = React.useState(10);
-  const [total, setTotal] = React.useState(0);
-  const [publishedTotal, setPublishedTotal] = React.useState(0);
-  const [featuredTotal, setFeaturedTotal] = React.useState(0);
-  const didMountRef = React.useRef(false);
+  const [pageSize] = useState(10);
+  const [total, setTotal] = useState(0);
+  const [publishedTotal, setPublishedTotal] = useState(0);
+  const [featuredTotal, setFeaturedTotal] = useState(0);
+  const didMountRef = useRef(false);
   const debouncedSearch = useDebouncedValue(search);
 
-  const listQueryString = React.useMemo(() => {
+  const listQueryString = useMemo(() => {
     const params = new URLSearchParams();
 
     if (page > 1) {
@@ -278,12 +123,12 @@ export default function AdminNewsPage() {
     return params.toString();
   }, [categoryFilter, debouncedSearch, page, statusFilter, typeFilter]);
 
-  const listPath = React.useMemo(
+  const listPath = useMemo(
     () => (listQueryString ? `${pathname}?${listQueryString}` : pathname),
     [listQueryString, pathname],
   );
 
-  React.useEffect(() => {
+  useEffect(() => {
     void fetchHeaderConfigItems()
       .then((headerConfig) => {
         setHeaderItems(headerConfig.items);
@@ -297,7 +142,7 @@ export default function AdminNewsPage() {
       });
   }, []);
 
-  const baseFilterParts = React.useMemo(() => {
+  const baseFilterParts = useMemo(() => {
     const filters: string[] = [];
     const keyword = debouncedSearch.trim();
 
@@ -318,7 +163,7 @@ export default function AdminNewsPage() {
     return filters;
   }, [categoryFilter, debouncedSearch, typeFilter]);
 
-  const statusFilterParts = React.useMemo(() => {
+  const statusFilterParts = useMemo(() => {
     if (statusFilter === "visible") {
       return ["is_hidden==false"];
     }
@@ -330,19 +175,19 @@ export default function AdminNewsPage() {
     return [];
   }, [statusFilter]);
 
-  const apiFilters = React.useMemo(() => {
+  const apiFilters = useMemo(() => {
     return [...baseFilterParts, ...statusFilterParts].join(",");
   }, [baseFilterParts, statusFilterParts]);
 
-  const visibleStatsFilters = React.useMemo(() => {
+  const visibleStatsFilters = useMemo(() => {
     return [...baseFilterParts, ...statusFilterParts, "is_hidden==false"].join(",");
   }, [baseFilterParts, statusFilterParts]);
 
-  const featuredStatsFilters = React.useMemo(() => {
+  const featuredStatsFilters = useMemo(() => {
     return [...baseFilterParts, ...statusFilterParts, "is_featured==true"].join(",");
   }, [baseFilterParts, statusFilterParts]);
 
-  const loadStats = React.useCallback(async () => {
+  const loadStats = useCallback(async () => {
     const [nextPublishedTotal, nextFeaturedTotal] = await Promise.all([
       fetchCmsPostCount(visibleStatsFilters),
       fetchCmsPostCount(featuredStatsFilters),
@@ -352,7 +197,7 @@ export default function AdminNewsPage() {
     setFeaturedTotal(nextFeaturedTotal);
   }, [featuredStatsFilters, visibleStatsFilters]);
 
-  const load = React.useCallback(async () => {
+  const load = useCallback(async () => {
     setReady(false);
 
     const newsData = await fetchCmsNewsItems({
@@ -368,7 +213,7 @@ export default function AdminNewsPage() {
     setReady(true);
   }, [apiFilters, page, pageSize]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void loadStats().catch((error) => {
       toast.error(
         error instanceof Error
@@ -378,7 +223,7 @@ export default function AdminNewsPage() {
     });
   }, [loadStats]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void load().catch((error) => {
       toast.error(
         error instanceof Error
@@ -389,7 +234,7 @@ export default function AdminNewsPage() {
     });
   }, [load]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const nextPath = listQueryString ? `${pathname}?${listQueryString}` : pathname;
     const currentPath = `${pathname}${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 
@@ -398,7 +243,7 @@ export default function AdminNewsPage() {
     }
   }, [listQueryString, pathname, router, searchParams]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
@@ -407,13 +252,13 @@ export default function AdminNewsPage() {
     setPage((currentPage) => (currentPage === 1 ? currentPage : 1));
   }, [apiFilters, typeFilter]);
 
-  const categoryOptions = React.useMemo(() => {
+  const categoryOptions = useMemo(() => {
     return flattenHeaderTree(buildHeaderCategoryTree(headerItems)).filter(
       (item) => item.type === "news" || item.type === "page",
     );
   }, [headerItems]);
 
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
     return [
       {
         label: "Tổng bài viết",

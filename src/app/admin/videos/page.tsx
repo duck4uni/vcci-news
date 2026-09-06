@@ -1,22 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { Plus, Save, Video, X } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Plus, Video } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { Pagination } from "@/components/base/pagination";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table,
   TableBody,
@@ -32,152 +23,21 @@ import {
   postApiV10Video,
 } from "@/api/vcci-news/endpoints/video";
 import type { Video as CmsVideoItem } from "@/api/vcci-news/models/video";
-
-const PAGE_SIZE = 10;
-
-const fieldClassName =
-  "rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
-
-interface VideoFormValues {
-  id?: string;
-  name: string;
-  url: string;
-}
-
-const EMPTY_VIDEO_FORM: VideoFormValues = {
-  name: "",
-  url: "",
-};
-
-interface VideoFormDialogProps {
-  open: boolean;
-  initial: CmsVideoItem | null;
-  saving: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (data: VideoFormValues) => Promise<void>;
-}
-
-function VideoFormDialog({
-  open,
-  initial,
-  saving,
-  onOpenChange,
-  onSave,
-}: VideoFormDialogProps) {
-  const [form, setForm] = React.useState<VideoFormValues>(EMPTY_VIDEO_FORM);
-
-  React.useEffect(() => {
-    if (!open) return;
-
-    setForm(
-      initial
-        ? {
-          id: initial.id,
-          name: initial.name,
-          url: initial.url,
-        }
-        : EMPTY_VIDEO_FORM,
-    );
-  }, [initial, open]);
-
-  const handleField = <K extends keyof VideoFormValues>(
-    key: K,
-    value: VideoFormValues[K],
-  ) => {
-    setForm((previous) => ({ ...previous, [key]: value }));
-  };
-
-  const handleSave = async () => {
-    if (!form.name.trim()) {
-      toast.error("Vui lòng nhập tên video");
-      return;
-    }
-
-    if (!form.url.trim()) {
-      toast.error("Vui lòng nhập link URL");
-      return;
-    }
-
-    await onSave({
-      id: form.id,
-      name: form.name.trim(),
-      url: form.url.trim(),
-    });
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-3xl border-[#063e8e]/15 bg-white">
-        <DialogHeader>
-          <DialogTitle className="text-[#063e8e]">
-            {initial ? "Chỉnh sửa video" : "Thêm video mới"}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label className="text-gray-700">
-              Tên video <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              value={form.name}
-              onChange={(event) => handleField("name", event.target.value)}
-              placeholder="Nhập tên video..."
-              className={fieldClassName}
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label className="text-gray-700">
-              Link URL <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              value={form.url}
-              onChange={(event) => handleField("url", event.target.value)}
-              placeholder="https://..."
-              className={fieldClassName}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              className="border-[#063e8e]/15 text-gray-700"
-              onClick={() => onOpenChange(false)}
-              disabled={saving}
-            >
-              <X className="mr-2 h-4 w-4" />
-              Hủy
-            </Button>
-            <Button
-              type="button"
-              className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
-              onClick={handleSave}
-              disabled={saving}
-            >
-              <Save className="mr-2 h-4 w-4" />
-              Lưu
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import { PAGE_SIZE, type VideoFormValues } from "./_components/types";
+import { VideoFormDialog } from "./_components/video-form-dialog";
 
 export default function AdminVideosPage() {
-  const [items, setItems] = React.useState<CmsVideoItem[]>([]);
-  const [search, setSearch] = React.useState("");
-  const [ready, setReady] = React.useState(false);
-  const [saving, setSaving] = React.useState(false);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [editTarget, setEditTarget] = React.useState<CmsVideoItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = React.useState<CmsVideoItem | null>(null);
-  const [page, setPage] = React.useState(1);
-  const [total, setTotal] = React.useState(0);
+  const [items, setItems] = useState<CmsVideoItem[]>([]);
+  const [search, setSearch] = useState("");
+  const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<CmsVideoItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<CmsVideoItem | null>(null);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
-  const loadVideos = React.useCallback(async () => {
+  const loadVideos = useCallback(async () => {
     setReady(false);
 
     try {
@@ -202,11 +62,11 @@ export default function AdminVideosPage() {
     }
   }, [page, search]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void loadVideos();
   }, [loadVideos]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     setPage(1);
   }, [search]);
 

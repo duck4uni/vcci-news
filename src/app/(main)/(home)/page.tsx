@@ -22,7 +22,7 @@ export default function HomePage() {
 
         <section className="flex flex-col xl:flex-row pb-8 gap-5 mb-0">
           <News />
-          <Advertisements count={2} startIndex={0} />
+          <Advertisements count={3} startIndex={0} />
         </section >
 
         <HorizontalAdBanner />

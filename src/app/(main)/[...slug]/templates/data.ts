@@ -499,15 +499,6 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
   return Links.resolveImageUrl(value);
 }
 
-export function extractFirstImageFromHtml(html?: string | null): string {
-  if (!html) return "";
-
-  const imgRegex = /<img[^>]*\ssrc=["']([^"']+)["']/i;
-  const match = html.match(imgRegex);
-
-  return match?.[1]?.trim() ?? "";
-}
-
 export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
   if (!post) return "/thumbnail.png";
 
@@ -523,14 +514,6 @@ export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
       if (url) return url;
     }
   }
-
-  for (const section of sections) {
-    const htmlImage = extractFirstImageFromHtml(section.content);
-    if (htmlImage) return Links.resolveImageUrl(htmlImage);
-  }
-
-  const htmlImage = extractFirstImageFromHtml(post.content) || extractFirstImageFromHtml(post.summary);
-  if (htmlImage) return Links.resolveImageUrl(htmlImage);
 
   return "/thumbnail.png";
 }

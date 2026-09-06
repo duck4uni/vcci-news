@@ -1,7 +1,5 @@
 "use client";
 
-import Link from "next/link";
-import { usePermission } from "@/hooks/usePermission";
 import { NoPermissionMessage } from "@/components/shared/permission-gate";
 
 export default function NoPermissionPage() {
