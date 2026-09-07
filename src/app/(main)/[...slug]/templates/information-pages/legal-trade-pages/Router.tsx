@@ -15,10 +15,13 @@ type LegalTradeRouterProps = {
   category: DynamicCategoryRouteItem;
 };
 
-function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteItem) {
-  const url = category.url || post.external_link;
+function resolveVariant(
+  post: DynamicPostItem,
+  category: DynamicCategoryRouteItem,
+  fullPath: string,
+) {
+  const url = category.url || fullPath;
   const slug = category.slug || post.slug;
-  const externalLink = post.external_link;
 
   if (
     slug === "phap-che" ||
@@ -30,7 +33,7 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
   if (
     slug === "giay-chung-nhan-gcn-va-chung-tu-thuong-mai-cttm" ||
     url ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/giay-chung-nhan-gcn-va-chung-tu-thuong-mai-cttm"
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/giay-chung-nhan-gcn-va-chung-tu-thuong-mai-cttm"
   ) {
     return "certificate-trade-document" as const;
   }
@@ -39,7 +42,7 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
     slug === "quy-trinh-tiep-nhan-ho-so-cap-gcn-va-xac-nhan-cttm" ||
     slug === "thu-tuc-cap-co" ||
     url ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/quy-trinh-tiep-nhan-ho-so-cap-gcn-va-xac-nhan-cttm" ||
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/quy-trinh-tiep-nhan-ho-so-cap-gcn-va-xac-nhan-cttm" ||
     url === "/xuat-xu-hang-hoa/thu-tuc-cap-co"
   ) {
     return "procedure" as const;
@@ -51,10 +54,10 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
 
   if (
     slug === "bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm" ||
-    externalLink ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm" ||
+    fullPath ===
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm" ||
     url ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm"
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm"
   ) {
     return "forms" as const;
   }
@@ -62,10 +65,10 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
   if (
     slug === "phi-cap-gcn-va-xac-nhan-cttm" ||
     slug === "phi-va-le-phi-cap-co" ||
-    externalLink ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/phi-cap-gcn-va-xac-nhan-cttm" ||
+    fullPath ===
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/phi-cap-gcn-va-xac-nhan-cttm" ||
     url ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/phi-cap-gcn-va-xac-nhan-cttm" ||
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/phi-cap-gcn-va-xac-nhan-cttm" ||
     url === "/xuat-xu-hang-hoa/phi-va-le-phi-cap-co"
   ) {
     return "fees" as const;
@@ -75,14 +78,14 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
     slug === "diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
     slug === "diem-cap-va-thoi-gian-cap-co" ||
     slug === "diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
-    externalLink ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
-    externalLink ===
-      "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
+    fullPath ===
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
+    fullPath ===
+    "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
     url ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/diem-cap-va-cap-gcn-va-xac-nhan-cttm" ||
     url ===
-      "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
+    "/phap-che-va-xac-nhan-chung-tu-tm/diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm" ||
     url === "/xuat-xu-hang-hoa/diem-cap-va-thoi-gian-cap-co"
   ) {
     return "locations" as const;
@@ -91,10 +94,10 @@ function resolveVariant(post: DynamicPostItem, category: DynamicCategoryRouteIte
   if (
     slug === "thong-tin-lien-he" ||
     slug === "thong-tin-lien-he-co" ||
-    externalLink ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/thong-tin-lien-he" ||
+    fullPath ===
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/thong-tin-lien-he" ||
     url ===
-      "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/thong-tin-lien-he" ||
+    "/phap-che-cap-giay-chung-nhan-va-xac-nhan-chung-tu-thuong-mai/thong-tin-lien-he" ||
     url === "/xuat-xu-hang-hoa/thong-tin-lien-he-co"
   ) {
     return "contact" as const;
@@ -107,17 +110,18 @@ export default function LegalTradePages({ post, category }: LegalTradeRouterProp
   const params = useParams();
   const pathSegments = Array.isArray(params.slug) ? params.slug : [params.slug];
   const currentSlug = pathSegments.at(-1) ?? "";
+  const fullPath = `/${pathSegments.filter(Boolean).join("/")}`;
   const variant = resolveVariant(
     {
       ...post,
       slug: currentSlug || post.slug,
-      external_link: `/${pathSegments.filter(Boolean).join("/")}` || post.external_link,
     },
     {
       ...category,
       slug: currentSlug || category.slug,
-      url: `/${pathSegments.filter(Boolean).join("/")}` || category.url,
+      url: fullPath || category.url,
     },
+    fullPath,
   );
 
   if (variant === "phap-che") {

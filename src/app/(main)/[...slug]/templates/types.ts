@@ -49,6 +49,7 @@ export type DynamicPostContentSection = {
   image_columns: number;
   images: Array<{
     position: number;
+    caption: string | null;
     image: {
       id: string;
       name: string;
@@ -64,7 +65,6 @@ export type DynamicPostItem = {
   id: string;
   title: string;
   slug: string;
-  external_link: string;
   content: string;
   summary: string;
   release_at: string | null;

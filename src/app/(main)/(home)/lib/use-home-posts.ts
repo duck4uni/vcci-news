@@ -23,7 +23,7 @@ type RawHomeThumbnail = {
 type RawHomePost = {
   id?: string | null;
   title?: string | null;
-  external_link?: string | null;
+  slug?: string | null;
   summary?: string | null;
   content?: string | null;
   release_at?: string | null;
@@ -400,7 +400,7 @@ async function fetchHomePostsFromApi() {
       const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
       const title = String(item.title ?? "").trim();
       const externalLink = buildPostLink(
-        item.external_link || (title ? `/${title}` : undefined),
+        item.slug ? `/${item.slug}` : (title ? `/${title}` : undefined),
         item.id ? String(item.id) : "",
         "#",
       );
@@ -626,7 +626,7 @@ export function useEventCalendarPosts(currentMonth: Date) {
             const thumbnailPath = item.thumbnail?.path ?? item.thumbnail?.original ?? null;
             const title = String(item.title ?? "").trim();
             const externalLink = buildPostLink(
-              item.external_link || (title ? `/${title}` : undefined),
+              item.slug ? `/${item.slug}` : (title ? `/${title}` : undefined),
               item.id ? String(item.id) : "",
               "#",
             );

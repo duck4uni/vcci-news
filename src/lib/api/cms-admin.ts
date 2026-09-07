@@ -171,7 +171,6 @@ interface CmsCategoryNode extends CmsCategoryItem {
 interface CmsRawPostItem {
   id?: string;
   title?: string;
-  external_link?: string | null;
   content?: string | null;
   release_at?: string | null;
   is_active?: boolean | null;
@@ -803,7 +802,6 @@ export async function createCmsNewsItem(input: {
     slug: input.slug,
     summary: input.summary,
     type: input.type === "baiviettrang" ? "page" : "news",
-    external_link: input.slug ? `/${input.slug}` : "/",
     content: input.summary || "",
     category_ids: input.category_ids,
     thumbnail_id: input.thumbnail_id ?? null,
@@ -864,7 +862,6 @@ export async function updateCmsNewsItem(
     slug: input.slug,
     summary: input.summary,
     type: input.type === "baiviettrang" ? "page" : "news",
-    external_link: input.slug ? `/${input.slug}` : "/",
     content: input.summary || "",
     category_ids: input.category_ids,
     thumbnail_id: input.thumbnail_id ?? null,

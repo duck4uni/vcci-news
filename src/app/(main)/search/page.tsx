@@ -50,7 +50,7 @@ function SearchResultItem({ item, index }: { item: DynamicPostItem; index: numbe
   return (
     <article className="border-b border-[#eceff3] pb-8 last:border-b-0">
       <Link
-        href={buildDynamicPostHref(item.external_link, item.id)}
+        href={buildDynamicPostHref(item.slug, item.id)}
         className="group grid gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
       >
         <div className="overflow-hidden rounded-md bg-[#edf1f5]">

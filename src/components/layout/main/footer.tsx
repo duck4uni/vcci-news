@@ -87,6 +87,7 @@ function Footer() {
   const [emailError, setEmailError] = useState("");
   const [checkError, setCheckError] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [submitting, setSubmitting] = useState(false);
 
   const { data: siteInformationResponse } =
@@ -156,6 +157,7 @@ function Footer() {
     let hasError = false;
 
     setMessage("");
+    setMessageType("success");
 
     if (!trimmedEmail) {
       setEmailError("Thông tin bắt buộc");
@@ -182,13 +184,15 @@ function Footer() {
       await postApiV10NewsletterSubscription({ email: trimmedEmail.trim() });
       setEmail("");
       setAccepted(false);
+      setMessageType("success");
       setMessage("Đăng ký nhận thông tin thành công.");
     } catch (error) {
-      setMessage(
+      const errorMessage =
         error instanceof Error
           ? error.message
-          : "Không thể đăng ký nhận thông tin.",
-      );
+          : "Không thể đăng ký nhận thông tin.";
+      setMessageType("error");
+      setMessage(errorMessage);
     } finally {
       setSubmitting(false);
     }
@@ -251,7 +255,17 @@ function Footer() {
               ) : null}
 
               {message ? (
-                <p className="mt-2 text-[12px] text-[#b8d8ff]">{message}</p>
+                <div
+                  className={`mt-3 flex items-center gap-2 rounded-[6px] px-4 py-3 text-[13px] font-medium ${messageType === "success"
+                      ? "bg-[#1a8754] text-white"
+                      : "bg-[#c0392b] text-white"
+                    }`}
+                >
+                  <span className="text-base leading-none">
+                    {messageType === "success" ? "✓" : "✕"}
+                  </span>
+                  <span>{message}</span>
+                </div>
               ) : null}
             </div>
           </div>
@@ -346,7 +360,7 @@ function Footer() {
               href="https://vcci-hcm.org.vn/"
               target="_blank"
               rel="noreferrer"
-              className="font-semibold text-white transition-colors hover:text-[#f7b500]"
+              className="font-medium text-white transition-colors hover:text-[#f7b500]"
             >
               VCCI-HCM
             </a>
@@ -355,7 +369,7 @@ function Footer() {
               href="https://meu.com.vn/"
               target="_blank"
               rel="noreferrer"
-              className="font-semibold text-white transition-colors hover:text-[#f7b500]"
+              className="font-medium text-white transition-colors hover:text-[#f7b500]"
             >
               MEU Solutions
             </a>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import links from "@links/index";
 import {
   fetchDynamicPostById,
-  fetchDynamicPostByExternalLink,
+  fetchDynamicPostBySlug,
   getDynamicPostSeoImage,
   getDynamicPostExcerpt,
   stripHtml,
@@ -66,7 +66,7 @@ export async function generateMetadata({
   try {
     post = postId
       ? await fetchDynamicPostById(postId)
-      : await fetchDynamicPostByExternalLink(path);
+      : await fetchDynamicPostBySlug(path);
   } catch {
     post = null;
   }

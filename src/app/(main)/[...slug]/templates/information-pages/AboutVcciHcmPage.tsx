@@ -80,7 +80,7 @@ function renderSummary(summary?: string) {
 type TinVcciApiRow = {
   id?: string | null;
   title?: string | null;
-  external_link?: string | null;
+  slug?: string | null;
   published_at?: string | null;
   release_at?: string | null;
   created_at?: string | null;
@@ -119,7 +119,7 @@ export default function AboutVcciHcmPage({
           ((response?.responseData?.rows ?? []) as unknown as TinVcciApiRow[]).map((item) => ({
             id: String(item.id ?? ""),
             title: String(item.title ?? "").trim(),
-            externalLink: buildDynamicPostHref(item.external_link?.trim() || "#", item.id ? String(item.id) : ""),
+            externalLink: buildDynamicPostHref(item.slug?.trim() || "#", item.id ? String(item.id) : ""),
             publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
             thumbnailUrl:
               links.resolveImageUrl(

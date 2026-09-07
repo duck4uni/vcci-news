@@ -151,7 +151,7 @@ export default function ArticlePage({ category, allCategories }: ArticlePageProp
                         className="border-b border-[#eceff3] pb-8 last:border-b-0"
                       >
                         <Link
-                          href={buildDynamicPostHref(item.external_link, item.id, category.id)}
+                          href={buildDynamicPostHref(item.slug, item.id, category.id)}
                           className="group grid items-center gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
                         >
                           <div className="relative overflow-hidden rounded-md bg-[#edf1f5] aspect-[25/15] sm:aspect-[5/3]">
