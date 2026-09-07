@@ -103,7 +103,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                     return (
                       <Link
                         key={item.id}
-                        href={buildDynamicPostHref(item.external_link, item.id, category.id)}
+                        href={buildDynamicPostHref(item.slug, item.id, category.id)}
                         className="group block"
                       >
                         <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">

@@ -52,7 +52,6 @@ function formatFieldName(field: string): string {
     slug: "Slug",
     published_at: "Ngày xuất bản",
     expired_at: "Ngày hết hạn",
-    external_link: "Liên kết ngoài",
   };
   return fieldMap[field] || field;
 }

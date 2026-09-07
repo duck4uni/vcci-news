@@ -115,7 +115,7 @@ export default function MemberRegistrationPage({ post }: MemberRegistrationPageP
 
           <div className="flex justify-center pt-4">
             <a
-              href={`${links.externalApiOrigin}/dang-ky`}
+              href={`https://vccihcm.vn/dang-ky`}
               target="_blank"
               rel="noreferrer"
               className="inline-flex min-w-[220px] items-center justify-center rounded-[4px] bg-[#2450b5] px-6 py-4 text-[18px] font-semibold text-white transition-colors hover:bg-[#173f9f]"

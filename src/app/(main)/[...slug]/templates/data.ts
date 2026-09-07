@@ -46,6 +46,7 @@ type RawPostUser = {
 
 type RawPostSectionImage = {
   position?: number | null;
+  caption?: string | null;
   image?: {
     id?: string | null;
     name?: string | null;
@@ -60,7 +61,6 @@ type RawPostItem = {
   id?: string | null;
   title?: string | null;
   slug?: string | null;
-  external_link?: string | null;
   content?: string | null;
   summary?: string | null;
   release_at?: string | null;
@@ -126,11 +126,13 @@ const normalizePath = (value?: string | null) => {
 };
 
 export const buildDynamicPostHref = (
-  path?: string | null,
+  slug?: string | null,
   _id?: string | null,
   _categoryId?: string | null,
 ) => {
-  return normalizePath(path);
+  const trimmed = (slug ?? "").trim();
+  if (!trimmed) return "#";
+  return normalizePath(trimmed);
 };
 
 const getSlugFromPath = (value?: string | null) => {
@@ -188,6 +190,7 @@ const mapPostContentSections = (item: RawPostItem): DynamicPostContentSection[] 
           typeof item?.position === "number"
             ? item.position
             : imageIndex + 1,
+        caption: item?.caption ?? null,
         image: item?.image
           ? {
             id: String(item.image.id ?? ""),
@@ -228,7 +231,6 @@ export const mapPost = (item: RawPostItem): DynamicPostItem => ({
   id: String(item.id ?? ""),
   title: String(item.title ?? "").trim(),
   slug: String(item.slug ?? "").trim(),
-  external_link: normalizePath(item.external_link),
   content: String(item.content ?? ""),
   summary: String(item.summary ?? ""),
   release_at: item.release_at ?? null,
@@ -360,26 +362,16 @@ export async function fetchDynamicPostById(id: string) {
   return post.id && post.title ? post : null;
 }
 
-export async function fetchDynamicPostByExternalLink(path: string) {
+export async function fetchDynamicPostBySlug(path: string) {
   const normalizedPath = normalizePath(path);
   const slug = getSlugFromPath(normalizedPath);
 
-  if (slug) {
-    const slugResult = await fetchDynamicPostList({
-      page: 1,
-      pageSize: 1,
-      filters: buildVisibleNewsFilters([`slug==${slug}`]),
-    });
-
-    if (slugResult.rows[0]) {
-      return slugResult.rows[0];
-    }
-  }
+  if (!slug) return null;
 
   const result = await fetchDynamicPostList({
     page: 1,
     pageSize: 1,
-    filters: buildVisibleNewsFilters([`external_link==${normalizedPath}`]),
+    filters: buildVisibleNewsFilters([`slug==${slug}`]),
   });
 
   return result.rows[0] ?? null;
@@ -729,7 +721,7 @@ export function useDynamicPostDetail(postId: string, routePath: string, options:
     queryFn: () =>
       postId
         ? fetchDynamicPostById(postId)
-        : fetchDynamicPostByExternalLink(routePath),
+        : fetchDynamicPostBySlug(routePath),
     enabled: options.enabled !== false,
     staleTime: options.staleTime ?? 60 * 1000,
   });

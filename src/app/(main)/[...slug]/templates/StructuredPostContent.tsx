@@ -39,6 +39,11 @@ function StructuredImageSection({ section }: { section: DynamicPostContentSectio
               height={800}
               className="h-auto w-full object-contain"
             />
+            {item.caption ? (
+              <figcaption className="mt-2 text-center text-sm text-gray-600">
+                {item.caption}
+              </figcaption>
+            ) : null}
           </figure>
         );
       })}
