@@ -6,11 +6,11 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { PostMutateContentStructure } from './postMutateContentStructure';
+import type { PostMutateEventDates } from './postMutateEventDates';
 
 export interface PostMutate {
   title?: string;
   thumbnail_id?: string;
-  external_link?: string;
   content?: string;
   release_at?: string;
   is_active?: boolean;
@@ -30,5 +30,5 @@ export interface PostMutate {
   location?: string;
   participation_fee?: string;
   content_structure?: PostMutateContentStructure;
-  event_dates?: string;
+  event_dates?: PostMutateEventDates;
 }

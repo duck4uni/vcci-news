@@ -6,12 +6,12 @@
  * OpenAPI spec version: 1.0.0
  */
 import type { PostContentStructure } from './postContentStructure';
+import type { PostEventDates } from './postEventDates';
 
 export interface Post {
   id?: string;
   title?: string;
   thumbnail_id?: string;
-  external_link?: string;
   content?: string;
   release_at?: string;
   is_active?: boolean;
@@ -35,5 +35,5 @@ export interface Post {
   location?: string;
   participation_fee?: string;
   content_structure?: PostContentStructure;
-  event_dates?: string;
+  event_dates?: PostEventDates;
 }
