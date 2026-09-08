@@ -1,0 +1,162 @@
+@import '../styles/index.css';
+/* shared styles are in `src/styles/index.css` */
+
+:root {
+  --primary-color: #0043ce;
+  --secondary-color: #193c3e;
+  --background-color: #f7f7f7;
+  --text-color: #333333;
+  --border-color: #eeeeee;
+
+  /* Tiptap text colors */
+  --tiptap-stone-foreground: oklch(0.27 0.01 34);
+  --tiptap-zinc-foreground: oklch(0.27 0.01 286);
+  --tiptap-slate-foreground: oklch(0.28 0.04 260);
+  --tiptap-red-foreground: oklch(0.44 0.16 27);
+  --tiptap-orange-foreground: oklch(0.47 0.14 37);
+  --tiptap-amber-foreground: oklch(0.47 0.12 46);
+  --tiptap-yellow-foreground: oklch(0.48 0.1 62);
+  --tiptap-lime-foreground: oklch(0.45 0.11 131);
+  --tiptap-green-foreground: oklch(0.45 0.11 151);
+  --tiptap-emerald-foreground: oklch(0.43 0.09 167);
+  --tiptap-teal-foreground: oklch(0.44 0.07 188);
+  --tiptap-cyan-foreground: oklch(0.45 0.08 224);
+  --tiptap-sky-foreground: oklch(0.44 0.1 241);
+  --tiptap-blue-foreground: oklch(0.42 0.18 266);
+  --tiptap-indigo-foreground: oklch(0.4 0.18 277);
+  --tiptap-violet-foreground: oklch(0.43 0.21 293);
+  --tiptap-purple-foreground: oklch(0.44 0.2 304);
+  --tiptap-fuchsia-foreground: oklch(0.45 0.19 325);
+  --tiptap-pink-foreground: oklch(0.46 0.17 4);
+  --tiptap-rose-foreground: oklch(0.45 0.17 14);
+
+  --tiptap-stone: oklch(0.72 0.01 56);
+  --tiptap-zinc: oklch(0.71 0.01 286);
+  --tiptap-slate: oklch(0.71 0.04 257);
+  --tiptap-red: oklch(0.71 0.17 22);
+  --tiptap-orange: oklch(0.76 0.16 56);
+  --tiptap-amber: oklch(0.84 0.16 84);
+  --tiptap-yellow: oklch(0.86 0.17 92);
+  --tiptap-lime: oklch(0.85 0.21 129);
+  --tiptap-green: oklch(0.8 0.18 152);
+  --tiptap-emerald: oklch(0.77 0.15 163);
+  --tiptap-teal: oklch(0.78 0.13 182);
+  --tiptap-cyan: oklch(0.8 0.13 212);
+  --tiptap-sky: oklch(0.75 0.14 233);
+  --tiptap-blue: oklch(0.71 0.14 255);
+  --tiptap-indigo: oklch(0.68 0.16 277);
+  --tiptap-violet: oklch(0.71 0.16 294);
+  --tiptap-purple: oklch(0.72 0.18 306);
+  --tiptap-fuchsia: oklch(0.75 0.21 322);
+  --tiptap-pink: oklch(0.73 0.18 350);
+  --tiptap-rose: oklch(0.72 0.17 13);
+}
+
+@layer components {
+  .tiptap {
+    @apply border-gray-200;
+
+    mark {
+      @apply rounded-md p-1;
+    }
+
+    a {
+      @apply cursor-pointer text-blue-600 underline-offset-4 hover:underline;
+    }
+
+    blockquote {
+      @apply mx-2 border-l-4 pl-2;
+    }
+
+    ul,
+    ol {
+      @apply my-1 ms-4 me-0.5 py-1;
+      li p {
+        @apply mt-0.5 mb-0.5;
+      }
+    }
+
+    ul {
+      @apply list-disc;
+    }
+    ol {
+      @apply list-decimal;
+    }
+
+    ul[data-type='taskList'] {
+      @apply ml-0 list-none p-0;
+
+      li {
+        @apply flex items-start gap-2;
+
+        label {
+          @apply pt-0.5 select-none;
+        }
+
+        div {
+          @apply flex-1;
+        }
+
+        p {
+          @apply m-0;
+        }
+
+        &[data-checked='true'] {
+          p {
+            @apply line-through opacity-40;
+          }
+        }
+      }
+
+      input[type='checkbox'] {
+        @apply cursor-pointer;
+      }
+
+      ul[data-type='taskList'] {
+        @apply m-0;
+      }
+    }
+
+    table {
+      @apply m-0 w-full table-fixed border-collapse overflow-hidden;
+
+      th,
+      td {
+        @apply relative box-border min-w-1 border p-4 align-top font-normal;
+      }
+
+      th {
+        @apply bg-primary text-primary-foreground whitespace-nowrap;
+      }
+
+      .selectedCell:after {
+        @apply pointer-events-none absolute top-0 right-0 bottom-0 left-0 bg-gray-200/40 content-[''];
+      }
+
+      .column-resize-handle {
+        @apply bg-secondary pointer-events-none absolute top-0 -right-0.5 -bottom-0.5 w-1;
+      }
+    }
+
+    .tableWrapper {
+      @apply m-0 overflow-x-auto;
+    }
+
+    &.resize-cursor {
+      @apply cursor-col-resize;
+    }
+
+    /* Placeholder /
+    p.is-editor-empty:first-child::before {
+      @apply text-muted-foreground pointer-events-none content-[attr(data-placeholder)];
+    }
+
+    / Image */
+    img {
+      @apply rounded-md;
+      &.ProseMirror-selectednode {
+        @apply outline-2 outline-offset-2;
+      }
+    }
+  }
+}

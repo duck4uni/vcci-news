@@ -42,6 +42,3 @@ next-env.d.ts
 
 #vscode
 .vscode/
-
-# Windows reserved device name files (cannot be deleted normally)
-nul

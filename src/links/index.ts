@@ -1,20 +1,13 @@
-const externalApiOrigin = "https://vcci-hcm.org.vn";
-const imageEndpoint = `${externalApiOrigin}/uploads/`;
-
-export const resolveImageUrl = (path?: string | null) => {
-  const trimmed = path?.trim();
-  if (!trimmed) return "";
-  if (/^https?:\/\//i.test(trimmed) || trimmed.startsWith("blob:") || trimmed.startsWith("data:")) return trimmed;
-  return `${imageEndpoint}${trimmed.replace(/^\/+/, "")}`;
-};
+const backendHost = 'gateway.dev.meu-solutions.com'
 
 const links = {
-  resolveImageUrl,
-  analyticsGoogle: "G-C9TEK9BS4C",
-  siteURL: process.env.NEXT_PUBLIC_FRONTEND_HOST || "https://vcci-hcm.org.vn",
-  apiEndpoint: process.env.NEXT_PUBLIC_BACKEND_HOST || "",
-  externalApiOrigin,
-  externalApiEndpoint: `${externalApiOrigin}/swagger`,
-};
+  analyticsGoogle: 'G-C9TEK9BS4C',
+  // apiEndpoint: "http://localhost:3000/api/v1.0",
+  apiEndpoint: `https://${backendHost}/vcci/api/v1.0`,
+  // imageEndpoint: 'https://utc2.erp.meu-solutions.com',
+  imageEndpoint: `https://${backendHost}/vcci`,
+  backendHost,
+  siteURL: 'https://news.vccihcm.vn/',
+}
 
-export default links;
+export default links

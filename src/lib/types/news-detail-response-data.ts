@@ -2,6 +2,7 @@ export interface NewsDetailItem {
     id: string
     title: string
     thumbnail: string
+    external_link: string
     description: string
     release_at: string
     is_active: boolean

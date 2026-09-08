@@ -1,5 +1,6 @@
 const stripImagesAndHtml = (html?: string) => {
   if (!html) return ''
+  // remove img tags first
   const withoutImgs = html.replace(/<img[^>]*>/gi, '')
   // use DOMParser on client for robust extraction
   if (typeof window !== 'undefined' && typeof DOMParser !== 'undefined') {
