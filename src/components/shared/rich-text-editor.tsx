@@ -1,8 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import * as React from "react";
-import { useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { JoditEditorProps } from "jodit-react";
 
 const JoditEditor = dynamic(() => import("jodit-react").then((mod) => mod.default), {
@@ -204,13 +203,13 @@ export function AdminRichTextEditor({
   readOnly = false,
 }: AdminRichTextEditorProps) {
   const editor = useRef(null);
-  const [isFormatting, setIsFormatting] = React.useState(false);
-  const [localValue, setLocalValue] = React.useState(value);
+  const [isFormatting, setIsFormatting] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
   const formatTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastValueRef = useRef(value);
 
   // Sync local value when prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isFormatting) {
       setLocalValue(value);
       lastValueRef.current = value;
@@ -226,7 +225,7 @@ export function AdminRichTextEditor({
 
   // Called by JoditEditor once the IJodit instance is ready. We use this to
   // attach a native paste listener to the editor's editable DOM element.
-  const handleEditorRef = React.useCallback((jodit: { editor?: HTMLElement }) => {
+  const handleEditorRef = useCallback((jodit: { editor?: HTMLElement }) => {
     // Clean up any previous listener
     pasteCleanupRef.current?.();
     pasteCleanupRef.current = null;
@@ -244,14 +243,14 @@ export function AdminRichTextEditor({
     };
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     return () => {
       pasteCleanupRef.current?.();
       pasteCleanupRef.current = null;
     };
   }, []);
 
-  const handleFormat = React.useCallback((html: string) => {
+  const handleFormat = useCallback((html: string) => {
     setIsFormatting(true);
     // Don't update localValue - keep showing previous content during formatting
 
@@ -274,7 +273,7 @@ export function AdminRichTextEditor({
     }, 3500); // 3.5s delay to show formatting message
   }, [onChange]);
 
-  const handleEditorChange = React.useCallback((html: string) => {
+  const handleEditorChange = useCallback((html: string) => {
     // Skip paste detection during cooldown after a recent format
     if (recentlyFormattedRef.current) {
       setLocalValue(html);
@@ -495,10 +494,9 @@ export function AdminRichTextEditor({
             value={localValue}
             config={config}
             onBlur={(nextContent) => {
-              const cleaned = cleanPastedHtml(nextContent);
-              setLocalValue(cleaned);
-              onChange(cleaned);
-              lastValueRef.current = cleaned;
+              setLocalValue(nextContent);
+              onChange(nextContent);
+              lastValueRef.current = nextContent;
             }}
             onChange={handleEditorChange}
           />
