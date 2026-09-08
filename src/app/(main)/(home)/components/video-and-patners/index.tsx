@@ -147,7 +147,7 @@ function VideoAndPartners() {
   return (
     <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
       <div className="flex-1">
-        <div className="mb-5 flex items-start justify-between gap-3">
+        <div className="mb-5 flex items-center justify-between gap-3">
           <div>
             <h2 className="client-section-title uppercase text-[#24469c]">
               Video
