@@ -29,7 +29,7 @@ const AppEditorContent: FC<AppEditorContentProps> = ({ value = '', className = '
 
     // 3. ✅ Xóa thẻ <a> nhưng giữ lại nội dung
     if (tagName === 'a') {
-      // Trả về children đã được xử lý (làm phẳng thẻ <a>)
+      // Tr? v? children d? du?c x? l? (l?m ph?ng th? <a>)
       return <>{children}</>;
     }
 

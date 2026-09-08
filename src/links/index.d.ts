@@ -1,7 +1,9 @@
 declare const links: {
+  resolveImageUrl: (path?: string | null) => string
   analyticsGoogle: string
   apiEndpoint: string
-  imageEndpoint: string
-  backendHost: string
+  externalApiOrigin: string
+  externalApiEndpoint: string
+  siteURL: string
 }
 export default links

@@ -1,115 +1,303 @@
-import ImageNext from "@/components/shared/image-next";
+'use client';
+
+import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
+import { SafeImage } from "@/components/shared/safe-image";
+import { ChevronRight } from "lucide-react";
 import memberImages from "@/constants/memberImages";
-import { ChevronsRight } from "lucide-react";
+import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/mockdata/bff-fallback";
+import { useGetOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
+import type { Organization } from "@/api/vcci-hcm/models";
 import Link from "next/link";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
-import "swiper/css/grid";
-import { GetNewsResponseType, NewsItem } from "@/api/types/news";
-import BASE_URL from "@/links/index";
-import { useGetNews } from "@/api/endpoints/news";
-import { Spinner } from "@/components/ui/spinner";
+import dayjs from "dayjs";
 
-const Members = () => {
-  const { data, isLoading } = useGetNews<GetNewsResponseType>(
-    {
-      filters: `page_config.code @=ket-noi-hoi-vien`,
+const MEMBER_CONNECTION_FALLBACK_IMAGE = "/home/20-2048x1365.webp";
+const VCCI_HCM_SITE_URL = "https://vccihcm.vn";
+const FEATURED_MEMBER_MORE_URL =
+  `${VCCI_HCM_SITE_URL}/giao-thuong-b2b?filters=users.status_id+%3D%3D+36ca1cc5-7b6e-4f9f-b973-69c5207deb62&sortField=created_at&sortOrder=ASC`;
+
+const MOCK_FEATURED_MEMBER_ROWS =
+  MOCK_FEATURED_MEMBERS_RESPONSE.responseData?.rows as unknown as Organization[] ?? [];
+
+const resolveMemberImage = (avatar: string | null | undefined, index: number) => {
+  if (avatar?.startsWith("http://") || avatar?.startsWith("https://")) {
+    return avatar;
+  }
+
+  if (avatar?.startsWith("/")) {
+    return `${VCCI_HCM_SITE_URL}${avatar}`;
+  }
+
+  return memberImages[index % memberImages.length] ?? "/img-error.png";
+};
+
+const getMemberDetailUrl = (orgLink: string | null | undefined) => {
+  if (orgLink) {
+    return `${VCCI_HCM_SITE_URL}/giao-thuong-b2b/doanh-nghiep/${orgLink}`;
+  }
+  return null;
+};
+
+function Members() {
+  const { memberConnectionPosts, categoryLinks, categoryNames } = useHomePosts();
+  const connectionPosts = memberConnectionPosts.slice(0, 2);
+  const sectionLink =
+    categoryLinks.get(categoryNames.ketNoiHoiVien.toLowerCase()) ?? "/hoi-vien/ket-noi-hoi-vien";
+
+  const { data: organizationsResponse, isLoading: featuredMembersLoading } =
+    useGetOrganizations<Organization[] | undefined>(
+      {
+        filters: "users.status_id==36ca1cc5-7b6e-4f9f-b973-69c5207deb62",
+        pageSize: "12",
+        sortField: "created_at",
+        sortOrder: "ASC",
+      },
+      {
+        query: {
+          staleTime: 60 * 1000,
+          select: (response) => {
+            const rows = (response as any)?.responseData?.rows ?? [];
+            return rows.length > 0 ? rows : MOCK_FEATURED_MEMBER_ROWS;
+          },
+        },
+      },
+    );
+
+  const featuredMembers = organizationsResponse ?? MOCK_FEATURED_MEMBER_ROWS;
+  const displayMembers = featuredMembers.slice(0, 9);
+
+  const renderMemberContent = () => {
+    if (featuredMembersLoading) {
+      return (
+        <div className="rounded-[14px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
+          Đang tải dữ liệu...
+        </div>
+      );
     }
-  );
+
+    if (displayMembers.length === 0) {
+      return (
+        <div className="rounded-[14px] bg-white/40 px-5 py-10 text-center text-sm text-[#1e2f5e]/70">
+          Chưa có thông tin.
+        </div>
+      );
+    }
+
+    return (
+      <Swiper
+        modules={[Autoplay]}
+        autoplay={{ delay: 4200, disableOnInteraction: false }}
+        observer
+        observeParents
+        updateOnWindowResize
+        slidesPerView="auto"
+        spaceBetween={16}
+        className="w-full"
+      >
+        {displayMembers.map((member, index) => {
+          const detailUrl = getMemberDetailUrl(member.org_link);
+          return (
+            <SwiperSlide
+              key={member.id}
+              className="!h-auto !w-full md:!w-[calc(50%-8px)] xl:!w-[calc(33.333%-10.67px)]"
+            >
+              <article className="rounded-[14px] bg-white p-[7px] shadow-[0_10px_22px_rgba(158,114,0,0.16)]">
+                {detailUrl ? (
+                  <a
+                    href={detailUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block"
+                  >
+                    <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
+                      <div className="flex h-full w-full max-w-[260px] items-center justify-center">
+                        <SafeImage
+                          src={resolveMemberImage(member.avatar, index)}
+                          fallbackSrc="/img-error.png"
+                          alt={member.name ?? ""}
+                          width={260}
+                          height={180}
+                          className="h-[180px] w-[260px] max-w-full object-contain"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e] transition-colors hover:text-[#20449a]">
+                      {member.name}
+                    </h3>
+                  </a>
+                ) : (
+                  <>
+                    <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
+                      <div className="flex h-full w-full max-w-[260px] items-center justify-center">
+                        <SafeImage
+                          src={resolveMemberImage(member.avatar, index)}
+                          fallbackSrc="/img-error.png"
+                          alt={member.name ?? ""}
+                          width={260}
+                          height={180}
+                          className="h-[180px] w-[260px] max-w-full object-contain"
+                        />
+                      </div>
+                    </div>
+                    <h3 className="mt-3 line-clamp-2 min-h-[40px] px-1 text-center text-sm font-semibold leading-5 text-[#1e2f5e]">
+                      {member.name}
+                    </h3>
+                  </>
+                )}
+              </article>
+            </SwiperSlide>
+          );
+        })}
+      </Swiper>
+    );
+  };
+
   return (
-    <section className="flex flex-col lg:flex-row gap-5 pb-10 mb-0">
-      {/* LEFT: HỘI VIÊN TIÊU BIỂU */}
-      <aside className="w-full lg:w-1/3 flex-1 bg-[#e8c518] p-5">
-        <div className="flex justify-between items-center mb-3">
-          <h2 className="text-xl font-bold uppercase text-[#063e8e]">
-            Hội viên tiêu biểu
-          </h2>
+    <section className="flex flex-col gap-5 pb-8 xl:flex-row xl:items-stretch">
+      <aside className="flex-1 rounded-[16px] bg-[#f7b500] p-4 shadow-[0_18px_34px_rgba(247,181,0,0.18)] md:p-5">
+        <div className="flex items-center justify-between gap-3 pb-10">
+          <div>
+            <h2 className="client-section-title uppercase text-[#20449a]">
+              Hội viên tiêu biểu
+            </h2>
+            <div className="mt-2.5 h-1 w-10 rounded-full bg-white" />
+          </div>
+
           <Link
-            href="/danh-ba-hoi-vien"
-            className="text-[#063e8e] hover:underline text-sm font-medium"
+            href={FEATURED_MEMBER_MORE_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[#1e2f5e] transition-colors hover:text-[#20449a]"
           >
-            <ChevronsRight />
+            <ChevronRight className="h-5 w-5" />
           </Link>
         </div>
 
-        <hr className="border-[#063e8e] mb-5" />
-
-        <Swiper
-          modules={[Autoplay]}
-          autoplay={{ delay: 4000, disableOnInteraction: false }}
-          loop
-          slidesPerView={3}
-          spaceBetween={16}
-          breakpoints={{
-            0: { slidesPerView: 2, spaceBetween: 10 },
-            640: { slidesPerView: 3, spaceBetween: 16 },
-            1024: { slidesPerView: 3, spaceBetween: 24 },
-          }}
-          className="partner-swiper"
-        >
-          {memberImages.map((src, i) => (
-            <SwiperSlide key={i}>
-              <div className="flex justify-center items-center bg-white rounded-lg shadow p-3">
-                <ImageNext
-                  src={src}
-                  alt={`member-${i}`}
-                  width={160}
-                  height={160}
-                  sizes="(max-width:640px) 25vw,(max-width:1024px) 15vw,10vw"
-                  className="object-contain w-full h-full"
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
+        {renderMemberContent()}
       </aside>
 
-      {/* RIGHT: KẾT NỐI HỘI VIÊN */}
-      {isLoading ? (
-        <div className="flex justify-center items-center w-full h-64">
-          <Spinner />
-        </div>
-      ) : (
-        <aside className="w-full lg:w-[30%] py-5">
-          <div className="flex justify-between items-center mb-3">
-            <h2 className="text-xl font-bold uppercase text-[#063e8e]">
+      <aside className="w-full xl:w-[31%] xl:min-w-[320px]">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <h2 className="client-section-title uppercase text-[#24469c]">
               Kết nối hội viên
             </h2>
+            <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />
           </div>
-          <hr className="border-[#063e8e] mb-5" />
-          <Swiper
-            modules={[Autoplay]}
-            autoplay={{ delay: 4000, disableOnInteraction: false }}
-            loop
-            className="partner-swiper"
+
+          <Link
+            href={sectionLink}
+            className="text-[#24469c] transition-colors hover:text-[#1b55a1]"
           >
-            {data?.responseData.rows.map((news: NewsItem) => (
-              <SwiperSlide key={news.id}>
-                <a href={`${news.external_link}`}>
-                  <div className="w-full aspect-3/2 relative overflow-hidden mb-5">
-                    <ImageNext
-                      src={`${BASE_URL.imageEndpoint}${news.thumbnail}`}
-                      alt={news.title}
-                      width={600}
-                      height={400}
-                      sizes="(max-width:768px) 100vw,50vw"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bg-white opacity-90 bottom-5 left-5 right-5 p-5">
-                      <p className="text-[#063e8e] font-semibold text-sm sm:text-base z-10 line-clamp-3">
-                        {news.title}
-                      </p>
+            <ChevronRight className="h-5 w-5" />
+          </Link>
+        </div>
+
+        <div>
+          {connectionPosts.length > 0 ? (
+            <>
+              {/* Mobile + xl+: Swiper */}
+              <div className="md:hidden xl:block">
+                <Swiper
+                  modules={[Autoplay]}
+                  autoplay={{ delay: 4000, disableOnInteraction: false }}
+                  loop={connectionPosts.length > 1}
+                  slidesPerView={1}
+                  className="w-full overflow-hidden rounded-[14px]"
+                >
+                  {connectionPosts.map((item) => (
+                    <SwiperSlide key={item.id}>
+                      <Link
+                        href={item.externalLink}
+                        className="group relative block cursor-pointer overflow-hidden rounded-[14px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+                      >
+                        <div className="aspect-[16/10] overflow-hidden xl:aspect-[1.25/1]">
+                          <SafeImage
+                            src={item.thumbnail?.url}
+                            fallbackSrc={MEMBER_CONNECTION_FALLBACK_IMAGE}
+                            alt={item.thumbnail?.alt || item.title}
+                            width={520}
+                            height={420}
+                            className="h-full w-full object-cover object-[center_80%]"
+                          />
+                        </div>
+                        <div className="absolute inset-0 bg-linear-to-t from-[#0d2f5f]/85 via-[#0d2f5f]/30 to-transparent" />
+                        <div className="absolute inset-x-0 bottom-0 p-4">
+                          <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.32] text-white transition-colors duration-200 group-hover:text-[#f7b500]">
+                            {item.title}
+                          </h4>
+                          <div className="mt-1.5 flex items-center gap-2">
+                            {item.categories[0]?.name && (
+                              <>
+                                <span className="text-[12px] font-medium text-[#f7b500]">
+                                  {item.categories[0].name}
+                                </span>
+                                <span className="text-[12px] text-white/50">•</span>
+                              </>
+                            )}
+                            <p className="text-[12px] font-medium text-white/78">
+                              {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </div>
+
+              {/* md to < xl: Grid 2 columns */}
+              <div className="hidden gap-4 md:grid md:grid-cols-2 xl:hidden">
+                {connectionPosts.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.externalLink}
+                    className="group relative block cursor-pointer overflow-hidden rounded-[14px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
+                  >
+                    <div className="aspect-[16/10] overflow-hidden">
+                      <SafeImage
+                        src={item.thumbnail?.url}
+                        fallbackSrc={MEMBER_CONNECTION_FALLBACK_IMAGE}
+                        alt={item.thumbnail?.alt || item.title}
+                        width={520}
+                        height={420}
+                        className="h-full w-full object-cover object-[center_80%]"
+                      />
                     </div>
-                  </div>
-                </a>
-              </SwiperSlide>
-            ))}
-          </Swiper>
-        </aside>
-      )}
+                    <div className="absolute inset-0 bg-linear-to-t from-[#0d2f5f]/85 via-[#0d2f5f]/30 to-transparent" />
+                    <div className="absolute inset-x-0 bottom-0 p-4">
+                      <h4 className="line-clamp-2 text-[15px] font-bold leading-[1.32] text-white transition-colors duration-200 group-hover:text-[#f7b500]">
+                        {item.title}
+                      </h4>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        {item.categories[0]?.name && (
+                          <>
+                            <span className="text-[12px] font-medium text-[#f7b500]">
+                              {item.categories[0].name}
+                            </span>
+                            <span className="text-[12px] text-white/50">•</span>
+                          </>
+                        )}
+                        <p className="text-[12px] font-medium text-white/78">
+                          {dayjs(item.publishedAt || item.createdAt).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="rounded-[14px] bg-[#eef3fb] px-5 py-10 text-center text-sm text-[#7f8eab]">
+              Chưa có thông tin.
+            </div>
+          )}
+        </div>
+      </aside>
     </section>
   );
-};
+}
 
 export default Members;

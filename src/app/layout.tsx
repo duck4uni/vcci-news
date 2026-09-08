@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "./styles.css";
+import "./globals.css";
 import { Providers } from "./_providers";
 import React from "react";
 import links from "@links/index";

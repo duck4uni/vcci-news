@@ -1,0 +1,904 @@
+﻿"use client";
+
+import { toCmsSlug } from "@/lib/utils/cms-slug";
+import links from "@/links";
+import { categoryFallbackRows } from "@/mockdata/categories";
+import {
+  getApiV10Tag,
+  postApiV10Tag,
+  patchApiV10TagId,
+  deleteApiV10TagId,
+  postApiV10TagIds,
+} from "@/api/vcci-news/endpoints/tag";
+import {
+  getApiV10Category,
+  postApiV10Category,
+  putApiV10CategoryId,
+  deleteApiV10CategoryId,
+} from "@/api/vcci-news/endpoints/category";
+import {
+  getApiV10Post,
+  getApiV10PostId,
+  postApiV10Post,
+  putApiV10PostId,
+  deleteApiV10PostId,
+} from "@/api/vcci-news/endpoints/post";
+import {
+  getApiV10PostTagPostId,
+  postApiV10PostTagPostIdBulk,
+  deleteApiV10PostTagPostId,
+} from "@/api/vcci-news/endpoints/post-tag";
+
+export type CmsHeaderCategoryType = "category" | "page" | "news";
+
+export interface CmsTagItem {
+  id: string;
+  name: string;
+  slug: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CmsCategoryItem {
+  id: string;
+  name: string;
+  slug: string;
+  type: string;
+  url?: string | null;
+  sort_order?: number | null;
+  parent_id?: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CmsFileItem {
+  id: string;
+  path?: string;
+  original?: string;
+  mime?: string;
+}
+
+export interface CmsPostContentImage {
+  position: number;
+  caption: string;
+  image: {
+    id: string;
+    name: string;
+    alt: string;
+    url: string;
+  };
+}
+
+export interface CmsPostContentSection {
+  id: string;
+  type: "text" | "image";
+  position: number;
+  content: string;
+  image_columns: number;
+  image_rows: number;
+  images: CmsPostContentImage[];
+}
+
+export interface CmsUserSummary {
+  id: string;
+  email: string;
+  username: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string;
+  avatar_url: string | null;
+}
+
+export interface CmsNewsItem {
+  id: string;
+  title: string;
+  slug: string;
+  summary: string;
+  type: "tintuc" | "baiviettrang";
+  header_category_id: string;
+  category_ids: string[];
+  tagsearch_values: string[];
+  tag_ids: string[];
+  is_featured: boolean;
+  thumbnail: {
+    id: string;
+    name: string;
+    alt: string;
+    url: string;
+  } | null;
+  is_hidden: boolean;
+  created_at: string;
+  updated_at: string;
+  published_at: string;
+  expired_at: string;
+  started_at: string;
+  ended_at: string;
+  registration_deadline: string;
+  location: string;
+  participation_fee: string;
+  event_dates: string[];
+  post_content: CmsPostContentSection[];
+  creator: CmsUserSummary | null;
+  editor: CmsUserSummary | null;
+}
+
+export interface CmsHeaderCategoryItem {
+  id: string;
+  code: string;
+  name: string;
+  slug: string;
+  static_link: string;
+  sort_order: number;
+  type: CmsHeaderCategoryType;
+  is_article: boolean;
+  parent_id: string | null;
+  api_parent_id: string | null;
+  level: number;
+  category_ids: string[];
+  tagsearch_values: string[];
+  description?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+interface CmsPagedResult<T> {
+  count: number;
+  page?: number;
+  pageSize?: number;
+  rows: T[];
+}
+
+interface CmsPageConfigNode {
+  id: string;
+  code?: string | null;
+  name?: string | null;
+  static_link?: string | null;
+  static_link_en?: string | null;
+  is_article?: boolean | null;
+  level?: number | null;
+  sort_order?: number | null;
+  slug?: string | null;
+  description?: string | null;
+  type?: string | null;
+  categories?: string[];
+  children?: CmsPageConfigNode[];
+}
+
+interface CmsCategoryNode extends CmsCategoryItem {
+  children?: CmsCategoryNode[];
+}
+
+interface CmsRawPostItem {
+  id?: string;
+  title?: string;
+  content?: string | null;
+  release_at?: string | null;
+  is_active?: boolean | null;
+  release_mode?: string | null;
+  slug?: string | null;
+  summary?: string | null;
+  page_config_id?: string | null;
+  created_by?: string | null;
+  updated_by?: string | null;
+  status?: string | null;
+  type?: string | null;
+  categories?: CmsCategoryItem[];
+  thumbnail?: CmsFileItem | null;
+  is_featured?: boolean | null;
+  is_hidden?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  published_at?: string | null;
+  expired_at?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  registration_deadline?: string | null;
+  location?: string | null;
+  participation_fee?: string | null;
+  event_dates?: string[] | null;
+  content_structure?: Record<string, unknown> | null;
+  creator?: CmsRawUser | null;
+  editor?: CmsRawUser | null;
+}
+
+interface CmsRawUser {
+  id?: string | null;
+  email?: string | null;
+  username?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  full_name?: string | null;
+  avatar_url?: string | null;
+}
+
+interface CmsPivotItem {
+  post_id?: string;
+  category_id?: string;
+  tag_id?: string;
+  created_at?: string;
+}
+
+const normalizeUser = (user: CmsRawUser | null | undefined): CmsUserSummary | null => {
+  if (!user || typeof user !== "object" || !user.id) return null;
+  const firstName = String(user.first_name ?? "").trim();
+  const lastName = String(user.last_name ?? "").trim();
+  const fullName =
+    String(user.full_name ?? "").trim() ||
+    [firstName, lastName].filter(Boolean).join(" ").trim() ||
+    String(user.username ?? "").trim() ||
+    String(user.email ?? "").trim();
+  return {
+    id: String(user.id),
+    email: String(user.email ?? ""),
+    username: user.username ? String(user.username) : null,
+    first_name: firstName || null,
+    last_name: lastName || null,
+    full_name: fullName,
+    avatar_url: user.avatar_url ? String(user.avatar_url) : null,
+  };
+};
+
+const normalizeDateTimeInput = (value?: string | null) => {
+  if (!value) return "";
+  return value.length >= 16 ? value.slice(0, 16) : value;
+};
+
+const toSlugFromPath = (staticLink?: string | null) => {
+  const normalized = (staticLink ?? "").trim();
+  if (!normalized || normalized === "/") return "";
+  const segments = normalized.split("/").filter(Boolean);
+  return segments.at(-1) ?? "";
+};
+
+const deriveHeaderType = (node: CmsPageConfigNode): CmsHeaderCategoryType => {
+  if ((node.children?.length ?? 0) > 0) return "category";
+  if (node.type === "news" || node.type === "page" || node.type === "category") {
+    return node.type;
+  }
+  return node.is_article ? "news" : "page";
+};
+
+const deriveCategoryHeaderType = (type?: string | null): CmsHeaderCategoryType => {
+  if (type === "category") return "category";
+  if (type === "news") return "news";
+  return "page";
+};
+
+const normalizeTagNames = (values: string[]) => {
+  const seen = new Set<string>();
+
+  return values
+    .map((value) => value.trim())
+    .filter((value) => {
+      if (!value) return false;
+      const key = value.toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+};
+
+const parsePostContent = (contentStructure?: Record<string, unknown> | null): CmsPostContentSection[] => {
+  const sections = Array.isArray(contentStructure?.post_content)
+    ? (contentStructure?.post_content as Record<string, unknown>[])
+    : [];
+
+  return sections.map((section, index) => {
+    const images = Array.isArray(section.images) ? (section.images as Record<string, unknown>[]) : [];
+
+    return {
+      id: typeof section.id === "string" ? section.id : `section-${index + 1}`,
+      type: section.type === "image" ? "image" : "text",
+      position: typeof section.position === "number" ? section.position : index + 1,
+      content: typeof section.content === "string" ? section.content : "",
+      image_columns:
+        typeof section.image_columns === "number" ? section.image_columns : 2,
+      image_rows: typeof section.image_rows === "number" ? section.image_rows : 2,
+      images: images.map((image, imageIndex) => ({
+        position: typeof image.position === "number" ? image.position : imageIndex + 1,
+        caption: typeof image.caption === "string" ? image.caption : "",
+        image: {
+          id: typeof image.image === "object" && image.image && "id" in image.image
+            ? String((image.image as Record<string, unknown>).id ?? "")
+            : "",
+          name:
+            typeof image.image === "object" && image.image && "name" in image.image
+              ? String((image.image as Record<string, unknown>).name ?? "")
+              : "",
+          alt:
+            typeof image.image === "object" && image.image && "alt" in image.image
+              ? String((image.image as Record<string, unknown>).alt ?? "")
+              : "",
+          url:
+            typeof image.image === "object" && image.image && "url" in image.image
+              ? String((image.image as Record<string, unknown>).url ?? "")
+              : "",
+        },
+      })),
+    };
+  });
+};
+
+const parseLegacyPostContent = (content?: string | null): CmsPostContentSection[] => {
+  const normalizedContent = typeof content === "string" ? content.trim() : "";
+
+  if (!normalizedContent) {
+    return [];
+  }
+
+  return [
+    {
+      id: "legacy-content-section",
+      type: "text",
+      position: 1,
+      content: normalizedContent,
+      image_columns: 2,
+      image_rows: 2,
+      images: [],
+    },
+  ];
+};
+
+const transformPost = (
+  post: CmsRawPostItem,
+  tagMap?: Map<string, CmsTagItem[]>,
+): CmsNewsItem => {
+  const tagItems = tagMap?.get(post.id ?? "") ?? [];
+  const categories = Array.isArray(post.categories) ? post.categories : [];
+  const primaryCategory = categories[0] ?? null;
+  const primaryCategoryType = primaryCategory?.type ?? null;
+  const structuredContent = parsePostContent(post.content_structure);
+  const fallbackContent =
+    structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(post.content);
+
+  return {
+    id: post.id ?? "",
+    title: post.title ?? "",
+    slug: post.slug ?? "",
+    summary: post.summary ?? "",
+    type:
+      post.type === "page" ||
+        primaryCategoryType === "post" ||
+        primaryCategoryType === "page"
+        ? "baiviettrang"
+        : "tintuc",
+    header_category_id: primaryCategory?.id ?? "",
+    category_ids: categories.map((item) => item.id),
+    tagsearch_values: tagItems.map((item) => item.name),
+    tag_ids: tagItems.map((item) => item.id),
+    is_featured: Boolean(post.is_featured),
+    thumbnail: post.thumbnail?.id
+      ? {
+        id: post.thumbnail.id,
+        name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+        alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+        url: links.resolveImageUrl(post.thumbnail.path),
+      }
+      : null,
+    is_hidden: Boolean(post.is_hidden),
+    created_at: post.created_at ?? "",
+    updated_at: post.updated_at ?? "",
+    published_at: normalizeDateTimeInput(post.published_at ?? post.release_at),
+    expired_at: normalizeDateTimeInput(post.expired_at),
+    started_at: normalizeDateTimeInput(post.started_at),
+    ended_at: normalizeDateTimeInput(post.ended_at),
+    registration_deadline: normalizeDateTimeInput(post.registration_deadline),
+    location: post.location ?? "",
+    participation_fee: post.participation_fee ?? "",
+    event_dates: Array.isArray(post.event_dates)
+      ? post.event_dates.filter((d): d is string => typeof d === "string")
+      : [],
+    post_content: fallbackContent,
+    creator: normalizeUser(post.creator),
+    editor: normalizeUser(post.editor),
+  };
+};
+
+async function fetchAllTagsInternal() {
+  const response = await getApiV10Tag({
+    page: 1,
+    pageSize: 10,
+    sortField: "name",
+    sortOrder: "asc",
+  });
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsTagItem>;
+  return result.rows ?? [];
+}
+
+async function fetchTagsForPost(postId: string) {
+  const response = await getApiV10PostTagPostId(postId);
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsPivotItem>;
+  const tagIds = (result.rows ?? []).map((item) => item.tag_id).filter(Boolean) as string[];
+
+  if (tagIds.length === 0) return [];
+
+  const tagsResponse = await postApiV10TagIds({ tag_ids: tagIds });
+  return (tagsResponse.responseData ?? []) as CmsTagItem[];
+}
+
+function buildHeaderItemsFromTree(
+  node: CmsPageConfigNode,
+  rootId: string,
+  parentId: string | null = null,
+): CmsHeaderCategoryItem[] {
+  const rows: CmsHeaderCategoryItem[] = [];
+  const children = Array.isArray(node.children) ? node.children : [];
+
+  children.forEach((child) => {
+    rows.push({
+      id: child.id,
+      code: child.code ?? toSlugFromPath(child.static_link) ?? child.id,
+      name: child.name ?? "",
+      slug: child.slug ?? toSlugFromPath(child.static_link),
+      static_link: child.static_link ?? "",
+      sort_order: child.sort_order ?? 0,
+      type: deriveHeaderType(child),
+      is_article: Boolean(child.is_article),
+      parent_id: parentId,
+      api_parent_id: child.id ? node.id : rootId,
+      level: child.level ?? (parentId ? 2 : 1),
+      category_ids: Array.isArray(child.categories) ? child.categories : [],
+      tagsearch_values: [],
+      description: child.description ?? "",
+    });
+
+    rows.push(...buildHeaderItemsFromTree(child, rootId, child.id));
+  });
+
+  return rows;
+}
+
+function buildCategoryTree(rows: CmsCategoryItem[]) {
+  const nodeMap = new Map<string, CmsCategoryNode>();
+  const roots: CmsCategoryNode[] = [];
+  const sortNodes = (nodes: CmsCategoryNode[]) => {
+    nodes.sort((left, right) => {
+      const leftOrder = left.sort_order ?? Number.MAX_SAFE_INTEGER;
+      const rightOrder = right.sort_order ?? Number.MAX_SAFE_INTEGER;
+
+      if (leftOrder !== rightOrder) return leftOrder - rightOrder;
+      return left.name.localeCompare(right.name, "vi");
+    });
+  };
+
+  rows.forEach((row) => {
+    nodeMap.set(row.id, { ...row, children: [] });
+  });
+
+  rows.forEach((row) => {
+    const node = nodeMap.get(row.id);
+    if (!node) return;
+
+    if (row.parent_id) {
+      const parent = nodeMap.get(row.parent_id);
+      if (parent) {
+        parent.children?.push(node);
+        sortNodes(parent.children ?? []);
+        return;
+      }
+    }
+
+    roots.push(node);
+  });
+
+  sortNodes(roots);
+  return roots;
+}
+
+function buildHeaderItemsFromCategories(
+  nodes: CmsCategoryNode[],
+  parentId: string | null = null,
+  depth = 0,
+): CmsHeaderCategoryItem[] {
+  return nodes.flatMap((node, index) => {
+    const type = deriveCategoryHeaderType(node.type);
+    const item: CmsHeaderCategoryItem = {
+      id: node.id,
+      code: node.slug || node.id,
+      name: node.name,
+      slug: node.slug,
+      static_link: node.url ?? "",
+      sort_order: node.sort_order ?? index + 1,
+      type,
+      is_article: type === "news",
+      parent_id: parentId,
+      api_parent_id: node.parent_id ?? null,
+      level: depth + 1,
+      category_ids: type === "category" ? [] : [node.id],
+      tagsearch_values: [],
+      description: "",
+      created_at: node.created_at,
+      updated_at: node.updated_at,
+    };
+
+    return [
+      item,
+      ...buildHeaderItemsFromCategories(node.children ?? [], node.id, depth + 1),
+    ];
+  });
+}
+
+const buildStaticLink = (slug: string, parentStaticLink?: string | null) => {
+  const cleanSlug = slug.trim().replace(/^\/+|\/+$/g, "");
+  if (!cleanSlug) {
+    return parentStaticLink?.trim() || "/";
+  }
+
+  const cleanParent = (parentStaticLink ?? "").trim().replace(/\/+$/, "");
+  if (!cleanParent || cleanParent === "/") {
+    return `/${cleanSlug}`;
+  }
+
+  return `${cleanParent}/${cleanSlug}`;
+};
+
+const toCategoryApiType = (type: CmsHeaderCategoryType) => {
+  if (type === "category") return "category";
+  if (type === "news") return "news";
+  return "page";
+};
+
+const toTagSlug = (value: string) => toCmsSlug(value);
+
+export async function fetchCmsCategories() {
+  const response = await getApiV10Category({
+    page: 1,
+    pageSize: 200,
+    sortField: "sort_order",
+    sortOrder: "asc",
+  }).catch(() => ({
+    responseData: {
+      count: categoryFallbackRows.length,
+      page: 1,
+      pageSize: 50,
+      rows: categoryFallbackRows as CmsCategoryItem[],
+    },
+  }));
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsCategoryItem>;
+
+  return (result.rows ?? []).filter((item) => item.type !== "category");
+}
+
+export async function fetchCmsTags() {
+  return fetchAllTagsInternal();
+}
+
+export async function fetchCmsTagsPage(params?: {
+  page?: number;
+  pageSize?: number;
+  filters?: string;
+}) {
+  const response = await getApiV10Tag({
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 10,
+    sortField: "name",
+    sortOrder: "asc",
+    filters: params?.filters?.trim() || undefined,
+  });
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsTagItem>;
+
+  return {
+    items: result.rows ?? [],
+    total: result.count ?? 0,
+    page: result.page ?? params?.page ?? 1,
+    pageSize: result.pageSize ?? params?.pageSize ?? 10,
+  };
+}
+
+export async function createCmsTag(input: { name: string; slug?: string }) {
+  const response = await postApiV10Tag({
+    name: input.name.trim(),
+    slug: input.slug?.trim() || toTagSlug(input.name),
+  });
+  return response.responseData as CmsTagItem;
+}
+
+export async function updateCmsTag(
+  id: string,
+  input: { name: string; slug?: string },
+) {
+  const response = await patchApiV10TagId(id, {
+    name: input.name.trim(),
+    slug: input.slug?.trim() || toTagSlug(input.name),
+  });
+  return response.responseData as CmsTagItem;
+}
+
+export async function deleteCmsTag(id: string) {
+  await deleteApiV10TagId(id);
+}
+
+export async function ensureTagsExist(names: string[]) {
+  const normalizedNames = normalizeTagNames(names);
+  if (normalizedNames.length === 0) return [];
+
+  const existingTags = await fetchAllTagsInternal();
+  const tagMap = new Map(
+    existingTags.map((item) => [item.name.trim().toLowerCase(), item]),
+  );
+
+  for (const name of normalizedNames) {
+    const key = name.toLowerCase();
+    if (tagMap.has(key)) continue;
+
+    const response = await postApiV10Tag({
+      name,
+      slug: toTagSlug(name),
+    });
+    const created = response.responseData as CmsTagItem;
+    tagMap.set(key, created);
+  }
+
+  return normalizedNames
+    .map((name) => tagMap.get(name.toLowerCase()))
+    .filter((item): item is CmsTagItem => Boolean(item));
+}
+
+export async function syncPostTags(postId: string, tagIds: string[]) {
+  const response = await getApiV10PostTagPostId(postId);
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsPivotItem>;
+  const currentIds = new Set(
+    (result.rows ?? []).map((item) => item.tag_id).filter(Boolean) as string[],
+  );
+  const nextIds = new Set(tagIds.filter(Boolean));
+
+  const toCreate = Array.from(nextIds).filter((id) => !currentIds.has(id));
+  const toDelete = Array.from(currentIds).filter((id) => !nextIds.has(id));
+
+  if (toCreate.length > 0) {
+    await postApiV10PostTagPostIdBulk(postId, { tag_ids: toCreate });
+  }
+
+  await Promise.all(
+    toDelete.map((tagId) =>
+      deleteApiV10PostTagPostId(postId, { tag_id: tagId }),
+    ),
+  );
+}
+
+export async function fetchHeaderConfigItems() {
+  const response = await getApiV10Category({
+    page: 1,
+    pageSize: 200,
+    sortField: "sort_order",
+    sortOrder: "asc",
+  }).catch(() => ({
+    responseData: {
+      count: categoryFallbackRows.length,
+      page: 1,
+      pageSize: 50,
+      rows: categoryFallbackRows as CmsCategoryItem[],
+    },
+  }));
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsCategoryItem>;
+  const roots = buildCategoryTree(result.rows ?? []);
+  const items = buildHeaderItemsFromCategories(roots);
+
+  return {
+    rootId: "",
+    rootStaticLink: "/",
+    items,
+  };
+}
+
+export async function createHeaderConfigItem(input: {
+  name: string;
+  slug: string;
+  sort_order: number;
+  type: CmsHeaderCategoryType;
+  ui_parent_id?: string | null;
+  api_parent_id: string;
+  parent_static_link?: string | null;
+}) {
+  const payload = {
+    name: input.name,
+    slug: input.slug || toTagSlug(input.name),
+    url: buildStaticLink(input.slug, input.parent_static_link),
+    sort_order: input.sort_order,
+    parent_id: input.api_parent_id || undefined,
+    type: toCategoryApiType(input.type),
+  };
+
+  const response = await postApiV10Category(payload);
+  return response.responseData as CmsCategoryItem;
+}
+
+export async function updateHeaderConfigItem(
+  id: string,
+  input: {
+    name: string;
+    slug: string;
+    sort_order: number;
+    type: CmsHeaderCategoryType;
+    api_parent_id: string;
+    parent_static_link?: string | null;
+  },
+) {
+  const payload = {
+    name: input.name,
+    slug: input.slug || toTagSlug(input.name),
+    url: buildStaticLink(input.slug, input.parent_static_link),
+    sort_order: input.sort_order,
+    parent_id: input.api_parent_id || undefined,
+    type: toCategoryApiType(input.type),
+  };
+
+  const response = await putApiV10CategoryId(id, payload);
+  return response.responseData as CmsCategoryItem;
+}
+
+export async function deleteHeaderConfigItem(id: string) {
+  await deleteApiV10CategoryId(id);
+}
+
+export async function fetchCmsNewsItems(params?: {
+  page?: number;
+  pageSize?: number;
+  sortField?: string;
+  sortOrder?: string;
+  filters?: string;
+}) {
+  const response = await getApiV10Post({
+    page: params?.page ?? 1,
+    pageSize: params?.pageSize ?? 10,
+    sortField: params?.sortField ?? "created_at",
+    sortOrder: (params?.sortOrder ?? "desc") as "asc" | "desc",
+    filters: params?.filters?.trim() || undefined,
+  });
+  const result = (response.responseData ?? {}) as CmsPagedResult<CmsRawPostItem>;
+
+  const rows = result.rows ?? [];
+
+  return {
+    items: rows.map((item) => transformPost(item)),
+    total: result.count ?? 0,
+    page: result.page ?? 1,
+    pageSize: result.pageSize ?? 10,
+  };
+}
+
+export async function fetchCmsPostCount(filters?: string) {
+  const response = await getApiV10Post({
+    page: 1,
+    pageSize: 1,
+    filters: filters?.trim() || undefined,
+  });
+  const result = (response.responseData ?? {}) as unknown as CmsPagedResult<CmsRawPostItem>;
+
+  return result.count ?? 0;
+}
+
+export async function fetchCmsNewsItem(id: string) {
+  const response = await getApiV10PostId(id);
+  const post = (response.responseData ?? {}) as CmsRawPostItem;
+  const tags = post.id ? await fetchTagsForPost(post.id) : [];
+  const tagMap = new Map<string, CmsTagItem[]>([[post.id ?? "", tags]]);
+  return transformPost(post, tagMap);
+}
+
+export async function createCmsNewsItem(input: {
+  title: string;
+  slug: string;
+  summary: string;
+  type: "tintuc" | "baiviettrang";
+  header_category_id: string;
+  category_ids: string[];
+  tag_ids: string[];
+  is_featured: boolean;
+  thumbnail_id?: string | null;
+  is_hidden: boolean;
+  published_at?: string | null;
+  expired_at?: string | null;
+  started_at?: string | null;
+  ended_at?: string | null;
+  registration_deadline?: string | null;
+  location?: string;
+  participation_fee?: string;
+  event_dates?: string[] | null;
+  post_content: CmsPostContentSection[];
+}) {
+  const payload = {
+    title: input.title,
+    slug: input.slug,
+    summary: input.summary,
+    type: input.type === "baiviettrang" ? "page" : "news",
+    content: input.summary || "",
+    category_ids: input.category_ids,
+    thumbnail_id: input.thumbnail_id ?? null,
+    is_featured: input.is_featured,
+    is_hidden: input.is_hidden,
+    is_active: !input.is_hidden,
+    published_at: input.published_at || null,
+    expired_at: input.expired_at || null,
+    started_at: input.started_at || null,
+    ended_at: input.ended_at || null,
+    registration_deadline: input.registration_deadline || null,
+    location: input.location?.trim() || null,
+    participation_fee: input.participation_fee?.trim() || null,
+    event_dates: input.event_dates ?? null,
+    release_mode: input.published_at ? "SCHEDULED" : "NOW",
+    release_at: input.published_at || null,
+    content_structure: {
+      post_content: input.post_content,
+    },
+  };
+
+  const response = await postApiV10Post(payload as any);
+  const created = (response.responseData ?? {}) as CmsRawPostItem;
+
+  if (created.id) {
+    await syncPostTags(created.id, input.tag_ids);
+  }
+
+  return created;
+}
+
+export async function updateCmsNewsItem(
+  id: string,
+  input: {
+    title: string;
+    slug: string;
+    summary: string;
+    type: "tintuc" | "baiviettrang";
+    header_category_id: string;
+    category_ids: string[];
+    tag_ids: string[];
+    is_featured: boolean;
+    thumbnail_id?: string | null;
+    is_hidden: boolean;
+    published_at?: string | null;
+    expired_at?: string | null;
+    started_at?: string | null;
+    ended_at?: string | null;
+    registration_deadline?: string | null;
+    location?: string;
+    participation_fee?: string;
+    event_dates?: string[] | null;
+    post_content: CmsPostContentSection[];
+  },
+) {
+  const payload = {
+    title: input.title,
+    slug: input.slug,
+    summary: input.summary,
+    type: input.type === "baiviettrang" ? "page" : "news",
+    content: input.summary || "",
+    category_ids: input.category_ids,
+    thumbnail_id: input.thumbnail_id ?? null,
+    is_featured: input.is_featured,
+    is_hidden: input.is_hidden,
+    is_active: !input.is_hidden,
+    published_at: input.published_at || null,
+    expired_at: input.expired_at || null,
+    started_at: input.started_at || null,
+    ended_at: input.ended_at || null,
+    registration_deadline: input.registration_deadline || null,
+    location: input.location?.trim() || null,
+    participation_fee: input.participation_fee?.trim() || null,
+    event_dates: input.event_dates ?? null,
+    release_mode: input.published_at ? "SCHEDULED" : "NOW",
+    release_at: input.published_at || null,
+    content_structure: {
+      post_content: input.post_content,
+    },
+  };
+
+  const response = await putApiV10PostId(id, payload as any);
+  const updated = (response.responseData ?? {}) as CmsRawPostItem;
+
+  await syncPostTags(id, input.tag_ids);
+
+  return updated;
+}
+
+export async function deleteCmsNewsItem(id: string) {
+  await deleteApiV10PostId(id);
+}
+
+export async function toggleCmsNewsVisibility(id: string, isHidden: boolean) {
+  const response = await putApiV10PostId(id, {
+    is_hidden: isHidden,
+    is_active: !isHidden,
+  } as any);
+  return (response.responseData ?? {}) as CmsRawPostItem;
+}

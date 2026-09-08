@@ -1,45 +1,84 @@
-import ImageNext from "@/components/shared/image-next";
-import Link from "next/link";
+'use client';
 
-function QuickLinks() {
+import { SafeImage } from "@/components/shared/safe-image";
+import Link from "next/link";
+import { useMemo } from "react";
+import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
+import links from "@/links";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
+import { getFallbackImage } from "@/lib/utils/fallback-image";
+
+const FALLBACK_HREF = links.externalApiOrigin;
+
+function AdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: string }) {
+  const src = item.file?.path ? links.resolveImageUrl(item.file.path) : fallbackSrc;
+
   return (
-    <aside className="w-full lg:w-[30%]">
-      <div className="flex justify-between items-center">
-        <h2 className="text-[18px] sm:text-[20px] font-semibold uppercase text-[#063e8e]">
-          Liên kết nhanh
-        </h2>
+    <Link
+      href={item.link || FALLBACK_HREF}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block overflow-hidden rounded-[16px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
+      title={item.name}
+    >
+      <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
+        <SafeImage
+          src={src}
+          fallbackSrc={fallbackSrc}
+          alt={item.alt || item.name}
+          width={2048}
+          height={1365}
+          className="h-full w-full object-cover object-[center_80%]"
+        />
       </div>
-      <hr className="border-[#063e8e] mb-4" />
-      <div className="space-y-2 text-[#063e8e] text-sm md:text-base pb-10">
-        <div>
-          <Link
-            className="text-[#363636]"
-            href="https://vcci-hcm.org.vn/lien-ket-nhanh/cam-nang-huong-dan-dau-tu-kinh-doanh-tai-viet-nam-2023/"
-          >
-            🔗 Cẩm nang hướng dẫn đầu tư kinh doanh tại Việt Nam
-          </Link>
-        </div>
-        <div>
-          <Link
-            className="text-[#363636]"
-            href="https://vcci-hcm.org.vn/lien-ket-nhanh/doanh-nghiep-kien-nghi-ve-chinh-sach-va-phap-luat/"
-          >
-            🔗 Doanh nghiệp kiến nghị về chính sách và pháp luật
-          </Link>
-        </div>
+    </Link>
+  );
+}
+
+function FallbackAdItem({ src }: { src: string }) {
+  return (
+    <Link
+      href={FALLBACK_HREF}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block overflow-hidden rounded-[16px] shadow-[0_12px_28px_rgba(31,59,124,0.14)]"
+      title="Quảng cáo VCCI HCM"
+    >
+      <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
+        <SafeImage
+          src={src}
+          alt="Quảng cáo VCCI HCM"
+          width={2048}
+          height={1365}
+          className="h-full w-full object-cover object-[center_80%]"
+        />
       </div>
-      <div>
-        <Link href="https://hardwaretools.com.vn/">
-          <ImageNext
-            src="/home/20-2048x1365.webp"
-            alt="banner"
-            width={2048}
-            height={1365}
-          />
-        </Link>
-      </div>
+    </Link>
+  );
+}
+
+function Advertisements({ count = 2, startIndex = 0 }: { count?: number; startIndex?: number }) {
+  const ads = useAdvertisements("square");
+  const visibleAds = ads.slice(startIndex, startIndex + count);
+
+  const fallbackSrcs = useMemo(
+    () => Array.from({ length: count }, (_, i) => getFallbackImage(i)),
+    [count],
+  );
+
+  // Luôn render đủ `count` khung hình: vị trí nào API không có data thì dùng random fallback.
+  const items = Array.from({ length: count }, (_, i) => {
+    const ad = visibleAds[i];
+    if (ad) return <AdItem key={ad.id} item={ad} fallbackSrc={fallbackSrcs[i]} />;
+    return <FallbackAdItem key={`fallback-${startIndex + i}`} src={fallbackSrcs[i]} />;
+  });
+
+  const mdCols = count >= 3 ? "md:grid-cols-3" : "md:grid-cols-2";
+  return (
+    <aside className={`flex w-full flex-col gap-4 md:grid ${mdCols} xl:grid xl:order-2 xl:w-[22%] xl:grid-cols-1 xl:gap-4 xl:self-center`}>
+      {items}
     </aside>
   );
 }
 
-export default QuickLinks;
+export default Advertisements;

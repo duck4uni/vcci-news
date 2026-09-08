@@ -1,73 +1,124 @@
-"use client";
+import type { Metadata } from "next";
+import links from "@links/index";
+import {
+  fetchDynamicPostById,
+  fetchDynamicPostBySlug,
+  getDynamicPostSeoImage,
+  getDynamicPostExcerpt,
+  stripHtml,
+} from "./templates/data";
+import DynamicPageClient from "./DynamicPageClient";
 
-import { useEffect } from "react";
-import { notFound, useParams, useRouter } from "next/navigation";
-import { useGetNewsPageConfigGetHierarchical } from "@/api/endpoints/news-page-config";
-import { GetNewsPageConfigResponseType } from "@/api/types/news-page-config";
+/**
+ * Build an absolute og:image URL. Relative paths (e.g. "/thumbnail.png") are
+ * resolved against the site origin so social crawlers always receive an
+ * absolute URL. Absolute URLs are returned as-is.
+ */
+function toAbsoluteSeoImageUrl(imageUrl: string): string {
+  if (!imageUrl) return "";
+  if (/^https?:\/\//i.test(imageUrl)) return imageUrl;
+  const origin = (links.siteURL || "").replace(/\/+$/, "");
+  return `${origin}${imageUrl.startsWith("/") ? "" : "/"}${imageUrl}`;
+}
 
-// templates
-import InformationPage from "./templates/InformationPage";
-import ArticlePage from "./templates/ArticlePage";
-import ArticleDetailPage from "./templates/ArticleDetailPage";
-import EventPage from "./templates/EventPage";
-import EventDetailPage from "./templates/EventDetailPage";
-import { Spinner } from "@/components/ui";
-import { GetNewsResponseType } from "@/api/types/news";
-import { useGetNews } from "@/api/endpoints/news";
+type GenerateMetadataArgs = {
+  params: Promise<{ slug: string[] }>;
+  searchParams: Promise<{ id?: string; categoryId?: string }>;
+};
 
-export default function DynamicPage() {
-  const params = useParams();
-  const slug = Array.isArray(params.slug) ? params.slug : [params.slug];
-  const path = slug.join("/");
-  const router = useRouter();
+/**
+ * Verify that a remote image URL actually serves an image (not an HTML 404
+ * page or redirect). Returns true for relative paths and on network errors
+ * (benefit of the doubt) so we only fall back when we're certain the URL is
+ * not an image.
+ */
+async function isRemoteImageValid(url: string): Promise<boolean> {
+  if (!url || !/^https?:\/\//i.test(url)) return true;
 
-  // query
-  const { data: news } = useGetNews<GetNewsResponseType>(
-    { filters: `external_link==/${path}` }
+  try {
+    const response = await fetch(url, {
+      method: "HEAD",
+      signal: AbortSignal.timeout(5000),
+      redirect: "follow",
+    });
+
+    // If the server rejects HEAD, give the benefit of the doubt
+    if (!response.ok) return true;
+
+    const contentType = response.headers.get("content-type") ?? "";
+    return contentType.startsWith("image/");
+  } catch {
+    return true;
+  }
+}
+
+export async function generateMetadata({
+  params,
+  searchParams,
+}: GenerateMetadataArgs): Promise<Metadata> {
+  const { slug } = await params;
+  const { id } = await searchParams;
+
+  const path = `/${(slug ?? []).join("/")}`;
+  const postId = id?.trim() ?? "";
+
+  let post = null;
+  try {
+    post = postId
+      ? await fetchDynamicPostById(postId)
+      : await fetchDynamicPostBySlug(path);
+  } catch {
+    post = null;
+  }
+
+  if (!post || !post.title) {
+    return {
+      title: "Bài viết không tìm thấy",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  const title = post.title;
+  const description =
+    stripHtml(post.summary) ||
+    getDynamicPostExcerpt(post).slice(0, 160) ||
+    "Tin tức từ VCCI HCM";
+  const rawImageUrl = getDynamicPostSeoImage(post);
+  const isImageValid = await isRemoteImageValid(rawImageUrl);
+  const imageUrl = toAbsoluteSeoImageUrl(
+    isImageValid ? rawImageUrl : "/thumbnail.png",
   );
-  const { data: category, isLoading, isError } = useGetNewsPageConfigGetHierarchical<GetNewsPageConfigResponseType>({
-    static_link: `/${path}`,
-  });
+  const articleUrl = `${links.siteURL.replace(/\/+$/, "")}${path}`;
 
-  // redirect to first child if has children
-  const children = category?.responseData?.children || [];
-  useEffect(() => {
-    if (!category) return;
-    if (slug.length === 1 && children.length > 0) {
-      const firstChild = children[0];
-      if (firstChild?.static_link) {
-        router.push(firstChild.static_link);
-      }
-    }
-  }, [slug, category, children, router]);
+  return {
+    title,
+    description,
+    alternates: { canonical: articleUrl },
+    openGraph: {
+      title,
+      description,
+      url: articleUrl,
+      siteName: "VCCI HCM",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+      locale: "vi_VN",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
-  //template
-  if (slug[0] === "hoat-dong" && slug[1] === "su-kien") {
-    if (slug.length === 2) return <EventPage />;
-    if (slug.length === 3) return <EventDetailPage />;
-  }
-
-  if (news?.responseData?.count == 0 && isLoading) {
-    return (
-      <div className="flex justify-center items-center w-full h-64">
-        <Spinner />
-      </div>
-    );
-  }
-
-  if (news && news?.responseData.rows.length !== 0) {
-    return <ArticleDetailPage data={news} />;
-  }
-
-  else if (category?.responseData.is_article == true) {
-    return <ArticlePage />;
-  }
-
-  else if (category?.responseData.is_article == false) {
-    return <InformationPage />;
-  }
-
-  else if (isError) {
-    return notFound();
-  }
+export default function Page() {
+  return <DynamicPageClient />;
 }
