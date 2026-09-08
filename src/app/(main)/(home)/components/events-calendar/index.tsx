@@ -137,7 +137,7 @@ function EventsCalendar({
         className ?? "xl:w-[28%] xl:min-w-[320px]",
       )}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h2
             className={cn(
