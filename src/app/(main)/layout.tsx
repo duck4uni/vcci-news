@@ -3,11 +3,7 @@ import Footer from "@/components/layout/main/footer";
 import React from "react";
 import ScrollToTopButton from "../../components/layout/main/ScrollToTopButton";
 
-export default function Layout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <main className="flex flex-col min-h-screen bg-white">
       <Header />

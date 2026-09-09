@@ -110,17 +110,17 @@ const EventInfoCard = ({ post }: { post: DynamicPostItem }) => {
   );
 };
 
-type ArticleDetailPageProps = {
+type NewsDetailPageProps = {
   post: DynamicPostItem;
   category: DynamicCategoryRouteItem | null;
   allCategories: DynamicCategoryRouteItem[];
 };
 
-export default function ArticleDetailPage({
+export default function NewsDetailPage({
   post,
   category,
   allCategories,
-}: ArticleDetailPageProps) {
+}: NewsDetailPageProps) {
   const publishedDate = dayjs(
     post.release_at ?? post.published_at ?? post.created_at,
   ).format("DD/MM/YYYY");

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -8,24 +8,24 @@ import { Pagination } from "@/components/base/pagination";
 import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import ListCategory from "@/components/base/list-category";
 import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
 import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
+import ListCategory from "@/components/base/list-category";
+import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import {
   buildDynamicPostHref,
   buildDynamicCategoryMenu,
-  buildVisibleNewsFilters,
-  useDynamicPostList,
   resolveDynamicPostImage,
-} from "./data";
-import type { DynamicCategoryRouteItem } from "./types";
+  mapPost,
+} from "../templates/data";
+import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
 
-type CatalogPageProps = {
-  category: DynamicCategoryRouteItem;
+type ThuVienTaiLieuProps = {
+  category: DynamicCategoryRouteItem | null;
   allCategories: DynamicCategoryRouteItem[];
 };
 
-export default function CatalogPage({ category, allCategories }: CatalogPageProps) {
+export default function ThuVienTaiLieu({ category, allCategories }: ThuVienTaiLieuProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -64,25 +64,39 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
     }
   }, [page, pathname, router, searchParamsString]);
 
-  const postsQuery = useDynamicPostList({
+  const filters = [
+    category?.id ? `category.id==${category.id}` : null,
+    keyword ? `title@=${keyword}` : null,
+    "is_hidden==false",
+    "is_active==true",
+    "type==news",
+  ]
+    .map((item) => item?.trim())
+    .filter(Boolean)
+    .join(",");
+
+  const { data: postsData, isLoading: postsLoading } = useGetApiV10Post({
     page,
     pageSize,
-    filters: buildVisibleNewsFilters([
-      `category.id==${category.id}`,
-      keyword ? `title@=${keyword}` : null,
-    ]),
-    staleTime: 60 * 1000,
+    sortField: "release_at",
+    sortOrder: "desc",
+    filters: filters || undefined,
   });
 
-  const totalPages = postsQuery.data?.totalPages ?? 1;
+  const responseData = postsData?.responseData;
+  const count = Number(responseData?.count ?? 0);
+  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(count / pageSize)) : 1;
   const currentPage = Math.min(page, totalPages);
-  const paginatedPosts = postsQuery.data?.rows ?? [];
-  const categoryMenu = buildDynamicCategoryMenu(category, allCategories);
+  const paginatedPosts = ((responseData?.rows ?? []) as unknown as Parameters<typeof mapPost>[0][])
+    .map(mapPost)
+    .filter((item: DynamicPostItem) => item.id && item.title);
+
+  const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
 
   return (
     <div className="min-h-screen bg-white">
       {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
-      {postsQuery.isLoading ? (
+      {postsLoading ? (
         <div className="flex h-64 w-full items-center justify-center">
           <Spinner />
         </div>
@@ -90,7 +104,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
         <div className="container mx-auto px-4 py-4 lg:pb-6 sm:px-6 lg:px-10">
           <div className="mb-8">
             <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-4xl">
-              {category.name}
+              {category?.name ?? "Thư viện tài liệu"}
             </h1>
             <div className="mt-2 h-[3px] w-16 rounded-full bg-[#f5a400]" />
           </div>
@@ -103,7 +117,7 @@ export default function CatalogPage({ category, allCategories }: CatalogPageProp
                     return (
                       <Link
                         key={item.id}
-                        href={buildDynamicPostHref(item.slug, item.id, category.id)}
+                        href={buildDynamicPostHref(item.slug, item.id, category?.id)}
                         className="group block"
                       >
                         <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">

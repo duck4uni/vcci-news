@@ -1,9 +1,5 @@
-import type { Category } from "@/api/vcci-news/models/category";
-import { getApiV10Category, useGetApiV10Category } from "@/api/vcci-news/endpoints/category";
-import { getApiV10Post, getApiV10PostId, useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
+import { getApiV10Post, getApiV10PostId } from "@/api/vcci-news/endpoints/post";
 import Links from "@/links";
-import { getCategoryFallbackResponse } from "@/mockdata/categories";
-import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import type {
   DynamicCategoryMenuItem,
   DynamicCategoryRouteItem,
@@ -13,12 +9,6 @@ import type {
   DynamicPostThumbnail,
   DynamicPostUser,
 } from "./types";
-
-type CategoryListResponse = {
-  responseData?: {
-    rows?: Category[];
-  };
-};
 
 type RawPostCategory = {
   id?: string | null;
@@ -280,36 +270,6 @@ export const buildVisibleNewsFilters = (
     "type==news",
   ]);
 
-export async function fetchDynamicCategories(): Promise<DynamicCategoryRouteItem[]> {
-  const response = await getApiV10Category({
-    page: 1,
-    pageSize: 200,
-    sortField: "sort_order",
-    sortOrder: "asc",
-  }).catch(() => getCategoryFallbackResponse());
-
-  const rows = (response.responseData?.rows ?? []) as unknown as Category[];
-
-  return sortCategories(
-    rows
-      .map((item) => {
-        const type = normalizeCategoryType(item.type);
-        if (!item.id || !item.name || !type) return null;
-
-        return {
-          id: item.id,
-          name: item.name,
-          slug: item.slug ?? "",
-          url: normalizePath(item.url),
-          type,
-          parent_id: item.parent_id ?? null,
-          sort_order: item.sort_order ?? null,
-        } satisfies DynamicCategoryRouteItem;
-      })
-      .filter((item): item is DynamicCategoryRouteItem => Boolean(item)),
-  );
-}
-
 export async function fetchDynamicPostList(params: {
   filters?: string;
   page?: number;
@@ -377,43 +337,6 @@ export async function fetchDynamicPostBySlug(path: string) {
   return result.rows[0] ?? null;
 }
 
-export async function fetchDynamicSinglePagePost(categoryId: string) {
-  const result = await fetchDynamicPostList({
-    page: 1,
-    pageSize: 1,
-    filters: buildPostFilters([
-      `category.id==${categoryId}`,
-      "is_hidden==false",
-      "is_active==true",
-      "type==page",
-    ]),
-  });
-
-  return result.rows[0] ?? null;
-}
-
-export function findDynamicCategoryByPath(
-  categories: DynamicCategoryRouteItem[],
-  path: string,
-) {
-  const normalizedPath = normalizePath(path);
-  return categories.find((item) => normalizePath(item.url) === normalizedPath) ?? null;
-}
-
-export function findMenuCategoryForPost(
-  post: DynamicPostItem | null,
-  categories: DynamicCategoryRouteItem[],
-) {
-  if (!post) return null;
-
-  for (const category of post.categories) {
-    const matched = categories.find((item) => item.id === category.id);
-    if (matched) return matched;
-  }
-
-  return null;
-}
-
 export function findDisplayCategoryForPost(
   post: DynamicPostItem | null,
   activeCategory: DynamicCategoryRouteItem | null,
@@ -474,13 +397,6 @@ export function buildDynamicCategoryMenu(
     name: item.name,
     static_link: item.url,
   }));
-}
-
-export function findFirstChildCategory(
-  category: DynamicCategoryRouteItem,
-  categories: DynamicCategoryRouteItem[],
-) {
-  return sortCategories(categories.filter((item) => item.parent_id === category.id))[0] ?? null;
 }
 
 export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
@@ -625,116 +541,3 @@ export function isDynamicPostVisible(post: DynamicPostItem) {
 }
 
 export { buildPostFilters, normalizePath };
-
-export type UseDynamicPostListOptions = {
-  page?: number;
-  pageSize?: number;
-  sortField?: string;
-  sortOrder?: string;
-  filters?: string;
-  enabled?: boolean;
-  staleTime?: number;
-};
-
-export function useDynamicPostList(options: UseDynamicPostListOptions) {
-  const page = options.page ?? 1;
-  const pageSize = options.pageSize ?? 5;
-
-  return useGetApiV10Post(
-    {
-      page,
-      pageSize,
-      sortField: options.sortField ?? "release_at",
-      sortOrder: (options.sortOrder ?? "desc") as "asc" | "desc",
-      filters: options.filters?.trim() || undefined,
-    },
-    {
-      query: {
-        enabled: options.enabled !== false,
-        staleTime: options.staleTime ?? 60 * 1000,
-        select: (response): DynamicPostListResult => {
-          const data = response?.responseData;
-          const count = Number(data?.count ?? 0);
-          return {
-            count,
-            page,
-            pageSize,
-            totalPages: pageSize > 0 ? Math.max(1, Math.ceil(count / pageSize)) : 1,
-            rows: ((data?.rows ?? []) as unknown as RawPostItem[])
-              .map(mapPost)
-              .filter((item) => item.id && item.title),
-          };
-        },
-      },
-    },
-  );
-}
-
-export type UseDynamicCategoriesOptions = {
-  enabled?: boolean;
-  staleTime?: number;
-};
-
-export function useDynamicCategories(options: UseDynamicCategoriesOptions = {}) {
-  return useGetApiV10Category(
-    {
-      page: 1,
-      pageSize: 200,
-      sortField: "sort_order",
-      sortOrder: "asc",
-    },
-    {
-      query: {
-        enabled: options.enabled !== false,
-        staleTime: options.staleTime ?? 5 * 60 * 1000,
-        select: (response): DynamicCategoryRouteItem[] => {
-          const rows = (response?.responseData?.rows ?? []) as unknown as Category[];
-          return sortCategories(
-            rows
-              .map((item) => {
-                const type = normalizeCategoryType(item.type);
-                if (!item.id || !item.name || !type) return null;
-                return {
-                  id: item.id,
-                  name: item.name,
-                  slug: item.slug ?? "",
-                  url: normalizePath(item.url),
-                  type,
-                  sort_order: item.sort_order ?? null,
-                  parent_id: item.parent_id ?? null,
-                } as DynamicCategoryRouteItem;
-              })
-              .filter((item): item is DynamicCategoryRouteItem => item !== null),
-          );
-        },
-      },
-    },
-  );
-}
-
-export function useDynamicPostDetail(postId: string, routePath: string, options: {
-  enabled?: boolean;
-  staleTime?: number;
-} = {}) {
-  return useQuery({
-    queryKey: ["dynamic-post-detail", postId || routePath],
-    queryFn: () =>
-      postId
-        ? fetchDynamicPostById(postId)
-        : fetchDynamicPostBySlug(routePath),
-    enabled: options.enabled !== false,
-    staleTime: options.staleTime ?? 60 * 1000,
-  });
-}
-
-export function useDynamicSinglePagePost(categoryId: string | undefined, options: {
-  enabled?: boolean;
-  staleTime?: number;
-} = {}) {
-  return useQuery({
-    queryKey: ["dynamic-single-page-post", categoryId],
-    queryFn: () => fetchDynamicSinglePagePost(categoryId!),
-    enabled: (options.enabled !== false) && Boolean(categoryId),
-    staleTime: options.staleTime ?? 60 * 1000,
-  });
-}

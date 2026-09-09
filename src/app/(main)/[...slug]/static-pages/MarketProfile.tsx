@@ -1,13 +1,11 @@
-'use client';
+"use client";
 
 import { useMemo, useState } from "react";
 import { FileText, Globe2, Newspaper, TrendingUp } from "lucide-react";
 import { SafeImage } from "@/components/shared/safe-image";
-import type { DynamicPostItem } from "../types";
-
-type MarketProfilePageProps = {
-  post: DynamicPostItem;
-};
+import ListCategory from "@/components/base/list-category";
+import { buildDynamicCategoryMenu } from "../templates/data";
+import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
 
 type RegionMarketItem = {
   name: string;
@@ -210,7 +208,13 @@ const OVERVIEW_ITEMS = [
   },
 ] as const;
 
-export default function MarketProfilePage({ post }: MarketProfilePageProps) {
+type MarketProfileProps = {
+  post: DynamicPostItem | null;
+  category: DynamicCategoryRouteItem | null;
+  allCategories: DynamicCategoryRouteItem[];
+};
+
+export default function MarketProfile({ post, category, allCategories }: MarketProfileProps) {
   const [activeRegionKey, setActiveRegionKey] = useState("dong-nam-a");
 
   const activeRegion = useMemo(
@@ -219,98 +223,105 @@ export default function MarketProfilePage({ post }: MarketProfilePageProps) {
     [activeRegionKey],
   );
 
+  const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
+
   return (
-    <section className="space-y-8">
-      <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
-        <div className="min-w-0">
+    <div className="min-h-screen bg-white">
+      {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
+      <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-10 lg:pb-6">
+        <section className="space-y-8">
+          <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_300px] xl:items-start">
+            <div className="min-w-0">
 
-          <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-[38px] md:leading-[1.15]">
-            {activeRegion.title}
-          </h1>
-          <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
+              <h1 className="text-3xl font-bold leading-tight text-[#111827] md:text-[38px] md:leading-[1.15]">
+                {activeRegion.title}
+              </h1>
+              <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
 
-          <p className="mt-5 max-w-4xl text-base leading-8 text-[#5b6880] md:text-[17px]">
-            {post.summary?.trim() || activeRegion.description}
-          </p>
+              <p className="mt-5 max-w-4xl text-base leading-8 text-[#5b6880] md:text-[17px]">
+                {post?.summary?.trim() || activeRegion.description}
+              </p>
 
-          <div className="mt-7 overflow-hidden rounded-[30px] border border-[#dce7f7] bg-white shadow-[0_18px_42px_rgba(17,24,39,0.06)]">
-            <div className="relative min-h-[280px] bg-[#f3f7ff] p-4 sm:p-5">
-              <div className="absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2 sm:inset-x-6 sm:top-6">
-                {activeRegion.markets.map((item) => {
-                  const hasDoc = item.href && item.href !== "#";
+              <div className="mt-7 overflow-hidden rounded-[30px] border border-[#dce7f7] bg-white shadow-[0_18px_42px_rgba(17,24,39,0.06)]">
+                <div className="relative min-h-[280px] bg-[#f3f7ff] p-4 sm:p-5">
+                  <div className="absolute inset-x-4 top-4 z-10 flex flex-wrap gap-2 sm:inset-x-6 sm:top-6">
+                    {activeRegion.markets.map((item) => {
+                      const hasDoc = item.href && item.href !== "#";
+                      return (
+                        <a
+                          key={`${activeRegion.key}-${item.name}`}
+                          href={item.href}
+                          target={item.href.startsWith("http") ? "_blank" : undefined}
+                          rel={item.href.startsWith("http") ? "noreferrer" : undefined}
+                          className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/92 px-3 py-2 text-xs font-semibold text-[#1e3768] shadow-[0_10px_24px_rgba(36,80,181,0.12)] transition-colors hover:bg-[#f8fbff]"
+                        >
+                          <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
+                          <span>{item.name}</span>
+                          {hasDoc && (
+                            <FileText className="h-3.5 w-3.5 text-[#2450b5]" />
+                          )}
+                        </a>
+                      );
+                    })}
+                  </div>
+
+                  <SafeImage
+                    src={activeRegion.image}
+                    alt={activeRegion.imageAlt}
+                    width={1200}
+                    height={900}
+                    className="h-full min-h-[280px] w-full rounded-[24px] object-cover object-center transition-all duration-300"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <aside className="rounded-[28px] border border-[#e6eefb] bg-[#fbfcff] p-6 shadow-[0_18px_42px_rgba(17,24,39,0.05)] xl:sticky xl:top-24">
+              <h2 className="text-[28px] font-bold leading-tight text-[#1f2a44]">Khu vực</h2>
+              <div className="mt-5 space-y-2">
+                {REGION_CONFIGS.map((item) => {
+                  const isActive = item.key === activeRegion.key;
+
                   return (
-                    <a
-                      key={`${activeRegion.key}-${item.name}`}
-                      href={item.href}
-                      target={item.href.startsWith("http") ? "_blank" : undefined}
-                      rel={item.href.startsWith("http") ? "noreferrer" : undefined}
-                      className="inline-flex items-center gap-2 rounded-full border border-white/80 bg-white/92 px-3 py-2 text-xs font-semibold text-[#1e3768] shadow-[0_10px_24px_rgba(36,80,181,0.12)] transition-colors hover:bg-[#f8fbff]"
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => setActiveRegionKey(item.key)}
+                      className={[
+                        "flex w-full items-center rounded-[18px] px-4 py-3 text-left text-[15px] font-medium transition-all duration-200",
+                        isActive
+                          ? "bg-[#2450b5] text-white shadow-[0_14px_28px_rgba(36,80,181,0.22)]"
+                          : "bg-[#f4f7fc] text-[#55657d] hover:bg-[#eaf1ff] hover:text-[#2450b5]",
+                      ].join(" ")}
                     >
-                      <span className={`h-2.5 w-2.5 rounded-full ${item.tone}`} />
-                      <span>{item.name}</span>
-                      {hasDoc && (
-                        <FileText className="h-3.5 w-3.5 text-[#2450b5]" />
-                      )}
-                    </a>
+                      {item.label}
+                    </button>
                   );
                 })}
               </div>
-
-              <SafeImage
-                src={activeRegion.image}
-                alt={activeRegion.imageAlt}
-                width={1200}
-                height={900}
-                className="h-full min-h-[280px] w-full rounded-[24px] object-cover object-center transition-all duration-300"
-              />
-            </div>
+            </aside>
           </div>
-        </div>
 
-        <aside className="rounded-[28px] border border-[#e6eefb] bg-[#fbfcff] p-6 shadow-[0_18px_42px_rgba(17,24,39,0.05)] xl:sticky xl:top-24">
-          <h2 className="text-[28px] font-bold leading-tight text-[#1f2a44]">Khu vực</h2>
-          <div className="mt-5 space-y-2">
-            {REGION_CONFIGS.map((item) => {
-              const isActive = item.key === activeRegion.key;
+          <div className="grid gap-5 lg:grid-cols-3">
+            {OVERVIEW_ITEMS.map((item) => {
+              const Icon = item.icon;
 
               return (
-                <button
-                  key={item.key}
-                  type="button"
-                  onClick={() => setActiveRegionKey(item.key)}
-                  className={[
-                    "flex w-full items-center rounded-[18px] px-4 py-3 text-left text-[15px] font-medium transition-all duration-200",
-                    isActive
-                      ? "bg-[#2450b5] text-white shadow-[0_14px_28px_rgba(36,80,181,0.22)]"
-                      : "bg-[#f4f7fc] text-[#55657d] hover:bg-[#eaf1ff] hover:text-[#2450b5]",
-                  ].join(" ")}
+                <article
+                  key={item.title}
+                  className="rounded-[26px] border border-[#e5edf8] bg-white px-5 py-6 shadow-[0_16px_36px_rgba(17,24,39,0.05)]"
                 >
-                  {item.label}
-                </button>
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#2450b5]">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="mt-4 text-[20px] font-bold leading-7 text-[#1e2f50]">{item.title}</h3>
+                  <p className="mt-3 text-[15px] leading-7 text-[#617089]">{item.description}</p>
+                </article>
               );
             })}
           </div>
-        </aside>
+        </section>
       </div>
-
-      <div className="grid gap-5 lg:grid-cols-3">
-        {OVERVIEW_ITEMS.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <article
-              key={item.title}
-              className="rounded-[26px] border border-[#e5edf8] bg-white px-5 py-6 shadow-[0_16px_36px_rgba(17,24,39,0.05)]"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#edf4ff] text-[#2450b5]">
-                <Icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-[20px] font-bold leading-7 text-[#1e2f50]">{item.title}</h3>
-              <p className="mt-3 text-[15px] leading-7 text-[#617089]">{item.description}</p>
-            </article>
-          );
-        })}
-      </div>
-    </section>
+    </div>
   );
 }
