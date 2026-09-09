@@ -9,14 +9,17 @@ import { Pagination } from "@components/base/pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@components/ui/spinner";
+import ListCategory from "@/components/base/list-category";
+import { buildDynamicCategoryMenu } from "../templates/data";
+import type { DynamicCategoryRouteItem } from "../templates/types";
+import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import {
   buildDynamicPostHref,
-  buildVisibleNewsFilters,
-  useDynamicPostList,
   getDynamicPostExcerpt,
   resolveDynamicPostImage,
-} from "@/app/(main)/[...slug]/templates/data";
-import type { DynamicPostItem } from "@/app/(main)/[...slug]/templates/types";
+  mapPost,
+} from "../templates/data";
+import type { DynamicPostItem } from "../templates/types";
 
 const formatPostDate = (value?: string | null) => {
   if (!value) return "";
@@ -95,14 +98,31 @@ function SearchContent() {
   const [searchInput, setSearchInput] = useState(query);
 
   const pageSize = 10;
-  const postsQuery = useDynamicPostList({
+  const filters = [
+    query ? `title@=${query}` : null,
+    "is_hidden==false",
+    "is_active==true",
+    "type==news",
+  ]
+    .map((item) => item?.trim())
+    .filter(Boolean)
+    .join(",");
+
+  const { data: postsData, isLoading: postsLoading } = useGetApiV10Post({
     page,
     pageSize,
-    filters: buildVisibleNewsFilters([
-      query ? `title@=${query}` : null,
-    ]),
-    staleTime: 60 * 1000,
+    sortField: "release_at",
+    sortOrder: "desc",
+    filters: filters || undefined,
   });
+
+  const responseData = postsData?.responseData;
+  const count = Number(responseData?.count ?? 0);
+  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(count / pageSize)) : 1;
+  const currentPage = Math.min(page, totalPages);
+  const rows = ((responseData?.rows ?? []) as unknown as Parameters<typeof mapPost>[0][])
+    .map(mapPost)
+    .filter((item: DynamicPostItem) => item.id && item.title);
 
   useEffect(() => {
     const nextPage = pageFromUrl ? Number(pageFromUrl) : 1;
@@ -124,10 +144,6 @@ function SearchContent() {
     router.push(`/search?${params.toString()}`, { scroll: false });
   };
 
-  const rows = postsQuery.data?.rows ?? [];
-  const totalPages = Number(postsQuery.data?.totalPages ?? 1);
-  const currentPage = Number(postsQuery.data?.page ?? page);
-
   return (
     <div className="min-h-screen bg-white">
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-10 lg:py-10">
@@ -145,7 +161,7 @@ function SearchContent() {
 
         <div className="flex flex-col gap-10 xl:flex-row xl:gap-14">
           <main className="order-2 min-w-0 xl:order-1 xl:flex-1">
-            {postsQuery.isLoading ? (
+            {postsLoading ? (
               <div className="flex items-center justify-center py-16">
                 <Spinner className="size-8" />
                 <span className="ml-2 text-gray-600">Đang tìm kiếm...</span>
@@ -232,16 +248,26 @@ function SearchContent() {
   );
 }
 
-export default function Page() {
+type SearchProps = {
+  category: DynamicCategoryRouteItem | null;
+  allCategories: DynamicCategoryRouteItem[];
+};
+
+export default function Search({ category, allCategories }: SearchProps) {
+  const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-white">
-          <Spinner className="size-8" />
-        </div>
-      }
-    >
-      <SearchContent />
-    </Suspense>
+    <>
+      {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-white">
+            <Spinner className="size-8" />
+          </div>
+        }
+      >
+        <SearchContent />
+      </Suspense>
+    </>
   );
 }

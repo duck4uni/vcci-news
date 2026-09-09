@@ -6,16 +6,12 @@ import { Play } from "lucide-react";
 import { SafeImage } from "@/components/shared/safe-image";
 import { Pagination } from "@/components/base/pagination";
 import { Spinner } from "@/components/ui/spinner";
+import ListCategory from "@/components/base/list-category";
+import { buildDynamicCategoryMenu } from "../templates/data";
+import type { DynamicCategoryRouteItem } from "../templates/types";
 import { useGetApiV10Video } from "@/api/vcci-news/endpoints/video";
 import type { Video } from "@/api/vcci-news/models/video";
 import { getVideoThumbnail, normalizeVideoUrl } from "@/lib/utils/video";
-
-const PAGE_SIZE = 10;
-
-type ClientVideoItem = Video & {
-  thumbnail: string;
-  watchUrl: string;
-};
 
 function VideoPageContent() {
   const router = useRouter();
@@ -23,40 +19,25 @@ function VideoPageContent() {
   const searchParams = useSearchParams();
   const pageFromUrl = Number(searchParams.get("page") ?? "1");
   const page = Number.isFinite(pageFromUrl) && pageFromUrl > 0 ? Math.floor(pageFromUrl) : 1;
+  const PAGE_SIZE = 10;
 
-  const videosQuery = useGetApiV10Video(
-    {
-      page,
-      pageSize: PAGE_SIZE,
-      sortField: "created_at",
-      sortOrder: "desc",
-    },
-    {
-      query: {
-        staleTime: 60 * 1000,
-        select: (response) => {
-          const pageData = response?.responseData ?? {};
-          const pageSize = pageData.pageSize ?? PAGE_SIZE;
-          const count = pageData.count ?? 0;
-          return {
-            rows: ((pageData.rows ?? []) as unknown as Video[]).map((item) => ({
-              ...item,
-              thumbnail: getVideoThumbnail(item.url ?? ""),
-              watchUrl: normalizeVideoUrl(item.url ?? ""),
-            })),
-            count,
-            page: pageData.page ?? page,
-            pageSize,
-            totalPages: Math.max(1, Math.ceil(count / pageSize)),
-          };
-        },
-      },
-    },
-  );
+  const { data: videosData, isLoading: videosLoading, isError: videosError } = useGetApiV10Video({
+    page,
+    pageSize: PAGE_SIZE,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
 
-  const videos = videosQuery.data?.rows ?? [];
-  const totalPages = videosQuery.data?.totalPages ?? 1;
-  const currentPage = videosQuery.data?.page ?? page;
+  const pageData = videosData?.responseData;
+  const count = pageData?.count ?? 0;
+  const videoPageSize = pageData?.pageSize ?? PAGE_SIZE;
+  const videos = ((pageData?.rows ?? []) as unknown as Video[]).map((item) => ({
+    ...item,
+    thumbnail: getVideoThumbnail(item.url ?? ""),
+    watchUrl: normalizeVideoUrl(item.url ?? ""),
+  }));
+  const totalPages = Math.max(1, Math.ceil(count / videoPageSize));
+  const currentPage = pageData?.page ?? page;
 
   const updatePage = (nextPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -81,7 +62,7 @@ function VideoPageContent() {
           <div className="mt-2 h-[3px] w-16 rounded-full bg-[#f5a400]" />
         </div>
 
-        {videosQuery.isLoading ? (
+        {videosLoading ? (
           <div className="grid gap-6 md:grid-cols-2">
             {Array.from({ length: 4 }).map((_, index) => (
               <div
@@ -90,7 +71,7 @@ function VideoPageContent() {
               />
             ))}
           </div>
-        ) : videosQuery.isError ? (
+        ) : videosError ? (
           <div className="rounded-2xl border border-[#edf1f5] bg-white px-6 py-12 text-center text-gray-600">
             Không thể tải danh sách video.
           </div>
@@ -152,16 +133,26 @@ function VideoPageContent() {
   );
 }
 
-export default function Page() {
+type VideoProps = {
+  category: DynamicCategoryRouteItem | null;
+  allCategories: DynamicCategoryRouteItem[];
+};
+
+export default function Video({ category, allCategories }: VideoProps) {
+  const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-white">
-          <Spinner className="size-8" />
-        </div>
-      }
-    >
-      <VideoPageContent />
-    </Suspense>
+    <>
+      {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-white">
+            <Spinner className="size-8" />
+          </div>
+        }
+      >
+        <VideoPageContent />
+      </Suspense>
+    </>
   );
 }

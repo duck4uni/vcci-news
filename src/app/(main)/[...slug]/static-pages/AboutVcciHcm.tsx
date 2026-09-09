@@ -1,0 +1,369 @@
+"use client";
+
+import dayjs from "dayjs";
+import { ShieldCheck, Target, Zap } from "lucide-react";
+import parse from "html-react-parser";
+import Link from "next/link";
+import ListCategory from "@/components/base/list-category";
+import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
+import { SafeImage } from "@/components/shared/safe-image";
+import links from "@/links";
+import {
+  buildDynamicPostHref,
+  buildDynamicCategoryMenu,
+  stripHtml,
+} from "../templates/data";
+import StructuredPostContent from "../templates/StructuredPostContent";
+import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
+
+const ABOUT_HIGHLIGHTS = [
+  {
+    key: "vision",
+    title: "Tầm nhìn",
+    description:
+      "Trở thành tổ chức hàng đầu đại diện cho cộng đồng doanh nghiệp tại phía Nam, kiến tạo môi trường kinh doanh thuận lợi và bền vững.",
+    icon: Target,
+    featured: false,
+  },
+  {
+    key: "mission",
+    title: "Sứ mệnh",
+    description:
+      "Nâng cao năng lực cạnh tranh của cộng đồng doanh nghiệp thông qua các hoạt động đối thoại, xúc tiến và xây dựng năng lực, tạo cầu nối vững chắc.",
+    icon: Zap,
+    featured: true,
+  },
+  {
+    key: "values",
+    title: "Giá trị cốt lõi",
+    bullets: ["Uy tín - Minh bạch", "Chuyên nghiệp", "Đổi mới sáng tạo", "Tinh thần cộng đồng"],
+    icon: ShieldCheck,
+    featured: false,
+  },
+] as const;
+
+const ACTIVITY_AREAS = [
+  {
+    name: "TP. Hồ Chí Minh",
+    description:
+      "Trung tâm điều phối, kết nối doanh nghiệp và lan tỏa các chương trình hỗ trợ hội viên trên toàn khu vực.",
+    toneClass: "from-[#f59e0b] to-[#ef4444]",
+  },
+  {
+    name: "Đồng Nai",
+    description:
+      "Địa bàn công nghiệp trọng điểm, gắn với nhu cầu xúc tiến thương mại và hỗ trợ sản xuất - xuất khẩu.",
+    toneClass: "from-[#2563eb] to-[#60a5fa]",
+  },
+  {
+    name: "Lâm Đồng",
+    description:
+      "Khu vực phát triển nông nghiệp công nghệ cao, du lịch và các mô hình kinh tế xanh, bền vững.",
+    toneClass: "from-[#16a34a] to-[#86efac]",
+  },
+  {
+    name: "Tây Ninh",
+    description:
+      "Cửa ngõ giao thương quan trọng, thuận lợi cho kết nối chuỗi cung ứng, logistics và thương mại biên giới.",
+    toneClass: "from-[#7c3aed] to-[#c4b5fd]",
+  },
+] as const;
+
+const TIN_VCCI_CATEGORY_ID = "b89b2ba6-a699-47cb-87e4-0643aea549a9";
+
+function renderSummary(summary?: string) {
+  const value = summary?.trim() ?? "";
+
+  if (!value || !stripHtml(value)) {
+    return null;
+  }
+
+  return parse(value);
+}
+
+type TinVcciApiRow = {
+  id?: string | null;
+  title?: string | null;
+  slug?: string | null;
+  published_at?: string | null;
+  release_at?: string | null;
+  created_at?: string | null;
+  thumbnail?: {
+    path?: string | null;
+    original?: string | null;
+    url?: string | null;
+  } | null;
+};
+
+type AboutVcciHcmProps = {
+  post: DynamicPostItem | null;
+  category: DynamicCategoryRouteItem | null;
+  allCategories: DynamicCategoryRouteItem[];
+};
+
+export default function AboutVcciHcm({ post, category, allCategories }: AboutVcciHcmProps) {
+  const tinVcciFilters = [
+    `category.id==${TIN_VCCI_CATEGORY_ID}`,
+    "is_hidden==false",
+    "is_active==true",
+    "type==news",
+  ]
+    .map((item) => item?.trim())
+    .filter(Boolean)
+    .join(",");
+
+  const { data: tinVcciData, isLoading: tinVcciLoading } = useGetApiV10Post({
+    page: 1,
+    pageSize: 3,
+    sortField: "release_at",
+    sortOrder: "desc",
+    filters: tinVcciFilters || undefined,
+  });
+
+  const tinVcciItems = ((tinVcciData?.responseData?.rows ?? []) as unknown as TinVcciApiRow[]).map((item) => ({
+    id: String(item.id ?? ""),
+    title: String(item.title ?? "").trim(),
+    externalLink: buildDynamicPostHref(item.slug?.trim() || "#", item.id ? String(item.id) : ""),
+    publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+    thumbnailUrl:
+      links.resolveImageUrl(
+        item.thumbnail?.url?.trim() ||
+        item.thumbnail?.path?.trim() ||
+        item.thumbnail?.original?.trim() ||
+        "",
+      ) || "/thumbnail.png",
+    thumbnailAlt: String(item.title ?? "").trim() || "Tin VCCI",
+  }));
+  const summaryContent = renderSummary(post?.summary);
+
+  if (!post) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#2450b5] border-t-transparent" />
+      </div>
+    );
+  }
+
+  const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
+
+  return (
+    <div className="min-h-screen bg-white">
+      {categoryMenu.length ? <ListCategory categories={categoryMenu} /> : null}
+      <div className="container mx-auto px-4 py-4 sm:px-6 lg:px-10 lg:pb-6">
+        <>
+          <section className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+            <div className="min-w-0">
+              <h1 className="max-w-6xl text-3xl font-bold leading-tight text-[#111827] md:text-[38px] md:leading-[1.15]">
+                Giới thiệu <span className="text-[#2f57ff]">chung</span>
+              </h1>
+              <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
+
+              {summaryContent ? (
+                <div className="mt-5 max-w-6xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
+                  {summaryContent}
+                </div>
+              ) : null}
+
+              <div className="mt-7 rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
+                <div className="about-vcci-page-content page-detail-content prose tiptap max-w-none overflow-hidden">
+                  <StructuredPostContent post={post} />
+                </div>
+              </div>
+            </div>
+
+            <aside className="rounded-[28px] border border-[#edf1f6] bg-[#fbfcff] px-6 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.05)] lg:sticky lg:top-24">
+              <h2 className="text-[30px] font-bold leading-tight text-[#1f2a44]">
+                Khu vực hoạt động
+              </h2>
+              <div className="mt-6 space-y-4">
+                {ACTIVITY_AREAS.map((item) => (
+                  <div key={item.name} className="flex items-center gap-3 text-[18px] text-[#58667d]">
+                    <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[#2f6ce5]" />
+                    <span>{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          </section>
+
+          <style jsx global>{`
+            .about-vcci-page-content figure {
+              width: 100% !important;
+              max-width: 100% !important;
+              margin: 28px 0 !important;
+              text-align: center;
+            }
+
+            .about-vcci-page-content img {
+              width: 100% !important;
+              max-width: 100% !important;
+              height: auto !important;
+              margin-left: auto !important;
+              margin-right: auto !important;
+              object-fit: contain;
+            }
+          `}</style>
+
+          <section className="mt-10 space-y-10 md:mt-12 md:space-y-12">
+            <div>
+              <div className="text-center">
+                <h2 className="text-[30px] font-bold leading-tight text-[#1f2a44] md:text-[38px]">
+                  Tầm nhìn, <span className="text-[#2f57ff]">Sứ mệnh</span> &{" "}
+                  <span className="text-[#f0a400]">Giá trị</span>
+                </h2>
+                <div className="mx-auto mt-3 h-1 w-16 rounded-full bg-[#f5a400]" />
+              </div>
+
+              <div className="mt-8 grid gap-4 lg:grid-cols-3">
+                {ABOUT_HIGHLIGHTS.map((item) => {
+                  const Icon = item.icon;
+
+                  return (
+                    <article
+                      key={item.key}
+                      className={[
+                        "rounded-3xl border px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)]",
+                        item.featured
+                          ? "border-[#1f56b8] bg-linear-to-br from-[#1d56b7] to-[#21467f] text-white"
+                          : "border-[#edf1f6] bg-white text-[#24415f]",
+                      ].join(" ")}
+                    >
+                      <div
+                        className={[
+                          "flex h-11 w-11 items-center justify-center rounded-2xl",
+                          item.featured ? "bg-white/10 text-[#ffbf2b]" : "bg-[#eff4ff] text-[#7ea1eb]",
+                        ].join(" ")}
+                      >
+                        <Icon className="h-5 w-5" />
+                      </div>
+
+                      <h3
+                        className={[
+                          "mt-5 text-[24px] font-bold",
+                          item.featured ? "text-white" : "text-[#1d2e4f]",
+                        ].join(" ")}
+                      >
+                        {item.title}
+                      </h3>
+
+                      {"description" in item ? (
+                        <p
+                          className={[
+                            "mt-3 text-[15px] leading-7",
+                            item.featured ? "text-white/82" : "text-[#5f6f86]",
+                          ].join(" ")}
+                        >
+                          {item.description}
+                        </p>
+                      ) : (
+                        <ul className="mt-3 space-y-2.5 text-[15px] text-[#5f6f86]">
+                          {item.bullets.map((bullet) => (
+                            <li key={bullet} className="flex items-start gap-2.5">
+                              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-[#f5a400]" />
+                              <span>{bullet}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
+              <div className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                  <h2 className="text-[30px] font-bold leading-tight text-[#1f2a44]">
+                    Khu vực hoạt động
+                  </h2>
+                  <div className="mt-3 h-[3px] w-16 rounded-full bg-[#f5a400]" />
+                  <p className="mt-4 max-w-3xl text-[16px] leading-8 text-[#5f6f86]">
+                    VCCI-HCM hoạt động tại 4 khu vực trọng điểm, bảo đảm hỗ trợ doanh nghiệp theo từng địa bàn cụ thể.
+                  </p>
+                </div>
+
+                <div className="hidden rounded-[18px] border border-[#edf1f6] bg-[#f8fbff] px-4 py-3 text-sm font-medium text-[#2450b5] md:block">
+                  4 điểm hoạt động chính
+                </div>
+              </div>
+
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {ACTIVITY_AREAS.map((item, index) => (
+                  <article
+                    key={item.name}
+                    className="rounded-[22px] border border-[#edf1f6] bg-[#fbfcff] px-5 py-5 shadow-[0_10px_26px_rgba(17,24,39,0.04)]"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#eff4ff] text-lg font-bold text-[#2450b5]">
+                        {index + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-[20px] font-bold leading-tight text-[#1f2a44]">
+                          {item.name}
+                        </h3>
+                      </div>
+                    </div>
+                    <p className="mt-4 text-[15px] leading-7 text-[#5f6f86]">
+                      {item.description}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <div className="mb-6 flex items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-[28px] font-bold leading-tight text-[#2450b5] md:text-[32px]">
+                    TIN VCCI
+                  </h2>
+                  <div className="mt-3 h-1 w-16 rounded-full bg-[#f5a400]" />
+                </div>
+
+                <Link
+                  href="/thong-tin-truyen-thong/tin-vcci"
+                  className="text-sm font-semibold text-[#2450b5] transition-colors hover:text-[#173f9f]"
+                >
+                  Xem tất cả
+                </Link>
+              </div>
+
+              <div className="grid gap-5 pb-6 md:grid-cols-2 xl:grid-cols-3">
+                {tinVcciItems.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={item.externalLink}
+                    className="group overflow-hidden rounded-[22px] bg-white shadow-[0_18px_38px_rgba(28,52,120,0.16)] transition-transform hover:-translate-y-1"
+                  >
+                    <div className="relative aspect-[1.28] overflow-hidden">
+                      <SafeImage
+                        src={item.thumbnailUrl}
+                        alt={item.thumbnailAlt}
+                        width={720}
+                        height={520}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                      />
+                      <div className="absolute inset-0 bg-linear-to-t from-[#1d2f56]/90 via-[#1d2f56]/28 to-transparent" />
+                      <div className="absolute inset-x-0 bottom-0 p-4">
+                        <span className="inline-flex rounded-[10px] bg-[#f5c21b] px-2.5 py-1 text-xs font-bold text-[#1d3f90]">
+                          Tin VCCI
+                        </span>
+                        <h3 className="mt-3 line-clamp-2 text-[17px] font-bold leading-6 text-white">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm text-white/78">
+                          {dayjs(item.publishedAt).format("DD/MM/YYYY")}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
+      </div>
+    </div>
+  );
+}

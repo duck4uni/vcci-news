@@ -1,6 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
 import parse from "html-react-parser";
+import { ImageLightbox } from "@/components/shared/image-lightbox";
 import { SafeImage } from "@/components/shared/safe-image";
 import { getDynamicPostBodyHtml } from "./data";
 import type { DynamicPostContentSection, DynamicPostItem } from "./types";
@@ -18,36 +21,60 @@ function getGridClassName(columns: number) {
 
 function StructuredImageSection({ section }: { section: DynamicPostContentSection }) {
   const images = section.images.filter((item) => item.image?.url);
+  const [activeImage, setActiveImage] = useState<{
+    src: string;
+    alt: string;
+    caption?: string;
+  } | null>(null);
 
   if (!images.length) return null;
 
   return (
-    <div className={`not-prose my-6 grid gap-4 ${getGridClassName(section.image_columns)}`}>
-      {images.map((item) => {
-        const image = item.image;
-        if (!image?.url) return null;
+    <>
+      <div className={`not-prose my-6 grid gap-4 ${getGridClassName(section.image_columns)}`}>
+        {images.map((item) => {
+          const image = item.image;
+          if (!image?.url) return null;
 
-        return (
-          <figure
-            key={`${section.id}-${image.id || image.url}-${item.position}`}
-            className="overflow-hidden rounded-[18px] bg-white"
-          >
-            <SafeImage
-              src={image.url}
-              alt={image.alt || image.name || "Hình ảnh bài viết"}
-              width={1200}
-              height={800}
-              className="h-auto w-full object-contain"
-            />
-            {item.caption ? (
-              <figcaption className="mt-2 text-center text-sm text-gray-600">
-                {item.caption}
-              </figcaption>
-            ) : null}
-          </figure>
-        );
-      })}
-    </div>
+          return (
+            <figure
+              key={`${section.id}-${image.id || image.url}-${item.position}`}
+              className="group cursor-zoom-in overflow-hidden rounded-[18px] bg-white"
+              onClick={() =>
+                setActiveImage({
+                  src: image.url,
+                  alt: image.alt || image.name || "Hình ảnh bài viết",
+                  caption: item.caption ?? undefined,
+                })
+              }
+            >
+              <SafeImage
+                src={image.url}
+                alt={image.alt || image.name || "Hình ảnh bài viết"}
+                width={1200}
+                height={800}
+                className="h-auto w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+              />
+              {item.caption ? (
+                <figcaption className="mt-2 text-center text-sm text-gray-600">
+                  {item.caption}
+                </figcaption>
+              ) : null}
+            </figure>
+          );
+        })}
+      </div>
+
+      <ImageLightbox
+        src={activeImage?.src ?? ""}
+        alt={activeImage?.alt}
+        caption={activeImage?.caption}
+        open={Boolean(activeImage)}
+        onOpenChange={(open) => {
+          if (!open) setActiveImage(null);
+        }}
+      />
+    </>
   );
 }
 

@@ -3,12 +3,11 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Facebook, Linkedin, Menu, Twitter, X, Youtube } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { SafeImage } from "@/components/shared/safe-image";
 import Link from "next/link";
 const fallbackLogo = "/logo.png";
 import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
-import { getApiV10SiteInformation } from "@/api/vcci-news/endpoints/site-information";
+import { useGetApiV10SiteInformation } from "@/api/vcci-news/endpoints/site-information";
 import links from "@/links";
 import type { Logo } from "@/api/vcci-news/models/logo";
 import type {
@@ -209,12 +208,14 @@ function Header() {
     }
   );
 
-  const { data: siteInformationResponse } =
-    useQuery<ApiEnvelope<SiteInformationData> | null>({
-      queryKey: ["site-information"],
-      queryFn: () => getApiV10SiteInformation().catch(() => null),
-      staleTime: 5 * 60 * 1000,
-    });
+  const { data: siteInformationResponse } = useGetApiV10SiteInformation(
+    undefined,
+    {
+      query: {
+        staleTime: 5 * 60 * 1000,
+      },
+    },
+  );
 
   const menuItems = useMemo(
     () => buildHeaderMenuTree(categoriesResponse?.responseData?.rows),
