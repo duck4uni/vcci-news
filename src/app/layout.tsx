@@ -6,8 +6,8 @@ import links from "@links/index";
 
 export const metadata: Metadata = {
   icons: { icon: '/favicon.ico', shortcut: '/favicon.ico' },
-  title: 'Chức năng Đại diện Người sử dụng lao động - Liên đoàn Thương mại và Công nghiệp Việt Nam, CN TP.HCM',
-  description: 'Chức năng Đại diện Người sử dụng lao động (NSDLĐ):',
+  title: 'Liên đoàn Thương mại và Công nghiệp Việt Nam, CN TP.HCM',
+  description: 'Phòng Thương mại và Công nghiệp Việt Nam (VCCI) là tổ chức quốc gia tập hợp và đại diện cho cộng đồng doanh nghiệp, doanh nhân, người sử dụng lao động...',
   metadataBase: new URL(links.siteURL),
   alternates: { canonical: links.siteURL },
   openGraph: {
