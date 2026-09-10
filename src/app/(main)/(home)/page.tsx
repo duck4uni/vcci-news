@@ -1,5 +1,3 @@
-'use client'
-
 import FeaturedNews from "./components/featured-news";
 import Advertisements from "./components/quick-links";
 import HorizontalAdBanner from "./components/horizontal-ad-banner";
@@ -9,12 +7,15 @@ import BusinessOpportunities from "./components/business-opportunities";
 import PolicyAndLaws from "./components/policies-and-laws";
 import EventsCalendar from "./components/events-calendar";
 import Banner from "./components/banner";
-import Members from './components/members';
-import VideoAndPartners from './components/video-and-patners';
+import Members from "./components/members";
+import VideoAndPartners from "./components/video-and-patners";
 
 export default function HomePage() {
   return (
     <div>
+      <h1 className="sr-only">
+        Liên đoàn Thương mại và Công nghiệp Việt Nam, CN TP.HCM
+      </h1>
       <Banner />
       {/* contents */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-10 space-y-6">
@@ -49,4 +50,4 @@ export default function HomePage() {
       </div>
     </div>
   );
-};
+}
