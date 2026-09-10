@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { usePathname } from 'next/navigation';
 import {
   AdminAuthLoadingScreen,
@@ -10,11 +9,12 @@ import { AdminSidebar } from '@/components/layout/admin/admin-sidebar';
 import { AdminHeader } from '@/components/layout/admin/admin-header';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
 import { cn } from '@/lib/utils';
+import { useEffect } from 'react';
 
 function AdminShell({ children }: { children: React.ReactNode }) {
   const { close, isOpen } = useSidebarStore();
 
-  React.useEffect(() => {
+  useEffect(() => {
     const mediaQuery = window.matchMedia('(max-width: 1023px)');
     const syncSidebar = () => {
       if (mediaQuery.matches) close();
