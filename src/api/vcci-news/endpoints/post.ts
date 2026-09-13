@@ -34,6 +34,8 @@ import type {
   GetApiV10PostId200,
   GetApiV10PostIdHistory200,
   GetApiV10PostParams,
+  GetApiV10PostStats200,
+  GetApiV10PostStatsParams,
   PostApiV10Post200,
   PostMutate,
   PutApiV10PostId200,
@@ -824,4 +826,198 @@ export const usePostApiV10Post = <TError = ErrorType<unknown>,
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * Retrieve aggregate post counts (total, published, featured) matching the given filters in a single request.
+ * @summary Get post stats
+ */
+export const getApiV10PostStats = (
+    params?: GetApiV10PostStatsParams,
+ options?: SecondParameter<typeof useCustomClient>,signal?: AbortSignal
+) => {
+      
+      
+      return useCustomClient<GetApiV10PostStats200>(
+      {url: `/api/v1.0/post/stats`, method: 'GET',
+        params, signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetApiV10PostStatsInfiniteQueryKey = (params?: GetApiV10PostStatsParams,) => {
+    return [
+    'infinite', `/api/v1.0/post/stats`, ...(params ? [params]: [])
+    ] as const;
+    }
+
+export const getGetApiV10PostStatsQueryKey = (params?: GetApiV10PostStatsParams,) => {
+    return [
+    `/api/v1.0/post/stats`, ...(params ? [params]: [])
+    ] as const;
+    }
+
     
+export const getGetApiV10PostStatsInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostStats>>>, TError = ErrorType<unknown>>(params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV10PostStatsInfiniteQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV10PostStats>>> = ({ signal }) => getApiV10PostStats(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV10PostStatsInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV10PostStats>>>
+export type GetApiV10PostStatsInfiniteQueryError = ErrorType<unknown>
+
+
+export function useGetApiV10PostStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostStats>>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetApiV10PostStatsParams, options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostStats>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostStats>>>, TError = ErrorType<unknown>>(
+ params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostStats>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostStats>>>, TError = ErrorType<unknown>>(
+ params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get post stats
+ */
+
+export function useGetApiV10PostStatsInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10PostStats>>>, TError = ErrorType<unknown>>(
+ params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV10PostStatsInfiniteQueryOptions(params,options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get post stats
+ */
+export const prefetchGetApiV10PostStatsInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(
+ queryClient: QueryClient, params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiV10PostStatsInfiniteQueryOptions(params,options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiV10PostStatsQueryOptions = <TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV10PostStatsQueryKey(params);
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV10PostStats>>> = ({ signal }) => getApiV10PostStats(params, requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV10PostStatsQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV10PostStats>>>
+export type GetApiV10PostStatsQueryError = ErrorType<unknown>
+
+
+export function useGetApiV10PostStats<TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(
+ params: undefined |  GetApiV10PostStatsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostStats>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostStats<TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(
+ params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10PostStats>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10PostStats>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10PostStats<TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(
+ params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get post stats
+ */
+
+export function useGetApiV10PostStats<TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(
+ params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV10PostStatsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get post stats
+ */
+export const prefetchGetApiV10PostStatsQuery = async <TData = Awaited<ReturnType<typeof getApiV10PostStats>>, TError = ErrorType<unknown>>(
+ queryClient: QueryClient, params?: GetApiV10PostStatsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10PostStats>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiV10PostStatsQueryOptions(params,options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+

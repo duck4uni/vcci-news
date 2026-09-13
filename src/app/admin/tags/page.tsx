@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
-  type CmsTagItem,
-  createCmsTag,
-  deleteCmsTag,
-  fetchCmsTagsPage,
-  updateCmsTag,
-} from "@/lib/api/cms-admin";
+  type TagItem,
+} from "@/api/vcci-news/types/tag";
+import {
+  deleteApiV10TagId,
+  getApiV10Tag,
+  patchApiV10TagId,
+  postApiV10Tag,
+} from "@/api/vcci-news/endpoints/tag";
 
 import { TagDeleteDialog } from "./_components/tag-delete-dialog";
 import { TagFormDialog } from "./_components/tag-form-dialog";
@@ -17,13 +19,13 @@ import { EMPTY_FORM, PAGE_SIZE, type TagFormValues } from "./_components/types";
 import { slugifyTag } from "./_components/utils";
 
 export default function AdminTagsPage() {
-  const [items, setItems] = useState<CmsTagItem[]>([]);
+  const [items, setItems] = useState<TagItem[]>([]);
   const [search, setSearch] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [formValues, setFormValues] = useState<TagFormValues>(EMPTY_FORM);
-  const [deleteTarget, setDeleteTarget] = useState<CmsTagItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TagItem | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
@@ -31,14 +33,17 @@ export default function AdminTagsPage() {
     setIsReady(false);
 
     const keyword = search.trim();
-    const result = await fetchCmsTagsPage({
+    const response = await getApiV10Tag({
       page,
       pageSize: PAGE_SIZE,
+      sortField: "name",
+      sortOrder: "asc",
       filters: keyword ? `name@=${keyword}|slug@=${keyword}` : undefined,
     });
+    const result = (response.responseData ?? {}) as { rows?: TagItem[]; count?: number };
 
-    setItems(result.items);
-    setTotal(result.total);
+    setItems(result.rows ?? []);
+    setTotal(result.count ?? 0);
     setIsReady(true);
   }, [page, search]);
 
@@ -68,7 +73,7 @@ export default function AdminTagsPage() {
     setFormOpen(true);
   };
 
-  const openEdit = (item: CmsTagItem) => {
+  const openEdit = (item: TagItem) => {
     setFormValues({
       id: item.id,
       name: item.name,
@@ -94,10 +99,10 @@ export default function AdminTagsPage() {
 
     try {
       if (formValues.id) {
-        await updateCmsTag(formValues.id, payload);
+        await patchApiV10TagId(formValues.id, payload);
         toast.success("Cập nhật tag thành công");
       } else {
-        await createCmsTag(payload);
+        await postApiV10Tag(payload);
         toast.success("Tạo tag thành công");
       }
 
@@ -117,7 +122,7 @@ export default function AdminTagsPage() {
     setIsSubmitting(true);
 
     try {
-      await deleteCmsTag(deleteTarget.id);
+      await deleteApiV10TagId(deleteTarget.id);
       toast.success("Xóa tag thành công");
       setDeleteTarget(null);
       await load();

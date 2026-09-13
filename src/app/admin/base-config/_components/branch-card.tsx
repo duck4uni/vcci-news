@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { BaseConfigBranchItem } from "@/mockdata/base-config";
+import type { BaseConfigBranchItem } from "@/api/vcci-news/types/base-config";
 
 export function BranchCard({
   branch,

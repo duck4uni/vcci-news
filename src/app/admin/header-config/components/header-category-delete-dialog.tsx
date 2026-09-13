@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
-import { HeaderCategoryTreeItem } from "@/mockdata/header-config";
+import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 
 interface HeaderCategoryDeleteDialogProps {
   target: HeaderCategoryTreeItem | null;

@@ -8,12 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { usePutApiV10UserChangePassword } from "@/api/vcci-news/endpoints/user";
+import { usePostApiV10AuthLogout } from "@/api/vcci-news/endpoints/authentication";
 import useAuthStore from "@/store/useAuthStore";
-import { logoutAdmin } from "@/lib/auth/admin-auth";
+import useUserStore from "@/store/useUserStore";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,6 +24,13 @@ export default function ChangePasswordPage() {
   const [done, setDone] = useState(false);
 
   const changePasswordMutation = usePutApiV10UserChangePassword();
+  const { mutateAsync: logoutAsync } = usePostApiV10AuthLogout({
+    mutation: {
+      onError: (error) => {
+        console.error('Logout error:', error);
+      },
+    },
+  });
 
   const validate = (): string | null => {
     if (!oldPassword.trim()) return "Vui lòng nhập mật khẩu cũ";
@@ -51,14 +59,22 @@ export default function ChangePasswordPage() {
       toast.success("Đổi mật khẩu thành công!");
 
       // Update store để bỏ must_change_password
-      useAuthStore.getState().setAppUser({
+      useUserStore.getState().setAppUser({
         ...appUser,
         must_change_password: false,
       } as typeof appUser);
 
       // Sau 2s, logout để user đăng nhập lại bằng mật khẩu mới
       setTimeout(async () => {
-        await logoutAdmin({ silent: true, redirectToLogin: true });
+        try {
+          await logoutAsync();
+        } catch {
+          // Ignore logout API failure and continue clearing local auth state.
+        } finally {
+          useAuthStore.getState().resetStore();
+          useUserStore.getState().clearUser();
+          router.push('/admin/login');
+        }
       }, 2000);
     } catch (err: unknown) {
       const e = err as { message?: string };

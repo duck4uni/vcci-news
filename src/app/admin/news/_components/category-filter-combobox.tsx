@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { type HeaderCategoryItem } from "@/mockdata/header-config";
+import type { HeaderCategoryItem } from "@/api/vcci-news/types/header-config";
 import { formatHeaderCategoryOptionLabel } from "./utils";
 
 export function CategoryFilterCombobox({

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 
 /**
  * Hook để kiểm tra permission của user hiện tại
@@ -20,7 +20,7 @@ export function usePermission(
   resourceOrPermissions: string | string[],
   actionOrMode?: string,
 ): boolean {
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
 
   return useMemo(() => {
     const userPermissions = appUser?.permissions || [];
@@ -66,7 +66,7 @@ export function usePermission(
  * const isSystemAdmin = useHasRole("system_admin");
  */
 export function useHasRole(roleName: string | string[]): boolean {
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
 
   return useMemo(() => {
     const userRoles = appUser?.roles || [];
@@ -86,7 +86,7 @@ export function useHasRole(roleName: string | string[]): boolean {
  * const permissions = useAllPermissions();
  */
 export function useAllPermissions(): string[] {
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
   return appUser?.permissions || [];
 }
 
@@ -97,7 +97,7 @@ export function useAllPermissions(): string[] {
  * const roles = useAllRoles();
  */
 export function useAllRoles(): string[] {
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
   return appUser?.roles || [];
 }
 
@@ -108,7 +108,7 @@ export function useAllRoles(): string[] {
  * const hasAnyPermission = useHasAnyPermission();
  */
 export function useHasAnyPermission(): boolean {
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
   return (appUser?.permissions?.length || 0) > 0;
 }
 

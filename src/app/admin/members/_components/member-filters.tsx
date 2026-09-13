@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { type MemberField, type MemberRegion } from "@/mockdata/members";
+import type { MemberField, MemberRegion } from "@/api/vcci-news/types/member";
 import {
   selectContentClassName,
   selectItemClassName,

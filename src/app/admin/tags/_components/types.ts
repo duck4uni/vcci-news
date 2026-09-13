@@ -1,4 +1,4 @@
-import type { CmsTagItem } from "@/lib/api/cms-admin";
+import type { TagItem } from "@/api/vcci-news/types/tag";
 
 export interface TagFormValues {
   id?: string;
@@ -13,4 +13,4 @@ export const EMPTY_FORM: TagFormValues = {
   slug: "",
 };
 
-export type { CmsTagItem };
+export type { TagItem };

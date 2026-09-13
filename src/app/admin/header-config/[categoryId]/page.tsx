@@ -26,15 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  deleteCmsNewsItem,
-  fetchCmsNewsItems,
-  fetchHeaderConfigItems,
-  type CmsHeaderCategoryItem,
-  type CmsNewsItem,
-} from "@/lib/api/cms-admin";
-import { ADMIN_NEWS_TYPE_LABELS } from "@/mockdata/admin-news";
-import { buildHeaderCategoryTree } from "@/mockdata/header-config";
+import { getApiV10Post } from "@/api/vcci-news/endpoints/post";
+import { deleteApiV10PostId } from "@/api/vcci-news/endpoints/post";
+import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import { ADMIN_NEWS_TYPE_LABELS, type AdminNewsItem } from "@/mockdata/admin-news";
+import { normalizeUser } from "@/lib/utils/cms-user";
+import { normalizeDateTimeInput } from "@/lib/utils/datetime";
+import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
+import links from "@/links";
+import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 import { HeaderCategoryPostsLoading } from "./_components/HeaderCategoryPostsLoading";
 import {
   PAGE_SIZE,
@@ -48,11 +48,11 @@ export default function HeaderCategoryPostsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const categoryId = String(params.categoryId ?? "");
-  const [items, setItems] = useState<CmsNewsItem[]>([]);
-  const [headerItems, setHeaderItems] = useState<CmsHeaderCategoryItem[]>([]);
+  const [items, setItems] = useState<AdminNewsItem[]>([]);
+  const [headerTree, setHeaderTree] = useState<HeaderCategoryTreeItem[]>([]);
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [ready, setReady] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<CmsNewsItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminNewsItem | null>(null);
   const didMountRef = useRef(false);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(() => {
@@ -90,22 +90,61 @@ export default function HeaderCategoryPostsPage() {
           keyword ? `title@=${keyword}|slug@=${keyword}` : "",
         ].filter(Boolean).join(",");
 
-        const [newsData, headerConfig] = await Promise.all([
-          fetchCmsNewsItems({
+        const [newsResponse, treeResponse] = await Promise.all([
+          getApiV10Post({
             page,
             pageSize: PAGE_SIZE,
             sortField: "created_at",
             sortOrder: "desc",
-            filters,
+            filters: filters.trim() || undefined,
           }),
-          fetchHeaderConfigItems(),
+          getApiV10CategoryTree(),
         ]);
 
         if (cancelled) return;
 
-        setItems(newsData.items);
-        setTotal(newsData.total);
-        setHeaderItems(headerConfig.items);
+        const newsResult = (newsResponse.responseData ?? {}) as { rows?: any[]; count?: number };
+        const tree = (treeResponse.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
+        setItems((newsResult.rows ?? []).map((item: any): AdminNewsItem => {
+          const structuredContent = parsePostContent(item.content_structure);
+          const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
+          const categories = Array.isArray(item.categories) ? item.categories : [];
+          const primaryCategory = categories[0] ?? null;
+          const primaryCategoryType = primaryCategory?.type ?? null;
+          return {
+            id: item.id ?? "",
+            title: item.title ?? "",
+            slug: item.slug ?? "",
+            summary: item.summary ?? "",
+            type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+            header_category_id: primaryCategory?.id ?? "",
+            category_ids: categories.map((c: any) => c.id),
+            tagsearch_values: [],
+            is_featured: Boolean(item.is_featured),
+            thumbnail: item.thumbnail?.id ? {
+              id: item.thumbnail.id,
+              name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+              alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+              url: links.resolveImageUrl(item.thumbnail.path),
+            } : null,
+            is_hidden: Boolean(item.is_hidden),
+            created_at: item.created_at ?? "",
+            updated_at: item.updated_at ?? "",
+            published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+            expired_at: normalizeDateTimeInput(item.expired_at),
+            started_at: normalizeDateTimeInput(item.started_at),
+            ended_at: normalizeDateTimeInput(item.ended_at),
+            registration_deadline: normalizeDateTimeInput(item.registration_deadline),
+            location: item.location ?? "",
+            participation_fee: item.participation_fee ?? "",
+            event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+            post_content: postContent,
+            creator: normalizeUser(item.creator),
+            editor: normalizeUser(item.editor),
+          };
+        }));
+        setTotal(newsResult.count ?? 0);
+        setHeaderTree(tree);
         setReady(true);
       } catch (error) {
         if (cancelled) return;
@@ -122,8 +161,8 @@ export default function HeaderCategoryPostsPage() {
   }, [categoryId, page, search]);
 
   const flatCategories = useMemo(() => {
-    return flattenTree(buildHeaderCategoryTree(headerItems));
-  }, [headerItems]);
+    return flattenTree(headerTree);
+  }, [headerTree]);
 
   const category = useMemo(
     () => flatCategories.find((item) => item.id === categoryId) ?? null,
@@ -193,7 +232,7 @@ export default function HeaderCategoryPostsPage() {
     if (!deleteTarget) return;
 
     try {
-      await deleteCmsNewsItem(deleteTarget.id);
+      await deleteApiV10PostId(deleteTarget.id);
       setItems((current) => current.filter((item) => item.id !== deleteTarget.id));
       setTotal((current) => Math.max(0, current - 1));
       toast.success("Đã xóa bài viết");

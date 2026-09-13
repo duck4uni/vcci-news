@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   HeaderCategoryDeleteDialog,
@@ -11,15 +11,14 @@ import {
   HeaderCategoryStats,
   HeaderCategoryTable,
 } from "./components";
+import { buildStaticLink } from "@/lib/utils/header-link";
 import {
-  CmsHeaderCategoryItem,
-  createHeaderConfigItem,
-  deleteHeaderConfigItem,
-  fetchHeaderConfigItems,
-  updateHeaderConfigItem,
-} from "@/lib/api/cms-admin";
+  deleteApiV10CategoryId,
+  getApiV10CategoryTree,
+  postApiV10Category,
+  putApiV10CategoryId,
+} from "@/api/vcci-news/endpoints/category";
 import {
-  buildHeaderCategoryTree,
   HeaderCategoryItem,
   HeaderCategoryTreeItem,
   toSlug,
@@ -40,7 +39,7 @@ function isProtectedHomeCategory(itemId?: string | null) {
   return itemId === PROTECTED_HOME_CATEGORY_ID;
 }
 
-function toFormValues(item?: CmsHeaderCategoryItem | null): HeaderCategoryFormValues {
+function toFormValues(item?: HeaderCategoryItem | null): HeaderCategoryFormValues {
   if (!item) return EMPTY_HEADER_CATEGORY_FORM;
 
   return {
@@ -54,35 +53,28 @@ function toFormValues(item?: CmsHeaderCategoryItem | null): HeaderCategoryFormVa
   };
 }
 
-type ManagedHeaderCategoryItem = HeaderCategoryItem & {
-  code: string;
-  api_parent_id: string | null;
-};
-
 function useHeaderConfigModule() {
-  const [items, setItems] = React.useState<ManagedHeaderCategoryItem[]>([]);
-  const [rootStaticLink, setRootStaticLink] = React.useState("/");
-  const [isReady, setIsReady] = React.useState(false);
+  const [tree, setTree] = useState<HeaderCategoryTreeItem[]>([]);
+  const [rootStaticLink, setRootStaticLink] = useState("/");
+  const [isReady, setIsReady] = useState(false);
 
-  const load = React.useCallback(async () => {
-    const headerConfig = await fetchHeaderConfigItems();
+  const load = useCallback(async () => {
+    const response = await getApiV10CategoryTree();
+    const treeData = (response.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
 
-    setItems(headerConfig.items as ManagedHeaderCategoryItem[]);
-    setRootStaticLink(headerConfig.rootStaticLink);
+    setTree(treeData);
+    setRootStaticLink("/");
     setIsReady(true);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     void load().catch((error) => {
       toast.error(error instanceof Error ? error.message : "Không thể tải cấu hình danh mục");
       setIsReady(true);
     });
   }, [load]);
 
-  const tree = React.useMemo(() => buildHeaderCategoryTree(items), [items]);
-
   return {
-    items,
     tree,
     rootStaticLink,
     isReady,
@@ -91,19 +83,19 @@ function useHeaderConfigModule() {
 }
 
 export default function HeaderConfigPage() {
-  const { items, tree, rootStaticLink, isReady, reload } = useHeaderConfigModule();
+  const { tree, rootStaticLink, isReady, reload } = useHeaderConfigModule();
 
-  const [expanded, setExpanded] = React.useState<Record<string, boolean>>({});
-  const [search, setSearch] = React.useState("");
-  const [formMode, setFormMode] = React.useState<HeaderCategoryFormMode>("create");
-  const [formOpen, setFormOpen] = React.useState(false);
-  const [formValues, setFormValues] = React.useState<HeaderCategoryFormValues>(
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [search, setSearch] = useState("");
+  const [formMode, setFormMode] = useState<HeaderCategoryFormMode>("create");
+  const [formOpen, setFormOpen] = useState(false);
+  const [formValues, setFormValues] = useState<HeaderCategoryFormValues>(
     EMPTY_HEADER_CATEGORY_FORM,
   );
-  const [deleteTarget, setDeleteTarget] = React.useState<HeaderCategoryTreeItem | null>(null);
-  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<HeaderCategoryTreeItem | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!isReady) return;
 
     setExpanded((previous) => {
@@ -126,7 +118,7 @@ export default function HeaderConfigPage() {
     });
   }, [isReady, tree]);
 
-  const flatRows = React.useMemo(() => {
+  const flatRows = useMemo(() => {
     const rows: HeaderCategoryFlatRow[] = [];
 
     const walk = (nodes: HeaderCategoryTreeItem[], depth = 0) => {
@@ -142,12 +134,12 @@ export default function HeaderConfigPage() {
     return rows;
   }, [tree]);
 
-  const itemMap = React.useMemo(
-    () => new Map(items.map((item) => [item.id, item])),
-    [items],
+  const itemMap = useMemo(
+    () => new Map(flatRows.map((item) => [item.id, item])),
+    [flatRows],
   );
 
-  const visibleRows = React.useMemo(() => {
+  const visibleRows = useMemo(() => {
     return flatRows.filter((row) => {
       const keyword = search.trim().toLowerCase();
       const matchesSearch =
@@ -169,17 +161,17 @@ export default function HeaderConfigPage() {
     });
   }, [expanded, flatRows, search]);
 
-  const categoryParentOptions = React.useMemo(
+  const categoryParentOptions = useMemo(
     () => tree.filter((item) => item.type === "category"),
     [tree],
   );
 
-  const editingItem = React.useMemo(
+  const editingItem = useMemo(
     () => flatRows.find((item) => item.id === formValues.id) ?? null,
     [flatRows, formValues.id],
   );
 
-  const canChangeParent = React.useMemo(() => {
+  const canChangeParent = useMemo(() => {
     if (!editingItem) return true;
     return editingItem.children.length === 0 || !formValues.parent_id;
   }, [editingItem, formValues.parent_id]);
@@ -224,7 +216,7 @@ export default function HeaderConfigPage() {
     const parent = itemMap.get(parentId);
     return {
       apiParentId: parent?.id ?? "",
-      parentStaticLink: parent?.static_link ?? rootStaticLink,
+      parentStaticLink: parent?.url ?? rootStaticLink,
     };
   };
 
@@ -278,17 +270,17 @@ export default function HeaderConfigPage() {
       const payload = {
         name: formValues.name.trim(),
         slug: formValues.slug.trim() || toSlug(formValues.name),
+        url: buildStaticLink(formValues.slug.trim(), parentContext.parentStaticLink),
         sort_order: Number(formValues.sort_order) || 1,
-        type: formValues.type,
-        api_parent_id: parentContext.apiParentId,
-        parent_static_link: parentContext.parentStaticLink,
+        parent_id: parentContext.apiParentId || undefined,
+        type: formValues.type === "category" ? "category" : formValues.type === "news" ? "news" : "page",
       };
 
       if (formMode === "create") {
-        await createHeaderConfigItem(payload);
+        await postApiV10Category(payload);
         toast.success("Tạo danh mục thành công");
       } else if (formValues.id) {
-        await updateHeaderConfigItem(formValues.id, payload);
+        await putApiV10CategoryId(formValues.id, payload);
         toast.success("Cập nhật danh mục thành công");
       }
 
@@ -313,7 +305,7 @@ export default function HeaderConfigPage() {
     setIsSubmitting(true);
 
     try {
-      await deleteHeaderConfigItem(deleteTarget.id);
+      await deleteApiV10CategoryId(deleteTarget.id);
       toast.success("Xóa danh mục thành công");
       setDeleteTarget(null);
       await reload();

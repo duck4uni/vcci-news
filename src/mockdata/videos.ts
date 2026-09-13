@@ -1,18 +1,10 @@
 "use client";
 
+import type { VideoItem, VideoFormValues } from "@/api/vcci-news/types/video";
+
+export type { VideoItem, VideoFormValues } from "@/api/vcci-news/types/video";
+
 export const VIDEO_STORAGE_KEY = "vcci-news.admin-videos.data.v1";
-
-export interface VideoItem {
-  id: string;
-  name: string;
-  url: string;
-}
-
-export interface VideoFormValues {
-  id?: string;
-  name: string;
-  url: string;
-}
 
 const VIDEO_SEED: VideoItem[] = [
   {

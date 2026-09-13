@@ -11,13 +11,17 @@ import {
   Mail,
 } from "lucide-react";
 import { toast } from "sonner";
-import { usePostApiV10AuthForgotPasswordRequest } from "@/api/vcci-news/endpoints/authentication";
+import {
+  useGetApiV10AuthMe,
+  usePostApiV10AuthForgotPasswordRequest,
+  usePostApiV10AuthLogin,
+} from "@/api/vcci-news/endpoints/authentication";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { loginAdmin } from "@/lib/auth/admin-auth";
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore, { type AuthenticatedAdminUser } from "@/store/useUserStore";
 import { AuthShell, type AuthMode } from "./_components/auth-shell";
 
 type ErrorResponse = {
@@ -65,6 +69,30 @@ function getAuthErrorMessage(error: unknown, fallback: string) {
   );
 }
 
+function normalizeUser(
+  user: any,
+  mustChangePassword: boolean,
+): AuthenticatedAdminUser | null {
+  if (!user?.id || !user.email || !user.username) return null;
+
+  return {
+    id: user.id,
+    email: user.email,
+    username: user.username,
+    first_name: user.first_name ?? null,
+    last_name: user.last_name ?? null,
+    roles: Array.isArray(user.roles)
+      ? user.roles.filter((v: unknown): v is string => typeof v === "string")
+      : [],
+    permissions: Array.isArray(user.permissions)
+      ? user.permissions.filter((v: unknown): v is string => typeof v === "string")
+      : [],
+    status: user.status ?? null,
+    last_login_at: user.last_login_at ?? null,
+    must_change_password: mustChangePassword,
+  };
+}
+
 function InlineMessage({ type, message }: {
   type: "error" | "success";
   message: string;
@@ -98,6 +126,8 @@ function AdminLoginPageContent() {
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
   const rememberState = useAuthStore((state) => state.appUserRemember);
+  const setAuthSession = useAuthStore((state) => state.setAuthSession);
+  const setAppUser = useUserStore((state) => state.setAppUser);
   const setAppUserRemember = useAuthStore((state) => state.setAppUserRemember);
 
   const [mode, setMode] = useState<AuthMode>("login");
@@ -105,13 +135,16 @@ function AdminLoginPageContent() {
   const [password, setPassword] = useState("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [remember, setRemember] = useState(false);
-  const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
 
   const [forgotNote, setForgotNote] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState<string | null>(null);
   const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+
+  const { refetch: getProfile } = useGetApiV10AuthMe({
+    query: { enabled: false },
+  });
 
   useEffect(() => {
     if (!rememberState?.remember) return;
@@ -124,7 +157,7 @@ function AdminLoginPageContent() {
   useEffect(() => {
     if (!hasHydrated || !isLoggedIn) return;
 
-    const currentUser = useAuthStore.getState().appUser;
+    const currentUser = useUserStore.getState().appUser;
     if (currentUser?.must_change_password) {
       router.replace("/admin/change-password");
     } else {
@@ -132,33 +165,75 @@ function AdminLoginPageContent() {
     }
   }, [hasHydrated, isLoggedIn, redirect, router]);
 
+  const { mutate: login, isPending: loginLoading } = usePostApiV10AuthLogin({
+    mutation: {
+      onSuccess: async (res: any) => {
+        const loginData = res?.responseData ?? res?.data?.responseData ?? res?.data;
+
+        if (!loginData?.access_token || !loginData?.refresh_token) {
+          setLoginError("Thiếu dữ liệu phiên đăng nhập từ API.");
+          return;
+        }
+
+        const mustChangePassword = loginData.must_change_password === true;
+
+        setAuthSession({
+          accessToken: loginData.access_token,
+          refreshToken: loginData.refresh_token,
+          persistSession: remember,
+        });
+
+        setAppUserRemember(
+          remember ? email.trim() : "",
+          remember ? password : "",
+          remember,
+        );
+
+        try {
+          const profile = await getProfile();
+          const profileData =
+            (profile.data as any)?.responseData ??
+            (profile.data as any)?.data?.responseData;
+
+          const normalizedUser = normalizeUser(profileData, mustChangePassword);
+          if (normalizedUser) {
+            setAppUser(normalizedUser);
+          } else if (loginData.user) {
+            const fallbackUser = normalizeUser(loginData.user, mustChangePassword);
+            if (fallbackUser) setAppUser(fallbackUser);
+          }
+        } catch {
+          if (loginData.user) {
+            const fallbackUser = normalizeUser(loginData.user, mustChangePassword);
+            if (fallbackUser) setAppUser(fallbackUser);
+          }
+        }
+
+        if (mustChangePassword) {
+          toast.success("Đăng nhập thành công. Vui lòng đổi mật khẩu để tiếp tục.");
+          router.replace("/admin/change-password");
+        } else {
+          toast.success("Đăng nhập quản trị thành công");
+          router.replace(redirect);
+        }
+      },
+      onError: (err: any) => {
+        setLoginError(
+          getAuthErrorMessage(err, "Đăng nhập thất bại. Vui lòng thử lại."),
+        );
+      },
+    },
+  });
+
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoginError(null);
-    setLoginLoading(true);
-
-    try {
-      const loginData = await loginAdmin(email.trim(), password, { persistSession: remember });
-      setAppUserRemember(
-        remember ? email.trim() : "",
-        remember ? password : "",
-        remember,
-      );
-
-      if (loginData?.must_change_password) {
-        toast.success("Đăng nhập thành công. Vui lòng đổi mật khẩu để tiếp tục.");
-        router.replace("/admin/change-password");
-      } else {
-        toast.success("Đăng nhập quản trị thành công");
-        router.replace(redirect);
-      }
-    } catch (error) {
-      setLoginError(
-        getAuthErrorMessage(error, "Đăng nhập thất bại. Vui lòng thử lại."),
-      );
-    } finally {
-      setLoginLoading(false);
-    }
+    login({
+      data: {
+        email: email.trim(),
+        password,
+      },
+    });
   };
 
   const forgotMutation = usePostApiV10AuthForgotPasswordRequest({

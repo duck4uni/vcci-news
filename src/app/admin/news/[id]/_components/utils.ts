@@ -1,5 +1,5 @@
 import type { AdminMediaItem, AdminNewsImageRef, AdminNewsType } from "@/mockdata/admin-news";
-import type { HeaderCategoryItem, HeaderCategoryTreeItem } from "@/mockdata/header-config";
+import type { HeaderCategoryItem, HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 
 export type HeaderCategoryOption = {
   id: string;

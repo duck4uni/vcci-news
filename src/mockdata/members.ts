@@ -1,59 +1,24 @@
 "use client";
 
+import type {
+  MemberField,
+  MemberRegion,
+  MemberImageRef,
+  MemberItem,
+  MemberFormValues,
+} from "@/api/vcci-news/types/member";
+
+export type {
+  MemberField,
+  MemberRegion,
+  MemberImageRef,
+  MemberItem,
+  MemberFormValues,
+} from "@/api/vcci-news/types/member";
+
 export const MEMBER_STORAGE_KEY = "vcci-news.admin-members.data.v1";
 export const MEMBER_FIELD_STORAGE_KEY = "vcci-news.admin-member-fields.data.v1";
 export const MEMBER_REGION_STORAGE_KEY = "vcci-news.admin-member-regions.data.v1";
-
-export interface MemberField {
-  id: string;
-  name: string;
-}
-
-export interface MemberRegion {
-  id: string;
-  name: string;
-}
-
-export interface MemberImageRef {
-  id: string;
-  name: string;
-  alt: string;
-  url: string;
-}
-
-import type { AdminNewsContentSection } from "@/mockdata/admin-news";
-
-export interface MemberItem {
-  id: string;
-  name: string;
-  is_featured: boolean;
-  image: MemberImageRef | null;
-  region_id: string;
-  field_id: string;
-  address: string;
-  phone: string;
-  fax: string;
-  email: string;
-  website: string;
-  introduction: AdminNewsContentSection[];
-  created_at: string;
-  updated_at: string;
-}
-
-export interface MemberFormValues {
-  id?: string;
-  name: string;
-  is_featured: boolean;
-  image: MemberImageRef | null;
-  region_id: string;
-  field_id: string;
-  address: string;
-  phone: string;
-  fax: string;
-  email: string;
-  website: string;
-  introduction: AdminNewsContentSection[];
-}
 
 // ---------------------------------------------------------------------------
 // ID generators
