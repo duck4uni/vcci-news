@@ -1,20 +1,15 @@
 "use client";
 
 import { toSlug } from "@/mockdata/header-config";
+import type {
+  HeaderCategoryPostItem,
+  HeaderCategoryPostFormValues,
+} from "@/api/vcci-news/types/header-category-post";
 
-export interface HeaderCategoryPostItem {
-  id: string;
-  category_id: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  thumbnail: string;
-  published_at: string;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
+export type {
+  HeaderCategoryPostItem,
+  HeaderCategoryPostFormValues,
+} from "@/api/vcci-news/types/header-category-post";
 
 export const HEADER_CATEGORY_POSTS_STORAGE_KEY =
   "vcci-news.header-category-posts.data.v1";
@@ -183,17 +178,6 @@ export const headerCategoryPostSeed: HeaderCategoryPostItem[] = [
     updated_at: "2026-05-03T06:45:00.000Z",
   },
 ];
-
-export interface HeaderCategoryPostFormValues {
-  id?: string;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  thumbnail: string;
-  published_at: string;
-  is_active: boolean;
-}
 
 export const EMPTY_HEADER_CATEGORY_POST_FORM: HeaderCategoryPostFormValues = {
   title: "",

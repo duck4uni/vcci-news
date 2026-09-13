@@ -1,12 +1,13 @@
 'use client';
 
-import React from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LogOut, Menu, ShieldCheck } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { logoutAdmin } from '@/lib/auth/admin-auth';
+import { usePostApiV10AuthLogout } from '@/api/vcci-news/endpoints/authentication';
 import { useSidebarStore } from '@/hooks/use-admin-sidebar';
 import useAuthStore from '@/store/useAuthStore';
+import useUserStore from '@/store/useUserStore';
 
 const routeLabels: Record<string, string> = {
   '/admin/base-config': 'Cấu hình chung',
@@ -57,12 +58,30 @@ function formatRoles(roles?: string[]) {
 
 export function AdminHeader() {
   const { toggle } = useSidebarStore();
+  const router = useRouter();
   const pathname = usePathname();
   const title = getTitle(pathname);
-  const currentUser = useAuthStore((state) => state.appUser);
+  const currentUser = useUserStore((state) => state.appUser);
+
+  const { mutateAsync: logoutAsync } = usePostApiV10AuthLogout({
+    mutation: {
+      onError: (error) => {
+        console.error('Logout error:', error);
+      },
+    },
+  });
 
   const handleLogout = async () => {
-    await logoutAdmin({ redirectToLogin: true });
+    try {
+      await logoutAsync();
+    } catch {
+      // Ignore logout API failure and continue clearing local auth state.
+    } finally {
+      useAuthStore.getState().resetStore();
+      useUserStore.getState().clearUser();
+      toast.success('Đã đăng xuất khỏi trang quản trị');
+      router.push('/admin/login');
+    }
   };
 
   return (

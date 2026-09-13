@@ -6,8 +6,9 @@ import {
   stripHtml,
 } from "./templates/data";
 import { getApiV10Post, getApiV10PostId } from "@/api/vcci-news/endpoints/post";
+import { getApiV10Category } from "@/api/vcci-news/endpoints/category";
+import { categoryFallbackRows } from "@/mockdata/categories";
 import type { DynamicPostItem } from "./templates/types";
-import { fetchCmsCategories } from "@/lib/api/cms-admin";
 import DynamicPageClient from "./DynamicPageClient";
 
 const STATIC_PAGE_SLUGS = new Set([
@@ -186,8 +187,22 @@ export async function generateMetadata({
   let categoryTitle = "";
   if (!postId) {
     try {
-      const categories = await fetchCmsCategories();
-      const matched = categories.find((item) => item.url === path || `/${item.slug}` === path);
+      const response = await getApiV10Category({
+        page: 1,
+        pageSize: 200,
+        sortField: "sort_order",
+        sortOrder: "asc",
+      }).catch(() => ({
+        responseData: {
+          count: categoryFallbackRows.length,
+          page: 1,
+          pageSize: 50,
+          rows: categoryFallbackRows as any[],
+        },
+      }));
+      const result = (response.responseData ?? {}) as { rows?: any[] };
+      const categories = (result.rows ?? []).filter((item: any) => item.type !== "category");
+      const matched = categories.find((item: any) => item.url === path || `/${item.slug}` === path);
       if (matched) categoryTitle = matched.name;
     } catch {
       // ignore

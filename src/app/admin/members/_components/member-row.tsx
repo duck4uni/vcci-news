@@ -7,7 +7,7 @@ import {
   TableCell,
   TableRow,
 } from "@/components/ui/table";
-import { type MemberItem } from "@/mockdata/members";
+import type { MemberItem } from "@/api/vcci-news/types/member";
 
 interface MemberRowProps {
   item: MemberItem;

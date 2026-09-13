@@ -8,7 +8,6 @@ import {
   Star,
   Tag,
 } from "lucide-react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
@@ -34,20 +33,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  deleteCmsNewsItem,
-  fetchCmsNewsItems,
-  fetchCmsPostCount,
-  fetchHeaderConfigItems,
-  toggleCmsNewsVisibility,
-} from "@/lib/api/cms-admin";
+  deleteApiV10PostId,
+  getApiV10Post,
+  putApiV10PostId,
+  useGetApiV10PostStats,
+} from "@/api/vcci-news/endpoints/post";
+import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
 import {
   ADMIN_NEWS_TYPE_LABELS,
   ADMIN_NEWS_TYPE_OPTIONS,
   type AdminNewsItem,
 } from "@/mockdata/admin-news";
+import { normalizeUser } from "@/lib/utils/cms-user";
+import { normalizeDateTimeInput } from "@/lib/utils/datetime";
+import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
+import links from "@/links";
 import {
-  buildHeaderCategoryTree,
-  type HeaderCategoryItem,
+  type HeaderCategoryTreeItem,
 } from "@/mockdata/header-config";
 import { AdminNewsTableLoading } from "./_components/admin-news-table-loading";
 import { CategoryFilterCombobox } from "./_components/category-filter-combobox";
@@ -71,7 +73,7 @@ export default function AdminNewsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [items, setItems] = useState<AdminNewsItem[]>([]);
-  const [headerItems, setHeaderItems] = useState<HeaderCategoryItem[]>([]);
+  const [headerTree, setHeaderTree] = useState<HeaderCategoryTreeItem[]>([]);
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [typeFilter, setTypeFilter] = useState(
     () => searchParams.get("type") ?? "all",
@@ -92,8 +94,6 @@ export default function AdminNewsPage() {
   });
   const [pageSize] = useState(10);
   const [total, setTotal] = useState(0);
-  const [publishedTotal, setPublishedTotal] = useState(0);
-  const [featuredTotal, setFeaturedTotal] = useState(0);
   const didMountRef = useRef(false);
   const debouncedSearch = useDebouncedValue(search);
 
@@ -129,9 +129,10 @@ export default function AdminNewsPage() {
   );
 
   useEffect(() => {
-    void fetchHeaderConfigItems()
-      .then((headerConfig) => {
-        setHeaderItems(headerConfig.items);
+    void getApiV10CategoryTree()
+      .then((response) => {
+        const tree = (response.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
+        setHeaderTree(tree);
       })
       .catch((error) => {
         toast.error(
@@ -179,49 +180,64 @@ export default function AdminNewsPage() {
     return [...baseFilterParts, ...statusFilterParts].join(",");
   }, [baseFilterParts, statusFilterParts]);
 
-  const visibleStatsFilters = useMemo(() => {
-    return [...baseFilterParts, ...statusFilterParts, "is_hidden==false"].join(",");
-  }, [baseFilterParts, statusFilterParts]);
-
-  const featuredStatsFilters = useMemo(() => {
-    return [...baseFilterParts, ...statusFilterParts, "is_featured==true"].join(",");
-  }, [baseFilterParts, statusFilterParts]);
-
-  const loadStats = useCallback(async () => {
-    const [nextPublishedTotal, nextFeaturedTotal] = await Promise.all([
-      fetchCmsPostCount(visibleStatsFilters),
-      fetchCmsPostCount(featuredStatsFilters),
-    ]);
-
-    setPublishedTotal(nextPublishedTotal);
-    setFeaturedTotal(nextFeaturedTotal);
-  }, [featuredStatsFilters, visibleStatsFilters]);
+  const statsResponse = useGetApiV10PostStats(
+    { filters: apiFilters || undefined },
+  );
+  const statsData = statsResponse.data?.responseData;
 
   const load = useCallback(async () => {
     setReady(false);
 
-    const newsData = await fetchCmsNewsItems({
+    const response = await getApiV10Post({
       page,
       pageSize,
       sortField: "created_at",
       sortOrder: "desc",
-      filters: apiFilters,
+      filters: apiFilters?.trim() || undefined,
     });
+    const result = (response.responseData ?? {}) as { rows?: any[]; count?: number; page?: number; pageSize?: number };
 
-    setItems(newsData.items);
-    setTotal(newsData.total);
+    setItems((result.rows ?? []).map((item: any): AdminNewsItem => {
+      const structuredContent = parsePostContent(item.content_structure);
+      const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
+      const categories = Array.isArray(item.categories) ? item.categories : [];
+      const primaryCategory = categories[0] ?? null;
+      const primaryCategoryType = primaryCategory?.type ?? null;
+      return {
+        id: item.id ?? "",
+        title: item.title ?? "",
+        slug: item.slug ?? "",
+        summary: item.summary ?? "",
+        type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+        header_category_id: primaryCategory?.id ?? "",
+        category_ids: categories.map((c: any) => c.id),
+        tagsearch_values: [],
+        is_featured: Boolean(item.is_featured),
+        thumbnail: item.thumbnail?.id ? {
+          id: item.thumbnail.id,
+          name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+          alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+          url: links.resolveImageUrl(item.thumbnail.path),
+        } : null,
+        is_hidden: Boolean(item.is_hidden),
+        created_at: item.created_at ?? "",
+        updated_at: item.updated_at ?? "",
+        published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+        expired_at: normalizeDateTimeInput(item.expired_at),
+        started_at: normalizeDateTimeInput(item.started_at),
+        ended_at: normalizeDateTimeInput(item.ended_at),
+        registration_deadline: normalizeDateTimeInput(item.registration_deadline),
+        location: item.location ?? "",
+        participation_fee: item.participation_fee ?? "",
+        event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+        post_content: postContent,
+        creator: normalizeUser(item.creator),
+        editor: normalizeUser(item.editor),
+      };
+    }));
+    setTotal(result.count ?? 0);
     setReady(true);
   }, [apiFilters, page, pageSize]);
-
-  useEffect(() => {
-    void loadStats().catch((error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Kh\u00f4ng th\u1ec3 t\u1ea3i s\u1ed1 li\u1ec7u b\u00e0i vi\u1ebft",
-      );
-    });
-  }, [loadStats]);
 
   useEffect(() => {
     void load().catch((error) => {
@@ -253,30 +269,30 @@ export default function AdminNewsPage() {
   }, [apiFilters, typeFilter]);
 
   const categoryOptions = useMemo(() => {
-    return flattenHeaderTree(buildHeaderCategoryTree(headerItems)).filter(
+    return flattenHeaderTree(headerTree).filter(
       (item) => item.type === "news" || item.type === "page",
     );
-  }, [headerItems]);
+  }, [headerTree]);
 
   const stats = useMemo(() => {
     return [
       {
         label: "Tổng bài viết",
-        value: total,
+        value: statsData?.total ?? total,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
       {
         label: "Đang hiển thị",
-        value: publishedTotal,
+        value: statsData?.published ?? 0,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
       {
         label: "Tin nổi bật",
-        value: featuredTotal,
+        value: statsData?.featured ?? 0,
         icon: <Tag className="h-4 w-4 text-[#063e8e]" />,
       },
     ];
-  }, [featuredTotal, publishedTotal, total]);
+  }, [statsData, total]);
 
   const handleDelete = async () => {
     if (!deleteTarget || isDeleting) return;
@@ -284,10 +300,11 @@ export default function AdminNewsPage() {
     setIsDeleting(true);
 
     try {
-      await deleteCmsNewsItem(deleteTarget.id);
+      await deleteApiV10PostId(deleteTarget.id);
       toast.success("Đã xóa bài viết");
       setDeleteTarget(null);
-      await Promise.all([load(), loadStats()]);
+      await load();
+      statsResponse.refetch();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể xóa bài viết",
@@ -304,9 +321,13 @@ export default function AdminNewsPage() {
     setTogglingVisibilityId(item.id);
 
     try {
-      await toggleCmsNewsVisibility(item.id, nextIsHidden);
+      await putApiV10PostId(item.id, {
+        is_hidden: nextIsHidden,
+        is_active: !nextIsHidden,
+      } as any);
       toast.success(nextIsHidden ? "Đã ẩn bài viết" : "Đã hiển thị bài viết");
-      await Promise.all([load(), loadStats()]);
+      await load();
+      statsResponse.refetch();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể thay đổi trạng thái hiển thị",
@@ -423,7 +444,7 @@ export default function AdminNewsPage() {
                 </TableRow>
               ) : (
                 items.map((item, index) => {
-                  const categoryNames = getDisplayCategoryNames(item, headerItems);
+                  const categoryNames = getDisplayCategoryNames(item, categoryOptions);
                   const primaryCategoryName = categoryNames[0] ?? "\u2014";
                   const extraCategoryCount = Math.max(categoryNames.length - 1, 0);
 

@@ -30,15 +30,24 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  type CmsHeaderCategoryItem,
-  type CmsTagItem,
-  createCmsNewsItem,
-  fetchCmsNewsItem,
-  fetchCmsNewsItems,
-  fetchCmsTags,
-  fetchHeaderConfigItems,
-  updateCmsNewsItem,
-} from "@/lib/api/cms-admin";
+  type TagItem,
+} from "@/api/vcci-news/types/tag";
+import {
+  getApiV10Post,
+  getApiV10PostId,
+  postApiV10Post,
+  putApiV10PostId,
+} from "@/api/vcci-news/endpoints/post";
+import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import {
+  deleteApiV10PostTagPostId,
+  getApiV10PostTagPostId,
+  postApiV10PostTagPostIdBulk,
+} from "@/api/vcci-news/endpoints/post-tag";
+import {
+  getApiV10Tag,
+  postApiV10TagIds,
+} from "@/api/vcci-news/endpoints/tag";
 import {
   ADMIN_NEWS_TYPE_OPTIONS,
   cloneAdminNewsFormValues,
@@ -48,7 +57,11 @@ import {
   resolveAdminNewsType,
   slugifyAdminNews,
 } from "@/mockdata/admin-news";
-import { buildHeaderCategoryTree } from "@/mockdata/header-config";
+import { normalizeUser } from "@/lib/utils/cms-user";
+import { normalizeDateTimeInput } from "@/lib/utils/datetime";
+import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
+import links from "@/links";
+import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 import {
   fieldClassName,
   readOnlyFieldClassName,
@@ -79,8 +92,8 @@ export function AdminNewsFormContent() {
   const isCreate = !newsId || newsId === "new";
   const backPath = returnPath;
   const [items, setItems] = useState<AdminNewsItem[]>([]);
-  const [headerItems, setHeaderItems] = useState<CmsHeaderCategoryItem[]>([]);
-  const [allTags, setAllTags] = useState<CmsTagItem[]>([]);
+  const [headerTree, setHeaderTree] = useState<HeaderCategoryTreeItem[]>([]);
+  const [allTags, setAllTags] = useState<TagItem[]>([]);
   const [form, setForm] = useState<AdminNewsFormValues | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [tagSearch, setTagSearch] = useState("");
@@ -98,22 +111,67 @@ export function AdminNewsFormContent() {
       setForm(isCreate ? cloneAdminNewsFormValues() : null);
 
       try {
-        const [nextHeaderConfig, nextTags] = await Promise.all([
-          fetchHeaderConfigItems(),
-          fetchCmsTags(),
+        const [treeResponse, nextTagsResponse] = await Promise.all([
+          getApiV10CategoryTree(),
+          getApiV10Tag({ page: 1, pageSize: 10, sortField: "name", sortOrder: "asc" }),
         ]);
+        const nextTagsResult = (nextTagsResponse.responseData ?? {}) as { rows?: TagItem[] };
+        const nextTags = nextTagsResult.rows ?? [];
+        const tree = (treeResponse.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
+        const nextHeaderTree = tree;
         const nextNewsItems = isCreate
           ? []
-          : (await fetchCmsNewsItems({
-            page: 1,
-            pageSize: 10,
-            filters: newsId ? `id==${newsId}` : undefined,
-          })).items;
+          : await (async () => {
+            const response = await getApiV10Post({
+              page: 1,
+              pageSize: 10,
+              filters: newsId ? `id==${newsId}` : undefined,
+            });
+            const result = (response.responseData ?? {}) as { rows?: any[] };
+            return (result.rows ?? []).map((item: any): AdminNewsItem => {
+              const structuredContent = parsePostContent(item.content_structure);
+              const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
+              const categories = Array.isArray(item.categories) ? item.categories : [];
+              const primaryCategory = categories[0] ?? null;
+              const primaryCategoryType = primaryCategory?.type ?? null;
+              return {
+                id: item.id ?? "",
+                title: item.title ?? "",
+                slug: item.slug ?? "",
+                summary: item.summary ?? "",
+                type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+                header_category_id: primaryCategory?.id ?? "",
+                category_ids: categories.map((c: any) => c.id),
+                tagsearch_values: [],
+                is_featured: Boolean(item.is_featured),
+                thumbnail: item.thumbnail?.id ? {
+                  id: item.thumbnail.id,
+                  name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+                  alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+                  url: links.resolveImageUrl(item.thumbnail.path),
+                } : null,
+                is_hidden: Boolean(item.is_hidden),
+                created_at: item.created_at ?? "",
+                updated_at: item.updated_at ?? "",
+                published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+                expired_at: normalizeDateTimeInput(item.expired_at),
+                started_at: normalizeDateTimeInput(item.started_at),
+                ended_at: normalizeDateTimeInput(item.ended_at),
+                registration_deadline: normalizeDateTimeInput(item.registration_deadline),
+                location: item.location ?? "",
+                participation_fee: item.participation_fee ?? "",
+                event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+                post_content: postContent,
+                creator: normalizeUser(item.creator),
+                editor: normalizeUser(item.editor),
+              };
+            });
+          })();
 
         if (cancelled) return;
 
         setItems(nextNewsItems);
-        setHeaderItems(nextHeaderConfig.items);
+        setHeaderTree(nextHeaderTree);
         setAllTags(nextTags);
 
         if (isCreate) {
@@ -130,9 +188,62 @@ export function AdminNewsFormContent() {
           return;
         }
 
-        const currentItem =
-          nextNewsItems.find((item) => item.id === newsId) ??
-          (newsId ? await fetchCmsNewsItem(newsId) : null);
+        const existingItem = nextNewsItems.find((item) => item.id === newsId);
+        const currentItem = existingItem
+          ? existingItem
+          : newsId
+            ? await (async () => {
+              const response = await getApiV10PostId(newsId);
+              const post = (response.responseData ?? {}) as any;
+              // Fetch tags for post
+              const tagsRes = await getApiV10PostTagPostId(newsId);
+              const tagsResult = (tagsRes.responseData ?? {}) as { rows?: { tag_id?: string }[] };
+              const tagIds = (tagsResult.rows ?? []).map(r => r.tag_id).filter(Boolean) as string[];
+              let tags: TagItem[] = [];
+              if (tagIds.length > 0) {
+                const tagsResponse = await postApiV10TagIds({ tag_ids: tagIds });
+                tags = (tagsResponse.responseData ?? []) as TagItem[];
+              }
+              const tagMap = new Map<string, TagItem[]>([[newsId, tags]]);
+              const tagItems = tagMap.get(newsId) ?? [];
+              const structuredContent = parsePostContent(post.content_structure);
+              const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(post.content);
+              const categories = Array.isArray(post.categories) ? post.categories : [];
+              const primaryCategory = categories[0] ?? null;
+              const primaryCategoryType = primaryCategory?.type ?? null;
+              return {
+                id: post.id ?? "",
+                title: post.title ?? "",
+                slug: post.slug ?? "",
+                summary: post.summary ?? "",
+                type: post.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+                header_category_id: primaryCategory?.id ?? "",
+                category_ids: categories.map((c: any) => c.id),
+                tagsearch_values: tagItems.map((t) => t.name),
+                is_featured: Boolean(post.is_featured),
+                thumbnail: post.thumbnail?.id ? {
+                  id: post.thumbnail.id,
+                  name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+                  alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+                  url: links.resolveImageUrl(post.thumbnail.path),
+                } : null,
+                is_hidden: Boolean(post.is_hidden),
+                created_at: post.created_at ?? "",
+                updated_at: post.updated_at ?? "",
+                published_at: normalizeDateTimeInput(post.published_at ?? post.release_at),
+                expired_at: normalizeDateTimeInput(post.expired_at),
+                started_at: normalizeDateTimeInput(post.started_at),
+                ended_at: normalizeDateTimeInput(post.ended_at),
+                registration_deadline: normalizeDateTimeInput(post.registration_deadline),
+                location: post.location ?? "",
+                participation_fee: post.participation_fee ?? "",
+                event_dates: Array.isArray(post.event_dates) ? post.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+                post_content: postContent,
+                creator: normalizeUser(post.creator),
+                editor: normalizeUser(post.editor),
+              } as AdminNewsItem;
+            })()
+            : null;
 
         if (cancelled) return;
 
@@ -166,8 +277,8 @@ export function AdminNewsFormContent() {
   }, [isCreate, newsId]);
 
   const headerOptions = useMemo(() => {
-    return flattenHeaderTree(buildHeaderCategoryTree(headerItems));
-  }, [headerItems]);
+    return flattenHeaderTree(headerTree);
+  }, [headerTree]);
 
   const availableSearchTags = useMemo(() => {
     if (form?.type !== "tintuc") return [];
@@ -290,7 +401,7 @@ export function AdminNewsFormContent() {
   };
 
   const handleHeaderCategoryChange = (value: string) => {
-    const nextCategory = headerItems.find((item) => item.id === value) ?? null;
+    const nextCategory = headerOptions.find((item) => item.id === value) ?? null;
 
     setForm((current) => {
       if (!current) return current;
@@ -371,43 +482,61 @@ export function AdminNewsFormContent() {
       return;
     }
 
-    const payload = {
-      title: form.title.trim(),
-      slug: slugifyAdminNews(form.slug.trim()),
-      summary: form.summary,
-      type: form.type,
-      header_category_id: form.type === "tintuc" ? form.category_ids[0] ?? "" : form.header_category_id,
-      category_ids:
-        form.type === "baiviettrang"
-          ? form.header_category_id
-            ? [form.header_category_id]
-            : []
-          : form.category_ids,
-      tag_ids: form.type === "baiviettrang" ? [] : selectedTagIds,
-      is_featured: form.type === "tintuc" ? form.is_featured : false,
-      thumbnail_id: form.thumbnail && isUuid(form.thumbnail.id) ? form.thumbnail.id : null,
-      is_hidden: form.is_hidden,
-      published_at: form.published_at || null,
-      expired_at: form.expired_at || null,
-      started_at: form.started_at || null,
-      ended_at: form.ended_at || null,
-      registration_deadline: form.registration_deadline || null,
-      location: form.location.trim(),
-      participation_fee: form.participation_fee.trim(),
-      event_dates: (form.event_dates ?? []).length > 0 ? form.event_dates : null,
-      post_content: form.post_content.map((section, index) => ({
-        ...section,
-        position: index + 1,
-      })),
-    };
-
     setIsSubmitting(true);
 
+    const tagIds = form.type === "baiviettrang" ? [] : selectedTagIds;
+
     try {
+      const payload = {
+        title: form.title.trim(),
+        slug: slugifyAdminNews(form.slug.trim()),
+        summary: form.summary,
+        type: form.type === "baiviettrang" ? "page" : "news",
+        content: form.summary || "",
+        category_ids:
+          form.type === "baiviettrang"
+            ? form.header_category_id
+              ? [form.header_category_id]
+              : []
+            : form.category_ids,
+        thumbnail_id: form.thumbnail && isUuid(form.thumbnail.id) ? form.thumbnail.id : null,
+        is_featured: form.type === "tintuc" ? form.is_featured : false,
+        is_hidden: form.is_hidden,
+        is_active: !form.is_hidden,
+        published_at: form.published_at || null,
+        expired_at: form.expired_at || null,
+        started_at: form.started_at || null,
+        ended_at: form.ended_at || null,
+        registration_deadline: form.registration_deadline || null,
+        location: form.location.trim() || null,
+        participation_fee: form.participation_fee.trim() || null,
+        event_dates: (form.event_dates ?? []).length > 0 ? form.event_dates : null,
+        release_mode: form.published_at ? "SCHEDULED" : "NOW",
+        release_at: form.published_at || null,
+        content_structure: {
+          post_content: form.post_content.map((section, index) => ({
+            ...section,
+            position: index + 1,
+          })),
+        },
+      };
+
       if (isCreate) {
-        await createCmsNewsItem(payload);
+        const response = await postApiV10Post(payload as any);
+        const created = (response.responseData ?? {}) as { id?: string };
+        if (created.id && tagIds.length > 0) {
+          await postApiV10PostTagPostIdBulk(created.id, { tag_ids: tagIds });
+        }
       } else if (newsId) {
-        await updateCmsNewsItem(newsId, payload);
+        await putApiV10PostId(newsId, payload as any);
+        // Xóa tags cũ rồi bulk add tags mới
+        const currentRes = await getApiV10PostTagPostId(newsId);
+        const currentResult = (currentRes.responseData ?? {}) as { rows?: { tag_id?: string }[] };
+        const currentTagIds = (currentResult.rows ?? []).map(r => r.tag_id).filter(Boolean) as string[];
+        await Promise.all(currentTagIds.map(tagId => deleteApiV10PostTagPostId(newsId, { tag_id: tagId })));
+        if (tagIds.length > 0) {
+          await postApiV10PostTagPostIdBulk(newsId, { tag_ids: tagIds });
+        }
       }
 
       toast.success(isCreate ? "Đã tạo bài viết" : "Đã cập nhật bài viết");

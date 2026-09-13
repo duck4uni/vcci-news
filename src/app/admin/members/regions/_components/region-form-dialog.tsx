@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { type MemberRegion } from "@/mockdata/members";
+import type { MemberRegion } from "@/api/vcci-news/types/member";
 
 const fieldClassName =
   "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";

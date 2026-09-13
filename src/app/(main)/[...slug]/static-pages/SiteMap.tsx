@@ -1,11 +1,11 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import ListCategory from "@/components/base/list-category";
 import { buildDynamicCategoryMenu } from "../templates/data";
 import type { DynamicCategoryRouteItem } from "../templates/types";
-import { useGetApiV10PageConfig } from "@/api/vcci-news/endpoints/page-config";
-import { GetNewsPageConfigResponseType } from "@/api/vcci-news/types/news-page-config";
+import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 
 type SiteMapProps = {
   category: DynamicCategoryRouteItem | null;
@@ -13,7 +13,22 @@ type SiteMapProps = {
 };
 
 export default function SiteMap({ category, allCategories }: SiteMapProps) {
-  const { data: categoriesData, isLoading, isError } = useGetApiV10PageConfig<GetNewsPageConfigResponseType>();
+  const [categoriesData, setCategoriesData] = useState<{ responseData?: HeaderCategoryTreeItem[] } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    void getApiV10CategoryTree()
+      .then((response) => {
+        setCategoriesData(response as { responseData?: HeaderCategoryTreeItem[] });
+        setIsLoading(false);
+      })
+      .catch(() => {
+        setIsError(true);
+        setIsLoading(false);
+      });
+  }, []);
+
   const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
 
   if (isLoading) {
@@ -38,7 +53,7 @@ export default function SiteMap({ category, allCategories }: SiteMapProps) {
     );
   }
 
-  const sections = categoriesData.responseData.children || [];
+  const sections = categoriesData?.responseData ?? [];
 
   return (
     <>
@@ -78,7 +93,7 @@ export default function SiteMap({ category, allCategories }: SiteMapProps) {
                     {/* Section Box */}
                     <div className="relative z-20">
                       <Link
-                        href={section.static_link || "#"}
+                        href={section.url || "#"}
                         className="flex bg-[#063e8e] text-white px-4 py-3 rounded-md font-medium text-center hover:bg-[#0a4fb5] transition shadow-md w-full text-sm min-h-20 items-center justify-center"
                       >
                         <span className="leading-tight">{section.name.toUpperCase()}</span>
@@ -108,7 +123,7 @@ export default function SiteMap({ category, allCategories }: SiteMapProps) {
                             <div className="absolute right-1/2 top-1/2 -translate-y-1/2 w-1/2 h-0.5 bg-gray-600"></div>
 
                             <Link
-                              href={child.static_link || "#"}
+                              href={child.url || "#"}
                               className="block bg-gray-400 text-white px-3 py-2.5 rounded text-xs font-medium text-center hover:bg-gray-500 transition shadow-sm leading-tight relative z-10"
                             >
                               {child.name.toUpperCase()}

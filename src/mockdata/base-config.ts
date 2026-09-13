@@ -2,53 +2,23 @@
 
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import { readAdminMediaItems } from "@/mockdata/admin-news";
+import type {
+  BaseConfigLogoItem,
+  BaseConfigBannerItem,
+  BaseConfigBranchItem,
+  BaseConfigSocialItem,
+  BaseConfigData,
+} from "@/api/vcci-news/types/base-config";
+
+export type {
+  BaseConfigLogoItem,
+  BaseConfigBannerItem,
+  BaseConfigBranchItem,
+  BaseConfigSocialItem,
+  BaseConfigData,
+} from "@/api/vcci-news/types/base-config";
 
 export const BASE_CONFIG_STORAGE_KEY = "vcci-news.admin-base-config.data.v1";
-
-export interface BaseConfigLogoItem {
-  id: string;
-  name: string;
-  imageId: string;
-  isActive: boolean;
-}
-
-export interface BaseConfigBannerItem {
-  id: string;
-  name: string;
-  imageId: string;
-  isActive: boolean;
-  displayTimeSeconds: number;
-  sortOrder: number;
-}
-
-export interface BaseConfigBranchItem {
-  id: string;
-  branchName: string;
-  address: string;
-  hotline: string;
-  email: string;
-  fax: string;
-  mapsEmbedUrl: string;
-  sortOrder: number;
-  isVisible: boolean;
-}
-
-export interface BaseConfigSocialItem {
-  id: string;
-  label: string;
-  url: string;
-  isVisible: boolean;
-  sortOrder: number;
-}
-
-export interface BaseConfigData {
-  logo: BaseConfigLogoItem | null;
-  banners: BaseConfigBannerItem[];
-  websiteName: string;
-  websiteLink: string;
-  socials: BaseConfigSocialItem[];
-  branches: BaseConfigBranchItem[];
-}
 
 export const EMPTY_BASE_CONFIG_BRANCH: BaseConfigBranchItem = {
   id: "",
@@ -201,18 +171,18 @@ export function readBaseConfig(): BaseConfigData {
     const fallbackBranchFromLegacyContact =
       parsed.contactInfo && typeof parsed.contactInfo === "object"
         ? [
-            {
-              id: createBaseConfigItemId("branch"),
-              branchName: parsed.contactInfo.officeName || "Chi nhánh mặc định",
-              address: parsed.contactInfo.address || "",
-              hotline: parsed.contactInfo.hotline || "",
-              email: parsed.contactInfo.email || "",
-              fax: parsed.contactInfo.fax || "",
-              mapsEmbedUrl: parsed.contactInfo.mapsEmbedUrl || "",
-              sortOrder: 1,
-              isVisible: true,
-            },
-          ]
+          {
+            id: createBaseConfigItemId("branch"),
+            branchName: parsed.contactInfo.officeName || "Chi nhánh mặc định",
+            address: parsed.contactInfo.address || "",
+            hotline: parsed.contactInfo.hotline || "",
+            email: parsed.contactInfo.email || "",
+            fax: parsed.contactInfo.fax || "",
+            mapsEmbedUrl: parsed.contactInfo.mapsEmbedUrl || "",
+            sortOrder: 1,
+            isVisible: true,
+          },
+        ]
         : BASE_CONFIG_SEED.branches;
 
     return {
@@ -226,12 +196,12 @@ export function readBaseConfig(): BaseConfigData {
               : null,
       banners: Array.isArray(parsed.banners)
         ? parsed.banners.map((item, index) => ({
-            ...item,
-            sortOrder:
-              typeof (item as BaseConfigBannerItem & { sortOrder?: number }).sortOrder === "number"
-                ? (item as BaseConfigBannerItem & { sortOrder?: number }).sortOrder ?? index + 1
-                : index + 1,
-          }))
+          ...item,
+          sortOrder:
+            typeof (item as BaseConfigBannerItem & { sortOrder?: number }).sortOrder === "number"
+              ? (item as BaseConfigBannerItem & { sortOrder?: number }).sortOrder ?? index + 1
+              : index + 1,
+        }))
         : [],
       websiteName:
         typeof (parsed as BaseConfigData & { websiteName?: string }).websiteName === "string"
@@ -243,42 +213,42 @@ export function readBaseConfig(): BaseConfigData {
           : BASE_CONFIG_SEED.websiteLink,
       socials: Array.isArray((parsed as BaseConfigData & { socials?: BaseConfigSocialItem[] }).socials)
         ? BASE_CONFIG_SOCIAL_SEED.map((seedItem, index) => {
-            const matchedItem = (
-              (parsed as BaseConfigData & { socials?: BaseConfigSocialItem[] }).socials ?? []
-            ).find((item) => item?.id === seedItem.id);
+          const matchedItem = (
+            (parsed as BaseConfigData & { socials?: BaseConfigSocialItem[] }).socials ?? []
+          ).find((item) => item?.id === seedItem.id);
 
-            return {
-              ...seedItem,
-              ...matchedItem,
-              url: typeof matchedItem?.url === "string" ? matchedItem.url : seedItem.url,
-              isVisible:
-                typeof matchedItem?.isVisible === "boolean"
-                  ? matchedItem.isVisible
-                  : seedItem.isVisible,
-              sortOrder:
-                typeof matchedItem?.sortOrder === "number"
-                  ? matchedItem.sortOrder
-                  : index + 1,
-            };
-          })
+          return {
+            ...seedItem,
+            ...matchedItem,
+            url: typeof matchedItem?.url === "string" ? matchedItem.url : seedItem.url,
+            isVisible:
+              typeof matchedItem?.isVisible === "boolean"
+                ? matchedItem.isVisible
+                : seedItem.isVisible,
+            sortOrder:
+              typeof matchedItem?.sortOrder === "number"
+                ? matchedItem.sortOrder
+                : index + 1,
+          };
+        })
         : BASE_CONFIG_SOCIAL_SEED.map((item) => ({ ...item })),
       branches: Array.isArray(parsed.branches)
         ? parsed.branches.map((item, index) => ({
-            ...EMPTY_BASE_CONFIG_BRANCH,
-            ...item,
-            fax:
-              typeof (item as BaseConfigBranchItem & { fax?: string }).fax === "string"
-                ? (item as BaseConfigBranchItem & { fax?: string }).fax ?? ""
-                : "",
-            sortOrder:
-              typeof (item as BaseConfigBranchItem & { sortOrder?: number }).sortOrder === "number"
-                ? (item as BaseConfigBranchItem & { sortOrder?: number }).sortOrder ?? index + 1
-                : index + 1,
-            isVisible:
-              typeof (item as BaseConfigBranchItem & { isVisible?: boolean }).isVisible === "boolean"
-                ? (item as BaseConfigBranchItem & { isVisible?: boolean }).isVisible
-                : true,
-          }))
+          ...EMPTY_BASE_CONFIG_BRANCH,
+          ...item,
+          fax:
+            typeof (item as BaseConfigBranchItem & { fax?: string }).fax === "string"
+              ? (item as BaseConfigBranchItem & { fax?: string }).fax ?? ""
+              : "",
+          sortOrder:
+            typeof (item as BaseConfigBranchItem & { sortOrder?: number }).sortOrder === "number"
+              ? (item as BaseConfigBranchItem & { sortOrder?: number }).sortOrder ?? index + 1
+              : index + 1,
+          isVisible:
+            typeof (item as BaseConfigBranchItem & { isVisible?: boolean }).isVisible === "boolean"
+              ? (item as BaseConfigBranchItem & { isVisible?: boolean }).isVisible
+              : true,
+        }))
         : fallbackBranchFromLegacyContact,
     };
   } catch {

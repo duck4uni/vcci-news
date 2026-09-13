@@ -15,20 +15,20 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { PAGE_SIZE, type CmsTagItem } from "./types";
+import { PAGE_SIZE, type TagItem } from "./types";
 
 interface TagsTableProps {
   search: string;
   onSearchChange: (value: string) => void;
   isReady: boolean;
   onActionClick: () => void;
-  items: CmsTagItem[];
+  items: TagItem[];
   total: number;
   page: number;
   totalPages: number;
   onPageChange: (page: number) => void;
-  onEdit: (item: CmsTagItem) => void;
-  onDelete: (item: CmsTagItem) => void;
+  onEdit: (item: TagItem) => void;
+  onDelete: (item: TagItem) => void;
 }
 
 export function TagsTable({

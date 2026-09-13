@@ -3,11 +3,7 @@ import { AxiosError, isAxiosError } from 'axios'
 import { QueryClient } from '@tanstack/react-query'
 
 // App
-// import router from '@/router'
-import { handleAdminUnauthorized } from '@/lib/auth/admin-auth'
-// import useProfileStore from '@stores/profile'
 import { QueryData } from '@/lib/types/base-api'
-// import { BASE_PATHS } from '@/constants/path'
 
 // Constants
 const RETRY_COUNT = 3
@@ -25,33 +21,20 @@ const handleCheckBaseRetryLogical = (failureCount: number, error: Error) => {
     return false
   }
 
-  // Expired token error
+  // Expired token error — let the interceptor handle refresh, don't retry here
   if (error.response?.status === EXPIRED_TOKEN_ERROR) {
-    if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
-      handleUnAuthorizationError();
-    }
-    return false;
+    return false
   }
 
   // Denied permission error
   if (error.response?.status === DENIED_PERMISSION_ERROR) {
-    // router.navigate('/')
-    window.location.href = process ? '/' : '/admin'
+    if (typeof window !== "undefined" && window.location.pathname.startsWith("/admin")) {
+      window.location.href = '/admin'
+    }
     return false
   }
 
   return true
-}
-
-// Handle un authorization error
-const handleUnAuthorizationError = () => {
-  void handleAdminUnauthorized()
-  // useProfileStore.getState().resetStore()
-
-  // const languageAwarePath = addLanguageToPath({
-  //   path: BASE_PATHS.authSignIn
-  // })
-  // router.navigate('')
 }
 
 // Handle delay value

@@ -34,6 +34,7 @@ import type {
   DeleteApiV10CategoryId200,
   GetApiV10CategoryId200,
   GetApiV10CategoryParams,
+  GetApiV10CategoryTree200,
   PostApiV10Category200,
   PutApiV10CategoryId200,
   ResponseGetAllData
@@ -629,4 +630,197 @@ export const usePostApiV10Category = <TError = ErrorType<unknown>,
 
       return useMutation(mutationOptions, queryClient);
     }
+    /**
+ * Retrieve hierarchical category tree with level field computed by backend. Each node includes children sorted by sort_order then name.
+ * @summary Get category tree
+ */
+export const getApiV10CategoryTree = (
     
+ options?: SecondParameter<typeof useCustomClient>,signal?: AbortSignal
+) => {
+      
+      
+      return useCustomClient<GetApiV10CategoryTree200>(
+      {url: `/api/v1.0/category/tree`, method: 'GET', signal
+    },
+      options);
+    }
+  
+
+
+
+export const getGetApiV10CategoryTreeInfiniteQueryKey = () => {
+    return [
+    'infinite', `/api/v1.0/category/tree`
+    ] as const;
+    }
+
+export const getGetApiV10CategoryTreeQueryKey = () => {
+    return [
+    `/api/v1.0/category/tree`
+    ] as const;
+    }
+
+    
+export const getGetApiV10CategoryTreeInfiniteQueryOptions = <TData = InfiniteData<Awaited<ReturnType<typeof getApiV10CategoryTree>>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV10CategoryTreeInfiniteQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV10CategoryTree>>> = ({ signal }) => getApiV10CategoryTree(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV10CategoryTreeInfiniteQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV10CategoryTree>>>
+export type GetApiV10CategoryTreeInfiniteQueryError = ErrorType<unknown>
+
+
+export function useGetApiV10CategoryTreeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10CategoryTree>>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10CategoryTreeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10CategoryTree>>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10CategoryTreeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10CategoryTree>>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get category tree
+ */
+
+export function useGetApiV10CategoryTreeInfinite<TData = InfiniteData<Awaited<ReturnType<typeof getApiV10CategoryTree>>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV10CategoryTreeInfiniteQueryOptions(options)
+
+  const query = useInfiniteQuery(queryOptions, queryClient) as  UseInfiniteQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get category tree
+ */
+export const prefetchGetApiV10CategoryTreeInfiniteQuery = async <TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseInfiniteQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiV10CategoryTreeInfiniteQueryOptions(options)
+
+  await queryClient.prefetchInfiniteQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+
+export const getGetApiV10CategoryTreeQueryOptions = <TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetApiV10CategoryTreeQueryKey();
+
+  
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getApiV10CategoryTree>>> = ({ signal }) => getApiV10CategoryTree(requestOptions, signal);
+
+      
+
+      
+
+   return  { queryKey, queryFn,   retry: 3, retryDelay: 1000,  ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetApiV10CategoryTreeQueryResult = NonNullable<Awaited<ReturnType<typeof getApiV10CategoryTree>>>
+export type GetApiV10CategoryTreeQueryError = ErrorType<unknown>
+
+
+export function useGetApiV10CategoryTree<TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10CategoryTree<TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>,
+          TError,
+          Awaited<ReturnType<typeof getApiV10CategoryTree>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetApiV10CategoryTree<TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Get category tree
+ */
+
+export function useGetApiV10CategoryTree<TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+ , queryClient?: QueryClient 
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetApiV10CategoryTreeQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  query.queryKey = queryOptions.queryKey ;
+
+  return query;
+}
+
+/**
+ * @summary Get category tree
+ */
+export const prefetchGetApiV10CategoryTreeQuery = async <TData = Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError = ErrorType<unknown>>(
+ queryClient: QueryClient,  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getApiV10CategoryTree>>, TError, TData>>, request?: SecondParameter<typeof useCustomClient>}
+
+  ): Promise<QueryClient> => {
+
+  const queryOptions = getGetApiV10CategoryTreeQueryOptions(options)
+
+  await queryClient.prefetchQuery(queryOptions);
+
+  return queryClient;
+}
+
+
+

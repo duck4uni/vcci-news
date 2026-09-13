@@ -127,7 +127,7 @@ export default function NewsDetailPage({
   const primaryCategory =
     findDisplayCategoryForPost(post, category, allCategories)?.name ||
     category?.name ||
-    "Tin tá»©c";
+    "Tin tức";
   const categoryMenu = category ? buildDynamicCategoryMenu(category, allCategories) : [];
 
   return (

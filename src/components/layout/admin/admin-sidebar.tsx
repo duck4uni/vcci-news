@@ -20,15 +20,13 @@ import {
   KeyRound,
   Video,
 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { useGetApiV10Logo } from "@/api/vcci-news/endpoints/logo";
 import type { Logo } from "@/api/vcci-news/models/logo";
 import logo from "@/assets/VCCI-HCM-logo-VN-2025.png";
 import links from "@/links";
 import { useSidebarStore } from "@/hooks/use-admin-sidebar";
-import { usePermission } from "@/hooks/usePermission";
 import { cn } from "@/lib/utils";
-import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 
 type LogoListEnvelope = {
   data?: {
@@ -122,8 +120,8 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { close, isOpen } = useSidebarStore();
   const [expandedGroups, setExpandedGroups] = React.useState<Record<string, boolean>>({});
-  const userPermissions = useAuthStore((state) => state.appUser?.permissions) || [];
-  const userRoles = useAuthStore((state) => state.appUser?.roles) || [];
+  const userPermissions = useUserStore((state) => state.appUser?.permissions) || [];
+  const userRoles = useUserStore((state) => state.appUser?.roles) || [];
 
   const { data: logoData } = useGetApiV10Logo(
     {

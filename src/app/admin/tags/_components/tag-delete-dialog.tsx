@@ -2,11 +2,11 @@
 
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 
-import type { CmsTagItem } from "./types";
+import type { TagItem } from "./types";
 
 interface TagDeleteDialogProps {
-  target: CmsTagItem | null;
-  onTargetChange: (target: CmsTagItem | null) => void;
+  target: TagItem | null;
+  onTargetChange: (target: TagItem | null) => void;
   isSubmitting: boolean;
   onConfirm: () => void;
 }

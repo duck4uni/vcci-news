@@ -1,6 +1,6 @@
 "use client";
 
-import type { BaseConfigBannerItem } from "@/mockdata/base-config";
+import type { BaseConfigBannerItem } from "@/api/vcci-news/types/base-config";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import { SafeImage } from "@/components/shared/safe-image";
 

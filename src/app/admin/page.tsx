@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useAuthStore from "@/store/useAuthStore";
+import useUserStore from "@/store/useUserStore";
 import { usePermission } from "@/hooks/usePermission";
 import { Loader2, ShieldX, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ const ADMIN_LANDING_ROUTES = [
 
 export default function AdminPage() {
   const router = useRouter();
-  const appUser = useAuthStore((state) => state.appUser);
+  const appUser = useUserStore((state) => state.appUser);
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
   const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
 

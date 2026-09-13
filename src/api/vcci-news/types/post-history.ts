@@ -1,12 +1,6 @@
-export interface PostHistoryUser {
-  id: string
-  email: string
-  username: string | null
-  first_name: string | null
-  last_name: string | null
-  full_name: string
-  avatar_url: string | null
-}
+import type { UserSummary } from "./user";
+
+export type PostHistoryUser = UserSummary;
 
 export type PostHistoryAction = "CREATE" | "UPDATE" | "DELETE"
 

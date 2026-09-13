@@ -1,7 +1,5 @@
 ﻿"use client";
 
-import * as React from "react";
-import Link from "next/link";
 import {
   ChevronDown,
   ChevronRight,
@@ -207,9 +205,9 @@ export function HeaderCategoryTable({
                   <TableCell className="w-[280px] text-sm text-gray-700">
                     <div className="mx-auto flex max-w-[220px] items-center justify-center gap-2">
                       <span className="block max-w-[180px] truncate">
-                        {item.static_link || "-"}
+                        {item.url || "-"}
                       </span>
-                      {item.static_link ? (
+                      {item.url ? (
                         <ExternalLink className="h-3.5 w-3.5 shrink-0 text-[#063e8e]" />
                       ) : null}
                     </div>

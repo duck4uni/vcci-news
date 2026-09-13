@@ -63,9 +63,5 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return <AdminAuthLoadingScreen />;
   }
 
-  if (authStatus === 'blocked') {
-    return null;
-  }
-
   return <AdminShell>{children}</AdminShell>;
 }
