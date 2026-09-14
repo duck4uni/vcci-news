@@ -31,7 +31,7 @@ export default function Contact({ category, allCategories }: ContactProps) {
                     Phòng Pháp chế và xác nhận Chứng từ thương mại
                   </h2>
                   <div className="mt-5 space-y-4 text-[16px] leading-8 text-[#5f6f86]">
-                    <p>Liên đoàn Thương mại và Công nghiệp Việt Nam – Chi nhánh khu vực Thành phố Hồ Chí Minh (VCCI-HCM)</p>
+                    <p>Liên đoàn Thương mại và Công nghiệp Việt Nam - Chi nhánh khu vực Thành phố Hồ Chí Minh (VCCI-HCM)</p>
                     <div className="flex items-start gap-3">
                       <MapPin className="mt-1 h-4 w-4 shrink-0 text-[#2450b5]" />
                       <span>Phòng 103, Lầu 1, Tòa nhà VCCI HCM, 171 Võ Thị Sáu, P. Xuân Hòa, TP. HCM</span>

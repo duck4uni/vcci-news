@@ -147,7 +147,9 @@ export default function MemberBenefits({ category, allCategories }: MemberBenefi
                   <span className="font-semibold">Phòng Hội viên Đào tạo và Truyền thông</span>
                 </div>
                 <p className="mt-1">C. Thanh Thủy</p>
-                <p>ĐT: 0903 909 796</p>
+                <p>
+                  ĐT: <a href="tel:0901198756">0901.198.756</a>
+                </p>
               </div>
 
               <div>
@@ -155,8 +157,12 @@ export default function MemberBenefits({ category, allCategories }: MemberBenefi
                   <Mail className="h-4 w-4" />
                   <span className="font-semibold">Email</span>
                 </div>
-                <p className="mt-1 wrap-break-word">luuthanhthuy72@yahoo.com</p>
-                <p className="wrap-break-word">hoivien@vcci-hcm.org.vn</p>
+                <p className="mt-1 wrap-break-word">
+                  <a href="mailto:luuthanhthuy72@yahoo.com">luuthanhthuy72@yahoo.com</a>
+                </p>
+                <p className="wrap-break-word">
+                  <a href="mailto:hoivien@vcci-hcm.org.vn">hoivien@vcci-hcm.org.vn</a>
+                </p>
               </div>
 
               <div>
@@ -164,7 +170,10 @@ export default function MemberBenefits({ category, allCategories }: MemberBenefi
                   <WalletCards className="h-4 w-4" />
                   <span className="font-semibold">Điện thoại</span>
                 </div>
-                <p className="mt-1">028. 3932 0817 - Fax: 028. 3932 5472</p>
+                <p className="mt-1">
+                  <a href="tel:02839320817">028. 3932 0817</a> - Fax: {" "}
+                  <a href="tel:02839325472">028. 3932 5472</a>
+                </p>
               </div>
 
               <div>
