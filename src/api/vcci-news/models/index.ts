@@ -332,6 +332,7 @@ export * from './postMutateEventDates';
 export * from './postTag';
 export * from './postTagBulkCreate';
 export * from './postTagMutate';
+export * from './priorityFeaturedParameter';
 export * from './putApiV10AdvertisementId200';
 export * from './putApiV10AdvertisementId200AllOf';
 export * from './putApiV10BannerId200';

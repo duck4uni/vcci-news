@@ -10,6 +10,7 @@ import type { SortFieldParameter } from './sortFieldParameter';
 import type { SortOrderParameter } from './sortOrderParameter';
 import type { PageParameter } from './pageParameter';
 import type { PageSizeParameter } from './pageSizeParameter';
+import type { PriorityFeaturedParameter } from './priorityFeaturedParameter';
 
 export type GetApiV10PostParams = {
 /**
@@ -34,4 +35,8 @@ page?: PageParameter;
  * @minimum 1
  */
 pageSize?: PageSizeParameter;
+/**
+ * If true, featured posts are sorted before non-featured posts. Set to false for plain sorting (e.g. admin listing). Defaults to true.
+ */
+priorityFeatured?: PriorityFeaturedParameter;
 };

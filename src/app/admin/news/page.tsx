@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   ChevronLeft,
   ChevronRight,
@@ -33,12 +34,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  deleteApiV10PostId,
-  getApiV10Post,
-  putApiV10PostId,
+  useDeleteApiV10PostId,
+  useGetApiV10Post,
   useGetApiV10PostStats,
+  usePutApiV10PostId,
 } from "@/api/vcci-news/endpoints/post";
-import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import { useGetApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
 import {
   ADMIN_NEWS_TYPE_LABELS,
   ADMIN_NEWS_TYPE_OPTIONS,
@@ -68,12 +69,53 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 const selectItemClassName =
   "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
 
+const POST_QUERY_KEY = "/api/v1.0/post";
+const POST_STATS_QUERY_KEY = "/api/v1.0/post/stats";
+
+function mapRowToAdminNewsItem(item: any): AdminNewsItem {
+  const structuredContent = parsePostContent(item.content_structure);
+  const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
+  const categories = Array.isArray(item.categories) ? item.categories : [];
+  const primaryCategory = categories[0] ?? null;
+  const primaryCategoryType = primaryCategory?.type ?? null;
+  return {
+    id: item.id ?? "",
+    title: item.title ?? "",
+    slug: item.slug ?? "",
+    summary: item.summary ?? "",
+    type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+    header_category_id: primaryCategory?.id ?? "",
+    category_ids: categories.map((c: any) => c.id),
+    tagsearch_values: [],
+    is_featured: Boolean(item.is_featured),
+    thumbnail: item.thumbnail?.id ? {
+      id: item.thumbnail.id,
+      name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+      alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+      url: links.resolveImageUrl(item.thumbnail.path),
+    } : null,
+    is_hidden: Boolean(item.is_hidden),
+    created_at: item.created_at ?? "",
+    updated_at: item.updated_at ?? "",
+    published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+    expired_at: normalizeDateTimeInput(item.expired_at),
+    started_at: normalizeDateTimeInput(item.started_at),
+    ended_at: normalizeDateTimeInput(item.ended_at),
+    registration_deadline: normalizeDateTimeInput(item.registration_deadline),
+    location: item.location ?? "",
+    participation_fee: item.participation_fee ?? "",
+    event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+    post_content: postContent,
+    creator: normalizeUser(item.creator),
+    editor: normalizeUser(item.editor),
+  };
+}
+
 export default function AdminNewsPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [items, setItems] = useState<AdminNewsItem[]>([]);
-  const [headerTree, setHeaderTree] = useState<HeaderCategoryTreeItem[]>([]);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [typeFilter, setTypeFilter] = useState(
     () => searchParams.get("type") ?? "all",
@@ -85,15 +127,13 @@ export default function AdminNewsPage() {
     () => searchParams.get("status") ?? "all",
   );
   const [deleteTarget, setDeleteTarget] = useState<AdminNewsItem | null>(null);
-  const [ready, setReady] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [togglingVisibilityId, setTogglingVisibilityId] = useState<string | null>(null);
   const [page, setPage] = useState(() => {
     const parsedPage = Number(searchParams.get("page") ?? 1);
     return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   });
-  const [pageSize] = useState(10);
-  const [total, setTotal] = useState(0);
+  const pageSize = 10;
   const didMountRef = useRef(false);
   const debouncedSearch = useDebouncedValue(search);
 
@@ -127,21 +167,6 @@ export default function AdminNewsPage() {
     () => (listQueryString ? `${pathname}?${listQueryString}` : pathname),
     [listQueryString, pathname],
   );
-
-  useEffect(() => {
-    void getApiV10CategoryTree()
-      .then((response) => {
-        const tree = (response.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
-        setHeaderTree(tree);
-      })
-      .catch((error) => {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Kh\u00f4ng th\u1ec3 t\u1ea3i danh m\u1ee5c hi\u1ec3n th\u1ecb",
-        );
-      });
-  }, []);
 
   const baseFilterParts = useMemo(() => {
     const filters: string[] = [];
@@ -180,75 +205,42 @@ export default function AdminNewsPage() {
     return [...baseFilterParts, ...statusFilterParts].join(",");
   }, [baseFilterParts, statusFilterParts]);
 
-  const statsResponse = useGetApiV10PostStats(
+  // Fetch post list via orval hook
+  const postsQuery = useGetApiV10Post({
+    page,
+    pageSize,
+    sortField: "created_at",
+    sortOrder: "desc",
+    priorityFeatured: false,
+    filters: apiFilters?.trim() || undefined,
+  });
+
+  // Fetch category tree via orval hook
+  const categoriesQuery = useGetApiV10CategoryTree();
+
+  // Fetch stats via orval hook
+  const statsQuery = useGetApiV10PostStats(
     { filters: apiFilters || undefined },
   );
-  const statsData = statsResponse.data?.responseData;
 
-  const load = useCallback(async () => {
-    setReady(false);
+  // Mutations
+  const deletePostMutation = useDeleteApiV10PostId();
+  const updatePostMutation = usePutApiV10PostId();
 
-    const response = await getApiV10Post({
-      page,
-      pageSize,
-      sortField: "created_at",
-      sortOrder: "desc",
-      filters: apiFilters?.trim() || undefined,
-    });
-    const result = (response.responseData ?? {}) as { rows?: any[]; count?: number; page?: number; pageSize?: number };
+  // Derived data
+  const postsResponse = (postsQuery.data ?? {}) as { responseData?: { rows?: any[]; count?: number } };
+  const items: AdminNewsItem[] = useMemo(
+    () => (postsResponse.responseData?.rows ?? []).map(mapRowToAdminNewsItem),
+    [postsResponse.responseData?.rows],
+  );
+  const total = postsResponse.responseData?.count ?? 0;
+  const ready = !postsQuery.isLoading && !postsQuery.isFetching;
 
-    setItems((result.rows ?? []).map((item: any): AdminNewsItem => {
-      const structuredContent = parsePostContent(item.content_structure);
-      const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
-      const categories = Array.isArray(item.categories) ? item.categories : [];
-      const primaryCategory = categories[0] ?? null;
-      const primaryCategoryType = primaryCategory?.type ?? null;
-      return {
-        id: item.id ?? "",
-        title: item.title ?? "",
-        slug: item.slug ?? "",
-        summary: item.summary ?? "",
-        type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
-        header_category_id: primaryCategory?.id ?? "",
-        category_ids: categories.map((c: any) => c.id),
-        tagsearch_values: [],
-        is_featured: Boolean(item.is_featured),
-        thumbnail: item.thumbnail?.id ? {
-          id: item.thumbnail.id,
-          name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
-          alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
-          url: links.resolveImageUrl(item.thumbnail.path),
-        } : null,
-        is_hidden: Boolean(item.is_hidden),
-        created_at: item.created_at ?? "",
-        updated_at: item.updated_at ?? "",
-        published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
-        expired_at: normalizeDateTimeInput(item.expired_at),
-        started_at: normalizeDateTimeInput(item.started_at),
-        ended_at: normalizeDateTimeInput(item.ended_at),
-        registration_deadline: normalizeDateTimeInput(item.registration_deadline),
-        location: item.location ?? "",
-        participation_fee: item.participation_fee ?? "",
-        event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
-        post_content: postContent,
-        creator: normalizeUser(item.creator),
-        editor: normalizeUser(item.editor),
-      };
-    }));
-    setTotal(result.count ?? 0);
-    setReady(true);
-  }, [apiFilters, page, pageSize]);
-
-  useEffect(() => {
-    void load().catch((error) => {
-      toast.error(
-        error instanceof Error
-          ? error.message
-          : "Không thể tải danh sách bài viết",
-      );
-      setReady(true);
-    });
-  }, [load]);
+  const headerTree = useMemo(
+    () => ((categoriesQuery.data ?? {}).responseData ?? []) as unknown as HeaderCategoryTreeItem[],
+    [categoriesQuery.data],
+  );
+  const statsData = (statsQuery.data ?? {}).responseData;
 
   useEffect(() => {
     const nextPath = listQueryString ? `${pathname}?${listQueryString}` : pathname;
@@ -294,17 +286,21 @@ export default function AdminNewsPage() {
     ];
   }, [statsData, total]);
 
+  const invalidatePostQueries = () => {
+    queryClient.invalidateQueries({ queryKey: [POST_QUERY_KEY], exact: false });
+    queryClient.invalidateQueries({ queryKey: [POST_STATS_QUERY_KEY], exact: false });
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget || isDeleting) return;
 
     setIsDeleting(true);
 
     try {
-      await deleteApiV10PostId(deleteTarget.id);
+      await deletePostMutation.mutateAsync({ id: deleteTarget.id });
       toast.success("Đã xóa bài viết");
       setDeleteTarget(null);
-      await load();
-      statsResponse.refetch();
+      invalidatePostQueries();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể xóa bài viết",
@@ -321,13 +317,15 @@ export default function AdminNewsPage() {
     setTogglingVisibilityId(item.id);
 
     try {
-      await putApiV10PostId(item.id, {
-        is_hidden: nextIsHidden,
-        is_active: !nextIsHidden,
-      } as any);
+      await updatePostMutation.mutateAsync({
+        id: item.id,
+        data: {
+          is_hidden: nextIsHidden,
+          is_active: !nextIsHidden,
+        } as any,
+      });
       toast.success(nextIsHidden ? "Đã ẩn bài viết" : "Đã hiển thị bài viết");
-      await load();
-      statsResponse.refetch();
+      invalidatePostQueries();
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Không thể thay đổi trạng thái hiển thị",
