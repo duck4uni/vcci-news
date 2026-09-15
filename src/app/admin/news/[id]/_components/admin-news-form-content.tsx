@@ -2,8 +2,10 @@
 
 import {
   type FormEvent,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import dayjs from "dayjs";
@@ -70,7 +72,9 @@ import {
   selectTriggerClassName,
   SEARCH_TAG_VISIBLE_LIMIT,
 } from "./constants";
+import { DateTimePicker } from "@/components/shared/date-time-picker";
 import { EventDatesDatePicker } from "./event-dates-date-picker";
+import { DraftRestoreDialog } from "./draft-restore-dialog";
 import { FormSection } from "./form-section";
 import { HeaderCategoryMultiPicker } from "./header-category-multi-picker";
 import { HeaderCategorySinglePicker } from "./header-category-single-picker";
@@ -81,6 +85,7 @@ import {
   isUuid,
   toImageRef,
 } from "./utils";
+import useNewsDraftStore, { type NewsDraftData } from "@/store/useNewsDraftStore";
 
 export function AdminNewsFormContent() {
   const params = useParams();
@@ -101,6 +106,15 @@ export function AdminNewsFormContent() {
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
   const [isMissingPost, setIsMissingPost] = useState(false);
   const [useEventDates, setUseEventDates] = useState(false);
+
+  // Draft auto-save (create mode only)
+  const draftHasHydrated = useNewsDraftStore((s) => s._hasHydrated);
+  const getDraftIfFresh = useNewsDraftStore((s) => s.getDraftIfFresh);
+  const saveDraft = useNewsDraftStore((s) => s.saveDraft);
+  const clearDraft = useNewsDraftStore((s) => s.clearDraft);
+  const [showDraftDialog, setShowDraftDialog] = useState(false);
+  const [pendingDraft, setPendingDraft] = useState<NewsDraftData | null>(null);
+  const draftRestoredRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -275,6 +289,43 @@ export function AdminNewsFormContent() {
       cancelled = true;
     };
   }, [isCreate, newsId]);
+
+  // Check draft sau khi load xong + store hydrated — chỉ hỏi 1 lần
+  useEffect(() => {
+    if (!isCreate || isLoadingInitialData || !draftHasHydrated || draftRestoredRef.current) return;
+    draftRestoredRef.current = true;
+    const freshDraft = getDraftIfFresh();
+    if (freshDraft) {
+      setPendingDraft(freshDraft);
+      setShowDraftDialog(true);
+    }
+  }, [isCreate, isLoadingInitialData, draftHasHydrated, getDraftIfFresh]);
+
+  // Auto-save draft (debounce 800ms) — chỉ create mode, bỏ qua khi đang mở dialog
+  useEffect(() => {
+    if (!isCreate || !form || showDraftDialog) return;
+    const timer = setTimeout(() => {
+      saveDraft({ form, useEventDates });
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [form, useEventDates, isCreate, showDraftDialog, saveDraft]);
+
+  const handleRestoreDraft = useCallback(() => {
+    if (!pendingDraft?.form) return;
+    // Deep clone để tránh tham chiếu chung giữa store và state
+    const restored = JSON.parse(JSON.stringify(pendingDraft.form)) as AdminNewsFormValues;
+    setForm(restored);
+    setUseEventDates(pendingDraft.useEventDates ?? false);
+    setShowDraftDialog(false);
+    setPendingDraft(null);
+    toast.success("Đã khôi phục bản nháp");
+  }, [pendingDraft]);
+
+  const handleDiscardDraft = useCallback(() => {
+    clearDraft();
+    setShowDraftDialog(false);
+    setPendingDraft(null);
+  }, [clearDraft]);
 
   const headerOptions = useMemo(() => {
     return flattenHeaderTree(headerTree);
@@ -540,6 +591,9 @@ export function AdminNewsFormContent() {
       }
 
       toast.success(isCreate ? "Đã tạo bài viết" : "Đã cập nhật bài viết");
+      if (isCreate) {
+        clearDraft();
+      }
       router.push(backPath);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể lưu bài viết");
@@ -727,25 +781,17 @@ export function AdminNewsFormContent() {
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div>
                     <Label className="mb-1.5 block text-gray-700">Ngày xuất bản</Label>
-                    <Input
-                      type="datetime-local"
+                    <DateTimePicker
                       value={form.published_at}
-                      onChange={(event) =>
-                        handleField("published_at", event.target.value)
-                      }
-                      className={fieldClassName}
+                      onChange={(value) => handleField("published_at", value)}
                     />
                   </div>
 
                   <div>
                     <Label className="mb-1.5 block text-gray-700">Ngày hết hạn</Label>
-                    <Input
-                      type="datetime-local"
+                    <DateTimePicker
                       value={form.expired_at}
-                      onChange={(event) =>
-                        handleField("expired_at", event.target.value)
-                      }
-                      className={fieldClassName}
+                      onChange={(value) => handleField("expired_at", value)}
                     />
                   </div>
                 </div>
@@ -861,7 +907,7 @@ export function AdminNewsFormContent() {
                   </>
                 ) : (
                   <p className="rounded-lg border border-dashed border-[#063e8e]/20 bg-white px-3 py-2 text-sm text-gray-700">
-                    {"Ch\u01b0a c\u00f3 tag t\u00ecm ki\u1ebfm n\u00e0o. Vui l\u00f2ng t\u1ea1o tag trong m\u1ee5c qu\u1ea3n l\u00fd tag tr\u01b0\u1edbc khi g\u00e1n cho b\u00e0i vi\u1ebft."}
+                    Chưa có tag tìm kiếm nào. Vui lòng tạo tag trong mục quản lý tag trước khi gán cho bài viết.
                   </p>
                 )}
               </div>
@@ -932,21 +978,17 @@ export function AdminNewsFormContent() {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div>
                 <Label className="mb-1.5 block text-gray-700">Ngày bắt đầu</Label>
-                <Input
-                  type="datetime-local"
+                <DateTimePicker
                   value={form.started_at}
-                  onChange={(event) => handleField("started_at", event.target.value)}
-                  className={fieldClassName}
+                  onChange={(value) => handleField("started_at", value)}
                 />
               </div>
 
               <div>
                 <Label className="mb-1.5 block text-gray-700">Ngày kết thúc</Label>
-                <Input
-                  type="datetime-local"
+                <DateTimePicker
                   value={form.ended_at}
-                  onChange={(event) => handleField("ended_at", event.target.value)}
-                  className={fieldClassName}
+                  onChange={(value) => handleField("ended_at", value)}
                 />
               </div>
 
@@ -954,13 +996,9 @@ export function AdminNewsFormContent() {
                 <Label className="mb-1.5 block text-gray-700">
                   Hạn đăng ký
                 </Label>
-                <Input
-                  type="datetime-local"
+                <DateTimePicker
                   value={form.registration_deadline}
-                  onChange={(event) =>
-                    handleField("registration_deadline", event.target.value)
-                  }
-                  className={fieldClassName}
+                  onChange={(value) => handleField("registration_deadline", value)}
                 />
               </div>
 
@@ -1044,6 +1082,13 @@ export function AdminNewsFormContent() {
           <PostHistoryViewer postId={newsId} />
         </PermissionGate>
       )}
+
+      <DraftRestoreDialog
+        open={showDraftDialog}
+        draft={pendingDraft}
+        onRestore={handleRestoreDraft}
+        onDiscard={handleDiscardDraft}
+      />
     </div>
   );
 }
