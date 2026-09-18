@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Clock } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
@@ -19,11 +19,11 @@ export function TimePicker({
   value: string;
   onChange: (time: string) => void;
 }) {
-  const [open, setOpen] = React.useState(false);
-  const [hour, setHour] = React.useState<number | null>(null);
-  const [minute, setMinute] = React.useState<number | null>(null);
+  const [open, setOpen] = useState(false);
+  const [hour, setHour] = useState<number | null>(null);
+  const [minute, setMinute] = useState<number | null>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     if (value) {
       // Trim seconds & timezone (VD: 19:39:00.000Z -> 19:39)

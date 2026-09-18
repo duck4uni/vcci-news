@@ -8,7 +8,7 @@ import {
 import { getApiV10Post, getApiV10PostId } from "@/api/vcci-news/endpoints/post";
 import { getApiV10Category } from "@/api/vcci-news/endpoints/category";
 import { categoryFallbackRows } from "@/mockdata/categories";
-import type { DynamicPostItem } from "./templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 import DynamicPageClient from "./DynamicPageClient";
 
 const STATIC_PAGE_SLUGS = new Set([

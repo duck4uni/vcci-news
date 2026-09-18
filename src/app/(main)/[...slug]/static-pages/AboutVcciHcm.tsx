@@ -13,8 +13,9 @@ import {
   buildDynamicCategoryMenu,
   stripHtml,
 } from "../templates/data";
-import StructuredPostContent from "../templates/StructuredPostContent";
-import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
+import PostContent from "@/components/shared/post-content";
+import type { DynamicCategoryRouteItem } from "../templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 const ABOUT_HIGHLIGHTS = [
   {
@@ -165,8 +166,8 @@ export default function AboutVcciHcm({ post, category, allCategories }: AboutVcc
               ) : null}
 
               <div className="mt-7 rounded-3xl bg-white px-5 py-6 shadow-[0_18px_42px_rgba(17,24,39,0.06)] sm:px-8 lg:px-10">
-                <div className="about-vcci-page-content page-detail-content prose tiptap max-w-none overflow-hidden">
-                  <StructuredPostContent post={post} />
+                <div className="about-vcci-page-content">
+                  <PostContent post={post} />
                 </div>
               </div>
             </div>

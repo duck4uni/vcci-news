@@ -3,9 +3,9 @@
 import { useEffect, useMemo } from "react";
 import { notFound, useParams, useRouter, useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui";
-import NewsPage from "./templates/NewsPage";
-import NewsDetailPage from "./templates/NewsDetailPage";
-import InformationPage from "./templates/InformationPage";
+import NewsPage from "./templates/news-page";
+import NewsDetailPage from "./templates/news-detail-page";
+import InformationPage from "./templates/information-page";
 import AnPham from "./static-pages/AnPham";
 import ThuVienTaiLieu from "./static-pages/ThuVienTaiLieu";
 import AboutVcciHcm from "./static-pages/AboutVcciHcm";
@@ -26,7 +26,8 @@ import SiteMap from "./static-pages/SiteMap";
 import Video from "./static-pages/Video";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import { useGetApiV10Category } from "@/api/vcci-news/endpoints/category";
-import type { DynamicPostItem, DynamicCategoryRouteItem } from "./templates/types";
+import type { DynamicCategoryRouteItem } from "./templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 const normalizePath = (value?: string | null) => {
   const trimmed = value?.trim() ?? "";

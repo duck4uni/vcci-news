@@ -19,7 +19,7 @@ import {
   resolveDynamicPostImage,
   mapPost,
 } from "../templates/data";
-import type { DynamicPostItem } from "../templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 const formatPostDate = (value?: string | null) => {
   if (!value) return "";
