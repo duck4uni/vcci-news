@@ -4,11 +4,13 @@ import type {
   DynamicCategoryMenuItem,
   DynamicCategoryRouteItem,
   DynamicCategoryType,
+} from "./types";
+import type {
   DynamicPostContentSection,
   DynamicPostItem,
   DynamicPostThumbnail,
   DynamicPostUser,
-} from "./types";
+} from "@/api/vcci-news/types/post";
 
 type RawPostCategory = {
   id?: string | null;

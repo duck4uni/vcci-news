@@ -5,7 +5,8 @@ import { FileText, Globe2, Newspaper, TrendingUp } from "lucide-react";
 import { SafeImage } from "@/components/shared/safe-image";
 import ListCategory from "@/components/base/list-category";
 import { buildDynamicCategoryMenu } from "../templates/data";
-import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
+import type { DynamicCategoryRouteItem } from "../templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 type RegionMarketItem = {
   name: string;

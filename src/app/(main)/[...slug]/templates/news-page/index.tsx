@@ -18,8 +18,9 @@ import {
   findDisplayCategoryForPost,
   getDynamicPostExcerpt,
   resolveDynamicPostImage,
-} from "./data";
-import type { DynamicCategoryRouteItem, DynamicPostItem } from "./types";
+} from "../data";
+import type { DynamicCategoryRouteItem } from "../types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 type NewsPageProps = {
   category: DynamicCategoryRouteItem;
@@ -192,7 +193,7 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
                   })
                 ) : (
                   <div className="rounded-2xl border border-[#edf1f5] bg-white px-6 py-12 text-center text-gray-600">
-                    {"Ch\u01b0a c\u00f3 b\u00e0i vi\u1ebft ph\u00f9 h\u1ee3p trong danh m\u1ee5c n\u00e0y."}
+                    <p>Chưa có bài viết phù hợp trong danh mục này.</p>
                   </div>
                 )}
 

@@ -18,7 +18,8 @@ import {
   resolveDynamicPostImage,
   mapPost,
 } from "../templates/data";
-import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
+import type { DynamicCategoryRouteItem } from "../templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 type AnPhamProps = {
   category: DynamicCategoryRouteItem | null;

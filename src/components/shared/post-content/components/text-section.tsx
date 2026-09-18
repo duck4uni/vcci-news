@@ -1,82 +1,5 @@
-"use client";
-
-import { useState } from "react";
-
 import parse from "html-react-parser";
-import { ImageLightbox } from "@/components/shared/image-lightbox";
-import { SafeImage } from "@/components/shared/safe-image";
-import { getDynamicPostBodyHtml } from "./data";
-import type { DynamicPostContentSection, DynamicPostItem } from "./types";
-
-type StructuredPostContentProps = {
-  post: DynamicPostItem;
-};
-
-function getGridClassName(columns: number) {
-  if (columns >= 4) return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4";
-  if (columns === 3) return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
-  if (columns === 2) return "grid-cols-1 sm:grid-cols-2";
-  return "grid-cols-1";
-}
-
-function StructuredImageSection({ section }: { section: DynamicPostContentSection }) {
-  const images = section.images.filter((item) => item.image?.url);
-  const [activeImage, setActiveImage] = useState<{
-    src: string;
-    alt: string;
-    caption?: string;
-  } | null>(null);
-
-  if (!images.length) return null;
-
-  return (
-    <>
-      <div className={`not-prose my-6 grid gap-4 ${getGridClassName(section.image_columns)}`}>
-        {images.map((item) => {
-          const image = item.image;
-          if (!image?.url) return null;
-
-          return (
-            <figure
-              key={`${section.id}-${image.id || image.url}-${item.position}`}
-              className="group cursor-zoom-in overflow-hidden rounded-[18px] bg-white"
-              onClick={() =>
-                setActiveImage({
-                  src: image.url,
-                  alt: image.alt || image.name || "Hình ảnh bài viết",
-                  caption: item.caption ?? undefined,
-                })
-              }
-            >
-              <SafeImage
-                src={image.url}
-                alt={image.alt || image.name || "Hình ảnh bài viết"}
-                width={1200}
-                height={800}
-                className="h-auto w-full object-contain transition-transform duration-300 group-hover:scale-[1.02]"
-              />
-              {item.caption ? (
-                <figcaption className="mt-2 text-center text-sm text-gray-600">
-                  {item.caption}
-                </figcaption>
-              ) : null}
-            </figure>
-          );
-        })}
-      </div>
-
-      <ImageLightbox
-        src={activeImage?.src ?? ""}
-        alt={activeImage?.alt}
-        caption={activeImage?.caption}
-        open={Boolean(activeImage)}
-        onOpenChange={(open) => {
-          if (!open) setActiveImage(null);
-        }}
-      />
-    </>
-  );
-}
+import type { DynamicPostContentSection } from "@/api/vcci-news/types/post";
 
 function normalizeCaptionShortcodes(html: string) {
   return html.replace(/\[caption[^\]]*]([\s\S]*?)\[\/caption]/gi, (_match, innerContent: string) => {
@@ -195,35 +118,100 @@ function renderStructuredHtml(html: string) {
   return parse(normalizeImportedLayout(normalizeCaptionShortcodes(html)));
 }
 
-export default function StructuredPostContent({ post }: StructuredPostContentProps) {
-  const sections = (post.content_structure?.post_content ?? [])
-    .slice()
-    .sort((left, right) => left.position - right.position);
-
-  if (!sections.length) {
-    return <>{renderStructuredHtml(getDynamicPostBodyHtml(post))}</>;
-  }
-
-  const hasRenderableSection = sections.some(
-    (section) => section.content.trim() || section.images.length,
-  );
-
-  if (!hasRenderableSection) {
-    return <>{renderStructuredHtml(getDynamicPostBodyHtml(post))}</>;
-  }
+export function TextSection({ section }: { section: DynamicPostContentSection }) {
+  const content = section.content.trim();
+  if (!content) return null;
 
   return (
-    <>
-      {sections.map((section) => {
-        if (section.type === "image") {
-          return <StructuredImageSection key={section.id} section={section} />;
+    <div className="post-text-section">
+      {renderStructuredHtml(content)}
+
+      <style jsx global>{`
+        .post-text-section {
+          color: #1f2937;
+          line-height: 1.85;
+          width: 100%;
+          max-width: 100%;
         }
 
-        const content = section.content.trim();
-        if (!content) return null;
+        .post-text-section p,
+        .post-text-section div {
+          margin: 0 0 18px;
+          max-width: 100% !important;
+          box-sizing: border-box;
+        }
 
-        return <div key={section.id}>{renderStructuredHtml(content)}</div>;
-      })}
-    </>
+        .post-text-section h1,
+        .post-text-section h2,
+        .post-text-section h3,
+        .post-text-section h4,
+        .post-text-section h5,
+        .post-text-section h6 {
+          margin: 0 0 18px;
+          color: #111827;
+          font-weight: 700;
+          line-height: 1.45;
+        }
+
+        .post-text-section :is(p, div, span, li, a, strong, em, u, s) {
+          font-family: inherit;
+        }
+
+        .post-text-section img {
+          display: block;
+          width: 100% !important;
+          max-width: 100% !important;
+          height: auto !important;
+          margin: 24px auto 10px;
+          border-radius: 14px;
+        }
+
+        .post-text-section figure {
+          display: block !important;
+          width: 100% !important;
+          max-width: 100% !important;
+          margin: 28px 0;
+          text-align: center;
+        }
+
+        .post-text-section .article-content,
+        .post-text-section .article-content_toc,
+        .post-text-section table,
+        .post-text-section iframe {
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box;
+        }
+
+        .post-text-section table {
+          display: table;
+          table-layout: fixed;
+        }
+
+        .post-text-section figcaption,
+        .post-text-section .wp-caption-text {
+          margin-top: 10px;
+          color: #6b7280;
+          font-size: 14px;
+          line-height: 1.6;
+          text-align: center;
+        }
+
+        .post-text-section a {
+          color: #14519f;
+          font-weight: 600;
+        }
+
+        .post-text-section ul,
+        .post-text-section ol {
+          margin: 18px 0;
+          padding-left: 24px;
+        }
+
+        .post-text-section li {
+          margin: 8px 0;
+        }
+      `}</style>
+    </div>
   );
 }

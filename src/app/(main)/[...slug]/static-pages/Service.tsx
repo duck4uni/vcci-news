@@ -16,7 +16,8 @@ import ListCategory from "@/components/base/list-category";
 import {
   buildDynamicCategoryMenu,
 } from "../templates/data";
-import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
+import type { DynamicCategoryRouteItem } from "../templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 const SERVICE_SUPPORT_ITEMS = [
   {

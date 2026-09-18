@@ -3,7 +3,8 @@
 import links from "@/links";
 import ListCategory from "@/components/base/list-category";
 import { buildDynamicCategoryMenu } from "../templates/data";
-import type { DynamicCategoryRouteItem, DynamicPostItem } from "../templates/types";
+import type { DynamicCategoryRouteItem } from "../templates/types";
+import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
 const MEMBERSHIP_REQUIREMENTS = [
   "Đơn xin gia nhập làm hội viên chính thức VCCI (2 bản theo mẫu của VCCI)",
