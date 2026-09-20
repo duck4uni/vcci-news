@@ -415,6 +415,11 @@ export function AdminRichTextEditor({
           margin-bottom: 1em;
         }
 
+        .admin-rich-text-editor .jodit-wysiwyg a {
+          color: #14519f;
+          text-decoration: underline;
+        }
+
         .admin-rich-text-editor .jodit-wysiwyg .article-content,
         .admin-rich-text-editor .jodit-wysiwyg .article-content_toc,
         .admin-rich-text-editor .jodit-wysiwyg table,

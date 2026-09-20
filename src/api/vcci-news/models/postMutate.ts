@@ -15,7 +15,6 @@ export interface PostMutate {
   release_at?: string;
   is_active?: boolean;
   release_mode?: string;
-  page_config_id?: string;
   is_featured?: boolean;
   status?: string;
   type?: string;

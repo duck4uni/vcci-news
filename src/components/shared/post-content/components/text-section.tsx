@@ -1,4 +1,5 @@
 import parse from "html-react-parser";
+import type { ReactNode } from "react";
 import type { DynamicPostContentSection } from "@/api/vcci-news/types/post";
 
 function normalizeCaptionShortcodes(html: string) {
@@ -118,13 +119,10 @@ function renderStructuredHtml(html: string) {
   return parse(normalizeImportedLayout(normalizeCaptionShortcodes(html)));
 }
 
-export function TextSection({ section }: { section: DynamicPostContentSection }) {
-  const content = section.content.trim();
-  if (!content) return null;
-
+export function PostTextSection({ children }: { children: ReactNode }) {
   return (
     <div className="post-text-section">
-      {renderStructuredHtml(content)}
+      {children}
 
       <style jsx global>{`
         .post-text-section {
@@ -214,4 +212,11 @@ export function TextSection({ section }: { section: DynamicPostContentSection })
       `}</style>
     </div>
   );
+}
+
+export function TextSection({ section }: { section: DynamicPostContentSection }) {
+  const content = section.content.trim();
+  if (!content) return null;
+
+  return <PostTextSection>{renderStructuredHtml(content)}</PostTextSection>;
 }
