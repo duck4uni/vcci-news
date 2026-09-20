@@ -6,6 +6,7 @@ import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import { findDisplayCategoryForPost } from "../data";
 import { renderPostSummary } from "./components/post-summary-content";
 import PostContent from "@/components/shared/post-content";
+import { PostTextSection } from "@/components/shared/post-content/components/text-section";
 import EventInfoCard from "./components/event-info-card";
 import type { DynamicCategoryRouteItem } from "../types";
 import type { DynamicPostItem } from "@/api/vcci-news/types/post";
@@ -46,8 +47,8 @@ export default function NewsDetailPage({
 
             {/* summary */}
             {post.summary ? (
-              <div className="mt-5 max-w-4xl text-base font-semibold leading-7 text-[#374151] md:text-lg md:leading-8">
-                {renderPostSummary(post.summary)}
+              <div className="mt-5 max-w-4xl">
+                <PostTextSection>{renderPostSummary(post.summary)}</PostTextSection>
               </div>
             ) : null}
 

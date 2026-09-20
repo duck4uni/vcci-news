@@ -16,7 +16,6 @@ export interface Post {
   release_at?: string;
   is_active?: boolean;
   release_mode?: string;
-  page_config_id?: string;
   created_at?: string;
   created_by?: string;
   updated_at?: string;

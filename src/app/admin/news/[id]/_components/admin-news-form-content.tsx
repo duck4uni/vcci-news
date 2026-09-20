@@ -9,7 +9,7 @@ import {
   useState,
 } from "react";
 import dayjs from "dayjs";
-import { ArrowLeft, Save, Upload, X, Calendar as CalendarIcon } from "lucide-react";
+import { ArrowLeft, Save, Upload, X, Calendar as CalendarIcon, Plus, Check, ChevronsUpDown } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -31,6 +31,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Command, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import {
   type TagItem,
 } from "@/api/vcci-news/types/tag";
@@ -50,6 +52,7 @@ import {
   getApiV10Tag,
   postApiV10TagIds,
 } from "@/api/vcci-news/endpoints/tag";
+import { useGetApiV10EventAddress } from "@/api/vcci-news/endpoints/event-address";
 import {
   ADMIN_NEWS_TYPE_OPTIONS,
   cloneAdminNewsFormValues,
@@ -74,6 +77,7 @@ import {
 } from "./constants";
 import { DateTimePicker } from "@/components/shared/date-time-picker";
 import { EventDatesDatePicker } from "./event-dates-date-picker";
+import { EventAddressManagerDialog } from "./event-address-manager-dialog";
 import { DraftRestoreDialog } from "./draft-restore-dialog";
 import { FormSection } from "./form-section";
 import { HeaderCategoryMultiPicker } from "./header-category-multi-picker";
@@ -106,6 +110,37 @@ export function AdminNewsFormContent() {
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
   const [isMissingPost, setIsMissingPost] = useState(false);
   const [useEventDates, setUseEventDates] = useState(false);
+  const [isAddressManagerOpen, setIsAddressManagerOpen] = useState(false);
+  const [isAddressSuggestOpen, setIsAddressSuggestOpen] = useState(false);
+
+  const eventAddressesQuery = useGetApiV10EventAddress({
+    page: 1,
+    pageSize: 100,
+    sortField: "information",
+    sortOrder: "asc",
+  });
+
+  const addressOptions = useMemo(() => {
+    const rows = eventAddressesQuery.data?.responseData?.rows ?? [];
+    const values = Array.from(
+      new Set(
+        rows
+          .map((row) => String((row as Record<string, unknown>)?.information ?? "").trim())
+          .filter(Boolean),
+      ),
+    );
+    const currentLocation = form?.location?.trim();
+    if (currentLocation && !values.includes(currentLocation)) {
+      values.unshift(currentLocation);
+    }
+    return values;
+  }, [eventAddressesQuery.data, form?.location]);
+
+  const matchingAddressOptions = useMemo(() => {
+    const keyword = form?.location?.trim().toLowerCase() ?? "";
+    if (!keyword) return addressOptions;
+    return addressOptions.filter((option) => option.toLowerCase().includes(keyword));
+  }, [addressOptions, form?.location]);
 
   // Draft auto-save (create mode only)
   const draftHasHydrated = useNewsDraftStore((s) => s._hasHydrated);
@@ -1003,12 +1038,76 @@ export function AdminNewsFormContent() {
               </div>
 
               <div>
-                <Label className="mb-1.5 block text-gray-700">Địa điểm</Label>
-                <Input
-                  value={form.location}
-                  onChange={(event) => handleField("location", event.target.value)}
-                  placeholder="Nhập địa điểm"
-                  className={fieldClassName}
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <Label className="block text-gray-700">Địa điểm</Label>
+                  <PermissionGate required="settings:write">
+                    <button
+                      type="button"
+                      onClick={() => setIsAddressManagerOpen(true)}
+                      className="flex items-center gap-1 text-xs font-medium text-[#063e8e] hover:underline"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      Tạo địa điểm mới
+                    </button>
+                  </PermissionGate>
+                </div>
+                <Popover
+                  open={isAddressSuggestOpen}
+                  onOpenChange={setIsAddressSuggestOpen}
+                >
+                  <PopoverAnchor asChild>
+                    <div className="relative">
+                      <Input
+                        value={form.location}
+                        onChange={(event) => {
+                          handleField("location", event.target.value);
+                          setIsAddressSuggestOpen(true);
+                        }}
+                        onFocus={() => setIsAddressSuggestOpen(true)}
+                        placeholder="Nhập hoặc chọn địa điểm"
+                        className={fieldClassName}
+                        autoComplete="off"
+                      />
+                      <ChevronsUpDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                    </div>
+                  </PopoverAnchor>
+                  <PopoverContent
+                    align="start"
+                    onOpenAutoFocus={(event) => event.preventDefault()}
+                    className="w-[var(--radix-popover-trigger-width)] min-w-[var(--radix-popover-trigger-width)] rounded-xl border-[#063e8e]/15 bg-white p-0 text-gray-700"
+                  >
+                    <Command className="bg-white text-gray-700">
+                      <CommandList className="max-h-60">
+                        {matchingAddressOptions.length === 0 ? (
+                          <div className="px-3 py-2 text-sm text-gray-500">
+                            Không có gợi ý — địa điểm sẽ dùng như đã nhập
+                          </div>
+                        ) : (
+                          matchingAddressOptions.map((option) => (
+                            <CommandItem
+                              key={option}
+                              value={option}
+                              onSelect={() => {
+                                handleField("location", option);
+                                setIsAddressSuggestOpen(false);
+                              }}
+                              className="gap-2 px-3 py-2 text-gray-700 data-[selected=true]:bg-[#063e8e]/10 data-[selected=true]:text-[#063e8e]"
+                            >
+                              <Check
+                                className={`h-4 w-4 shrink-0 text-[#063e8e] ${form.location === option ? "opacity-100" : "opacity-0"
+                                  }`}
+                              />
+                              <span className="truncate">{option}</span>
+                            </CommandItem>
+                          ))
+                        )}
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+                <EventAddressManagerDialog
+                  open={isAddressManagerOpen}
+                  onOpenChange={setIsAddressManagerOpen}
                 />
               </div>
 
