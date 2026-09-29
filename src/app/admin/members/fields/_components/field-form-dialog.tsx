@@ -12,19 +12,18 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { MemberField } from "@/api/vcci-news/types/member";
-
 const fieldClassName =
   "border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-700 focus-visible:ring-[#063e8e]/30";
 
 interface FieldFormDialogProps {
   open: boolean;
-  initial: MemberField | null;
+  initial: { id: string; name: string } | null;
   onOpenChange: (open: boolean) => void;
   onSave: (data: { id?: string; name: string }) => void;
+  saving?: boolean;
 }
 
-export function FieldFormDialog({ open, initial, onOpenChange, onSave }: FieldFormDialogProps) {
+export function FieldFormDialog({ open, initial, onOpenChange, onSave, saving }: FieldFormDialogProps) {
   const [name, setName] = useState("");
 
   useEffect(() => {
@@ -34,7 +33,7 @@ export function FieldFormDialog({ open, initial, onOpenChange, onSave }: FieldFo
   const handleSave = () => {
     const trimmed = name.trim();
     if (!trimmed) {
-      toast.error("Vui lòng nhập tên lĩnh vực");
+      toast.error("Vui lòng nhập tên doanh nghiệp");
       return;
     }
     onSave({ id: initial?.id, name: trimmed });
@@ -45,20 +44,21 @@ export function FieldFormDialog({ open, initial, onOpenChange, onSave }: FieldFo
       <DialogContent className="max-w-md border-[#063e8e]/15 bg-white">
         <DialogHeader>
           <DialogTitle className="text-[#063e8e]">
-            {initial ? "Chỉnh sửa lĩnh vực" : "Thêm lĩnh vực mới"}
+            {initial ? "Chỉnh sửa doanh nghiệp" : "Thêm doanh nghiệp mới"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
             <Label className="text-gray-700">
-              Tên lĩnh vực <span className="text-red-500">*</span>
+              Tên doanh nghiệp <span className="text-red-500">*</span>
             </Label>
             <Input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nhập tên lĩnh vực..."
+              placeholder="Nhập tên doanh nghiệp..."
               className={fieldClassName}
-              onKeyDown={(event) => event.key === "Enter" && handleSave()}
+              onKeyDown={(event) => event.key === "Enter" && !saving && handleSave()}
+              disabled={saving}
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
@@ -75,9 +75,10 @@ export function FieldFormDialog({ open, initial, onOpenChange, onSave }: FieldFo
               type="button"
               className="bg-[#063e8e] text-white hover:bg-[#063e8e]/90"
               onClick={handleSave}
+              disabled={saving}
             >
               <Save className="mr-2 h-4 w-4" />
-              Lưu
+              {saving ? "Đang lưu..." : "Lưu"}
             </Button>
           </div>
         </div>

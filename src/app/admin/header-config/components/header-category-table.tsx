@@ -20,10 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  type HeaderCategoryTreeItem,
-  getHeaderCategoryTypeLabel,
-} from "@/mockdata/header-config";
+import { getHeaderCategoryTypeLabel } from "@/lib/utils/header-category";
+import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 
 export type HeaderCategoryFlatRow = HeaderCategoryTreeItem & {
   depth: number;

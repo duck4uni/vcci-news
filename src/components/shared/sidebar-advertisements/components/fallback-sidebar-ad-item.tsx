@@ -1,4 +1,4 @@
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import Link from "next/link";
 
 const FALLBACK_HREF = "https://vcci-hcm.org.vn";
@@ -13,7 +13,7 @@ export function FallbackSidebarAdItem({ src }: { src: string }) {
       title="Quảng cáo VCCI HCM"
     >
       <div className="relative aspect-[16/10]">
-        <SafeImage
+        <Image
           src={src}
           alt="Quảng cáo VCCI HCM"
           fill

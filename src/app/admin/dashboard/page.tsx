@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import dayjs from "dayjs";
 import {
@@ -16,49 +15,44 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
-  type AdminMediaItem,
-  type AdminNewsItem,
-  readAdminMediaItems,
-  readAdminNewsItems,
-} from "@/mockdata/admin-news";
-import { type BaseConfigData, readBaseConfig } from "@/mockdata/base-config";
-import {
-  type ContactRequestItem,
-  type MembershipApplicationItem,
-  type NewsletterSubscriptionItem,
-  readContactRequests,
-  readMembershipApplications,
-  readNewsletterSubscriptions,
-} from "@/mockdata/contact-management";
-import {
-  type HeaderCategoryPostItem,
-  getHeaderCategoryPostSeed,
-} from "@/mockdata/header-category-posts";
-import { type HeaderCategoryItem, getHeaderCategorySeed } from "@/mockdata/header-config";
-import {
-  type MemberField,
-  type MemberItem,
-  type MemberRegion,
-  readMemberFields,
-  readMemberRegions,
-  readMembers,
-} from "@/mockdata/members";
-import { type VideoItem, readVideos } from "@/mockdata/videos";
+  useGetApiV10Post,
+  useGetApiV10PostId,
+} from "@/api/vcci-news/endpoints/post";
+import { useGetApiV10File, useGetApiV10FileId } from "@/api/vcci-news/endpoints/file";
+import { useGetApiV10Video } from "@/api/vcci-news/endpoints/video";
+import { useGetApiV10Member } from "@/api/vcci-news/endpoints/member";
+import { useGetApiV10Business } from "@/api/vcci-news/endpoints/business";
+import { useGetApiV10Position } from "@/api/vcci-news/endpoints/position";
+import { useGetApiV10Contact } from "@/api/vcci-news/endpoints/contact";
+import { useGetApiV10NewsletterSubscription } from "@/api/vcci-news/endpoints/newsletter-subscription";
+import { useGetApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import { useGetApiV10Banner } from "@/api/vcci-news/endpoints/banner";
+import { useGetApiV10SiteInformation } from "@/api/vcci-news/endpoints/site-information";
+import { resolveCmsFileUrl, toAdminMediaItem } from "@/lib/utils/file";
+import type { AdminMediaItem } from "@/mockdata/admin-news";
+import { ComponentType, useMemo } from "react";
 
 function formatDateTime(value: string) {
+  if (!value) return "—";
   return dayjs(value).format("DD/MM/YYYY HH:mm");
+}
+
+function extractRows(responseData: unknown): any[] {
+  if (!responseData || typeof responseData !== "object") return [];
+  const rows = (responseData as { rows?: unknown }).rows;
+  return Array.isArray(rows) ? rows : [];
 }
 
 type DashboardMetric = {
   title: string;
   value: string;
   description: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   href: string;
 };
 
@@ -66,7 +60,7 @@ type DashboardShortcut = {
   title: string;
   description: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
 };
 
 type ActivityItem = {
@@ -78,47 +72,167 @@ type ActivityItem = {
   href: string;
 };
 
+interface SpotlightPostItem {
+  id: string;
+  title: string;
+  thumbnail_id?: string | null;
+  updated_at?: string | null;
+  created_at?: string | null;
+}
+
+function SpotlightThumbnail({ fileId }: { fileId?: string | null }) {
+  const { data } = useGetApiV10FileId(fileId ?? "", {
+    query: { enabled: Boolean(fileId) },
+  });
+  const file = (data as any)?.responseData ?? (data as any)?.data?.responseData;
+  const url = file?.path ? resolveCmsFileUrl(file.path) : null;
+
+  if (!url) {
+    return (
+      <div className="flex h-full items-center justify-center text-[#063e8e]">
+        <Newspaper className="h-5 w-5" />
+      </div>
+    );
+  }
+
+  return <Image
+    src={url}
+    alt={file?.original ?? "thumbnail"}
+    fill
+    className="object-cover"
+    unoptimized
+  />;
+}
+
 export default function AdminDashboardPage() {
-  const [ready, setReady] = React.useState(false);
-  const [newsItems, setNewsItems] = React.useState<AdminNewsItem[]>([]);
-  const [mediaItems, setMediaItems] = React.useState<AdminMediaItem[]>([]);
-  const [videos, setVideos] = React.useState<VideoItem[]>([]);
-  const [members, setMembers] = React.useState<MemberItem[]>([]);
-  const [memberFields, setMemberFields] = React.useState<MemberField[]>([]);
-  const [memberRegions, setMemberRegions] = React.useState<MemberRegion[]>([]);
-  const [newsletterItems, setNewsletterItems] = React.useState<NewsletterSubscriptionItem[]>([]);
-  const [contactRequests, setContactRequests] = React.useState<ContactRequestItem[]>([]);
-  const [membershipApplications, setMembershipApplications] = React.useState<
-    MembershipApplicationItem[]
-  >([]);
-  const [baseConfig, setBaseConfig] = React.useState<BaseConfigData>(() => readBaseConfig());
+  const postsQuery = useGetApiV10Post({
+    page: 1,
+    pageSize: 200,
+    sortField: "updated_at",
+    sortOrder: "desc",
+  });
+  const filesQuery = useGetApiV10File({ page: 1, pageSize: 200 });
+  const videosQuery = useGetApiV10Video({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const membersQuery = useGetApiV10Member({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const businessesQuery = useGetApiV10Business({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const positionsQuery = useGetApiV10Position({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const contactsQuery = useGetApiV10Contact({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const newsletterQuery = useGetApiV10NewsletterSubscription({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const categoryTreeQuery = useGetApiV10CategoryTree();
+  const bannersQuery = useGetApiV10Banner({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const siteInfoQuery = useGetApiV10SiteInformation();
 
-  React.useEffect(() => {
-    setNewsItems(readAdminNewsItems());
-    setMediaItems(readAdminMediaItems());
-    setVideos(readVideos());
-    setMembers(readMembers());
-    setMemberFields(readMemberFields());
-    setMemberRegions(readMemberRegions());
-    setNewsletterItems(readNewsletterSubscriptions());
-    setContactRequests(readContactRequests());
-    setMembershipApplications(readMembershipApplications());
-    setBaseConfig(readBaseConfig());
-    setReady(true);
-  }, []);
+  const newsItems = useMemo(
+    () => extractRows((postsQuery.data as any)?.responseData),
+    [postsQuery.data],
+  );
+  const mediaItems = useMemo<AdminMediaItem[]>(
+    () => extractRows((filesQuery.data as any)?.responseData).map(toAdminMediaItem),
+    [filesQuery.data],
+  );
+  const videos = useMemo(
+    () => extractRows((videosQuery.data as any)?.responseData),
+    [videosQuery.data],
+  );
+  const members = useMemo(
+    () => extractRows((membersQuery.data as any)?.responseData),
+    [membersQuery.data],
+  );
+  const businesses = useMemo(
+    () => extractRows((businessesQuery.data as any)?.responseData),
+    [businessesQuery.data],
+  );
+  const positions = useMemo(
+    () => extractRows((positionsQuery.data as any)?.responseData),
+    [positionsQuery.data],
+  );
+  const contactRequests = useMemo(
+    () => extractRows((contactsQuery.data as any)?.responseData),
+    [contactsQuery.data],
+  );
+  const newsletterItems = useMemo(
+    () => extractRows((newsletterQuery.data as any)?.responseData),
+    [newsletterQuery.data],
+  );
+  const banners = useMemo(
+    () => extractRows((bannersQuery.data as any)?.responseData),
+    [bannersQuery.data],
+  );
 
-  const headerCategories = React.useMemo<HeaderCategoryItem[]>(() => getHeaderCategorySeed(), []);
-  const headerPosts = React.useMemo<HeaderCategoryPostItem[]>(() => getHeaderCategoryPostSeed(), []);
+  const categoryTree = useMemo(
+    () => {
+      const raw = (categoryTreeQuery.data as any)?.responseData;
+      return Array.isArray(raw) ? raw : [];
+    },
+    [categoryTreeQuery.data],
+  );
 
-  const metrics = React.useMemo<DashboardMetric[]>(() => {
-    const totalContactForms =
-      newsletterItems.length + contactRequests.length + membershipApplications.length;
+  const headerCategoryCount = useMemo(() => {
+    const walk = (nodes: any[]): number =>
+      nodes.reduce(
+        (total, node) => total + 1 + walk(Array.isArray(node?.children) ? node.children : []),
+        0,
+      );
+    return walk(categoryTree);
+  }, [categoryTree]);
+
+  const siteInfo = useMemo(
+    () =>
+      (siteInfoQuery.data as any)?.responseData ??
+      (siteInfoQuery.data as any)?.data?.responseData,
+    [siteInfoQuery.data],
+  );
+
+  const isLoading =
+    postsQuery.isLoading ||
+    filesQuery.isLoading ||
+    videosQuery.isLoading ||
+    membersQuery.isLoading ||
+    contactsQuery.isLoading;
+
+  const metrics = useMemo<DashboardMetric[]>(() => {
+    const totalContactForms = newsletterItems.length + contactRequests.length;
 
     return [
       {
         title: "Bài viết nội dung",
-        value: String(newsItems.length + headerPosts.length),
-        description: `${newsItems.length} bài admin, ${headerPosts.length} bài danh mục`,
+        value: String(newsItems.length),
+        description: `${newsItems.length} bài viết đang quản lý`,
         icon: Newspaper,
         href: "/admin/news",
       },
@@ -130,9 +244,9 @@ export default function AdminDashboardPage() {
         href: "/admin/media",
       },
       {
-        title: "Hội viên & biểu mẫu",
-        value: String(members.length + membershipApplications.length),
-        description: `${members.length} hội viên, ${membershipApplications.length} đơn chờ xử lý`,
+        title: "Hội viên",
+        value: String(members.length),
+        description: `${members.length} hội viên, ${businesses.length} doanh nghiệp, ${positions.length} chức vụ`,
         icon: Users,
         href: "/admin/members",
       },
@@ -145,17 +259,17 @@ export default function AdminDashboardPage() {
       },
     ];
   }, [
+    businesses.length,
     contactRequests.length,
-    headerPosts.length,
     mediaItems.length,
     members.length,
-    membershipApplications.length,
     newsletterItems.length,
     newsItems.length,
+    positions.length,
     videos.length,
   ]);
 
-  const shortcuts = React.useMemo<DashboardShortcut[]>(
+  const shortcuts = useMemo<DashboardShortcut[]>(
     () => [
       {
         title: "Cấu hình chung",
@@ -185,13 +299,13 @@ export default function AdminDashboardPage() {
     [],
   );
 
-  const recentActivities = React.useMemo<ActivityItem[]>(() => {
+  const recentActivities = useMemo<ActivityItem[]>(() => {
     const items: ActivityItem[] = [
-      ...newsItems.map((item) => ({
+      ...newsItems.map((item: any) => ({
         id: `news-${item.id}`,
-        title: item.title,
+        title: item.title ?? "",
         description: "Cập nhật trong Quản lý bài viết",
-        time: item.updated_at || item.created_at,
+        time: item.updated_at || item.created_at || "",
         badge: "Bài viết",
         href: "/admin/news",
       })),
@@ -203,40 +317,40 @@ export default function AdminDashboardPage() {
         badge: "Ảnh",
         href: "/admin/media",
       })),
-      ...membershipApplications.map((item) => ({
-        id: `member-app-${item.id}`,
-        title: item.organizationName,
-        description: "Đơn đăng ký hội viên mới",
-        time: item.submittedAt,
-        badge: "Đơn hội viên",
-        href: "/admin/contact-management/membership-applications",
-      })),
-      ...contactRequests.map((item) => ({
+      ...contactRequests.map((item: any) => ({
         id: `contact-${item.id}`,
-        title: item.contactName,
-        description: item.purpose,
-        time: item.submittedAt,
+        title: item.fullname ?? "",
+        description: item.title ?? "Đơn liên hệ từ website",
+        time: item.created_at ?? "",
         badge: "Liên hệ",
         href: "/admin/contact-management/contact-requests",
       })),
     ];
 
     return items
+      .filter((item) => item.id)
       .sort((left, right) => dayjs(right.time).valueOf() - dayjs(left.time).valueOf())
       .slice(0, 6);
-  }, [contactRequests, mediaItems, membershipApplications, newsItems]);
+  }, [contactRequests, mediaItems, newsItems]);
 
-  const spotlightNews = React.useMemo(() => newsItems.slice(0, 3), [newsItems]);
-  const visibleSocials = React.useMemo(
-    () => baseConfig.socials.filter((item) => item.isVisible).sort((a, b) => a.sortOrder - b.sortOrder),
-    [baseConfig.socials],
-  );
-  const activeBanners = React.useMemo(
-    () => baseConfig.banners.filter((item) => item.isActive).sort((a, b) => a.sortOrder - b.sortOrder),
-    [baseConfig.banners],
+  const spotlightNews = useMemo<SpotlightPostItem[]>(
+    () =>
+      newsItems.slice(0, 3).map((item: any) => ({
+        id: String(item?.id ?? ""),
+        title: item?.title ?? "",
+        thumbnail_id: item?.thumbnail_id ?? null,
+        updated_at: item?.updated_at ?? null,
+        created_at: item?.created_at ?? null,
+      })),
+    [newsItems],
   );
 
-  if (!ready) {
+  const activeBanners = useMemo(
+    () => banners.filter((item: any) => item?.status === "ACTIVE" || item?.status === 1),
+    [banners],
+  );
+
+  if (isLoading) {
     return (
       <div className="grid gap-5 lg:grid-cols-4">
         {Array.from({ length: 8 }).map((_, index) => (
@@ -284,7 +398,7 @@ export default function AdminDashboardPage() {
                 >
                   <div className="text-xs uppercase tracking-[0.16em] text-slate-400">Phản hồi</div>
                   <div className="mt-2 text-2xl font-semibold text-[#163b73]">
-                    {contactRequests.length + membershipApplications.length}
+                    {contactRequests.length}
                   </div>
                   <div className="mt-1 text-sm text-slate-500">đơn đang cần theo dõi</div>
                 </Link>
@@ -303,8 +417,12 @@ export default function AdminDashboardPage() {
           <CardContent className="space-y-4">
             <div className="rounded-[24px] border border-[#063e8e]/10 bg-[#f8fbff] p-4">
               <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Website</div>
-              <div className="mt-2 text-lg font-semibold text-[#163b73]">{baseConfig.websiteName}</div>
-              <div className="mt-1 truncate text-sm text-slate-500">{baseConfig.websiteLink}</div>
+              <div className="mt-2 text-lg font-semibold text-[#163b73]">
+                {siteInfo?.website_name || "Chưa cấu hình"}
+              </div>
+              <div className="mt-1 truncate text-sm text-slate-500">
+                {siteInfo?.website_link || "—"}
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -313,16 +431,18 @@ export default function AdminDashboardPage() {
                 <div className="mt-2 text-2xl font-semibold text-[#163b73]">{activeBanners.length}</div>
               </div>
               <div className="rounded-[24px] border border-[#063e8e]/10 bg-white p-4">
-                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Mạng xã hội hiển thị</div>
-                <div className="mt-2 text-2xl font-semibold text-[#163b73]">{visibleSocials.length}</div>
+                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Danh mục menu header</div>
+                <div className="mt-2 text-2xl font-semibold text-[#163b73]">{headerCategoryCount}</div>
               </div>
             </div>
 
             <div className="rounded-[24px] border border-[#063e8e]/10 bg-white p-4">
-              <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Chi nhánh liên hệ</div>
-              <div className="mt-2 text-lg font-semibold text-[#163b73]">{baseConfig.branches.length} địa điểm</div>
+              <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Liên hệ</div>
+              <div className="mt-2 text-lg font-semibold text-[#163b73]">
+                {siteInfo?.hotline || "Chưa cấu hình hotline"}
+              </div>
               <div className="mt-1 text-sm text-slate-500">
-                {baseConfig.branches[0]?.branchName || "Chưa có chi nhánh nào được cấu hình"}
+                {siteInfo?.email || siteInfo?.address || "—"}
               </div>
             </div>
           </CardContent>
@@ -366,27 +486,33 @@ export default function AdminDashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {recentActivities.map((item) => (
-              <Link
-                key={item.id}
-                href={item.href}
-                className="flex items-start justify-between gap-4 rounded-[24px] border border-[#063e8e]/10 bg-white p-4 transition hover:bg-[#f8fbff]"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="border-[#063e8e]/15 text-[#063e8e]">
-                      {item.badge}
-                    </Badge>
-                    <span className="text-xs text-slate-400">{formatDateTime(item.time)}</span>
+            {recentActivities.length === 0 ? (
+              <div className="rounded-[24px] border border-[#063e8e]/10 bg-white p-6 text-center text-sm text-slate-500">
+                Không có dữ liệu hoạt động
+              </div>
+            ) : (
+              recentActivities.map((item) => (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  className="flex items-start justify-between gap-4 rounded-[24px] border border-[#063e8e]/10 bg-white p-4 transition hover:bg-[#f8fbff]"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="border-[#063e8e]/15 text-[#063e8e]">
+                        {item.badge}
+                      </Badge>
+                      <span className="text-xs text-slate-400">{formatDateTime(item.time)}</span>
+                    </div>
+                    <div className="mt-2 line-clamp-1 text-sm font-semibold text-[#163b73]">
+                      {item.title || "—"}
+                    </div>
+                    <div className="mt-1 line-clamp-2 text-sm text-slate-500">{item.description}</div>
                   </div>
-                  <div className="mt-2 line-clamp-1 text-sm font-semibold text-[#163b73]">
-                    {item.title}
-                  </div>
-                  <div className="mt-1 line-clamp-2 text-sm text-slate-500">{item.description}</div>
-                </div>
-                <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
-              </Link>
-            ))}
+                  <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-slate-400" />
+                </Link>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -431,34 +557,31 @@ export default function AdminDashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {spotlightNews.map((item) => (
-              <Link
-                key={item.id}
-                href={`/admin/news/${item.id}`}
-                className="flex gap-4 rounded-[24px] border border-[#063e8e]/10 bg-white p-4 transition hover:bg-[#f8fbff]"
-              >
-                <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#eef4ff]">
-                  {item.thumbnail ? (
-                    <SafeImage
-                      src={item.thumbnail.url}
-                      alt={item.thumbnail.alt || item.thumbnail.name}
-                      fill
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-[#063e8e]">
-                      <Newspaper className="h-5 w-5" />
-                    </div>
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <div className="line-clamp-2 text-sm font-semibold text-[#163b73]">{item.title}</div>
-                  <div className="mt-2 text-xs text-slate-400">
-                    {formatDateTime(item.updated_at || item.created_at)}
+            {spotlightNews.length === 0 ? (
+              <div className="rounded-[24px] border border-[#063e8e]/10 bg-white p-6 text-center text-sm text-slate-500">
+                Không có dữ liệu bài viết
+              </div>
+            ) : (
+              spotlightNews.map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/admin/news/${item.id}`}
+                  className="flex gap-4 rounded-[24px] border border-[#063e8e]/10 bg-white p-4 transition hover:bg-[#f8fbff]"
+                >
+                  <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-2xl bg-[#eef4ff]">
+                    <SpotlightThumbnail fileId={item.thumbnail_id} />
                   </div>
-                </div>
-              </Link>
-            ))}
+                  <div className="min-w-0">
+                    <div className="line-clamp-2 text-sm font-semibold text-[#163b73]">
+                      {item.title || "—"}
+                    </div>
+                    <div className="mt-2 text-xs text-slate-400">
+                      {formatDateTime(item.updated_at || item.created_at || "")}
+                    </div>
+                  </div>
+                </Link>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -473,12 +596,12 @@ export default function AdminDashboardPage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[24px] border border-[#063e8e]/10 bg-[#f8fbff] p-4">
                 <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Menu header</div>
-                <div className="mt-2 text-2xl font-semibold text-[#163b73]">{headerCategories.length}</div>
+                <div className="mt-2 text-2xl font-semibold text-[#163b73]">{headerCategoryCount}</div>
                 <div className="mt-1 text-sm text-slate-500">mục điều hướng</div>
               </div>
               <div className="rounded-[24px] border border-[#063e8e]/10 bg-[#f8fbff] p-4">
-                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Bài trong danh mục</div>
-                <div className="mt-2 text-2xl font-semibold text-[#163b73]">{headerPosts.length}</div>
+                <div className="text-xs uppercase tracking-[0.14em] text-slate-400">Bài viết</div>
+                <div className="mt-2 text-2xl font-semibold text-[#163b73]">{newsItems.length}</div>
                 <div className="mt-1 text-sm text-slate-500">bản ghi nội dung</div>
               </div>
             </div>
@@ -491,16 +614,22 @@ export default function AdminDashboardPage() {
                 </Badge>
               </div>
               <div className="mt-4 grid grid-cols-3 gap-3">
-                {mediaItems.slice(0, 3).map((item) => (
-                  <div key={item.id} className="relative aspect-square overflow-hidden rounded-2xl bg-[#eef4ff]">
-                    <SafeImage
-                      src={item.url}
-                      alt={item.alt || item.name}
-                      fill
-                      className="object-cover"
-                    />
+                {mediaItems.length === 0 ? (
+                  <div className="col-span-3 py-6 text-center text-sm text-slate-500">
+                    Không có dữ liệu ảnh
                   </div>
-                ))}
+                ) : (
+                  mediaItems.slice(0, 3).map((item) => (
+                    <div key={item.id} className="relative aspect-square overflow-hidden rounded-2xl bg-[#eef4ff]">
+                      <Image
+                        src={item.url}
+                        alt={item.alt || item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </CardContent>
@@ -516,9 +645,9 @@ export default function AdminDashboardPage() {
           <CardContent className="space-y-3">
             {[
               { label: "Video", value: videos.length, icon: MonitorPlay },
-              { label: "Lĩnh vực hội viên", value: memberFields.length, icon: FolderTree },
-              { label: "Khu vực hội viên", value: memberRegions.length, icon: MapPin },
-              { label: "Chi nhánh liên hệ", value: baseConfig.branches.length, icon: Globe },
+              { label: "Doanh nghiệp hội viên", value: businesses.length, icon: FolderTree },
+              { label: "Chức vụ hội viên", value: positions.length, icon: MapPin },
+              { label: "Banner", value: banners.length, icon: Globe },
             ].map((item) => (
               <div
                 key={item.label}

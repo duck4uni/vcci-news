@@ -45,7 +45,7 @@ import {
 import { PermissionGate } from "@/components/shared/permission-gate";
 import { usePermission } from "@/hooks/usePermission";
 import { AdminImagePicker } from "@/components/admin/image-picker";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import links from "@/links";
 import { useQueryClient } from "@tanstack/react-query";
@@ -369,12 +369,11 @@ export function AdvertisementList({
                             style={{ aspectRatio: previewAspect, width: type === "horizontal" ? 112 : 72 }}
                           >
                             {imageUrl ? (
-                              <SafeImage
+                              <Image
                                 src={imageUrl}
                                 alt={ad.alt || ad.name}
                                 fill
                                 className="object-cover"
-                                unoptimized={isGif}
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
@@ -514,12 +513,11 @@ export function AdvertisementList({
                   style={{ aspectRatio: previewAspect, width: type === "horizontal" ? 200 : 120 }}
                 >
                   {form.filePreviewUrl ? (
-                    <SafeImage
+                    <Image
                       src={form.filePreviewUrl}
                       alt="Preview"
                       fill
                       className="object-cover"
-                      unoptimized={form.filePreviewUrl.toLowerCase().endsWith(".gif")}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">

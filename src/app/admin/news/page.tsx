@@ -15,7 +15,7 @@ import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -44,14 +44,12 @@ import {
   ADMIN_NEWS_TYPE_LABELS,
   ADMIN_NEWS_TYPE_OPTIONS,
   type AdminNewsItem,
-} from "@/mockdata/admin-news";
+} from "@/api/vcci-news/types/post";
 import { normalizeUser } from "@/lib/utils/cms-user";
 import { normalizeDateTimeInput } from "@/lib/utils/datetime";
 import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
 import links from "@/links";
-import {
-  type HeaderCategoryTreeItem,
-} from "@/mockdata/header-config";
+import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
 import { AdminNewsTableLoading } from "./_components/admin-news-table-loading";
 import { CategoryFilterCombobox } from "./_components/category-filter-combobox";
 import {
@@ -468,7 +466,7 @@ export default function AdminNewsPage() {
                       <TableCell className="text-center">
                         <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.03]">
                           {item.thumbnail ? (
-                            <SafeImage
+                            <Image
                               src={item.thumbnail.url}
                               alt={item.thumbnail.alt || item.thumbnail.name}
                               fill

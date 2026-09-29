@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { FileText, Globe2, Newspaper, TrendingUp } from "lucide-react";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import ListCategory from "@/components/base/list-category";
 import { buildDynamicCategoryMenu } from "../templates/data";
 import type { DynamicCategoryRouteItem } from "../templates/types";
@@ -266,7 +266,7 @@ export default function MarketProfile({ post, category, allCategories }: MarketP
                     })}
                   </div>
 
-                  <SafeImage
+                  <Image
                     src={activeRegion.image}
                     alt={activeRegion.imageAlt}
                     width={1200}

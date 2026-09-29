@@ -1,6 +1,6 @@
 import type { DynamicPostContentSection } from "@/api/vcci-news/types/post";
+import Image from "next/image";
 import { ImageLightbox } from "../../image-lightbox";
-import { SafeImage } from "../../safe-image";
 import { useState } from "react";
 
 function getGridClassName(columns: number) {
@@ -39,7 +39,7 @@ export function ImageSection({ section }: { section: DynamicPostContentSection }
                 })
               }
             >
-              <SafeImage
+              <Image
                 src={image.url}
                 alt={image.alt || image.name || "Hình ảnh bài viết"}
                 width={1200}

@@ -1,4 +1,4 @@
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import Link from "next/link";
 import links from "@/links";
 import type { Advertisement } from "@/api/vcci-news/models/advertisement";
@@ -15,9 +15,8 @@ export function SidebarAdItem({ item, fallbackSrc }: { item: Advertisement; fall
       title={item.name}
     >
       <div className="relative aspect-[16/10]">
-        <SafeImage
+        <Image
           src={src}
-          fallbackSrc={fallbackSrc}
           alt={item.alt || item.name}
           fill
           sizes="(max-width: 768px) 100vw, 300px"

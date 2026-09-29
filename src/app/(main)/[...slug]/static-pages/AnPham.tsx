@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui";
 import { Pagination } from "@/components/base/pagination";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
@@ -123,7 +123,7 @@ export default function AnPham({ category, allCategories }: AnPhamProps) {
                       >
                         <div className="overflow-hidden bg-white shadow-[0_10px_24px_rgba(17,24,39,0.08)]">
                           <div className="relative aspect-3/4 overflow-hidden bg-white">
-                            <SafeImage
+                            <Image
                               src={resolveDynamicPostImage(item.thumbnail)}
                               alt={item.title}
                               width={520}

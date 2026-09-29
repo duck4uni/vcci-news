@@ -1,7 +1,7 @@
 'use client';
 
 import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import memberImages from "@/constants/memberImages";
 import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/mockdata/bff-fallback";
@@ -113,9 +113,8 @@ function Members() {
                   >
                     <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
                       <div className="flex h-full w-full max-w-[260px] items-center justify-center">
-                        <SafeImage
+                        <Image
                           src={resolveMemberImage(member.avatar, index)}
-                          fallbackSrc="/img-error.png"
                           alt={member.name ?? ""}
                           width={260}
                           height={180}
@@ -131,9 +130,8 @@ function Members() {
                   <>
                     <div className="flex h-[210px] items-center justify-center overflow-hidden rounded-[14px] bg-white px-4 py-5">
                       <div className="flex h-full w-full max-w-[260px] items-center justify-center">
-                        <SafeImage
+                        <Image
                           src={resolveMemberImage(member.avatar, index)}
-                          fallbackSrc="/img-error.png"
                           alt={member.name ?? ""}
                           width={260}
                           height={180}
@@ -214,9 +212,8 @@ function Members() {
                         className="group relative block cursor-pointer overflow-hidden rounded-[14px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
                       >
                         <div className="aspect-[16/10] overflow-hidden xl:aspect-[1.25/1]">
-                          <SafeImage
-                            src={item.thumbnail?.url}
-                            fallbackSrc={MEMBER_CONNECTION_FALLBACK_IMAGE}
+                          <Image
+                            src={item.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE}
                             alt={item.thumbnail?.alt || item.title}
                             width={520}
                             height={420}
@@ -257,9 +254,8 @@ function Members() {
                     className="group relative block cursor-pointer overflow-hidden rounded-[14px] shadow-[0_16px_32px_rgba(31,59,124,0.12)]"
                   >
                     <div className="aspect-[16/10] overflow-hidden">
-                      <SafeImage
-                        src={item.thumbnail?.url}
-                        fallbackSrc={MEMBER_CONNECTION_FALLBACK_IMAGE}
+                      <Image
+                        src={item.thumbnail?.url ?? MEMBER_CONNECTION_FALLBACK_IMAGE}
                         alt={item.thumbnail?.alt || item.title}
                         width={520}
                         height={420}

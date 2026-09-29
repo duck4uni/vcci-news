@@ -20,11 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  type HeaderCategoryTreeItem,
-  type HeaderCategoryType,
-  toSlug,
-} from "@/mockdata/header-config";
+import { toSlug } from "@/lib/utils/header-category";
+import type {
+  HeaderCategoryTreeItem,
+  HeaderCategoryType,
+} from "@/api/vcci-news/types/header-config";
 
 export type HeaderCategoryFormMode = "create" | "edit";
 

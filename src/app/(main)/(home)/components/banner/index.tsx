@@ -1,6 +1,6 @@
 "use client";
 
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { Swiper as SwiperType } from "swiper/types";
@@ -84,9 +84,8 @@ function BannerSlideItem({
       : "/thumbnail.png";
 
   return (
-    <SafeImage
+    <Image
       src={url}
-      fallbackSrc="/thumbnail.png"
       alt={alt}
       width={2560}
       height={720}

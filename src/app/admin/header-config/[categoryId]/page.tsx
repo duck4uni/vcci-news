@@ -15,7 +15,7 @@ import { AdminRowActions } from "@/components/admin/admin-row-actions";
 import { AdminStatsGrid } from "@/components/admin/admin-stats-grid";
 import { AdminTableLayout } from "@/components/admin/admin-table-layout";
 import { Pagination } from "@/components/base/pagination";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,10 +26,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { getApiV10Post } from "@/api/vcci-news/endpoints/post";
-import { deleteApiV10PostId } from "@/api/vcci-news/endpoints/post";
-import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
-import { ADMIN_NEWS_TYPE_LABELS, type AdminNewsItem } from "@/mockdata/admin-news";
+import {
+  useDeleteApiV10PostId,
+  useGetApiV10Post,
+} from "@/api/vcci-news/endpoints/post";
+import { useGetApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import {
+  ADMIN_NEWS_TYPE_LABELS,
+  type AdminNewsItem,
+} from "@/api/vcci-news/types/post";
 import { normalizeUser } from "@/lib/utils/cms-user";
 import { normalizeDateTimeInput } from "@/lib/utils/datetime";
 import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
@@ -48,17 +53,83 @@ export default function HeaderCategoryPostsPage() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const categoryId = String(params.categoryId ?? "");
-  const [items, setItems] = useState<AdminNewsItem[]>([]);
-  const [headerTree, setHeaderTree] = useState<HeaderCategoryTreeItem[]>([]);
+  const { data: treeResponse, isLoading: isTreeLoading } = useGetApiV10CategoryTree();
+  const { mutateAsync: deletePost, isPending: isDeletingPost } = useDeleteApiV10PostId();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
-  const [ready, setReady] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminNewsItem | null>(null);
   const didMountRef = useRef(false);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(() => {
     const parsedPage = Number(searchParams.get("page") ?? 1);
     return Number.isFinite(parsedPage) && parsedPage > 0 ? Math.floor(parsedPage) : 1;
   });
+
+  const apiFilters = useMemo(() => {
+    const keyword = search.trim();
+    const filters = [
+      `category.id==${categoryId}`,
+      keyword ? `title@=${keyword}|slug@=${keyword}` : "",
+    ].filter(Boolean).join(",");
+    return filters.trim() || undefined;
+  }, [categoryId, search]);
+
+  const postsQuery = useGetApiV10Post({
+    page,
+    pageSize: PAGE_SIZE,
+    sortField: "created_at",
+    sortOrder: "desc",
+    filters: apiFilters,
+  });
+
+  const postsResponse = (postsQuery.data ?? {}) as { responseData?: { rows?: any[]; count?: number } };
+  const items: AdminNewsItem[] = useMemo(
+    () =>
+      (postsResponse.responseData?.rows ?? []).map((item: any): AdminNewsItem => {
+        const structuredContent = parsePostContent(item.content_structure);
+        const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
+        const categories = Array.isArray(item.categories) ? item.categories : [];
+        const primaryCategory = categories[0] ?? null;
+        const primaryCategoryType = primaryCategory?.type ?? null;
+        return {
+          id: item.id ?? "",
+          title: item.title ?? "",
+          slug: item.slug ?? "",
+          summary: item.summary ?? "",
+          type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+          header_category_id: primaryCategory?.id ?? "",
+          category_ids: categories.map((c: any) => c.id),
+          tagsearch_values: [],
+          is_featured: Boolean(item.is_featured),
+          thumbnail: item.thumbnail?.id ? {
+            id: item.thumbnail.id,
+            name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+            alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+            url: links.resolveImageUrl(item.thumbnail.path),
+          } : null,
+          is_hidden: Boolean(item.is_hidden),
+          created_at: item.created_at ?? "",
+          updated_at: item.updated_at ?? "",
+          published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+          expired_at: normalizeDateTimeInput(item.expired_at),
+          started_at: normalizeDateTimeInput(item.started_at),
+          ended_at: normalizeDateTimeInput(item.ended_at),
+          registration_deadline: normalizeDateTimeInput(item.registration_deadline),
+          location: item.location ?? "",
+          participation_fee: item.participation_fee ?? "",
+          event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+          post_content: postContent,
+          creator: normalizeUser(item.creator),
+          editor: normalizeUser(item.editor),
+        };
+      }),
+    [postsResponse.responseData],
+  );
+  const total = postsResponse.responseData?.count ?? 0;
+
+  const headerTree: HeaderCategoryTreeItem[] = useMemo(
+    () => (treeResponse?.responseData ?? []) as unknown as HeaderCategoryTreeItem[],
+    [treeResponse],
+  );
+  const ready = !isTreeLoading && !postsQuery.isLoading;
 
   const listQueryString = useMemo(() => {
     const nextParams = new URLSearchParams();
@@ -78,87 +149,6 @@ export default function HeaderCategoryPostsPage() {
     () => (listQueryString ? `${pathname}?${listQueryString}` : pathname),
     [listQueryString, pathname],
   );
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const load = async () => {
-      try {
-        const keyword = search.trim();
-        const filters = [
-          `category.id==${categoryId}`,
-          keyword ? `title@=${keyword}|slug@=${keyword}` : "",
-        ].filter(Boolean).join(",");
-
-        const [newsResponse, treeResponse] = await Promise.all([
-          getApiV10Post({
-            page,
-            pageSize: PAGE_SIZE,
-            sortField: "created_at",
-            sortOrder: "desc",
-            filters: filters.trim() || undefined,
-          }),
-          getApiV10CategoryTree(),
-        ]);
-
-        if (cancelled) return;
-
-        const newsResult = (newsResponse.responseData ?? {}) as { rows?: any[]; count?: number };
-        const tree = (treeResponse.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
-        setItems((newsResult.rows ?? []).map((item: any): AdminNewsItem => {
-          const structuredContent = parsePostContent(item.content_structure);
-          const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
-          const categories = Array.isArray(item.categories) ? item.categories : [];
-          const primaryCategory = categories[0] ?? null;
-          const primaryCategoryType = primaryCategory?.type ?? null;
-          return {
-            id: item.id ?? "",
-            title: item.title ?? "",
-            slug: item.slug ?? "",
-            summary: item.summary ?? "",
-            type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
-            header_category_id: primaryCategory?.id ?? "",
-            category_ids: categories.map((c: any) => c.id),
-            tagsearch_values: [],
-            is_featured: Boolean(item.is_featured),
-            thumbnail: item.thumbnail?.id ? {
-              id: item.thumbnail.id,
-              name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
-              alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
-              url: links.resolveImageUrl(item.thumbnail.path),
-            } : null,
-            is_hidden: Boolean(item.is_hidden),
-            created_at: item.created_at ?? "",
-            updated_at: item.updated_at ?? "",
-            published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
-            expired_at: normalizeDateTimeInput(item.expired_at),
-            started_at: normalizeDateTimeInput(item.started_at),
-            ended_at: normalizeDateTimeInput(item.ended_at),
-            registration_deadline: normalizeDateTimeInput(item.registration_deadline),
-            location: item.location ?? "",
-            participation_fee: item.participation_fee ?? "",
-            event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
-            post_content: postContent,
-            creator: normalizeUser(item.creator),
-            editor: normalizeUser(item.editor),
-          };
-        }));
-        setTotal(newsResult.count ?? 0);
-        setHeaderTree(tree);
-        setReady(true);
-      } catch (error) {
-        if (cancelled) return;
-        toast.error(error instanceof Error ? error.message : "Không thể tải dữ liệu");
-        setReady(true);
-      }
-    };
-
-    void load();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [categoryId, page, search]);
 
   const flatCategories = useMemo(() => {
     return flattenTree(headerTree);
@@ -229,14 +219,13 @@ export default function HeaderCategoryPostsPage() {
   }, [items, total]);
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
+    if (!deleteTarget || isDeletingPost) return;
 
     try {
-      await deleteApiV10PostId(deleteTarget.id);
-      setItems((current) => current.filter((item) => item.id !== deleteTarget.id));
-      setTotal((current) => Math.max(0, current - 1));
+      await deletePost({ id: deleteTarget.id });
       toast.success("Đã xóa bài viết");
       setDeleteTarget(null);
+      postsQuery.refetch();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể xóa bài viết");
     }
@@ -354,7 +343,7 @@ export default function HeaderCategoryPostsPage() {
                     <TableCell className="text-center">
                       <div className="relative mx-auto h-16 w-24 overflow-hidden rounded-xl border border-[#063e8e]/15 bg-[#063e8e]/[0.03]">
                         {item.thumbnail ? (
-                          <SafeImage
+                          <Image
                             src={item.thumbnail.url}
                             alt={item.thumbnail.alt || item.thumbnail.name}
                             fill

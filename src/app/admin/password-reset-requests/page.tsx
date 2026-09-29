@@ -198,25 +198,25 @@ export default function PasswordResetRequestsPage() {
           <Table>
             <TableHeader>
               <TableRow className="border-0 bg-[#063e8e] hover:bg-[#063e8e]">
-                <TableHead className="w-10 py-3 text-center text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="w-16 py-4 text-center text-white">
                   STT
                 </TableHead>
-                <TableHead className="py-3 text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="py-4 text-left text-white">
                   Email
                 </TableHead>
-                <TableHead className="py-3 text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="py-4 text-left text-white">
                   Ghi chú
                 </TableHead>
-                <TableHead className="py-3 text-center text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="w-[140px] py-4 text-center text-white">
                   Trạng thái
                 </TableHead>
-                <TableHead className="py-3 text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="w-[170px] py-4 text-center text-white">
                   Thời gian
                 </TableHead>
-                <TableHead className="py-3 text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="w-[180px] py-4 text-center text-white">
                   Người xử lý
                 </TableHead>
-                <TableHead className="w-32 py-3 text-center text-white text-sm font-semibold whitespace-nowrap">
+                <TableHead className="w-[130px] py-4 text-center text-white">
                   Thao tác
                 </TableHead>
               </TableRow>
@@ -224,7 +224,7 @@ export default function PasswordResetRequestsPage() {
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-12 text-slate-500">
+                  <TableCell colSpan={7} className="text-center py-12 text-gray-400">
                     Không có yêu cầu nào
                   </TableCell>
                 </TableRow>
@@ -232,66 +232,62 @@ export default function PasswordResetRequestsPage() {
                 rows.map((req, index) => (
                   <TableRow
                     key={req.id}
-                    className="border-b border-[#063e8e]/5 hover:bg-[#063e8e]/2"
+                    className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
                   >
-                    <TableCell className="text-center text-slate-600 whitespace-nowrap">
+                    <TableCell className="py-3 text-center text-sm text-gray-500">
                       {(currentPage - 1) * PAGE_SIZE + index + 1}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3 text-sm text-gray-800">
                       <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="text-sm font-medium text-[#163b73]">
+                        <Mail className="h-4 w-4 text-gray-400 shrink-0" />
+                        <span className="truncate max-w-[200px]" title={req.email}>
                           {req.email}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <p className="text-sm text-slate-600 truncate max-w-[200px]">
-                        {req.note || "-"}
-                      </p>
+                    <TableCell className="py-3 text-sm text-gray-800">
+                      <p className="truncate max-w-[200px]">{req.note || "—"}</p>
                     </TableCell>
-                    <TableCell className="text-center">
+                    <TableCell className="py-3 text-center">
                       {req.status === "PENDING" && (
-                        <Badge variant="outline" className="text-sm border-amber-200 bg-amber-50 text-amber-700 whitespace-nowrap">
+                        <span className="inline-flex rounded-full bg-[#fff4e5] px-3 py-1 text-xs font-normal text-[#c7760d]">
                           <Clock className="mr-1 h-4 w-4" />
                           Chờ xử lý
-                        </Badge>
+                        </span>
                       )}
                       {req.status === "RESOLVED" && (
-                        <Badge variant="outline" className="text-sm border-green-200 bg-green-50 text-green-700 whitespace-nowrap">
+                        <span className="inline-flex rounded-full bg-[#edf7ee] px-3 py-1 text-xs font-normal text-[#16803d]">
                           <CheckCircle className="mr-1 h-4 w-4" />
                           Đã xử lý
-                        </Badge>
+                        </span>
                       )}
                       {req.status === "REJECTED" && (
-                        <Badge variant="outline" className="text-sm border-red-200 bg-red-50 text-red-700 whitespace-nowrap">
+                        <span className="inline-flex rounded-full bg-red-50 px-3 py-1 text-xs font-normal text-red-700">
                           <XCircle className="mr-1 h-4 w-4" />
                           Từ chối
-                        </Badge>
+                        </span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      <p className="text-sm text-slate-500 whitespace-nowrap">
-                        {formatDate(req.created_at)}
-                      </p>
+                    <TableCell className="py-3 text-center text-sm text-gray-700">
+                      {formatDate(req.created_at)}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3 text-center text-sm text-gray-700">
                       {req.resolved_by_user ? (
-                        <span className="text-sm text-slate-600">
+                        <span className="truncate max-w-[160px] inline-block">
                           {req.resolved_by_user.email}
                         </span>
                       ) : (
-                        <span className="text-sm text-slate-400">-</span>
+                        <span className="text-gray-400">—</span>
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="py-3 text-center">
                       {req.status === "PENDING" && canWrite ? (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center justify-center gap-1">
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenResolve(req)}
-                            className="h-9 rounded-lg text-green-600 hover:bg-green-50"
+                            className="h-8 rounded-lg text-green-600 hover:bg-green-50"
                             title="Reset mật khẩu"
                           >
                             <KeyRound className="h-4 w-4" />
@@ -300,14 +296,14 @@ export default function PasswordResetRequestsPage() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleOpenReject(req)}
-                            className="h-9 rounded-lg text-red-600 hover:bg-red-50"
+                            className="h-8 rounded-lg text-red-600 hover:bg-red-50"
                             title="Từ chối"
                           >
                             <XCircle className="h-4 w-4" />
                           </Button>
                         </div>
                       ) : (
-                        <span className="text-sm text-slate-400">-</span>
+                        <span className="text-sm text-gray-400">—</span>
                       )}
                     </TableCell>
                   </TableRow>
