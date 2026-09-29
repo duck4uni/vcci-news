@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import {
-  type AdminNewsItem,
-} from "@/mockdata/admin-news";
-import {
-  type HeaderCategoryItem,
-  type HeaderCategoryTreeItem,
-} from "@/mockdata/header-config";
+import type { AdminNewsItem } from "@/api/vcci-news/types/post";
+import type {
+  HeaderCategoryItem,
+  HeaderCategoryTreeItem,
+} from "@/api/vcci-news/types/header-config";
 
 export type FlattenedHeaderCategory = HeaderCategoryItem & { depth: number };
 

@@ -7,7 +7,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { MemberField, MemberRegion } from "@/api/vcci-news/types/member";
 import {
   selectContentClassName,
   selectItemClassName,
@@ -15,8 +14,8 @@ import {
 } from "./constants";
 
 interface MemberFiltersProps {
-  fields: MemberField[];
-  regions: MemberRegion[];
+  fields: { id: string; name: string }[];
+  regions: { id: string; name: string }[];
   fieldFilter: string;
   regionFilter: string;
   onFieldFilterChange: (value: string) => void;
@@ -35,11 +34,11 @@ export function MemberFilters({
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
       <Select value={fieldFilter} onValueChange={onFieldFilterChange}>
         <SelectTrigger className={selectTriggerClassName}>
-          <SelectValue placeholder="Lĩnh vực" />
+          <SelectValue placeholder="Doanh nghiệp" />
         </SelectTrigger>
         <SelectContent className={selectContentClassName}>
           <SelectItem value="all" className={selectItemClassName}>
-            Tất cả lĩnh vực
+            Tất cả doanh nghiệp
           </SelectItem>
           {fields.map((f) => (
             <SelectItem key={f.id} value={f.id} className={selectItemClassName}>
@@ -51,11 +50,11 @@ export function MemberFilters({
 
       <Select value={regionFilter} onValueChange={onRegionFilterChange}>
         <SelectTrigger className={selectTriggerClassName}>
-          <SelectValue placeholder="Khu vực" />
+          <SelectValue placeholder="Chức vụ" />
         </SelectTrigger>
         <SelectContent className={selectContentClassName}>
           <SelectItem value="all" className={selectItemClassName}>
-            Tất cả khu vực
+            Tất cả chức vụ
           </SelectItem>
           {regions.map((r) => (
             <SelectItem key={r.id} value={r.id} className={selectItemClassName}>

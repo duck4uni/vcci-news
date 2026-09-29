@@ -17,7 +17,7 @@ import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminPostContentEditor } from "@/components/admin/post-content-editor";
 import { PostHistoryViewer } from "./post-history-viewer";
 import { AdminRichTextEditor } from "@/components/shared/rich-text-editor";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { PermissionGate } from "@/components/shared/permission-gate";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -37,31 +37,33 @@ import {
   type TagItem,
 } from "@/api/vcci-news/types/tag";
 import {
-  getApiV10Post,
-  getApiV10PostId,
-  postApiV10Post,
-  putApiV10PostId,
+  useGetApiV10Post,
+  useGetApiV10PostId,
+  usePostApiV10Post,
+  usePutApiV10PostId,
 } from "@/api/vcci-news/endpoints/post";
-import { getApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
+import { useGetApiV10CategoryTree } from "@/api/vcci-news/endpoints/category";
 import {
-  deleteApiV10PostTagPostId,
-  getApiV10PostTagPostId,
-  postApiV10PostTagPostIdBulk,
+  useDeleteApiV10PostTagPostId,
+  useGetApiV10PostTagPostId,
+  usePostApiV10PostTagPostIdBulk,
 } from "@/api/vcci-news/endpoints/post-tag";
 import {
-  getApiV10Tag,
-  postApiV10TagIds,
+  useGetApiV10Tag,
+  usePostApiV10TagIds,
 } from "@/api/vcci-news/endpoints/tag";
 import { useGetApiV10EventAddress } from "@/api/vcci-news/endpoints/event-address";
 import {
   ADMIN_NEWS_TYPE_OPTIONS,
-  cloneAdminNewsFormValues,
   type AdminMediaItem,
   type AdminNewsFormValues,
   type AdminNewsItem,
+} from "@/api/vcci-news/types/post";
+import {
+  cloneAdminNewsFormValues,
   resolveAdminNewsType,
   slugifyAdminNews,
-} from "@/mockdata/admin-news";
+} from "@/lib/utils/admin-news";
 import { normalizeUser } from "@/lib/utils/cms-user";
 import { normalizeDateTimeInput } from "@/lib/utils/datetime";
 import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
@@ -91,6 +93,45 @@ import {
 } from "./utils";
 import useNewsDraftStore, { type NewsDraftData } from "@/store/useNewsDraftStore";
 
+function mapPostRowToAdminNewsItem(item: any): AdminNewsItem {
+  const structuredContent = parsePostContent(item.content_structure);
+  const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
+  const categories = Array.isArray(item.categories) ? item.categories : [];
+  const primaryCategory = categories[0] ?? null;
+  const primaryCategoryType = primaryCategory?.type ?? null;
+  return {
+    id: item.id ?? "",
+    title: item.title ?? "",
+    slug: item.slug ?? "",
+    summary: item.summary ?? "",
+    type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+    header_category_id: primaryCategory?.id ?? "",
+    category_ids: categories.map((c: any) => c.id),
+    tagsearch_values: [],
+    is_featured: Boolean(item.is_featured),
+    thumbnail: item.thumbnail?.id ? {
+      id: item.thumbnail.id,
+      name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+      alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
+      url: links.resolveImageUrl(item.thumbnail.path),
+    } : null,
+    is_hidden: Boolean(item.is_hidden),
+    created_at: item.created_at ?? "",
+    updated_at: item.updated_at ?? "",
+    published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+    expired_at: normalizeDateTimeInput(item.expired_at),
+    started_at: normalizeDateTimeInput(item.started_at),
+    ended_at: normalizeDateTimeInput(item.ended_at),
+    registration_deadline: normalizeDateTimeInput(item.registration_deadline),
+    location: item.location ?? "",
+    participation_fee: item.participation_fee ?? "",
+    event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+    post_content: postContent,
+    creator: normalizeUser(item.creator),
+    editor: normalizeUser(item.editor),
+  };
+}
+
 export function AdminNewsFormContent() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -112,6 +153,7 @@ export function AdminNewsFormContent() {
   const [useEventDates, setUseEventDates] = useState(false);
   const [isAddressManagerOpen, setIsAddressManagerOpen] = useState(false);
   const [isAddressSuggestOpen, setIsAddressSuggestOpen] = useState(false);
+  const [postTagNames, setPostTagNames] = useState<string[]>([]);
 
   const eventAddressesQuery = useGetApiV10EventAddress({
     page: 1,
@@ -119,6 +161,35 @@ export function AdminNewsFormContent() {
     sortField: "information",
     sortOrder: "asc",
   });
+
+  // Orval hooks
+  const { data: treeResponse } = useGetApiV10CategoryTree();
+  const { data: tagsResponse } = useGetApiV10Tag({
+    page: 1,
+    pageSize: 10,
+    sortField: "name",
+    sortOrder: "asc",
+  });
+  const postsListQuery = useGetApiV10Post({
+    page: 1,
+    pageSize: 10,
+    filters: !isCreate && newsId ? `id==${newsId}` : undefined,
+  });
+  const postDetailQuery = useGetApiV10PostId(newsId || "", {
+    query: { enabled: !isCreate && Boolean(newsId) },
+  });
+  const postTagsQuery = useGetApiV10PostTagPostId(
+    !isCreate && newsId ? newsId : "",
+    undefined,
+    {
+      query: { enabled: !isCreate && Boolean(newsId) },
+    },
+  );
+  const { mutateAsync: fetchTagsByIds } = usePostApiV10TagIds();
+  const { mutateAsync: createPost, isPending: isCreatingPost } = usePostApiV10Post();
+  const { mutateAsync: updatePost, isPending: isUpdatingPost } = usePutApiV10PostId();
+  const { mutateAsync: deletePostTag } = useDeleteApiV10PostTagPostId();
+  const { mutateAsync: bulkAddPostTags } = usePostApiV10PostTagPostIdBulk();
 
   const addressOptions = useMemo(() => {
     const rows = eventAddressesQuery.data?.responseData?.rows ?? [];
@@ -151,179 +222,126 @@ export function AdminNewsFormContent() {
   const [pendingDraft, setPendingDraft] = useState<NewsDraftData | null>(null);
   const draftRestoredRef = useRef(false);
 
+  // Sync header tree from orval query
   useEffect(() => {
+    const tree = (treeResponse?.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
+    setHeaderTree(tree);
+  }, [treeResponse]);
+
+  // Sync tag list from orval query
+  useEffect(() => {
+    const nextTagsResult = (tagsResponse?.responseData ?? {}) as { rows?: TagItem[] };
+    setAllTags(nextTagsResult.rows ?? []);
+  }, [tagsResponse]);
+
+  // Sync post rows from orval query
+  useEffect(() => {
+    if (isCreate) {
+      setItems([]);
+      return;
+    }
+    const result = (postsListQuery.data?.responseData ?? {}) as { rows?: any[] };
+    setItems((result.rows ?? []).map(mapPostRowToAdminNewsItem));
+  }, [isCreate, postsListQuery.data]);
+
+  // Resolve tag names for current post
+  useEffect(() => {
+    if (isCreate || !newsId) {
+      setPostTagNames([]);
+      return;
+    }
+    const tagsResult = (postTagsQuery.data?.responseData ?? {}) as { rows?: { tag_id?: string }[] };
+    const tagIds = (tagsResult.rows ?? []).map(r => r.tag_id).filter(Boolean) as string[];
+    if (tagIds.length === 0) {
+      setPostTagNames([]);
+      return;
+    }
     let cancelled = false;
-
-    const load = async () => {
-      setIsLoadingInitialData(true);
-      setIsMissingPost(false);
-      setForm(isCreate ? cloneAdminNewsFormValues() : null);
-
+    void (async () => {
       try {
-        const [treeResponse, nextTagsResponse] = await Promise.all([
-          getApiV10CategoryTree(),
-          getApiV10Tag({ page: 1, pageSize: 10, sortField: "name", sortOrder: "asc" }),
-        ]);
-        const nextTagsResult = (nextTagsResponse.responseData ?? {}) as { rows?: TagItem[] };
-        const nextTags = nextTagsResult.rows ?? [];
-        const tree = (treeResponse.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
-        const nextHeaderTree = tree;
-        const nextNewsItems = isCreate
-          ? []
-          : await (async () => {
-            const response = await getApiV10Post({
-              page: 1,
-              pageSize: 10,
-              filters: newsId ? `id==${newsId}` : undefined,
-            });
-            const result = (response.responseData ?? {}) as { rows?: any[] };
-            return (result.rows ?? []).map((item: any): AdminNewsItem => {
-              const structuredContent = parsePostContent(item.content_structure);
-              const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(item.content);
-              const categories = Array.isArray(item.categories) ? item.categories : [];
-              const primaryCategory = categories[0] ?? null;
-              const primaryCategoryType = primaryCategory?.type ?? null;
-              return {
-                id: item.id ?? "",
-                title: item.title ?? "",
-                slug: item.slug ?? "",
-                summary: item.summary ?? "",
-                type: item.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
-                header_category_id: primaryCategory?.id ?? "",
-                category_ids: categories.map((c: any) => c.id),
-                tagsearch_values: [],
-                is_featured: Boolean(item.is_featured),
-                thumbnail: item.thumbnail?.id ? {
-                  id: item.thumbnail.id,
-                  name: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
-                  alt: item.thumbnail.original ?? item.thumbnail.path ?? "thumbnail",
-                  url: links.resolveImageUrl(item.thumbnail.path),
-                } : null,
-                is_hidden: Boolean(item.is_hidden),
-                created_at: item.created_at ?? "",
-                updated_at: item.updated_at ?? "",
-                published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
-                expired_at: normalizeDateTimeInput(item.expired_at),
-                started_at: normalizeDateTimeInput(item.started_at),
-                ended_at: normalizeDateTimeInput(item.ended_at),
-                registration_deadline: normalizeDateTimeInput(item.registration_deadline),
-                location: item.location ?? "",
-                participation_fee: item.participation_fee ?? "",
-                event_dates: Array.isArray(item.event_dates) ? item.event_dates.filter((d: any): d is string => typeof d === "string") : [],
-                post_content: postContent,
-                creator: normalizeUser(item.creator),
-                editor: normalizeUser(item.editor),
-              };
-            });
-          })();
-
-        if (cancelled) return;
-
-        setItems(nextNewsItems);
-        setHeaderTree(nextHeaderTree);
-        setAllTags(nextTags);
-
-        if (isCreate) {
-          const now = new Date().toISOString();
-          setForm({
-            ...cloneAdminNewsFormValues(),
-            type: "tintuc",
-            header_category_id: "",
-            category_ids: [],
-            created_at: now,
-            updated_at: now,
-          });
-          setUseEventDates(false);
-          return;
-        }
-
-        const existingItem = nextNewsItems.find((item) => item.id === newsId);
-        const currentItem = existingItem
-          ? existingItem
-          : newsId
-            ? await (async () => {
-              const response = await getApiV10PostId(newsId);
-              const post = (response.responseData ?? {}) as any;
-              // Fetch tags for post
-              const tagsRes = await getApiV10PostTagPostId(newsId);
-              const tagsResult = (tagsRes.responseData ?? {}) as { rows?: { tag_id?: string }[] };
-              const tagIds = (tagsResult.rows ?? []).map(r => r.tag_id).filter(Boolean) as string[];
-              let tags: TagItem[] = [];
-              if (tagIds.length > 0) {
-                const tagsResponse = await postApiV10TagIds({ tag_ids: tagIds });
-                tags = (tagsResponse.responseData ?? []) as TagItem[];
-              }
-              const tagMap = new Map<string, TagItem[]>([[newsId, tags]]);
-              const tagItems = tagMap.get(newsId) ?? [];
-              const structuredContent = parsePostContent(post.content_structure);
-              const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(post.content);
-              const categories = Array.isArray(post.categories) ? post.categories : [];
-              const primaryCategory = categories[0] ?? null;
-              const primaryCategoryType = primaryCategory?.type ?? null;
-              return {
-                id: post.id ?? "",
-                title: post.title ?? "",
-                slug: post.slug ?? "",
-                summary: post.summary ?? "",
-                type: post.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
-                header_category_id: primaryCategory?.id ?? "",
-                category_ids: categories.map((c: any) => c.id),
-                tagsearch_values: tagItems.map((t) => t.name),
-                is_featured: Boolean(post.is_featured),
-                thumbnail: post.thumbnail?.id ? {
-                  id: post.thumbnail.id,
-                  name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
-                  alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
-                  url: links.resolveImageUrl(post.thumbnail.path),
-                } : null,
-                is_hidden: Boolean(post.is_hidden),
-                created_at: post.created_at ?? "",
-                updated_at: post.updated_at ?? "",
-                published_at: normalizeDateTimeInput(post.published_at ?? post.release_at),
-                expired_at: normalizeDateTimeInput(post.expired_at),
-                started_at: normalizeDateTimeInput(post.started_at),
-                ended_at: normalizeDateTimeInput(post.ended_at),
-                registration_deadline: normalizeDateTimeInput(post.registration_deadline),
-                location: post.location ?? "",
-                participation_fee: post.participation_fee ?? "",
-                event_dates: Array.isArray(post.event_dates) ? post.event_dates.filter((d: any): d is string => typeof d === "string") : [],
-                post_content: postContent,
-                creator: normalizeUser(post.creator),
-                editor: normalizeUser(post.editor),
-              } as AdminNewsItem;
-            })()
-            : null;
-
-        if (cancelled) return;
-
-        if (!currentItem) {
-          setIsMissingPost(true);
-          setForm(null);
-          return;
-        }
-
-        setIsMissingPost(false);
-        const nextForm = cloneAdminNewsFormValues(currentItem);
-        setForm(nextForm);
-        setUseEventDates((nextForm.event_dates ?? []).length > 0);
-      } catch (error) {
-        if (cancelled) return;
-        toast.error(error instanceof Error ? error.message : "Không thể tải bài viết");
-        setIsMissingPost(!isCreate);
-        setForm(isCreate ? cloneAdminNewsFormValues() : null);
-      } finally {
-        if (!cancelled) {
-          setIsLoadingInitialData(false);
-        }
+        const response = await fetchTagsByIds({ data: { tag_ids: tagIds } });
+        const tags = (response.responseData ?? []) as TagItem[];
+        if (!cancelled) setPostTagNames(tags.map((t) => t.name));
+      } catch {
+        if (!cancelled) setPostTagNames([]);
       }
-    };
-
-    void load();
-
+    })();
     return () => {
       cancelled = true;
     };
-  }, [isCreate, newsId]);
+  }, [isCreate, newsId, postTagsQuery.data, fetchTagsByIds]);
+
+  // Build form from post detail query
+  useEffect(() => {
+    if (isCreate) {
+      const now = new Date().toISOString();
+      setForm({
+        ...cloneAdminNewsFormValues(),
+        type: "tintuc",
+        header_category_id: "",
+        category_ids: [],
+        created_at: now,
+        updated_at: now,
+      });
+      setUseEventDates(false);
+      setIsMissingPost(false);
+      setIsLoadingInitialData(false);
+      return;
+    }
+
+    if (!newsId || postDetailQuery.isLoading || !postDetailQuery.data) return;
+
+    const post = ((postDetailQuery.data as { responseData?: unknown })?.responseData ?? null) as any;
+    if (!post) {
+      setIsMissingPost(true);
+      setForm(null);
+      setIsLoadingInitialData(false);
+      return;
+    }
+
+    const structuredContent = parsePostContent(post.content_structure);
+    const postContent = structuredContent.length > 0 ? structuredContent : parseLegacyPostContent(post.content);
+    const categories = Array.isArray(post.categories) ? post.categories : [];
+    const primaryCategory = categories[0] ?? null;
+    const primaryCategoryType = primaryCategory?.type ?? null;
+    const currentItem = {
+      id: post.id ?? "",
+      title: post.title ?? "",
+      slug: post.slug ?? "",
+      summary: post.summary ?? "",
+      type: post.type === "page" || primaryCategoryType === "post" || primaryCategoryType === "page" ? "baiviettrang" : "tintuc",
+      header_category_id: primaryCategory?.id ?? "",
+      category_ids: categories.map((c: any) => c.id),
+      tagsearch_values: postTagNames,
+      is_featured: Boolean(post.is_featured),
+      thumbnail: post.thumbnail?.id ? {
+        id: post.thumbnail.id,
+        name: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+        alt: post.thumbnail.original ?? post.thumbnail.path ?? "thumbnail",
+        url: links.resolveImageUrl(post.thumbnail.path),
+      } : null,
+      is_hidden: Boolean(post.is_hidden),
+      created_at: post.created_at ?? "",
+      updated_at: post.updated_at ?? "",
+      published_at: normalizeDateTimeInput(post.published_at ?? post.release_at),
+      expired_at: normalizeDateTimeInput(post.expired_at),
+      started_at: normalizeDateTimeInput(post.started_at),
+      ended_at: normalizeDateTimeInput(post.ended_at),
+      registration_deadline: normalizeDateTimeInput(post.registration_deadline),
+      location: post.location ?? "",
+      participation_fee: post.participation_fee ?? "",
+      event_dates: Array.isArray(post.event_dates) ? post.event_dates.filter((d: any): d is string => typeof d === "string") : [],
+      post_content: postContent,
+      creator: normalizeUser(post.creator),
+      editor: normalizeUser(post.editor),
+    } as AdminNewsItem;
+
+    setIsMissingPost(false);
+    const nextForm = cloneAdminNewsFormValues(currentItem);
+    setForm(nextForm);
+    setUseEventDates((nextForm.event_dates ?? []).length > 0);
+    setIsLoadingInitialData(false);
+  }, [isCreate, newsId, postDetailQuery.data, postDetailQuery.isLoading, postTagNames]);
 
   // Check draft sau khi load xong + store hydrated — chỉ hỏi 1 lần
   useEffect(() => {
@@ -536,7 +554,7 @@ export function AdminNewsFormContent() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!form || isSubmitting) return;
+    if (!form || isSubmitting || isCreatingPost || isUpdatingPost) return;
 
     if (!form.title.trim()) {
       toast.error("Tiêu đề bài viết là bắt buộc");
@@ -608,20 +626,20 @@ export function AdminNewsFormContent() {
       };
 
       if (isCreate) {
-        const response = await postApiV10Post(payload as any);
+        const response = await createPost({ data: payload as any });
         const created = (response.responseData ?? {}) as { id?: string };
         if (created.id && tagIds.length > 0) {
-          await postApiV10PostTagPostIdBulk(created.id, { tag_ids: tagIds });
+          await bulkAddPostTags({ postId: created.id, data: { tag_ids: tagIds } });
         }
       } else if (newsId) {
-        await putApiV10PostId(newsId, payload as any);
+        await updatePost({ id: newsId, data: payload as any });
         // Xóa tags cũ rồi bulk add tags mới
-        const currentRes = await getApiV10PostTagPostId(newsId);
-        const currentResult = (currentRes.responseData ?? {}) as { rows?: { tag_id?: string }[] };
+        const currentRes = await postTagsQuery.refetch();
+        const currentResult = (currentRes.data?.responseData ?? {}) as { rows?: { tag_id?: string }[] };
         const currentTagIds = (currentResult.rows ?? []).map(r => r.tag_id).filter(Boolean) as string[];
-        await Promise.all(currentTagIds.map(tagId => deleteApiV10PostTagPostId(newsId, { tag_id: tagId })));
+        await Promise.all(currentTagIds.map(tagId => deletePostTag({ postId: newsId, params: { tag_id: tagId } })));
         if (tagIds.length > 0) {
-          await postApiV10PostTagPostIdBulk(newsId, { tag_ids: tagIds });
+          await bulkAddPostTags({ postId: newsId, data: { tag_ids: tagIds } });
         }
       }
 
@@ -748,7 +766,7 @@ export function AdminNewsFormContent() {
                 <div className="relative overflow-hidden rounded-2xl border border-[#063e8e]/15 bg-white">
                   <div className="relative aspect-[16/11]">
                     {form.thumbnail ? (
-                      <SafeImage
+                      <Image
                         src={form.thumbnail.url}
                         alt={form.thumbnail.alt || form.thumbnail.name}
                         fill

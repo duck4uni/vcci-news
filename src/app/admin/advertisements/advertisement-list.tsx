@@ -374,7 +374,6 @@ export function AdvertisementList({
                                 alt={ad.alt || ad.name}
                                 fill
                                 className="object-cover"
-                                unoptimized={isGif}
                               />
                             ) : (
                               <div className="flex h-full w-full items-center justify-center">
@@ -519,7 +518,6 @@ export function AdvertisementList({
                       alt="Preview"
                       fill
                       className="object-cover"
-                      unoptimized={form.filePreviewUrl.toLowerCase().endsWith(".gif")}
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center">

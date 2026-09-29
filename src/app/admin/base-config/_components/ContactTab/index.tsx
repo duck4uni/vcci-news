@@ -66,7 +66,6 @@ export function ContactTab() {
   );
 
   useEffect(() => {
-    if (!apiBranches.length) return;
     const next = apiBranches.map(mapApiBranchToConfig);
     setBranches(next);
     setCurrentId((previous) =>
@@ -193,15 +192,21 @@ export function ContactTab() {
             <div className="text-sm font-semibold uppercase text-[#4b74b8]">
               Danh sách chi nhánh
             </div>
-            {branches.map((branch) => (
-              <BranchCard
-                key={branch.id}
-                branch={branch}
-                current={current?.id === branch.id}
-                onSelect={() => setCurrentId(branch.id)}
-                onDelete={() => remove(branch.id)}
-              />
-            ))}
+            {branches.length === 0 ? (
+              <div className="py-8 text-center text-sm text-slate-500">
+                Không có data chi nhánh
+              </div>
+            ) : (
+              branches.map((branch) => (
+                <BranchCard
+                  key={branch.id}
+                  branch={branch}
+                  current={current?.id === branch.id}
+                  onSelect={() => setCurrentId(branch.id)}
+                  onDelete={() => remove(branch.id)}
+                />
+              ))
+            )}
           </div>
           <div className="space-y-5 rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5">
             {current ? (

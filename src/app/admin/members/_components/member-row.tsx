@@ -1,16 +1,16 @@
 "use client";
 
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import {
   TableCell,
   TableRow,
 } from "@/components/ui/table";
-import type { MemberItem } from "@/api/vcci-news/types/member";
+import type { AdminMemberRow } from "@/lib/utils/admin-member";
 
 interface MemberRowProps {
-  item: MemberItem;
+  item: AdminMemberRow;
   index: number;
   fieldName: string | undefined;
   regionName: string | undefined;
@@ -33,30 +33,30 @@ export function MemberRow({
     >
       <TableCell className="px-4 py-3 text-sm font-medium text-gray-800">
         <div className="space-y-1">
-          <div>{item.name}</div>
-          {item.is_featured ? (
+          <div>{item.full_name}</div>
+          {item.job_title ? (
             <Badge
               variant="outline"
               className="border-[#063e8e]/25 bg-[#063e8e]/[0.04] text-[#063e8e]"
             >
-              Hội viên tiêu biểu
+              {item.job_title}
             </Badge>
           ) : null}
         </div>
       </TableCell>
       <TableCell className="px-4 py-3 text-center">
-        {item.image ? (
-          <div className="mx-auto h-12 w-16 overflow-hidden rounded-lg border border-[#063e8e]/15">
-            <SafeImage
-              src={item.image.url}
-              alt={item.image.alt || item.name}
-              width={64}
+        {item.avatar_url ? (
+          <div className="mx-auto h-12 w-12 overflow-hidden rounded-full border border-[#063e8e]/15">
+            <Image
+              src={item.avatar_url}
+              alt={item.full_name}
+              width={48}
               height={48}
               className="h-full w-full object-cover"
             />
           </div>
         ) : (
-          <div className="mx-auto flex h-12 w-16 items-center justify-center rounded-lg border border-dashed border-[#063e8e]/20 bg-[#063e8e]/5 text-xs text-gray-400">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-[#063e8e]/20 bg-[#063e8e]/5 text-xs text-gray-400">
             Chưa có
           </div>
         )}
@@ -68,13 +68,10 @@ export function MemberRow({
         {fieldName ?? "—"}
       </TableCell>
       <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
-        {item.phone && <div>{item.phone}</div>}
-        {item.email && (
-          <div className="truncate text-xs text-[#063e8e]">{item.email}</div>
-        )}
+        <span className="line-clamp-2">{item.job_title || "—"}</span>
       </TableCell>
       <TableCell className="px-4 py-3 text-center text-sm text-gray-600">
-        <span className="line-clamp-2">{item.address || "—"}</span>
+        {item.birth_date || "—"}
       </TableCell>
       <TableCell className="px-4 py-3 text-center">
         <AdminRowActions

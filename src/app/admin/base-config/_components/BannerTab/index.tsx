@@ -247,17 +247,23 @@ export function BannerTab() {
               </Button>
             </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {banners.map((item, index) => (
-              <ConfigItemPreview
-                key={item.id}
-                title={`Banner ${index + 1}`}
-                item={item}
-                current={index === currentIndex}
-                onSelect={() => setCurrentIndex(index)}
-              />
-            ))}
-          </div>
+          {banners.length === 0 ? (
+            <div className="py-12 text-center text-sm text-gray-500">
+              Không có data banner trang chủ
+            </div>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {banners.map((item, index) => (
+                <ConfigItemPreview
+                  key={item.id}
+                  title={`Banner ${index + 1}`}
+                  item={item}
+                  current={index === currentIndex}
+                  onSelect={() => setCurrentIndex(index)}
+                />
+              ))}
+            </div>
+          )}
           {current ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div>

@@ -97,56 +97,62 @@ export function SocialTab() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4 px-4 sm:px-6">
-          {socials.map((item) => (
-            <div
-              key={item.id}
-              className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5"
-            >
-              <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)_180px] lg:items-end">
-                <div className="flex items-center gap-3 rounded-2xl border bg-white px-4 py-4">
-                  <Checkbox
-                    checked={item.isVisible}
-                    onCheckedChange={(checked) =>
-                      change(item.id, "isVisible", checked === true)
-                    }
-                  />
-                  <div>
-                    <div className="font-semibold">{item.label}</div>
-                    <div className="text-sm text-slate-500">
-                      {item.isVisible ? "Đang hiển thị" : "Đang ẩn"}
+          {socials.length === 0 ? (
+            <div className="py-12 text-center text-sm text-gray-500">
+              Không có data mạng xã hội
+            </div>
+          ) : (
+            socials.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-[28px] border border-[#063e8e]/10 bg-[#f8fbff] p-5"
+              >
+                <div className="grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)_180px] lg:items-end">
+                  <div className="flex items-center gap-3 rounded-2xl border bg-white px-4 py-4">
+                    <Checkbox
+                      checked={item.isVisible}
+                      onCheckedChange={(checked) =>
+                        change(item.id, "isVisible", checked === true)
+                      }
+                    />
+                    <div>
+                      <div className="font-semibold">{item.label}</div>
+                      <div className="text-sm text-slate-500">
+                        {item.isVisible ? "Đang hiển thị" : "Đang ẩn"}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Link URL</Label>
-                  <Input
-                    value={item.url}
-                    onChange={(event) =>
-                      change(item.id, "url", event.target.value)
-                    }
-                    placeholder={`Nhập link ${item.label}...`}
-                    className={fieldClassName}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Thứ tự hiển thị</Label>
-                  <Input
-                    type="number"
-                    min={1}
-                    value={item.sortOrder}
-                    onChange={(event) =>
-                      change(
-                        item.id,
-                        "sortOrder",
-                        Number(event.target.value || 1),
-                      )
-                    }
-                    className={fieldClassName}
-                  />
+                  <div className="space-y-2">
+                    <Label>Link URL</Label>
+                    <Input
+                      value={item.url}
+                      onChange={(event) =>
+                        change(item.id, "url", event.target.value)
+                      }
+                      placeholder={`Nhập link ${item.label}...`}
+                      className={fieldClassName}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Thứ tự hiển thị</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={item.sortOrder}
+                      onChange={(event) =>
+                        change(
+                          item.id,
+                          "sortOrder",
+                          Number(event.target.value || 1),
+                        )
+                      }
+                      className={fieldClassName}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </CardContent>
       </Card>
     </TabsContent>

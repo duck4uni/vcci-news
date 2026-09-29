@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
@@ -24,12 +23,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetApiV10Contact, useDeleteApiV10ContactId } from "@/api/vcci-news/endpoints/contact";
 import {
   CONTACT_PURPOSE_OPTIONS,
-  type ContactRequestItem,
-  persistContactRequests,
-  readContactRequests,
-} from "@/mockdata/contact-management";
+  type AdminContactRequestRow,
+  extractRows,
+  mapApiRowToAdminContactRequest,
+} from "@/lib/utils/admin-contact";
+import { useMemo, useState } from "react";
 
 const selectTriggerClassName =
   "w-full rounded-xl border-[#063e8e]/15 bg-white text-gray-700 data-[placeholder]:text-gray-700 focus:ring-[#063e8e]/30 lg:w-[220px]";
@@ -38,23 +40,35 @@ const selectContentClassName = "border-[#063e8e]/15 bg-white text-gray-700";
 const selectItemClassName = "text-gray-700 focus:bg-[#063e8e]/10 focus:text-[#063e8e]";
 
 function formatDateTime(value: string) {
+  if (!value) return "—";
   return dayjs(value).format("DD/MM/YYYY HH:mm");
 }
 
 export default function AdminContactRequestsPage() {
-  const [items, setItems] = React.useState<ContactRequestItem[]>([]);
-  const [search, setSearch] = React.useState("");
-  const [purposeFilter, setPurposeFilter] = React.useState("all");
-  const [ready, setReady] = React.useState(false);
-  const [detailTarget, setDetailTarget] = React.useState<ContactRequestItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = React.useState<ContactRequestItem | null>(null);
+  const queryClient = useQueryClient();
 
-  React.useEffect(() => {
-    setItems(readContactRequests());
-    setReady(true);
-  }, []);
+  const [search, setSearch] = useState("");
+  const [purposeFilter, setPurposeFilter] = useState("all");
+  const [detailTarget, setDetailTarget] = useState<AdminContactRequestRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminContactRequestRow | null>(null);
 
-  const filteredItems = React.useMemo(() => {
+  const contactsQuery = useGetApiV10Contact({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const deleteContact = useDeleteApiV10ContactId();
+
+  const items = useMemo(
+    () =>
+      extractRows((contactsQuery.data as any)?.responseData).map(
+        mapApiRowToAdminContactRequest,
+      ),
+    [contactsQuery.data],
+  );
+
+  const filteredItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
 
     return items.filter((item) => {
@@ -74,14 +88,20 @@ export default function AdminContactRequestsPage() {
     });
   }, [items, purposeFilter, search]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
-    setItems(nextItems);
-    persistContactRequests(nextItems);
-    toast.success("Đã xóa đơn liên hệ");
-    setDeleteTarget(null);
+    try {
+      await deleteContact.mutateAsync({ id: deleteTarget.id });
+      toast.success("Đã xóa đơn liên hệ");
+      queryClient.invalidateQueries({ queryKey: ["getApiV10Contact"] });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Không thể xóa đơn liên hệ";
+      toast.error(message);
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
@@ -127,50 +147,50 @@ export default function AdminContactRequestsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-            {!ready ? (
-              Array.from({ length: 4 }).map((_, index) => (
-                <TableRow key={`loading-${index}`}>
-                  <TableCell colSpan={7} className="px-4 py-4">
-                    <div className="h-10 animate-pulse rounded-xl bg-[#063e8e]/10" />
+              {contactsQuery.isLoading ? (
+                Array.from({ length: 4 }).map((_, index) => (
+                  <TableRow key={`loading-${index}`}>
+                    <TableCell colSpan={7} className="px-4 py-4">
+                      <div className="h-10 animate-pulse rounded-xl bg-[#063e8e]/10" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : filteredItems.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-16 text-center text-gray-400">
+                    Không có đơn liên hệ nào
                   </TableCell>
                 </TableRow>
-              ))
-            ) : filteredItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-16 text-center text-gray-400">
-                  Không có đơn liên hệ nào
-                </TableCell>
-              </TableRow>
               ) : (
                 filteredItems.map((item, index) => (
                   <TableRow
                     key={item.id}
                     className={index % 2 === 0 ? "bg-white" : "bg-[#063e8e]/3"}
-                >
-                  <TableCell className="py-3 text-center text-sm text-gray-500">
-                    {index + 1}
-                  </TableCell>
-                  <TableCell className="py-3 text-center">
-                    <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
-                      {item.purpose}
+                  >
+                    <TableCell className="py-3 text-center text-sm text-gray-500">
+                      {index + 1}
+                    </TableCell>
+                    <TableCell className="py-3 text-center">
+                      <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
+                        {item.purpose || "—"}
                       </Badge>
                     </TableCell>
                     <TableCell className="py-3 text-sm text-gray-800">
                       <div className="space-y-1">
-                        <div className="font-semibold">{item.contactName}</div>
-                        <div className="text-gray-600">{item.contactPhone}</div>
+                        <div className="font-semibold">{item.contactName || "—"}</div>
+                        <div className="text-gray-600">{item.contactPhone || "—"}</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-3 text-sm text-gray-700">
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-800">{item.organizationName}</div>
-                        <div>{item.businessField}</div>
+                        <div className="font-medium text-gray-800">{item.organizationName || "—"}</div>
+                        <div>{item.businessField || "—"}</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-3 text-sm text-gray-700">
                       <div className="space-y-1">
-                        <div>{item.email}</div>
-                        <div className="text-gray-500">{item.contactEmail}</div>
+                        <div>{item.email || "—"}</div>
+                        <div className="text-gray-500">{item.contactEmail || "—"}</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-3 text-center text-sm text-gray-700">
@@ -199,40 +219,40 @@ export default function AdminContactRequestsPage() {
         badge={
           detailTarget ? (
             <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
-              {detailTarget.purpose}
+              {detailTarget.purpose || "—"}
             </Badge>
           ) : null
         }
         sections={
           detailTarget
             ? [
-                {
-                  title: "Thông tin chung",
-                  fields: [
-                    { label: "Mục đích liên hệ", value: detailTarget.purpose },
-                    { label: "Ngày gửi", value: formatDateTime(detailTarget.submittedAt) },
-                  ],
-                },
-                {
-                  title: "Người liên hệ",
-                  fields: [
-                    { label: "Họ tên người liên hệ", value: detailTarget.contactName },
-                    { label: "Chức vụ", value: detailTarget.contactPosition },
-                    { label: "Email người liên hệ", value: detailTarget.contactEmail },
-                    { label: "Điện thoại người liên hệ", value: detailTarget.contactPhone },
-                    { label: "Nội dung liên hệ", value: detailTarget.message, fullWidth: true },
-                  ],
-                },
-                {
-                  title: "Thông tin công ty / tổ chức",
-                  fields: [
-                    { label: "Tên công ty / tổ chức", value: detailTarget.organizationName },
-                    { label: "Lĩnh vực hoạt động", value: detailTarget.businessField },
-                    { label: "Email", value: detailTarget.email },
-                    { label: "Website", value: detailTarget.website },
-                  ],
-                },
-              ]
+              {
+                title: "Thông tin chung",
+                fields: [
+                  { label: "Mục đích liên hệ", value: detailTarget.purpose || "—" },
+                  { label: "Ngày gửi", value: formatDateTime(detailTarget.submittedAt) },
+                ],
+              },
+              {
+                title: "Người liên hệ",
+                fields: [
+                  { label: "Họ tên người liên hệ", value: detailTarget.contactName || "—" },
+                  { label: "Chức vụ", value: detailTarget.contactPosition || "—" },
+                  { label: "Email người liên hệ", value: detailTarget.contactEmail || "—" },
+                  { label: "Điện thoại người liên hệ", value: detailTarget.contactPhone || "—" },
+                  { label: "Nội dung liên hệ", value: detailTarget.message || "—", fullWidth: true },
+                ],
+              },
+              {
+                title: "Thông tin công ty / tổ chức",
+                fields: [
+                  { label: "Tên công ty / tổ chức", value: detailTarget.organizationName || "—" },
+                  { label: "Lĩnh vực hoạt động", value: detailTarget.businessField || "—" },
+                  { label: "Email", value: detailTarget.email || "—" },
+                  { label: "Website", value: detailTarget.website || "—" },
+                ],
+              },
+            ]
             : []
         }
         onOpenChange={(open) => !open && setDetailTarget(null)}

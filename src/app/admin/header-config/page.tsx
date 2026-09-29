@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  useDeleteApiV10CategoryId,
+  useGetApiV10CategoryTree,
+  usePostApiV10Category,
+  usePutApiV10CategoryId,
+} from "@/api/vcci-news/endpoints/category";
 import { toast } from "sonner";
 import {
   HeaderCategoryDeleteDialog,
@@ -12,17 +18,11 @@ import {
   HeaderCategoryTable,
 } from "./components";
 import { buildStaticLink } from "@/lib/utils/header-link";
-import {
-  deleteApiV10CategoryId,
-  getApiV10CategoryTree,
-  postApiV10Category,
-  putApiV10CategoryId,
-} from "@/api/vcci-news/endpoints/category";
-import {
+import { toSlug } from "@/lib/utils/header-category";
+import type {
   HeaderCategoryItem,
   HeaderCategoryTreeItem,
-  toSlug,
-} from "@/mockdata/header-config";
+} from "@/api/vcci-news/types/header-config";
 
 const EMPTY_HEADER_CATEGORY_FORM: HeaderCategoryFormValues = {
   name: "",
@@ -54,36 +54,41 @@ function toFormValues(item?: HeaderCategoryItem | null): HeaderCategoryFormValue
 }
 
 function useHeaderConfigModule() {
+  const {
+    data: treeResponse,
+    isLoading,
+    error,
+    refetch: refetchTree,
+  } = useGetApiV10CategoryTree();
   const [tree, setTree] = useState<HeaderCategoryTreeItem[]>([]);
   const [rootStaticLink, setRootStaticLink] = useState("/");
-  const [isReady, setIsReady] = useState(false);
-
-  const load = useCallback(async () => {
-    const response = await getApiV10CategoryTree();
-    const treeData = (response.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
-
-    setTree(treeData);
-    setRootStaticLink("/");
-    setIsReady(true);
-  }, []);
 
   useEffect(() => {
-    void load().catch((error) => {
+    const treeData = (treeResponse?.responseData ?? []) as unknown as HeaderCategoryTreeItem[];
+    setTree(treeData);
+    setRootStaticLink("/");
+  }, [treeResponse]);
+
+  useEffect(() => {
+    if (error) {
       toast.error(error instanceof Error ? error.message : "Không thể tải cấu hình danh mục");
-      setIsReady(true);
-    });
-  }, [load]);
+    }
+  }, [error]);
 
   return {
     tree,
     rootStaticLink,
-    isReady,
-    reload: load,
+    isReady: !isLoading,
+    reload: refetchTree,
   };
 }
 
 export default function HeaderConfigPage() {
   const { tree, rootStaticLink, isReady, reload } = useHeaderConfigModule();
+  const { mutateAsync: createCategory, isPending: isCreatingCategory } = usePostApiV10Category();
+  const { mutateAsync: updateCategory, isPending: isUpdatingCategory } = usePutApiV10CategoryId();
+  const { mutateAsync: deleteCategory, isPending: isDeletingCategory } = useDeleteApiV10CategoryId();
+  const isMutating = isCreatingCategory || isUpdatingCategory || isDeletingCategory;
 
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [search, setSearch] = useState("");
@@ -221,7 +226,7 @@ export default function HeaderConfigPage() {
   };
 
   const handleSubmit = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || isMutating) return;
 
     if (isProtectedHomeCategory(formValues.id)) {
       return;
@@ -277,10 +282,10 @@ export default function HeaderConfigPage() {
       };
 
       if (formMode === "create") {
-        await postApiV10Category(payload);
+        await createCategory({ data: payload });
         toast.success("Tạo danh mục thành công");
       } else if (formValues.id) {
-        await putApiV10CategoryId(formValues.id, payload);
+        await updateCategory({ id: formValues.id, data: payload });
         toast.success("Cập nhật danh mục thành công");
       }
 
@@ -295,7 +300,7 @@ export default function HeaderConfigPage() {
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget || isSubmitting) return;
+    if (!deleteTarget || isSubmitting || isMutating) return;
 
     if (isProtectedHomeCategory(deleteTarget.id)) {
       setDeleteTarget(null);
@@ -305,7 +310,7 @@ export default function HeaderConfigPage() {
     setIsSubmitting(true);
 
     try {
-      await deleteApiV10CategoryId(deleteTarget.id);
+      await deleteCategory({ id: deleteTarget.id });
       toast.success("Xóa danh mục thành công");
       setDeleteTarget(null);
       await reload();

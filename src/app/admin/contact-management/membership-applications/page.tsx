@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import dayjs from "dayjs";
-import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AdminDeleteDialog } from "@/components/admin/admin-delete-dialog";
 import { AdminRowActions } from "@/components/admin/admin-row-actions";
@@ -17,29 +16,72 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  type MembershipApplicationItem,
-  persistMembershipApplications,
-  readMembershipApplications,
-} from "@/mockdata/contact-management";
+import { useQueryClient } from "@tanstack/react-query";
+import { useGetApiV10Contact, useDeleteApiV10ContactId } from "@/api/vcci-news/endpoints/contact";
+import { extractRows } from "@/lib/utils/admin-contact";
+import { useMemo, useState } from "react";
+
+interface AdminMembershipApplicationRow {
+  id: string;
+  organizationName: string;
+  businessField: string;
+  address: string;
+  website: string;
+  contactName: string;
+  contactPosition: string;
+  contactEmail: string;
+  contactPhone: string;
+  membershipType: string;
+  note: string;
+  submittedAt: string;
+}
+
+function mapApiRowToMembershipApplication(item: any): AdminMembershipApplicationRow {
+  return {
+    id: String(item?.id ?? ""),
+    organizationName: item?.fullname ?? "",
+    businessField: "",
+    address: "",
+    website: "",
+    contactName: item?.fullname ?? "",
+    contactPosition: "",
+    contactEmail: item?.email ?? "",
+    contactPhone: item?.phone ?? "",
+    membershipType: item?.title ?? "",
+    note: item?.content ?? "",
+    submittedAt: item?.created_at ?? "",
+  };
+}
 
 function formatDateTime(value: string) {
+  if (!value) return "—";
   return dayjs(value).format("DD/MM/YYYY HH:mm");
 }
 
 export default function AdminMembershipApplicationsPage() {
-  const [items, setItems] = React.useState<MembershipApplicationItem[]>([]);
-  const [search, setSearch] = React.useState("");
-  const [ready, setReady] = React.useState(false);
-  const [detailTarget, setDetailTarget] = React.useState<MembershipApplicationItem | null>(null);
-  const [deleteTarget, setDeleteTarget] = React.useState<MembershipApplicationItem | null>(null);
+  const queryClient = useQueryClient();
 
-  React.useEffect(() => {
-    setItems(readMembershipApplications());
-    setReady(true);
-  }, []);
+  const [search, setSearch] = useState("");
+  const [detailTarget, setDetailTarget] = useState<AdminMembershipApplicationRow | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminMembershipApplicationRow | null>(null);
 
-  const filteredItems = React.useMemo(() => {
+  const contactsQuery = useGetApiV10Contact({
+    page: 1,
+    pageSize: 200,
+    sortField: "created_at",
+    sortOrder: "desc",
+  });
+  const deleteContact = useDeleteApiV10ContactId();
+
+  const items = useMemo(
+    () =>
+      extractRows((contactsQuery.data as any)?.responseData).map(
+        mapApiRowToMembershipApplication,
+      ),
+    [contactsQuery.data],
+  );
+
+  const filteredItems = useMemo(() => {
     const keyword = search.trim().toLowerCase();
     if (!keyword) return items;
 
@@ -54,19 +96,24 @@ export default function AdminMembershipApplicationsPage() {
     );
   }, [items, search]);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!deleteTarget) return;
 
-    const nextItems = items.filter((item) => item.id !== deleteTarget.id);
-    setItems(nextItems);
-    persistMembershipApplications(nextItems);
-    toast.success("Đã xóa đơn đăng ký hội viên");
-    setDeleteTarget(null);
+    try {
+      await deleteContact.mutateAsync({ id: deleteTarget.id });
+      toast.success("Đã xóa đơn đăng ký hội viên");
+      queryClient.invalidateQueries({ queryKey: ["getApiV10Contact"] });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error ? error.message : "Không thể xóa đơn đăng ký hội viên";
+      toast.error(message);
+    } finally {
+      setDeleteTarget(null);
+    }
   };
 
   return (
     <div className="space-y-8">
-
       <AdminTableLayout
         searchValue={search}
         searchPlaceholder="Tìm kiếm đơn đăng ký hội viên..."
@@ -91,9 +138,9 @@ export default function AdminMembershipApplicationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-            {!ready ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <TableRow key={`loading-${index}`}>
+              {contactsQuery.isLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <TableRow key={`loading-${index}`}>
                     <TableCell colSpan={7} className="px-4 py-4">
                       <div className="h-10 animate-pulse rounded-xl bg-[#063e8e]/10" />
                     </TableCell>
@@ -116,22 +163,22 @@ export default function AdminMembershipApplicationsPage() {
                     </TableCell>
                     <TableCell className="py-3 text-sm text-gray-800">
                       <div className="space-y-1">
-                        <div className="font-semibold">{item.organizationName}</div>
-                        <div className="text-gray-600">{item.businessField}</div>
+                        <div className="font-semibold">{item.organizationName || "—"}</div>
+                        <div className="text-gray-600">{item.businessField || "—"}</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-3 text-sm text-gray-700">
                       <div className="space-y-1">
-                        <div className="font-medium text-gray-800">{item.contactName}</div>
-                        <div>{item.contactPhone}</div>
+                        <div className="font-medium text-gray-800">{item.contactName || "—"}</div>
+                        <div>{item.contactPhone || "—"}</div>
                       </div>
                     </TableCell>
                     <TableCell className="py-3 text-center">
                       <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
-                        {item.membershipType}
+                        {item.membershipType || "—"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-3 text-sm text-gray-700">{item.contactEmail}</TableCell>
+                    <TableCell className="py-3 text-sm text-gray-700">{item.contactEmail || "—"}</TableCell>
                     <TableCell className="py-3 text-center text-sm text-gray-700">
                       {formatDateTime(item.submittedAt)}
                     </TableCell>
@@ -158,44 +205,44 @@ export default function AdminMembershipApplicationsPage() {
       <ContactManagementDetailDialog
         open={!!detailTarget}
         title="Chi tiết đơn đăng ký hội viên"
-        description="Biểu mẫu mẫu phục vụ duyệt giao diện quản trị đơn đăng ký hội viên."
+        description="Thông tin đầy đủ của đơn đăng ký hội viên được gửi từ website VCCI News."
         badge={
           detailTarget ? (
             <Badge variant="outline" className="border-[#063e8e]/25 text-[#063e8e]">
-              {detailTarget.membershipType}
+              {detailTarget.membershipType || "—"}
             </Badge>
           ) : null
         }
         sections={
           detailTarget
             ? [
-                {
-                  title: "Thông tin chung",
-                  fields: [
-                    { label: "Loại hội viên", value: detailTarget.membershipType },
-                    { label: "Ngày gửi", value: formatDateTime(detailTarget.submittedAt) },
-                  ],
-                },
-                {
-                  title: "Thông tin doanh nghiệp",
-                  fields: [
-                    { label: "Tên công ty / tổ chức", value: detailTarget.organizationName },
-                    { label: "Lĩnh vực hoạt động", value: detailTarget.businessField },
-                    { label: "Địa chỉ", value: detailTarget.address, fullWidth: true },
-                    { label: "Website", value: detailTarget.website },
-                  ],
-                },
-                {
-                  title: "Thông tin người liên hệ",
-                  fields: [
-                    { label: "Họ tên người liên hệ", value: detailTarget.contactName },
-                    { label: "Chức vụ", value: detailTarget.contactPosition },
-                    { label: "Email người liên hệ", value: detailTarget.contactEmail },
-                    { label: "Điện thoại người liên hệ", value: detailTarget.contactPhone },
-                    { label: "Ghi chú", value: detailTarget.note, fullWidth: true },
-                  ],
-                },
-              ]
+              {
+                title: "Thông tin chung",
+                fields: [
+                  { label: "Loại hội viên", value: detailTarget.membershipType || "—" },
+                  { label: "Ngày gửi", value: formatDateTime(detailTarget.submittedAt) },
+                ],
+              },
+              {
+                title: "Thông tin doanh nghiệp",
+                fields: [
+                  { label: "Tên công ty / tổ chức", value: detailTarget.organizationName || "—" },
+                  { label: "Lĩnh vực hoạt động", value: detailTarget.businessField || "—" },
+                  { label: "Địa chỉ", value: detailTarget.address || "—", fullWidth: true },
+                  { label: "Website", value: detailTarget.website || "—" },
+                ],
+              },
+              {
+                title: "Thông tin người liên hệ",
+                fields: [
+                  { label: "Họ tên người liên hệ", value: detailTarget.contactName || "—" },
+                  { label: "Chức vụ", value: detailTarget.contactPosition || "—" },
+                  { label: "Email người liên hệ", value: detailTarget.contactEmail || "—" },
+                  { label: "Điện thoại người liên hệ", value: detailTarget.contactPhone || "—" },
+                  { label: "Ghi chú", value: detailTarget.note || "—", fullWidth: true },
+                ],
+              },
+            ]
             : []
         }
         onOpenChange={(open) => !open && setDetailTarget(null)}

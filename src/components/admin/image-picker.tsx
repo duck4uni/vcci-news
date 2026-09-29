@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { ImagePlus, Search, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { SafeImage } from "@/components/shared/safe-image";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
 import { toAdminMediaItem } from "@/lib/utils/file";
-import { getApiV10File, postApiV10FileUpload } from "@/api/vcci-news/endpoints/file";
+import { useGetApiV10File, usePostApiV10FileUpload } from "@/api/vcci-news/endpoints/file";
 import { Pagination } from "@/components/base/pagination";
 import { cn } from "@/lib/utils";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
 const PAGE_SIZE = 10;
 
@@ -41,68 +42,55 @@ export function AdminImagePicker({
   onOpenChange,
   onSelect,
 }: AdminImagePickerProps) {
-  const inputRef = React.useRef<HTMLInputElement | null>(null);
-  const [search, setSearch] = React.useState("");
-  const [items, setItems] = React.useState<AdminMediaItem[]>([]);
-  const [page, setPage] = React.useState(1);
-  const [total, setTotal] = React.useState(0);
-  const [ready, setReady] = React.useState(false);
-  const [uploading, setUploading] = React.useState(false);
-
-  const load = React.useCallback(async () => {
-    if (!open) return;
-
-    setReady(false);
-
-    try {
-      const keyword = search.trim();
-      const filters = [
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [search, setSearch] = useState("");
+  const [items, setItems] = useState<AdminMediaItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const fileQuery = useGetApiV10File(
+    {
+      page,
+      pageSize: PAGE_SIZE,
+      sortField: "created_at",
+      sortOrder: "desc",
+      filters: [
         "mime@=image",
-        keyword ? `original@=${keyword}|path@=${keyword}` : "",
-      ].filter(Boolean).join(",");
+        search.trim() ? `original@=${search.trim()}|path@=${search.trim()}` : "",
+      ].filter(Boolean).join(","),
+    },
+    { query: { enabled: open } },
+  );
+  const uploadMutation = usePostApiV10FileUpload();
+  const ready = open && !fileQuery.isFetching;
+  const uploading = uploadMutation.isPending;
 
-      const response = await getApiV10File({
-        page,
-        pageSize: PAGE_SIZE,
-        sortField: "created_at",
-        sortOrder: "desc",
-        filters,
-      });
-      const pageData = response.responseData ?? {};
+  useEffect(() => {
+    const pageData = fileQuery.data?.responseData;
+    if (!pageData) return;
+    setItems((pageData.rows ?? []).map(toAdminMediaItem));
+    setTotal(pageData.count ?? 0);
+  }, [fileQuery.data]);
 
-      setItems((pageData.rows ?? []).map(toAdminMediaItem));
-      setTotal(pageData.count ?? 0);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Không thể tải thư viện hình ảnh");
-      setItems([]);
-      setTotal(0);
-    } finally {
-      setReady(true);
-    }
-  }, [open, page, search]);
+  useEffect(() => {
+    if (!fileQuery.error) return;
+    toast.error(fileQuery.error instanceof Error ? fileQuery.error.message : "Không thể tải thư viện hình ảnh");
+    setItems([]);
+    setTotal(0);
+  }, [fileQuery.error]);
 
-  React.useEffect(() => {
-    void load();
-  }, [load]);
-
-  React.useEffect(() => {
+  useEffect(() => {
     if (!open) return;
     setPage(1);
   }, [open, search]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    setUploading(true);
-
     try {
-      const response = await postApiV10FileUpload({
-        file,
-        original: file.name,
-      });
+      const response = await uploadMutation.mutateAsync({ data: { file, original: file.name } });
       const uploaded = response.responseData ?? null;
 
       if (!uploaded) {
@@ -116,7 +104,6 @@ export function AdminImagePicker({
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không thể tải hình ảnh lên");
     } finally {
-      setUploading(false);
       event.target.value = "";
     }
   };
@@ -210,7 +197,7 @@ export function AdminImagePicker({
                   )}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-[#063e8e]/[0.04]">
-                    <SafeImage
+                    <Image
                       src={item.url}
                       alt={item.alt || item.name}
                       fill
