@@ -1,7 +1,7 @@
 "use client";
 
 import { ImagePlus, Save } from "lucide-react";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,7 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { AdminMediaItem } from "@/mockdata/admin-news";
-import { fieldClassName, type ConfigItemForm, type ConfigItemMode } from "./types";
+import {
+  fieldClassName,
+  type ConfigItemForm,
+  type ConfigItemMode,
+} from "./types";
 
 export function ConfigItemDialog({
   open,
@@ -114,7 +118,7 @@ export function ConfigItemDialog({
               <div className="overflow-hidden rounded-3xl border border-dashed border-[#063e8e]/20 bg-[#eef4ff]/60">
                 <div className="relative aspect-[16/9]">
                   {previewMedia ? (
-                    <SafeImage
+                    <Image
                       src={previewMedia.url}
                       alt={previewMedia.alt || previewMedia.name}
                       fill

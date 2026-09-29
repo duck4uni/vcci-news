@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { Image as ImageIcon, Pencil, Plus, Type, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminRichTextEditor } from "@/components/shared/rich-text-editor";
-import { SafeImage } from "@/components/shared/safe-image";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -409,7 +409,7 @@ export function AdminPostContentEditor({
                                   }}
                                   className="relative h-64 w-full cursor-pointer"
                                 >
-                                  <SafeImage
+                                  <Image
                                     src={currentImage.image.url}
                                     alt={currentImage.image.alt || currentImage.image.name}
                                     fill

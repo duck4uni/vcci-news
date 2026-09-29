@@ -6,7 +6,7 @@ import parse from "html-react-parser";
 import Link from "next/link";
 import ListCategory from "@/components/base/list-category";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import links from "@/links";
 import {
   buildDynamicPostHref,
@@ -338,7 +338,7 @@ export default function AboutVcciHcm({ post, category, allCategories }: AboutVcc
                     className="group overflow-hidden rounded-[22px] bg-white shadow-[0_18px_38px_rgba(28,52,120,0.16)] transition-transform hover:-translate-y-1"
                   >
                     <div className="relative aspect-[1.28] overflow-hidden">
-                      <SafeImage
+                      <Image
                         src={item.thumbnailUrl}
                         alt={item.thumbnailAlt}
                         width={720}

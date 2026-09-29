@@ -10,6 +10,7 @@ const orvalConfig = defineConfig({
       target: "src/api/vcci-news/endpoints/index.ts",
       schemas: "src/api/vcci-news/models",
       client: "react-query",
+      clean: true,
       override: {
         query: {
           useInfinite: true,

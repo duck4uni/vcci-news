@@ -1,6 +1,6 @@
 'use client';
 
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import Link from "next/link";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
 import links from "@/links";
@@ -27,9 +27,8 @@ function HorizontalAdBanner() {
       style={{ aspectRatio: "1600 / 200" }}
       title={title}
     >
-      <SafeImage
+      <Image
         src={src}
-        fallbackSrc={FALLBACK_SRC}
         alt={alt}
         fill
         sizes="100vw"

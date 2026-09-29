@@ -1,6 +1,6 @@
 'use client';
 
-import { SafeImage } from "@/components/shared/safe-image";
+import Image from "next/image";
 import Link from "next/link";
 import { useMemo } from "react";
 import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
@@ -22,9 +22,8 @@ function AdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: strin
       title={item.name}
     >
       <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
-        <SafeImage
+        <Image
           src={src}
-          fallbackSrc={fallbackSrc}
           alt={item.alt || item.name}
           width={2048}
           height={1365}
@@ -45,7 +44,7 @@ function FallbackAdItem({ src }: { src: string }) {
       title="Quảng cáo VCCI HCM"
     >
       <div className="aspect-[16/10] overflow-hidden sm:aspect-[16/10] lg:aspect-[7/4] xl:aspect-[3/2]">
-        <SafeImage
+        <Image
           src={src}
           alt="Quảng cáo VCCI HCM"
           width={2048}
