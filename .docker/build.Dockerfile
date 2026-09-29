@@ -25,15 +25,15 @@ ARG NEXT_PUBLIC_FRONTEND_HOST=https://vcci-hcm.org.vn
 ENV NEXT_PUBLIC_BACKEND_HOST=$NEXT_PUBLIC_BACKEND_HOST
 ENV NEXT_PUBLIC_FRONTEND_HOST=$NEXT_PUBLIC_FRONTEND_HOST
 
-# Install system dependencies needed for Sharp
-RUN apk add --no-cache libc6-compat vips-dev
+# Install system dependencies needed for Sharp runtime
+RUN apk add --no-cache libc6-compat
 
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml* ./
 COPY --from=builder /app/pnpm-workspace.yaml ./
-RUN pnpm install --prod --frozen-lockfile
+COPY --from=builder /app/node_modules ./node_modules
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
