@@ -13,13 +13,7 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "vcci-hcm.org.vn",
         port: "",
-        pathname: "/wp-content/uploads/**",
-      },
-      {
-        protocol: "https",
-        hostname: "vcci-hcm.org.vn",
-        port: "",
-        pathname: "/uploads/**",
+        pathname: "/**",
       },
       {
         protocol: "https",
