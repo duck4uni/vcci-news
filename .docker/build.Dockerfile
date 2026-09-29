@@ -32,7 +32,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # ERR_PNPM_IGNORED_BUILDS trên pnpm v11+.
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/pnpm-lock.yaml* ./
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+RUN pnpm install --prod --frozen-lockfile
 
 COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
