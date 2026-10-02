@@ -1,39 +1,23 @@
 "use client";
 
-import Image from "next/image";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
 import { Swiper as SwiperType } from "swiper/types";
+import { useQuery } from "@tanstack/react-query";
 import { useRef } from "react";
+import { getApiV10Banner } from "@/api/vcci-news/endpoints/banner";
+import type { RawBanner } from "@/api/vcci-news/types/banner";
+import type { RawFile } from "@/api/vcci-news/types/file";
+import { getApiV10FileId } from "@/api/vcci-news/endpoints/file";
+import { resolveCmsFileUrl } from "@/lib/utils/file";
+import { Skeleton } from "@/components/ui/skeleton";
+import { BannerItem, type BannerItemData } from "./components/banner-item";
 import "swiper/css";
 
-import { useGetApiV10Banner } from "@/api/vcci-news/endpoints/banner";
-import { resolveCmsFileUrl } from "@/lib/utils/file";
-import { useGetApiV10FileId } from "@/api/vcci-news/endpoints/file";
-import { Skeleton } from "@/components/ui/skeleton";
+type BannerRow = RawBanner;
 
-type ApiEnvelope<T> = {
-  responseData?: T;
-  data?: {
-    responseData?: T;
-  };
-};
+const FALLBACK_IMAGE = "/thumbnail.png";
 
-const getEnvelopeData = <T,>(payload?: ApiEnvelope<T>) =>
-  payload?.responseData ?? payload?.data?.responseData;
-
-type BannerRow = {
-  id: string;
-  file_id?: string | null;
-  banner_name?: string | null;
-  image_url?: string | null;
-  display_order?: number | null;
-};
-
-/**
- * Mock banner khi BE /api/banner lỗi hoặc không trả data.
- * Dùng ảnh `thumbnail.png` đã có sẵn trong public/.
- */
 const MOCK_BANNER_ROWS: BannerRow[] = [
   {
     id: "mock-banner-1",
@@ -55,83 +39,58 @@ const MOCK_BANNER_ROWS: BannerRow[] = [
   },
 ];
 
-function BannerSlideItem({
-  src,
-  alt,
-  fileId,
-}: {
-  src: string;
-  alt: string;
-  fileId?: string | null;
-}) {
-  const { data: file, isPending } = useGetApiV10FileId(fileId!, {
-    query: {
-      enabled: !!fileId,
-      select: (response) => response?.responseData ?? null,
-    },
+const resolveFileSrc = async (fileId?: string | null): Promise<string | null> => {
+  if (!fileId) return null;
+
+  try {
+    const response = await getApiV10FileId(fileId);
+    const file = response?.responseData as RawFile | undefined;
+    return file?.path ? resolveCmsFileUrl(file.path) : null;
+  } catch {
+    return null;
+  }
+};
+
+const toBannerItems = async (rows: BannerRow[]): Promise<BannerItemData[]> =>
+  Promise.all(
+    rows.map(async (row) => ({
+      id: row.id,
+      alt: row.banner_name || "Banner",
+      src:
+        row.image_url ??
+        (await resolveFileSrc(row.file_id)) ??
+        FALLBACK_IMAGE,
+    })),
+  );
+
+const fetchBannerItems = async (): Promise<BannerItemData[]> => {
+  try {
+    const response = await getApiV10Banner({
+      filters: "status@=ACTIVE",
+      sortField: "display_order",
+      sortOrder: "asc",
+    });
+
+    const rows = (response?.responseData?.rows ?? []) as BannerRow[];
+    return await toBannerItems(rows.length > 0 ? rows : MOCK_BANNER_ROWS);
+  } catch {
+    return await toBannerItems(MOCK_BANNER_ROWS);
+  }
+};
+
+export function Banner() {
+  const swiperRef = useRef<SwiperType | null>(null);
+
+  const { data: items = [], isPending } = useQuery({
+    queryKey: ["banner-items", "status-active"] as const,
+    queryFn: fetchBannerItems,
+    staleTime: 60 * 1000,
   });
 
   if (isPending) {
     return (
-      <Skeleton className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px]" />
-    );
-  }
-
-  const url = src
-    ? src
-    : file
-      ? resolveCmsFileUrl(file.path)
-      : "/thumbnail.png";
-
-  return (
-    <Image
-      src={url}
-      alt={alt}
-      width={2560}
-      height={720}
-      sizes="100vw"
-      className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] object-cover"
-    />
-  );
-}
-
-const Banner = () => {
-  const swiperRef = useRef<SwiperType | null>(null);
-
-  const { data: bannerData, isPending, isError } = useGetApiV10Banner(
-    {
-      filters: "status@=ACTIVE",
-      sortField: "display_order",
-      sortOrder: "asc",
-    },
-    {
-      query: {
-        staleTime: 60 * 1000,
-      },
-    },
-  );
-
-  const pageData = bannerData
-    ? getEnvelopeData<{ rows?: BannerRow[] }>(bannerData as unknown as ApiEnvelope<{ rows?: BannerRow[] }>)
-    : undefined;
-  // BE trả rows rỗng HOẶC bị lỗi → fallback mock banner để UI không trống.
-  const rows: BannerRow[] =
-    pageData?.rows && pageData.rows.length > 0
-      ? pageData.rows
-      : MOCK_BANNER_ROWS;
-
-  if (isPending && !rows.length) {
-    return (
-      <div className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] bg-slate-100 flex items-center justify-center">
-        <Skeleton className="w-full h-full" />
-      </div>
-    );
-  }
-
-  if (!rows || rows.length === 0) {
-    return (
-      <div className="w-full h-[220px] sm:h-[320px] md:h-[430px] lg:h-[540px] bg-slate-100 flex items-center justify-center">
-        <Skeleton className="w-full h-full" />
+      <div className="flex h-[220px] w-full items-center justify-center bg-slate-100 sm:h-[320px] md:h-[430px] lg:h-[540px]">
+        <Skeleton className="h-full w-full" />
       </div>
     );
   }
@@ -140,25 +99,16 @@ const Banner = () => {
     <Swiper
       modules={[Autoplay]}
       autoplay={{ delay: 4000, disableOnInteraction: false }}
-      loop={rows.length > 1}
+      loop={items.length > 1}
       slidesPerView={1}
       onSwiper={(s) => (swiperRef.current = s)}
       className="w-full overflow-hidden"
     >
-      {rows.map((row) => {
-        const src = row.image_url ?? (row.file_id ? undefined : "/thumbnail.png");
-        return (
-          <SwiperSlide key={row.id}>
-            <BannerSlideItem
-              src={src ?? ""}
-              alt={row.banner_name || "Banner"}
-              fileId={row.file_id ?? null}
-            />
-          </SwiperSlide>
-        );
-      })}
+      {items.map((item) => (
+        <SwiperSlide key={item.id}>
+          <BannerItem {...item} />
+        </SwiperSlide>
+      ))}
     </Swiper>
   );
-};
-
-export default Banner;
+}
