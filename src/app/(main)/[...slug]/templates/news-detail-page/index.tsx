@@ -1,7 +1,7 @@
 'use client';
 
 import dayjs from "dayjs";
-import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
+import { EventsCalendar } from "@/components/base/events-calendar";
 import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import { findDisplayCategoryForPost } from "../data";
 import { renderPostSummary } from "./components/post-summary-content";

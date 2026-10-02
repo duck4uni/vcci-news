@@ -18,7 +18,7 @@ const STATIC_PAGE_SLUGS = new Set([
   "quy-trinh-tiep-nhan-ho-so-cap-gcn-va-xac-nhan-cttm",
   "bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm", "phi-cap-gcn-va-xac-nhan-cttm",
   "diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm", "thong-tin-lien-he",
-  "danh-ba-hoi-vien", "search", "site-map", "video",
+  "danh-ba-hoi-vien",
 ]);
 
 const SITE_NAME = "VCCI HCM";
@@ -99,21 +99,6 @@ const STATIC_PAGE_METADATA: Record<string, { title: string; description: string 
     title: "Danh bạ hội viên",
     description:
       "Danh bạ hội viên VCCI-HCM: tra cứu thông tin doanh nghiệp hội viên và kết nối đối tác kinh doanh.",
-  },
-  "search": {
-    title: "Tìm kiếm",
-    description:
-      "Tìm kiếm tin tức, bài viết và nội dung trên website VCCI-HCM theo từ khóa.",
-  },
-  "site-map": {
-    title: "Sơ đồ site",
-    description:
-      "Sơ đồ tổng quan các chuyên mục và trang trên website VCCI-HCM, hỗ trợ điều hướng nhanh.",
-  },
-  "video": {
-    title: "Video",
-    description:
-      "Thư viện video VCCI-HCM: các phóng sự, sự kiện, hội thảo và hoạt động xúc tiến thương mại.",
   },
 };
 

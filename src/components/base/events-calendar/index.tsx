@@ -5,7 +5,10 @@ import { addMonths, format, getDay, startOfMonth, subMonths } from "date-fns";
 import dayjs from "dayjs";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { useEventCalendarPosts, type HomePostItem } from "@/app/(main)/(home)/lib/use-home-posts";
+import {
+  useEventCalendarPosts,
+  type EventCalendarItem,
+} from "./use-event-calendar-posts";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +17,7 @@ const weekDays = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 const formatDateTime = (value: string) =>
   value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "Đang cập nhật";
 
-const getEventDateRange = (item: HomePostItem) => {
+const getEventDateRange = (item: EventCalendarItem) => {
   // Ưu tiên event_dates (ngày cụ thể)
   if (item.eventDates && item.eventDates.length > 0) {
     return item.eventDates.map((d) => dayjs(d).format("YYYY-MM-DD")).filter(Boolean);
@@ -49,13 +52,13 @@ const getEventDateRange = (item: HomePostItem) => {
   return [];
 };
 
-const isTrainingEvent = (item: HomePostItem) =>
+const isTrainingEvent = (item: EventCalendarItem) =>
   item.categories.some((category) => {
     const key = `${category.name} ${category.slug} ${category.url}`.toLowerCase();
     return key.includes("đào tạo") || key.includes("dao-tao");
   });
 
-const getDayVariant = (items: HomePostItem[]) => {
+const getDayVariant = (items: EventCalendarItem[]) => {
   const hasTraining = items.some((item) => isTrainingEvent(item));
   const hasEvent = items.some((item) => !isTrainingEvent(item));
 
@@ -65,7 +68,7 @@ const getDayVariant = (items: HomePostItem[]) => {
   return "default";
 };
 
-function EventsCalendar({
+export function EventsCalendar({
   className,
   compact = false,
 }: {
@@ -102,7 +105,7 @@ function EventsCalendar({
   }, [currentMonth]);
 
   const eventMap = useMemo(() => {
-    const map = new Map<string, HomePostItem[]>();
+    const map = new Map<string, EventCalendarItem[]>();
 
     monthEvents.forEach((item) => {
       const eventDates = getEventDateRange(item);
@@ -394,5 +397,3 @@ function EventsCalendar({
     </aside>
   );
 }
-
-export default EventsCalendar;

@@ -1,17 +1,109 @@
-'use client';
-
-import { useHomePosts } from "@/app/(main)/(home)/lib/use-home-posts";
+import { getApiV10Post } from "@/api/vcci-news/endpoints/post";
+import type { RawPost } from "@/api/vcci-news/types/post-raw";
+import type { PagedResult } from "@/api/vcci-news/types/paged-result";
+import {
+  buildPostLink,
+  normalizeLink,
+} from "@/lib/utils/post";
+import { MOCK_HOME_POSTS } from "@/mockdata/home-posts";
 import dayjs from "dayjs";
 import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 
-function BusinessOpportunities() {
-  const { businessPosts, categoryLinks, categoryNames } = useHomePosts();
-  const listSlots = Array.from({ length: 4 }, (_, index) => businessPosts[index] ?? null);
-  const sectionLink =
-    categoryLinks.get(categoryNames.coHoiKinhDoanh.toLowerCase()) ??
-    "/xuc-tien-thuong-mai/co-hoi-kinh-doanh";
+const CATEGORY_ID = "0a460499-89c1-4f52-8592-1fb7bb69c4a2";
+const SECTION_LINK_FALLBACK = "/xuc-tien-thuong-mai/co-hoi-kinh-doanh";
 
+const SECTION_PARAMS = {
+  page: 1,
+  pageSize: 4,
+  sortField: "created_at",
+  sortOrder: "desc",
+  priorityFeatured: false,
+  filters: [
+    `category.id==${CATEGORY_ID}`,
+    "is_hidden==false",
+    "is_active==true",
+    "type==news",
+  ].join(","),
+} as const;
+
+/** Item đã chuẩn hóa mà component cần để render. */
+type BusinessOpportunityItem = {
+  id: string;
+  title: string;
+  externalLink: string;
+  createdAt: string;
+  publishedAt: string;
+};
+
+const toBusinessOpportunityItem = (post: RawPost): BusinessOpportunityItem => {
+  const title = String(post.title ?? "").trim();
+
+  return {
+    id: String(post.id ?? ""),
+    title,
+    externalLink: buildPostLink(
+      post.slug ? `/${post.slug}` : undefined,
+      post.id ? String(post.id) : "",
+      "#",
+    ),
+    createdAt: String(post.created_at ?? ""),
+    publishedAt: String(post.published_at ?? post.release_at ?? post.created_at ?? ""),
+  };
+};
+
+/** Đọc URL category "Cơ hội kinh doanh" từ bài viết đầu tiên (nếu có). */
+const resolveSectionLink = (posts: RawPost[]) => {
+  const categoryUrl = posts[0]?.categories?.find(
+    (category) => category?.url && category.url !== "#",
+  )?.url;
+
+  return categoryUrl ? normalizeLink(categoryUrl) : SECTION_LINK_FALLBACK;
+};
+
+const fetchBusinessOpportunityPosts = async (): Promise<{
+  posts: BusinessOpportunityItem[];
+  sectionLink: string;
+}> => {
+  try {
+    const response = await getApiV10Post(SECTION_PARAMS);
+    const rows =
+      (response as PagedResult<RawPost> | undefined)?.responseData?.rows ?? [];
+
+    if (rows.length === 0) throw new Error("Empty rows");
+
+    return {
+      posts: rows.map(toBusinessOpportunityItem),
+      sectionLink: resolveSectionLink(rows),
+    };
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      "[BusinessOpportunities] CMS unavailable, falling back to mock data",
+      error,
+    );
+
+    const mockPosts = MOCK_HOME_POSTS.filter((item) =>
+      item.categories.some((category) => category.id === CATEGORY_ID),
+    );
+
+    return {
+      posts: mockPosts.map((item) => ({
+        id: item.id,
+        title: item.title,
+        externalLink: item.externalLink,
+        createdAt: item.createdAt,
+        publishedAt: item.publishedAt,
+      })),
+      sectionLink:
+        mockPosts[0]?.categories.find(
+          (category) => category.id === CATEGORY_ID && category.url !== "#",
+        )?.url ?? SECTION_LINK_FALLBACK,
+    };
+  }
+};
+
+export function BusinessOpportunitiesSkeleton() {
   return (
     <section className="flex flex-1 flex-col">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -20,6 +112,40 @@ function BusinessOpportunities() {
             Cơ hội kinh doanh
           </h2>
           <div className="mt-2.5 h-[4px] w-[40px] rounded-full bg-[#f7b500]" />
+        </div>
+        <ChevronRight className="h-5 w-5 text-[#24469c]" />
+      </div>
+
+      <div className="flex min-h-[270px] flex-1 flex-col gap-2.5">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={`business-skeleton-${index}`}
+            className={`flex min-h-[58px] gap-3 rounded-[16px] px-0.5 py-1 ${index === 0 ? "pt-0.5" : ""}`}
+          >
+            <span className="mt-1 h-[40px] w-[2px] shrink-0 rounded-full bg-[#f7b500]/40" />
+            <div className="min-w-0 flex-1">
+              <div className="h-5 w-5/6 animate-pulse rounded bg-[#eef3fb]" />
+              <div className="mt-1.5 h-4 w-24 animate-pulse rounded bg-[#f4f7fb]" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+export async function BusinessOpportunities() {
+  const { posts, sectionLink } = await fetchBusinessOpportunityPosts();
+  const listSlots = Array.from({ length: 4 }, (_, index) => posts[index] ?? null);
+
+  return (
+    <section className="flex flex-1 flex-col">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <h2 className="client-section-title uppercase text-[#24469c]">
+            Cơ hội kinh doanh
+          </h2>
+          <div className="mt-2.5 h-1 w-10 rounded-full bg-[#f7b500]" />
         </div>
 
         <Link
@@ -76,5 +202,3 @@ function BusinessOpportunities() {
     </section>
   );
 }
-
-export default BusinessOpportunities;

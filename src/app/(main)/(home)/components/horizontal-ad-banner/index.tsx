@@ -1,16 +1,31 @@
-'use client';
-
 import Image from "next/image";
 import Link from "next/link";
-import { useAdvertisements } from "@/app/(main)/(home)/lib/use-advertisements";
+import { getApiV10AdvertisementPublic } from "@/api/vcci-news/endpoints/advertisement";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
 import links from "@/links";
 
 const FALLBACK_HREF = links.externalApiOrigin;
 const FALLBACK_SRC = "/quang-cao/qc-1.jpg";
 
-function HorizontalAdBanner() {
-  const ads = useAdvertisements("horizontal");
-  const ad = ads[0];
+/** Lấy 1 quảng cáo horizontal từ API public (BE đã lọc ACTIVE, sort sort_order ASC). */
+const fetchHorizontalAd = async (): Promise<Advertisement | null> => {
+  try {
+    const response = await getApiV10AdvertisementPublic({
+      type: "horizontal",
+      limit: 1,
+    });
+    const rows =
+      (response as unknown as { responseData?: Advertisement[] } | undefined)
+        ?.responseData ?? [];
+    return rows[0] ?? null;
+  } catch (error) {
+    console.warn("[HorizontalAdBanner] CMS unavailable, using fallback", error);
+    return null;
+  }
+};
+
+export async function HorizontalAdBanner() {
+  const ad = await fetchHorizontalAd();
 
   const href = ad?.link || FALLBACK_HREF;
   const src = ad?.file?.path ? links.resolveImageUrl(ad.file.path) : FALLBACK_SRC;
@@ -37,5 +52,3 @@ function HorizontalAdBanner() {
     </Link>
   );
 }
-
-export default HorizontalAdBanner;

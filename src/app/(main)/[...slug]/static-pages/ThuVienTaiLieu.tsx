@@ -8,7 +8,7 @@ import { Pagination } from "@/components/base/pagination";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import EventsCalendar from "@/app/(main)/(home)/components/events-calendar";
+import { EventsCalendar } from "@/components/base/events-calendar";
 import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import ListCategory from "@/components/base/list-category";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
