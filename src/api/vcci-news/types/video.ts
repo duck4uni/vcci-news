@@ -9,3 +9,9 @@ export interface VideoFormValues {
   name: string;
   url: string;
 }
+
+export type RawVideo = {
+  id?: string | null;
+  name?: string | null;
+  url?: string | null;
+};

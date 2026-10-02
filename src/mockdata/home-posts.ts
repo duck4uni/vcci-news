@@ -1,7 +1,7 @@
 /**
  * Type local — được khai báo trực tiếp ở đây để tránh vấn đề Next.js không resolve
- * được module qua route group lồng `(main)/(home)`. Shape này được giữ đồng bộ
- * với `HomePostItem` / `HomePostCategory` trong `use-home-posts.ts`.
+ * được module qua route group lồng `(main)/(home)`. Các component home tự định nghĩa
+ * type mapper riêng và map shape của mock data này sang type của chúng.
  */
 export type HomePostCategory = {
   id: string;
@@ -749,15 +749,15 @@ type ShortPostParams = {
   summary: string;
   content: string;
   categoryKey:
-    | "tinVcci"
-    | "tinKinhTe"
-    | "chuyenDe"
-    | "suKien"
-    | "chinhSachPhapLuat"
-    | "lienKetNhanh"
-    | "daoTao"
-    | "coHoiKinhDoanh"
-    | "ketNoiHoiVien";
+  | "tinVcci"
+  | "tinKinhTe"
+  | "chuyenDe"
+  | "suKien"
+  | "chinhSachPhapLuat"
+  | "lienKetNhanh"
+  | "daoTao"
+  | "coHoiKinhDoanh"
+  | "ketNoiHoiVien";
   thumbnailUrl: string;
   publishedAt: string;
   startedAt?: string;

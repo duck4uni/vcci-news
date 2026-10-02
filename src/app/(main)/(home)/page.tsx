@@ -1,14 +1,17 @@
-import FeaturedNews from "./components/featured-news";
-import Advertisements from "./components/quick-links";
-import HorizontalAdBanner from "./components/horizontal-ad-banner";
-import News from "./components/news";
-import Events from "./components/events";
-import BusinessOpportunities from "./components/business-opportunities";
-import PolicyAndLaws from "./components/policies-and-laws";
-import EventsCalendar from "./components/events-calendar";
-import Banner from "./components/banner";
-import Members from "./components/members";
-import VideoAndPartners from "./components/video-and-patners";
+import { Suspense } from "react";
+import { FeaturedNews, FeaturedNewsSkeleton } from "./components/featured-news";
+import { Advertisements } from "./components/advertisements";
+import { HorizontalAdBanner } from "./components/horizontal-ad-banner";
+import { News } from "./components/news";
+import { Events, EventsSkeleton } from "./components/events";
+import { BusinessOpportunities, BusinessOpportunitiesSkeleton } from "./components/business-opportunities";
+import { PolicyAndLaws, PolicyAndLawsSkeleton } from "./components/policies-and-laws";
+import { EventsCalendar } from "@/components/base/events-calendar";
+import { Banner } from "./components/banner";
+import { FeaturedMembers } from "./components/featured-members";
+import { MemberConnection, MemberConnectionSkeleton } from "./components/member-connection";
+import { Videos, VideosSkeleton } from "./components/videos";
+import { Partners } from "./components/partners";
 
 export default function HomePage() {
   return (
@@ -19,7 +22,9 @@ export default function HomePage() {
       <Banner />
       {/* contents */}
       <div className="container mx-auto px-3 sm:px-6 lg:px-10 space-y-6">
-        <FeaturedNews />
+        <Suspense fallback={<FeaturedNewsSkeleton />}>
+          <FeaturedNews />
+        </Suspense>
 
         <section className="flex flex-col xl:flex-row pb-8 gap-5 mb-0">
           <News />
@@ -29,7 +34,9 @@ export default function HomePage() {
         <HorizontalAdBanner />
 
         <section className="flex flex-col gap-5 xl:flex-row xl:items-stretch" >
-          <Events />
+          <Suspense fallback={<EventsSkeleton />}>
+            <Events />
+          </Suspense>
           <EventsCalendar />
         </section >
 
@@ -37,16 +44,30 @@ export default function HomePage() {
           <div className="flex flex-col flex-1">
             <section className="flex flex-col xl:flex-row gap-5">
               <div className="flex flex-col md:flex-row gap-5 pt-8 flex-1 order-2 xl:order-1">
-                <BusinessOpportunities />
-                <PolicyAndLaws />
+                <Suspense fallback={<BusinessOpportunitiesSkeleton />}>
+                  <BusinessOpportunities />
+                </Suspense>
+                <Suspense fallback={<PolicyAndLawsSkeleton />}>
+                  <PolicyAndLaws />
+                </Suspense>
               </div>
               <Advertisements count={2} startIndex={3} />
             </section>
           </div>
         </div >
 
-        <Members />
-        <VideoAndPartners />
+        <section className="flex flex-col gap-5 pb-8 xl:flex-row xl:items-stretch">
+          <FeaturedMembers />
+          <Suspense fallback={<MemberConnectionSkeleton />}>
+            <MemberConnection />
+          </Suspense>
+        </section>
+        <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
+          <Suspense fallback={<VideosSkeleton />}>
+            <Videos />
+          </Suspense>
+          <Partners />
+        </section>
       </div>
     </div>
   );
