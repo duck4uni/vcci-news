@@ -95,8 +95,9 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
   const { data: postsData, isLoading: postsLoading } = useGetApiV10Post({
     page,
     pageSize,
-    sortField: "release_at",
+    sortField: "created_at",
     sortOrder: "desc",
+    priorityFeatured: false,
     filters: filters || undefined,
   });
 
