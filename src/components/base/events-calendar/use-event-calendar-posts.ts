@@ -12,7 +12,7 @@ import {
   resolveAssetUrl,
 } from "@/lib/utils/post";
 import { MOCK_HOME_POSTS } from "@/mockdata/home-posts";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 type RawHomePost = RawEventCalendarPost;
 
@@ -120,21 +120,10 @@ async function fetchEventCalendarRows(params: GetApiV10PostParams) {
   return rows.map<EventCalendarItem>(mapRawPostToEventCalendarItem);
 }
 
-/**
- * Params lịch sự kiện theo tháng: filter theo tháng được thực hiện hoàn toàn
- * ở BE. Toán tử `[]` = date between; đặt `registration_deadline` cuối cùng
- * (trước `[]`) để BE nhận diện đây là monthly-event query (pageSize=0 => trả
- * toàn bộ, không giới hạn). Cú pháp `field1|field2|field3[](start|end)` tạo
- * điều kiện OR: event rơi vào tháng khi registration_deadline / started_at /
- * ended_at nằm trong khoảng tháng đó.
- */
-function createEventCalendarParams(currentMonth: Date): GetApiV10PostParams {
-  const monthStart = dayjs(currentMonth).startOf("month").format("YYYY-MM-DD");
-  const monthEnd = dayjs(currentMonth).endOf("month").format("YYYY-MM-DDTHH:mm:ss");
-
+function createEventCalendarParams(): GetApiV10PostParams {
   return {
     page: 1,
-    pageSize: 0,
+    pageSize: 100,
     sortField: "started_at",
     sortOrder: "asc",
     priorityFeatured: false,
@@ -142,15 +131,62 @@ function createEventCalendarParams(currentMonth: Date): GetApiV10PostParams {
       `category.id==(${EVENT_CATEGORY_IDS.suKien}|${EVENT_CATEGORY_IDS.daoTao})`,
       "is_hidden==false",
       "is_active==true",
-      "type==event",
-      `registration_deadline|started_at|ended_at[](${monthStart}|${monthEnd})`,
+      "type==news",
     ].join(","),
   };
 }
 
+function filterEventsByMonth(
+  items: EventCalendarItem[],
+  currentMonth: Date,
+): EventCalendarItem[] {
+  const monthStart = dayjs(currentMonth).startOf("month");
+  const monthEnd = dayjs(currentMonth).endOf("month");
+
+  const hasDateInMonth = (date: dayjs.Dayjs | null): boolean =>
+    date !== null && !date.isBefore(monthStart, "day") && !date.isAfter(monthEnd, "day");
+
+  return items.filter((item) => {
+    const startedAt = item.startedAt ? dayjs(item.startedAt) : null;
+    const endedAt = item.endedAt ? dayjs(item.endedAt) : null;
+    const registrationDeadline = item.registrationDeadline
+      ? dayjs(item.registrationDeadline)
+      : null;
+    const eventDates = (item.eventDates ?? [])
+      .map((d) => dayjs(d))
+      .filter((d) => d.isValid());
+
+    if (!startedAt && !endedAt && !registrationDeadline && eventDates.length === 0) {
+      return false;
+    }
+
+    if (eventDates.length > 0) {
+      return eventDates.some((d) => hasDateInMonth(d));
+    }
+
+    const eventStartDate = startedAt || registrationDeadline;
+    const eventEndDate = endedAt || registrationDeadline || startedAt;
+
+    if (eventStartDate && eventEndDate) {
+      return (
+        !eventStartDate.isAfter(monthEnd, "day") &&
+        !eventEndDate.isBefore(monthStart, "day")
+      );
+    }
+
+    if (startedAt && hasDateInMonth(startedAt)) return true;
+    if (endedAt && hasDateInMonth(endedAt)) return true;
+    if (registrationDeadline && hasDateInMonth(registrationDeadline)) return true;
+
+    return false;
+  });
+}
+
 export function useEventCalendarPosts(currentMonth: Date) {
-  const params = useMemo(
-    () => createEventCalendarParams(currentMonth),
+  const params = useMemo(() => createEventCalendarParams(), []);
+
+  const selectByMonth = useCallback(
+    (items: EventCalendarItem[]) => filterEventsByMonth(items, currentMonth),
     [currentMonth],
   );
 
@@ -160,11 +196,11 @@ export function useEventCalendarPosts(currentMonth: Date) {
       try {
         return await fetchEventCalendarRows(params);
       } catch (error) {
-        // eslint-disable-next-line no-console
         console.warn("[useEventCalendarPosts] CMS unavailable, falling back to mock data", error);
         return MOCK_HOME_POSTS.filter((item) => Boolean(item.registrationDeadline));
       }
     },
+    select: selectByMonth,
     staleTime: 5 * 60 * 1000,
   });
 
