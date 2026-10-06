@@ -47,7 +47,7 @@ export const queryClient = new QueryClient({
       staleTime: API_QUERY_STALE_TIME,
       gcTime: API_QUERY_GC_TIME,
       refetchOnWindowFocus: false,
-      refetchOnMount: false,
+      refetchOnMount: "always",
       refetchOnReconnect: false,
       placeholderData: (previousData: unknown) => previousData,
       retry(failureCount, error) {

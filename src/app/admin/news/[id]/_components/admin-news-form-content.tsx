@@ -65,7 +65,7 @@ import {
   slugifyAdminNews,
 } from "@/lib/utils/admin-news";
 import { normalizeUser } from "@/lib/utils/cms-user";
-import { normalizeDateTimeInput } from "@/lib/utils/datetime";
+import { normalizeDateTimeInput, toIsoWithLocalOffset } from "@/lib/utils/datetime";
 import { parsePostContent, parseLegacyPostContent } from "@/lib/utils/post-content";
 import links from "@/links";
 import type { HeaderCategoryTreeItem } from "@/api/vcci-news/types/header-config";
@@ -607,16 +607,16 @@ export function AdminNewsFormContent() {
         is_featured: form.type === "tintuc" ? form.is_featured : false,
         is_hidden: form.is_hidden,
         is_active: !form.is_hidden,
-        published_at: form.published_at || null,
-        expired_at: form.expired_at || null,
-        started_at: form.started_at || null,
-        ended_at: form.ended_at || null,
-        registration_deadline: form.registration_deadline || null,
+        published_at: toIsoWithLocalOffset(form.published_at),
+        expired_at: toIsoWithLocalOffset(form.expired_at),
+        started_at: toIsoWithLocalOffset(form.started_at),
+        ended_at: toIsoWithLocalOffset(form.ended_at),
+        registration_deadline: toIsoWithLocalOffset(form.registration_deadline),
         location: form.location.trim() || null,
         participation_fee: form.participation_fee.trim() || null,
         event_dates: (form.event_dates ?? []).length > 0 ? form.event_dates : null,
         release_mode: form.published_at ? "SCHEDULED" : "NOW",
-        release_at: form.published_at || null,
+        release_at: toIsoWithLocalOffset(form.published_at),
         content_structure: {
           post_content: form.post_content.map((section, index) => ({
             ...section,
