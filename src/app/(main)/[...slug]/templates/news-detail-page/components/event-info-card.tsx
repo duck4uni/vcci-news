@@ -2,11 +2,8 @@ import dayjs from "dayjs";
 import { Calendar, MapPin, Clock, Users, CreditCard } from "lucide-react";
 import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 
-const formatDate = (value: string | null) =>
-  value ? dayjs(value).format("DD/MM/YYYY") : "";
-
 const formatDateTime = (value: string | null) =>
-  value ? dayjs(value).format("DD/MM/YYYY HH:mm") : "";
+  value ? dayjs(value).format("HH:mm (DD/MM/YYYY)") : "";
 
 const isEventOrTraining = (post: DynamicPostItem) => {
   const eventCategories = ["Sự kiện", "Đào tạo", "su-kien", "dao-tao", "su_kien", "dao_tao"];
@@ -80,10 +77,10 @@ export default function EventInfoCard({ post }: { post: DynamicPostItem }) {
           <p className="mt-1 text-sm font-semibold text-[#1f3768]">
             {startedAt
               ? endedAt
-                ? `${formatDate(startedAt)} - ${formatDate(endedAt)}`
-                : formatDate(startedAt)
+                ? `${formatDateTime(startedAt)} - ${formatDateTime(endedAt)}`
+                : formatDateTime(startedAt)
               : endedAt
-                ? formatDate(endedAt)
+                ? formatDateTime(endedAt)
                 : "-"}
           </p>
         </div>
