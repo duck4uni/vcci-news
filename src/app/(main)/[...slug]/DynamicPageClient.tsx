@@ -21,6 +21,7 @@ import Fees from "./static-pages/Fees";
 import Locations from "./static-pages/Locations";
 import Contact from "./static-pages/Contact";
 import MemberDirectory from "./static-pages/MemberDirectory";
+import SoDoToChuc from "./static-pages/SoDoToChuc";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import { useGetApiV10Category } from "@/api/vcci-news/endpoints/category";
 import type { DynamicCategoryRouteItem } from "./templates/types";
@@ -63,7 +64,7 @@ export default function DynamicPageClient() {
     "quy-trinh-tiep-nhan-ho-so-cap-gcn-va-xac-nhan-cttm",
     "bieu-mau-gcn-va-noi-dung-khai-bao-gcn-cttm", "phi-cap-gcn-va-xac-nhan-cttm",
     "diem-cap-va-thoi-gian-cap-gcn-va-xac-nhan-cttm", "thong-tin-lien-he",
-    "danh-ba-hoi-vien",
+    "danh-ba-hoi-vien", "so-do-to-chuc",
   ].includes(endingSlug);
 
   const { data: categoryData, isLoading: categoryLoading } = useGetApiV10Category({
@@ -282,6 +283,13 @@ export default function DynamicPageClient() {
     case "danh-ba-hoi-vien":
       return (
         <MemberDirectory
+          category={matchedCategory}
+          allCategories={allCategories}
+        />
+      );
+    case "so-do-to-chuc":
+      return (
+        <SoDoToChuc
           category={matchedCategory}
           allCategories={allCategories}
         />

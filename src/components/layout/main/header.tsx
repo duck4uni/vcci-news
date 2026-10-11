@@ -296,6 +296,12 @@ function Header() {
             >
               Liên hệ
             </Link>
+            <Link
+              className="px-3 py-1 text-[13px] font-medium text-white transition hover:opacity-80"
+              href="/so-do-to-chuc"
+            >
+              Sơ đồ tổ chức
+            </Link>
           </div>
 
           <div className="flex items-center gap-4">
