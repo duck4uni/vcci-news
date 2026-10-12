@@ -5,6 +5,7 @@ import ListCategory from "@/components/base/list-category";
 import { buildDynamicCategoryMenu } from "../templates/data";
 import type { DynamicCategoryRouteItem } from "../templates/types";
 import { OrgChart } from "d3-org-chart";
+import { zoom as d3Zoom } from "d3-zoom";
 
 type OrgNode = {
   id: string;
@@ -12,6 +13,13 @@ type OrgNode = {
   name: string;
   title: string;
   note?: string;
+  _expanded?: boolean;
+};
+
+type OrgChartHierarchyNode = {
+  data: OrgNode;
+  children?: OrgChartHierarchyNode[];
+  _children?: OrgChartHierarchyNode[];
 };
 
 const ORG_DIRECTOR: OrgNode = {
@@ -71,28 +79,34 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
 
       const previousDepartmentId = previousDepartmentByManager.get(managerId);
       previousDepartmentByManager.set(managerId, node.id);
-      return previousDepartmentId ? { ...node, parentId: previousDepartmentId, _expanded: true } as OrgNode : node;
+      return previousDepartmentId ? { ...node, parentId: previousDepartmentId, _expanded: true } : node;
     });
     const chart = new OrgChart<OrgNode>()
       .container(container)
+      // Disable all pointer/scroll zoom and pan; fit() is used only for initial centering.
+      .createZoom(() => d3Zoom().filter(() => false))
+      // Prevent d3-org-chart from auto-centering the clicked node, which shifts the whole board.
+      .setActiveNodeCentered(false)
       .data(chartData)
-      .initialExpandLevel(2)
+      .initialExpandLevel(3)
       .nodeId((node) => node.id)
       .parentNodeId((node) => node.parentId)
       .nodeWidth(() => 260)
       .nodeHeight(({ data }) => {
         const isDepartment = initiallyCollapsedDepartmentIds.has(data.id);
         const showDetails = !isDepartment || expandedDepartmentDetails.has(data.id);
-        if (isDepartment && !showDetails) return 82;
+        if (isDepartment && !showDetails) return 116;
 
         const titleLineCount = data.title.split("\n").reduce((count, line) => count + (line.includes(":") ? 2 : 1), 0);
-        return Math.max(118, 82 + titleLineCount * 23 + (data.note ? 20 : 0));
+        const departmentExtraHeight = isDepartment ? 40 + (titleLineCount > 2 ? (titleLineCount - 2) * 5 : 0) : 0;
+        return Math.max(132, 94 + titleLineCount * 28 + (data.note ? 24 : 0) + departmentExtraHeight);
       })
       .childrenMargin(() => 36)
-      .siblingsMargin((node) => initiallyCollapsedDepartmentIds.has((node as { data?: OrgNode }).data?.id ?? "") ? 0 : 30)
+      .siblingsMargin(() => 15)
+      .neighbourMargin(() => 40)
       .compact(false)
       .duration(350)
-      .scaleExtent([0.35, 2.5])
+      .scaleExtent([1, 1])
       .onNodeClick((node) => {
         const nodeId = node.data.id;
         if (!initiallyCollapsedDepartmentIds.has(nodeId)) return;
@@ -101,8 +115,12 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
         } else {
           expandedDepartmentDetails.add(nodeId);
         }
+        syncExpandedFlagsFromHierarchy();
         chart.render();
+        adjustSvgHeightToContent();
       })
+      // Re-center the whole tree after each expand/collapse so the board stays fixed mid-container.
+      .onExpandOrCollapse(() => fitChartToContent(true))
       .nodeContent(({ data }) => {
         const featured = data.id === ORG_DIRECTOR.id;
         const escapeHtml = (value: string) =>
@@ -122,22 +140,70 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
         const isDepartment = initiallyCollapsedDepartmentIds.has(data.id);
         const showDetails = !isDepartment || expandedDepartmentDetails.has(data.id);
 
-        const titleLines = showDetails ? safeTitle.split("\n").map((line) => {
+        const titleLines = safeTitle.split("\n").map((line) => {
           const separatorIndex = line.indexOf(":");
           if (separatorIndex === -1) return `<div>${line}</div>`;
           const role = line.slice(0, separatorIndex);
           const person = line.slice(separatorIndex + 1).trim();
-          return `<div style="margin-top:4px"><span style="font-weight:600">${role}</span><br/><span>${person}</span></div>`;
-        }).join("") : "";
+          return `<div style="margin-top:9px"><span style="font-weight:600">${role}</span><br/><span>${person}</span></div>`;
+        }).join("");
 
         return `<div style="box-sizing:border-box;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${showDetails ? "18px" : "12px"};border:1px solid ${featured ? "#174a83" : "#d7e0e9"};background:${featured ? "#174a83" : "#fff"};color:${featured ? "#fff" : "#20364b"};text-align:center;box-shadow:0 5px 16px rgba(23,52,83,.08);font-family:Arial,sans-serif;cursor:${isDepartment ? "pointer" : "default"}">
-          <div style="font-size:${featured ? "19px" : "16px"};font-weight:700;line-height:1.4">${safeName}</div>
-          ${showDetails && safeTitle ? `<div style="margin-top:8px;font-size:14px;line-height:1.55;color:${featured ? "#dbeafe" : "#65778a"}">${titleLines}</div>` : ""}
-          ${showDetails && safeNote ? `<div style="margin-top:8px;color:#f4c45f;font-size:10px;font-weight:700;letter-spacing:1px">${safeNote}</div>` : ""}
+          <div style="font-size:${featured ? "23px" : "20px"};font-weight:700;line-height:1.4">${safeName}</div>
+          ${showDetails && safeTitle ? `<div style="margin-top:8px;font-size:18px;line-height:1.55;color:${featured ? "#dbeafe" : "#65778a"}">${titleLines}</div>` : ""}
+          ${showDetails && safeNote ? `<div style="margin-top:8px;color:#f4c45f;font-size:12px;font-weight:700;letter-spacing:1px">${safeNote}</div>` : ""}
         </div>`;
       })
-      .render()
-      .fit({ animate: false, scale: false });
+      .render();
+
+    // Scale the whole diagram into the viewport on every layout change: shrink to fit
+    // the widest row, size the svg height to the scaled content so nothing is clipped
+    // and no manual height tuning is needed when the data changes.
+    const svgElement = container.querySelector("svg");
+    const contentBounds = () => {
+      const state = chart.getChartState();
+      const nodes = state.root?.descendants();
+      if (!nodes?.length) return null;
+      const bindings = state.layoutBindings[state.layout];
+      return {
+        svgWidth: state.svgWidth,
+        minY: Math.min(...nodes.map((node) => node.y + bindings.nodeTopY(node))),
+        maxY: Math.max(...nodes.map((node) => node.y + bindings.nodeBottomY(node))),
+        naturalWidth:
+          Math.max(...nodes.map((node) => node.x + bindings.nodeRightX(node))) -
+          Math.min(...nodes.map((node) => node.x + bindings.nodeLeftX(node))) + 100,
+      };
+    };
+    const applySvgHeight = (height: number) => {
+      chart.svgHeight(height);
+      svgElement?.setAttribute("height", String(height));
+    };
+    const fitChartToContent = (animate: boolean) => {
+      const bounds = contentBounds();
+      if (!bounds) return;
+      const naturalHeight = bounds.maxY - bounds.minY + 100;
+      const scale = Math.min(1, bounds.svgWidth / bounds.naturalWidth);
+      applySvgHeight(Math.ceil(naturalHeight * scale));
+      chart.fit({ animate });
+    };
+    // chart.render() rebuilds visibility from data flags: a node stays visible only while
+    // its own _expanded flag is true (expandSomeNodes walks up from flagged nodes), yet the
+    // expand button only re-flags the clicked node's children. Re-flag every node to match
+    // the currently visible hierarchy before re-rendering so open branches stay open.
+    const syncExpandedFlagsFromHierarchy = () => {
+      const rootNode = chart.getChartState().root as unknown as OrgChartHierarchyNode | null;
+      if (!rootNode) return;
+      const walk = (node: OrgChartHierarchyNode, visible: boolean) => {
+        node.data._expanded = visible;
+        node.children?.forEach((child) => walk(child, visible));
+        node._children?.forEach((child) => walk(child, false));
+      };
+      walk(rootNode, true);
+    };
+
+    const adjustSvgHeightToContent = () => fitChartToContent(true);
+
+    fitChartToContent(false);
 
     return () => {
       container.replaceChildren();
@@ -152,7 +218,7 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
       <div className="container mx-auto px-4 py-6 sm:px-6 lg:px-10 lg:pb-10">
         <section>
           <div className="overflow-auto rounded-sm border border-[#e1e7ed] bg-[#f7f9fb] p-2 sm:p-4">
-            <div ref={chartContainerRef} className="min-h-[680px] w-full" aria-label="Sơ đồ tổ chức VCCI-HCM" />
+            <div ref={chartContainerRef} className="min-h-[480px] w-full" aria-label="Sơ đồ tổ chức VCCI-HCM" />
           </div>
         </section>
       </div>
