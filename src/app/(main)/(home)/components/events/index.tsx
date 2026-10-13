@@ -1,5 +1,5 @@
 import { getApiV10Post } from "@/api/vcci-news/endpoints/post";
-import type { RawEventPost } from "@/api/vcci-news/types/post-raw";
+import type { RawEventCalendarPost } from "@/api/vcci-news/types/post-raw";
 import type { PagedResult } from "@/api/vcci-news/types/paged-result";
 import {
   buildPostLink,
@@ -17,22 +17,27 @@ import { getFallbackImage } from "@/lib/utils/fallback-image";
 const SU_KIEN_CATEGORY_ID = "b85f6710-bcbc-4c0b-8b3a-09fff0e5e51a";
 const DAO_TAO_CATEGORY_ID = "36df7021-9a74-43d6-9084-0d5ed347b7f4";
 const SECTION_LINK_FALLBACK = "/hoat-dong/su-kien";
-const PAGE_SIZE = 5;
+const DISPLAY_SIZE = 5;
+// Lấy dư số bài để sau khi lọc "sắp diễn ra" vẫn đủ 5 thẻ hiển thị.
+const FETCH_SIZE = 15;
 
 /** Multi-category filter (OR) — sắp xếp & lọc hoàn toàn ở BE. */
-const SECTION_PARAMS = {
+const buildSectionParams = (now: Date, options?: { skipDateFilter?: boolean }) => ({
   page: 1,
-  pageSize: PAGE_SIZE,
-  sortField: "created_at",
-  sortOrder: "desc",
+  pageSize: FETCH_SIZE,
+  sortField: "started_at",
+  sortOrder: "asc" as const,
   priorityFeatured: false,
   filters: [
     `category.id==(${SU_KIEN_CATEGORY_ID}|${DAO_TAO_CATEGORY_ID})`,
     "is_hidden==false",
     "is_active==true",
     "type==news",
+    // Lọc trước ở BE: chỉ lấy sự kiện có started_at từ hiện tại trở đi,
+    // bài không có started_at (NULL) bị loại tự nhiên ở đây.
+    ...(options?.skipDateFilter ? [] : [`started_at>=${dayjs(now).format("YYYY-MM-DD")}`]),
   ].join(","),
-} as const;
+});
 
 type EventItem = {
   id: string;
@@ -41,6 +46,7 @@ type EventItem = {
   createdAt: string;
   publishedAt: string;
   startedAt: string;
+  endedAt: string;
   contentText: string;
   summary: string;
   /** Text đã strip HTML (caption/figure/img/tag/entity). */
@@ -49,8 +55,36 @@ type EventItem = {
   thumbnail: { url: string; alt: string } | null;
 };
 
+/** Ngày dùng để sắp xếp sự kiện: ưu tiên started_at, fallback published_at rồi created_at. */
+const eventSortDate = (item: EventItem) => {
+  const value = item.startedAt || item.publishedAt || item.createdAt;
+  const timestamp = dayjs(value).valueOf();
+  return Number.isFinite(timestamp) ? timestamp : Number.MAX_SAFE_INTEGER;
+};
 
-const toEventItem = (post: RawEventPost): EventItem => {
+/** Sự kiện sắp diễn ra gần nhất đứng đầu; bài thiếu ngày hợp lệ xếp cuối. */
+const sortEventItems = (items: EventItem[]) =>
+  [...items].sort((a, b) => eventSortDate(a) - eventSortDate(b));
+
+/**
+ * Sự kiện còn hiệu lực từ hiện tại trở đi: dùng ended_at nếu có (sự kiện nhiều ngày),
+ * không có thì dùng started_at. Bài thiếu cả hai coi là không xác định.
+ */
+const isUpcomingEvent = (item: EventItem, now: number) => {
+  const endValue = item.endedAt || item.startedAt;
+  if (!endValue) return false;
+  const endAt = dayjs(endValue).valueOf();
+  return Number.isFinite(endAt) && endAt >= now;
+};
+
+/** Lọc sự kiện sắp tới, sort gần nhất trước; nếu không còn bài nào hợp lệ thì fallback sang bài không có ngày. */
+const pickUpcomingEvents = (items: EventItem[], now: number) => {
+  const upcoming = sortEventItems(items.filter((item) => isUpcomingEvent(item, now)));
+  if (upcoming.length) return upcoming.slice(0, DISPLAY_SIZE);
+  return sortEventItems(items.filter((item) => !item.startedAt && !item.endedAt)).slice(0, DISPLAY_SIZE);
+};
+
+const toEventItem = (post: RawEventCalendarPost): EventItem => {
   const title = String(post.title ?? "").trim();
   const categories = post.categories ?? [];
   const thumbnailPath = post.thumbnail?.path ?? post.thumbnail?.original ?? null;
@@ -72,6 +106,7 @@ const toEventItem = (post: RawEventPost): EventItem => {
     createdAt: String(post.created_at ?? ""),
     publishedAt: String(post.published_at ?? post.release_at ?? post.created_at ?? ""),
     startedAt: String(post.started_at ?? ""),
+    endedAt: String(post.ended_at ?? ""),
     contentText,
     summary,
     excerpt: stripHtml(contentText || summary),
@@ -83,7 +118,7 @@ const toEventItem = (post: RawEventPost): EventItem => {
 };
 
 /** Lấy url danh mục sự kiện/đào tạo từ chính danh sách posts, fallback nếu không có. */
-const resolveSectionLink = (posts: RawEventPost[]) => {
+const resolveSectionLink = (posts: RawEventCalendarPost[]) => {
   for (const post of posts) {
     const category = post.categories?.find(
       (item) =>
@@ -105,13 +140,29 @@ const fetchEventPosts = async (): Promise<{
   sectionLink: string;
 }> => {
   try {
-    const response = await getApiV10Post(SECTION_PARAMS);
+    const response = await getApiV10Post(buildSectionParams(new Date()));
     const rows =
-      (response as PagedResult<RawEventPost> | undefined)?.responseData?.rows ?? [];
-    if (rows.length === 0) throw new Error("Empty rows");
+      (response as PagedResult<RawEventCalendarPost> | undefined)?.responseData?.rows ?? [];
+    if (rows.length === 0) {
+      // BE chưa áp dụng filter theo ngày -> thử lại không có điều kiện lọc,
+      // để sự kiện cũ không làm mất sự kiện đang sắp diễn ra.
+      const fallbackResponse = await getApiV10Post(
+        buildSectionParams(new Date(), { skipDateFilter: true }),
+      );
+      const fallbackRows =
+        (fallbackResponse as PagedResult<RawEventCalendarPost> | undefined)?.responseData?.rows ?? [];
+      if (fallbackRows.length === 0) throw new Error("Empty rows");
 
+      return {
+        posts: pickUpcomingEvents(fallbackRows.map(toEventItem), Date.now()),
+        sectionLink: resolveSectionLink(fallbackRows),
+      };
+    }
+
+    // BE đã lọc started_at >= hôm nay, lọc lại phía client để bao phủ ended_at
+    // của sự kiện nhiều ngày và bảo đảm đủ số lượng hiển thị.
     return {
-      posts: rows.map(toEventItem),
+      posts: pickUpcomingEvents(rows.map(toEventItem), Date.now()),
       sectionLink: resolveSectionLink(rows),
     };
   } catch (error) {
@@ -127,19 +178,20 @@ const fetchEventPosts = async (): Promise<{
         ?.url ?? SECTION_LINK_FALLBACK;
 
     return {
-      posts: mockPosts.map((item) => ({
+      posts: pickUpcomingEvents(mockPosts.map((item) => ({
         id: item.id,
         title: item.title,
         externalLink: item.externalLink,
         createdAt: item.createdAt,
         publishedAt: item.publishedAt,
         startedAt: item.startedAt,
+        endedAt: item.endedAt,
         contentText: item.contentText,
         summary: item.summary,
         excerpt: stripHtml(item.contentText || item.summary),
         categoryName: item.categories[0]?.name ?? "",
         thumbnail: item.thumbnail,
-      })),
+      })), Date.now()),
       sectionLink: mockSectionLink,
     };
   }
@@ -187,8 +239,8 @@ export function EventsSkeleton() {
 
 export async function Events() {
   const { posts, sectionLink } = await fetchEventPosts();
-  // Giữ nguyên hành vi cũ: đảo ngược danh sách trước khi chọn bài featured
-  const eventItems = [...posts].reverse();
+  // BE chỉ sort theo started_at, chưa loại sự kiện đã diễn ra -> lọc + sort lại phía client.
+  const eventItems = pickUpcomingEvents(posts, Date.now());
   const [featuredEvent, ...sideEvents] = eventItems;
   const sideSlots = Array.from({ length: 4 }, (_, index) => sideEvents[index] ?? null);
 

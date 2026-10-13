@@ -29,6 +29,28 @@ const ORG_DIRECTOR: OrgNode = {
   title: "Giám đốc",
 };
 
+const ORG_NODE_WIDTH = 260;
+// Estimate rendered height of a node title so cards grow when names + phone numbers wrap.
+const estimateTitleHeight = (title: string) => {
+  const roleFontSize = 18;
+  const personFontSize = 16;
+  const availableWidth = ORG_NODE_WIDTH - 36;
+  // Rough average glyph width ratio for Arial, tuned conservatively (wider) so wrapped
+  // text is over-counted rather than under-counted, preventing clipped cards.
+  const charsPerLine = Math.max(8, Math.floor(availableWidth / (personFontSize * 0.62)));
+
+  return title.split("\n").reduce((height, line) => {
+    const separatorIndex = line.indexOf(":");
+    if (separatorIndex === -1) return height + roleFontSize * 1.55;
+
+    const person = line.slice(separatorIndex + 1).trim();
+    const personWithPhone = ORG_PHONES[person] ? `${person} - ${ORG_PHONES[person]}` : person;
+    const personLines = Math.max(1, Math.ceil(person.length / charsPerLine));
+    const personWithPhoneLines = Math.max(1, Math.ceil(personWithPhone.length / charsPerLine));
+    return height + 9 + roleFontSize * 1.55 + personWithPhoneLines * personFontSize * 1.5;
+  }, 0);
+};
+
 const ORG_DEPUTIES: OrgNode[] = [
   { id: "deputy-nam", parentId: ORG_DIRECTOR.id, name: "Nguyễn Hữu Nam", title: "Phó Giám đốc" },
   { id: "deputy-ninh", parentId: ORG_DIRECTOR.id, name: "Bùi Thị Ninh", title: "Phó Giám đốc" },
@@ -59,6 +81,33 @@ const ORG_DEPARTMENTS: OrgNode[] = [
 type SoDoToChucProps = {
   category: DynamicCategoryRouteItem | null;
   allCategories: DynamicCategoryRouteItem[];
+};
+
+const ORG_PHONES: Record<string, string> = {
+  "Trần Ngọc Liêm": "0903338350",
+  "Nguyễn Hữu Nam": "0907790989",
+  "Bùi Thị Ninh": "0938150708",
+  "Nguyễn Thị Huệ": "0918904296",
+  "Vũ Thị Thanh Huyền": "0907081974",
+  "Nguyễn Hữu Trường": "0917688959",
+  "Nguyễn Xuân Bích Thoại": "0982459399",
+  "Lê Thanh Thúy": "0903789233",
+  "Nguyễn Văn Quân": "0983945914",
+  "Vũ Xuân Hưng": "0909170171",
+  "Nguyễn Văn Đức": "0909497155",
+  "Nguyễn Khánh Linh": "0393112520",
+  "Nguyễn Đoàn Thông": "0903857520",
+  "Bùi Mạnh Hùng": "0877892442",
+  "Trần Ngọc Đào": "02839325166",
+  "Hồ Ngọc Vinh": "0918866055",
+  "Bùi Tường Vi": "0906050580",
+  "Nguyễn Hữu Nghĩa": "0982012258",
+  "Nguyễn Lê Nhật Thanh": "0903877111",
+  "Ma Thị Hương": "0395122922",
+  "Đỗ Quang Huy": "0396982299",
+  "Nguyễn Huy Hoàng": "0983349447",
+  "Nguyễn Thị Quỳnh Như": "0937267286",
+  "Nguyễn Thị Như Quỳnh": "0937267286",
 };
 
 export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps) {
@@ -97,9 +146,10 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
         const showDetails = !isDepartment || expandedDepartmentDetails.has(data.id);
         if (isDepartment && !showDetails) return 116;
 
-        const titleLineCount = data.title.split("\n").reduce((count, line) => count + (line.includes(":") ? 2 : 1), 0);
-        const departmentExtraHeight = isDepartment ? 40 + (titleLineCount > 2 ? (titleLineCount - 2) * 5 : 0) : 0;
-        return Math.max(132, 94 + titleLineCount * 28 + (data.note ? 24 : 0) + departmentExtraHeight);
+        const titleHeight = estimateTitleHeight(data.title);
+        const phoneHeight = ORG_PHONES[data.name] && !data.title.includes(":") ? 26 : 0;
+        const departmentExtraHeight = isDepartment ? 56 : 0;
+        return Math.max(132, 110 + titleHeight + phoneHeight + (data.note ? 24 : 0) + departmentExtraHeight);
       })
       .childrenMargin(() => 36)
       .siblingsMargin(() => 15)
@@ -145,11 +195,18 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
           if (separatorIndex === -1) return `<div>${line}</div>`;
           const role = line.slice(0, separatorIndex);
           const person = line.slice(separatorIndex + 1).trim();
-          return `<div style="margin-top:9px"><span style="font-weight:600">${role}</span><br/><span>${person}</span></div>`;
+          const phone = ORG_PHONES[person];
+          const personHtml = phone
+            ? `${person} - <span style="color:${featured ? "#86efac" : "#16a34a"};font-weight:600">${phone}</span>`
+            : person;
+          return `<div style="margin-top:9px"><span style="font-weight:600">${role}</span><br/><span style="font-size:16px">${personHtml}</span></div>`;
         }).join("");
+
+        const nodePhone = ORG_PHONES[data.name];
 
         return `<div style="box-sizing:border-box;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:${showDetails ? "18px" : "12px"};border:1px solid ${featured ? "#174a83" : "#d7e0e9"};background:${featured ? "#174a83" : "#fff"};color:${featured ? "#fff" : "#20364b"};text-align:center;box-shadow:0 5px 16px rgba(23,52,83,.08);font-family:Arial,sans-serif;cursor:${isDepartment ? "pointer" : "default"}">
           <div style="font-size:${featured ? "23px" : "20px"};font-weight:700;line-height:1.4">${safeName}</div>
+          ${nodePhone ? `<div style="font-size:16px;font-weight:600;margin-top:2px;color:${featured ? "#86efac" : "#16a34a"}">${nodePhone}</div>` : ""}
           ${showDetails && safeTitle ? `<div style="margin-top:8px;font-size:18px;line-height:1.55;color:${featured ? "#dbeafe" : "#65778a"}">${titleLines}</div>` : ""}
           ${showDetails && safeNote ? `<div style="margin-top:8px;color:#f4c45f;font-size:12px;font-weight:700;letter-spacing:1px">${safeNote}</div>` : ""}
         </div>`;
