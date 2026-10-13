@@ -108,6 +108,9 @@ const ORG_PHONES: Record<string, string> = {
   "Nguyễn Huy Hoàng": "0983349447",
   "Nguyễn Thị Quỳnh Như": "0937267286",
   "Nguyễn Thị Như Quỳnh": "0937267286",
+  "Vũ Thị Hiền": "0949549480",
+  "Nguyễn Đức Hường": "0909557219",
+  "Trương Thanh Tần": "0389977097"
 };
 
 export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps) {
@@ -121,7 +124,21 @@ export default function SoDoToChuc({ category, allCategories }: SoDoToChucProps)
     const initiallyCollapsedDepartmentIds = new Set(ORG_DEPARTMENTS.map((department) => department.id));
     const expandedDepartmentDetails = new Set<string>();
     const previousDepartmentByManager = new Map<string, string>();
-    const chartData = [ORG_DIRECTOR, ...ORG_DEPUTIES, ...ORG_DEPARTMENTS].map((node) => {
+    // Cột 4 phòng ban trực thuộc Giám đốc đứng sau Nguyễn Thị Huệ và trước Nguyễn Hữu Trường.
+    const deputyById = (id: string) => ORG_DEPUTIES.find((node) => node.id === id)!;
+    const directorDepartments = ORG_DEPARTMENTS.filter((node) => node.parentId === ORG_DIRECTOR.id);
+    const deputyDepartments = ORG_DEPARTMENTS.filter((node) => node.parentId !== ORG_DIRECTOR.id);
+    const chartData = [
+      ORG_DIRECTOR,
+      deputyById("deputy-nam"),
+      deputyById("deputy-ninh"),
+      deputyById("deputy-hue"),
+      ...directorDepartments,
+      deputyById("deputy-truong"),
+      deputyById("deputy-huyen"),
+      deputyById("deputy-thoai"),
+      ...deputyDepartments,
+    ].map((node) => {
       const managerId = node.parentId;
       if (!initiallyCollapsedDepartmentIds.has(node.id) || !managerId) return node;
       if (managerId !== ORG_DIRECTOR.id && !managerId.startsWith("deputy-")) return node;
