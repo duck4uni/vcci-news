@@ -57,21 +57,14 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
   const pathname = usePathname();
   const searchParamsString = searchParams.toString();
 
-  const initialPage = Number(searchParams.get("page") ?? "1");
-  const [searchInput, setSearchInput] = useState("");
-  const [submitSearch, setSubmitSearch] = useState("");
+  const pageParam = Number(searchParams.get("page") ?? "1");
+  const initialPage = Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+  const initialQuery = searchParams.get("q") ?? "";
+  const [searchInput, setSearchInput] = useState(initialQuery);
+  const [submitSearch, setSubmitSearch] = useState(initialQuery);
   const [page, setPage] = useState(initialPage);
   const pageSize = 10;
   const keyword = submitSearch.trim();
-
-  // Auto-search with debounce
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSubmitSearch(searchInput);
-      setPage(1);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParamsString);
@@ -81,6 +74,12 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
       params.delete("page");
     }
 
+    if (keyword) {
+      params.set("q", keyword);
+    } else {
+      params.delete("q");
+    }
+
     const qs = params.toString();
     const nextUrl = qs ? `${pathname}?${qs}` : pathname;
     const currentUrl = searchParamsString ? `${pathname}?${searchParamsString}` : pathname;
@@ -88,7 +87,7 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
     if (nextUrl !== currentUrl) {
       router.replace(nextUrl, { scroll: false });
     }
-  }, [page, pathname, router, searchParamsString]);
+  }, [page, keyword, pathname, router, searchParamsString]);
 
   const filters = `category.id==${category.id}${keyword ? `,title@=${keyword}` : ""},is_hidden==false,is_active==true,type==news`;
 
