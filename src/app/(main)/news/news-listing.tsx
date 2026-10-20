@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 import { Pagination } from "@/components/base/pagination";
@@ -19,7 +20,7 @@ import {
 const PAGE_SIZE = 10;
 
 const CURRENT_YEAR = new Date().getFullYear();
-const START_YEAR = 2020;
+const START_YEAR = 2009;
 
 const YEAR_OPTIONS = Array.from(
   { length: CURRENT_YEAR - START_YEAR + 1 },
@@ -40,8 +41,40 @@ const formatPostDate = (value?: string | null) => {
 };
 
 export default function NewsListing() {
-  const [year, setYear] = useState<number | null>(null);
-  const [page, setPage] = useState(1);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchParamsString = searchParams.toString();
+
+  const yearParam = Number(searchParams.get("year"));
+  const year = YEAR_OPTIONS.includes(yearParam) ? yearParam : null;
+
+  const pageParam = Number(searchParams.get("page") ?? "1");
+  const page =
+    Number.isFinite(pageParam) && pageParam > 0 ? Math.floor(pageParam) : 1;
+
+  const updateSearchParams = (next: { year?: number | null; page?: number }) => {
+    const params = new URLSearchParams(searchParamsString);
+    const nextYear = next.year === undefined ? year : next.year;
+    const nextPage = next.page ?? page;
+
+    if (nextYear) {
+      params.set("year", String(nextYear));
+    } else {
+      params.delete("year");
+    }
+
+    if (nextPage > 1) {
+      params.set("page", String(nextPage));
+    } else {
+      params.delete("page");
+    }
+
+    const queryString = params.toString();
+    router.replace(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
+  };
 
   const filterParts = useMemo(() => {
     const parts = ["is_hidden==false", "is_active==true", "type==news"];
@@ -70,8 +103,11 @@ export default function NewsListing() {
   );
 
   const handleSelectYear = (value: number | null) => {
-    setYear(value);
-    setPage(1);
+    updateSearchParams({ year: value, page: 1 });
+  };
+
+  const handleChangePage = (nextPage: number) => {
+    updateSearchParams({ page: nextPage });
   };
 
   return (
@@ -159,12 +195,12 @@ export default function NewsListing() {
                   <Pagination
                     pageCount={totalPages}
                     page={currentPage}
-                    onChangePage={setPage}
+                    onChangePage={handleChangePage}
                     onGoToPreviousPage={() =>
-                      setPage(Math.max(1, currentPage - 1))
+                      handleChangePage(Math.max(1, currentPage - 1))
                     }
                     onGoToNextPage={() =>
-                      setPage(Math.min(totalPages, currentPage + 1))
+                      handleChangePage(Math.min(totalPages, currentPage + 1))
                     }
                   />
                 </div>
@@ -183,8 +219,8 @@ export default function NewsListing() {
                   type="button"
                   onClick={() => handleSelectYear(null)}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${year === null
-                      ? "bg-[#14519f] text-white shadow-[0_10px_20px_rgba(20,81,159,0.18)]"
-                      : "bg-[#f4f7fb] text-[#5f6875] hover:bg-[#eaf0f8]"
+                    ? "bg-[#14519f] text-white shadow-[0_10px_20px_rgba(20,81,159,0.18)]"
+                    : "bg-[#f4f7fb] text-[#5f6875] hover:bg-[#eaf0f8]"
                     }`}
                 >
                   Tất cả
@@ -199,8 +235,8 @@ export default function NewsListing() {
                       type="button"
                       onClick={() => handleSelectYear(active ? null : option)}
                       className={`rounded-full px-4 py-2 text-sm font-semibold transition-all ${active
-                          ? "bg-[#14519f] text-white shadow-[0_10px_20px_rgba(20,81,159,0.18)]"
-                          : "bg-[#f4f7fb] text-[#5f6875] hover:bg-[#eaf0f8]"
+                        ? "bg-[#14519f] text-white shadow-[0_10px_20px_rgba(20,81,159,0.18)]"
+                        : "bg-[#f4f7fb] text-[#5f6875] hover:bg-[#eaf0f8]"
                         }`}
                     >
                       {option}
