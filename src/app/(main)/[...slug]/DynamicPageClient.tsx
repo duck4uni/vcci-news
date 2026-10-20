@@ -321,6 +321,7 @@ export default function DynamicPageClient() {
   if (resolvedCategory?.type === "news") {
     return (
       <NewsPage
+        key={resolvedCategory.id}
         category={resolvedCategory}
         allCategories={allCategories}
       />
