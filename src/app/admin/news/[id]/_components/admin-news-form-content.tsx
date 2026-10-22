@@ -132,6 +132,65 @@ function mapPostRowToAdminNewsItem(item: any): AdminNewsItem {
   };
 }
 
+type EventDateFieldKey = "started_at" | "ended_at" | "registration_deadline";
+
+const EMPTY_EVENT_DATE_FIELD_FLAGS: Record<EventDateFieldKey, boolean> = {
+  started_at: false,
+  ended_at: false,
+  registration_deadline: false,
+};
+
+function getEventDateFieldFlags(
+  form: Pick<AdminNewsFormValues, EventDateFieldKey>,
+): Record<EventDateFieldKey, boolean> {
+  return {
+    started_at: Boolean(form.started_at),
+    ended_at: Boolean(form.ended_at),
+    registration_deadline: Boolean(form.registration_deadline),
+  };
+}
+
+function OptionalEventDateField({
+  id,
+  label,
+  enabled,
+  value,
+  onChange,
+  onEnabledChange,
+}: {
+  id: string;
+  label: string;
+  enabled: boolean;
+  value: string;
+  onChange: (value: string) => void;
+  onEnabledChange: (enabled: boolean) => void;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center gap-2">
+        <Checkbox
+          id={id}
+          checked={enabled}
+          onCheckedChange={(checked) => onEnabledChange(checked === true)}
+          className="border-[#063e8e]/30 data-[state=checked]:border-[#063e8e] data-[state=checked]:bg-[#063e8e]"
+        />
+        <Label
+          htmlFor={id}
+          className={`cursor-pointer ${enabled ? "text-gray-700" : "text-gray-500"}`}
+        >
+          {label}
+        </Label>
+      </div>
+      <fieldset
+        disabled={!enabled}
+        className={`m-0 min-w-0 border-0 p-0 ${enabled ? "" : "opacity-50"}`}
+      >
+        <DateTimePicker value={value} onChange={onChange} />
+      </fieldset>
+    </div>
+  );
+}
+
 export function AdminNewsFormContent() {
   const params = useParams();
   const searchParams = useSearchParams();
@@ -151,6 +210,9 @@ export function AdminNewsFormContent() {
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
   const [isMissingPost, setIsMissingPost] = useState(false);
   const [useEventDates, setUseEventDates] = useState(false);
+  const [enabledEventDateFields, setEnabledEventDateFields] = useState<
+    Record<EventDateFieldKey, boolean>
+  >(EMPTY_EVENT_DATE_FIELD_FLAGS);
   const [isAddressManagerOpen, setIsAddressManagerOpen] = useState(false);
   const [isAddressSuggestOpen, setIsAddressSuggestOpen] = useState(false);
   const [postTagNames, setPostTagNames] = useState<string[]>([]);
@@ -284,6 +346,7 @@ export function AdminNewsFormContent() {
         updated_at: now,
       });
       setUseEventDates(false);
+      setEnabledEventDateFields({ ...EMPTY_EVENT_DATE_FIELD_FLAGS });
       setIsMissingPost(false);
       setIsLoadingInitialData(false);
       return;
@@ -340,6 +403,7 @@ export function AdminNewsFormContent() {
     const nextForm = cloneAdminNewsFormValues(currentItem);
     setForm(nextForm);
     setUseEventDates((nextForm.event_dates ?? []).length > 0);
+    setEnabledEventDateFields(getEventDateFieldFlags(nextForm));
     setIsLoadingInitialData(false);
   }, [isCreate, newsId, postDetailQuery.data, postDetailQuery.isLoading, postTagNames]);
 
@@ -358,10 +422,10 @@ export function AdminNewsFormContent() {
   useEffect(() => {
     if (!isCreate || !form || showDraftDialog) return;
     const timer = setTimeout(() => {
-      saveDraft({ form, useEventDates });
+      saveDraft({ form, useEventDates, eventDateFields: enabledEventDateFields });
     }, 800);
     return () => clearTimeout(timer);
-  }, [form, useEventDates, isCreate, showDraftDialog, saveDraft]);
+  }, [form, useEventDates, enabledEventDateFields, isCreate, showDraftDialog, saveDraft]);
 
   const handleRestoreDraft = useCallback(() => {
     if (!pendingDraft?.form) return;
@@ -369,6 +433,10 @@ export function AdminNewsFormContent() {
     const restored = JSON.parse(JSON.stringify(pendingDraft.form)) as AdminNewsFormValues;
     setForm(restored);
     setUseEventDates(pendingDraft.useEventDates ?? false);
+    setEnabledEventDateFields({
+      ...getEventDateFieldFlags(restored),
+      ...pendingDraft.eventDateFields,
+    });
     setShowDraftDialog(false);
     setPendingDraft(null);
     toast.success("Đã khôi phục bản nháp");
@@ -451,6 +519,13 @@ export function AdminNewsFormContent() {
       if (!current) return current;
       return { ...current, [key]: value };
     });
+  };
+
+  const handleEventDateFieldToggle = (key: EventDateFieldKey, enabled: boolean) => {
+    setEnabledEventDateFields((current) => ({ ...current, [key]: enabled }));
+    if (!enabled) {
+      handleField(key, "");
+    }
   };
 
   const handleTitleChange = (value: string) => {
@@ -609,9 +684,15 @@ export function AdminNewsFormContent() {
         is_active: !form.is_hidden,
         published_at: toIsoWithLocalOffset(form.published_at),
         expired_at: toIsoWithLocalOffset(form.expired_at),
-        started_at: toIsoWithLocalOffset(form.started_at),
-        ended_at: toIsoWithLocalOffset(form.ended_at),
-        registration_deadline: toIsoWithLocalOffset(form.registration_deadline),
+        started_at: enabledEventDateFields.started_at
+          ? toIsoWithLocalOffset(form.started_at)
+          : null,
+        ended_at: enabledEventDateFields.ended_at
+          ? toIsoWithLocalOffset(form.ended_at)
+          : null,
+        registration_deadline: enabledEventDateFields.registration_deadline
+          ? toIsoWithLocalOffset(form.registration_deadline)
+          : null,
         location: form.location.trim() || null,
         participation_fee: form.participation_fee.trim() || null,
         event_dates: (form.event_dates ?? []).length > 0 ? form.event_dates : null,
@@ -1028,32 +1109,43 @@ export function AdminNewsFormContent() {
               </div>
             )}
 
+            <p className="text-xs text-gray-500">
+              Bật các mốc thời gian cần dùng. Trường bỏ chọn sẽ không được lưu.
+            </p>
+
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              <div>
-                <Label className="mb-1.5 block text-gray-700">Ngày bắt đầu</Label>
-                <DateTimePicker
-                  value={form.started_at}
-                  onChange={(value) => handleField("started_at", value)}
-                />
-              </div>
+              <OptionalEventDateField
+                id="event-started-at-enabled"
+                label="Ngày bắt đầu"
+                enabled={enabledEventDateFields.started_at}
+                value={form.started_at}
+                onChange={(value) => handleField("started_at", value)}
+                onEnabledChange={(enabled) =>
+                  handleEventDateFieldToggle("started_at", enabled)
+                }
+              />
 
-              <div>
-                <Label className="mb-1.5 block text-gray-700">Ngày kết thúc</Label>
-                <DateTimePicker
-                  value={form.ended_at}
-                  onChange={(value) => handleField("ended_at", value)}
-                />
-              </div>
+              <OptionalEventDateField
+                id="event-ended-at-enabled"
+                label="Ngày kết thúc"
+                enabled={enabledEventDateFields.ended_at}
+                value={form.ended_at}
+                onChange={(value) => handleField("ended_at", value)}
+                onEnabledChange={(enabled) =>
+                  handleEventDateFieldToggle("ended_at", enabled)
+                }
+              />
 
-              <div>
-                <Label className="mb-1.5 block text-gray-700">
-                  Hạn đăng ký
-                </Label>
-                <DateTimePicker
-                  value={form.registration_deadline}
-                  onChange={(value) => handleField("registration_deadline", value)}
-                />
-              </div>
+              <OptionalEventDateField
+                id="event-registration-deadline-enabled"
+                label="Hạn đăng ký"
+                enabled={enabledEventDateFields.registration_deadline}
+                value={form.registration_deadline}
+                onChange={(value) => handleField("registration_deadline", value)}
+                onEnabledChange={(enabled) =>
+                  handleEventDateFieldToggle("registration_deadline", enabled)
+                }
+              />
 
               <div>
                 <div className="mb-1.5 flex items-center justify-between gap-2">

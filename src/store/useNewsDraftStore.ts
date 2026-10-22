@@ -10,6 +10,9 @@ const MAX_DRAFT_AGE_MS = 1000 * 60 * 60 * 24 * 7; // 7 ngày
 export interface NewsDraftData {
   form: AdminNewsFormValues;
   useEventDates: boolean;
+  eventDateFields?: Partial<
+    Record<"started_at" | "ended_at" | "registration_deadline", boolean>
+  >;
   savedAt: string; // ISO timestamp
 }
 

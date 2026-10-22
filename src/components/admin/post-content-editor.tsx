@@ -1,7 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { Image as ImageIcon, Pencil, Plus, Type, Upload, X } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  Image as ImageIcon,
+  Pencil,
+  Plus,
+  Type,
+  Upload,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 import { AdminImagePicker } from "@/components/admin/image-picker";
 import { AdminRichTextEditor } from "@/components/shared/rich-text-editor";
@@ -156,6 +165,32 @@ export function AdminPostContentEditor({
     onChange(nextSections);
   };
 
+  const moveSection = (sectionId: string, direction: -1 | 1) => {
+    const currentIndex = sections.findIndex((section) => section.id === sectionId);
+    const targetIndex = currentIndex + direction;
+
+    if (
+      currentIndex < 0 ||
+      targetIndex < 0 ||
+      targetIndex >= sections.length
+    ) {
+      return;
+    }
+
+    const nextSections = [...sections];
+    [nextSections[currentIndex], nextSections[targetIndex]] = [
+      nextSections[targetIndex],
+      nextSections[currentIndex],
+    ];
+
+    onChange(
+      nextSections.map((section, index) => ({
+        ...section,
+        position: index + 1,
+      })),
+    );
+  };
+
   const updateGrid = (sectionId: string, columns: number, rows: number) => {
     updateSection(sectionId, (section) => {
       const maxImages = columns * rows;
@@ -244,8 +279,10 @@ export function AdminPostContentEditor({
         </div>
       ) : null}
 
-      {sections.map((section) => {
+      {sections.map((section, sectionIndex) => {
         const maxSlots = section.image_columns * section.image_rows;
+        const isFirstSection = sectionIndex === 0;
+        const isLastSection = sectionIndex === sections.length - 1;
 
         return (
           <div
@@ -262,22 +299,50 @@ export function AdminPostContentEditor({
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-700">Section {section.position}</p>
+                  <p className="text-sm font-medium text-gray-700">Section {sectionIndex + 1}</p>
                   <p className="text-base font-semibold text-black">
                     {section.type === "text" ? "Văn bản" : "Hình ảnh"}
                   </p>
                 </div>
               </div>
 
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => removeSection(section.id)}
-                className="text-gray-700 hover:bg-red-50 hover:text-red-600"
-              >
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => moveSection(section.id, -1)}
+                  disabled={isFirstSection}
+                  title="Di chuyển section lên"
+                  aria-label={`Di chuyển section ${sectionIndex + 1} lên`}
+                  className="text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e] disabled:opacity-30"
+                >
+                  <ChevronUp className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => moveSection(section.id, 1)}
+                  disabled={isLastSection}
+                  title="Di chuyển section xuống"
+                  aria-label={`Di chuyển section ${sectionIndex + 1} xuống`}
+                  className="text-gray-700 hover:bg-[#063e8e]/10 hover:text-[#063e8e] disabled:opacity-30"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => removeSection(section.id)}
+                  title="Xóa section"
+                  aria-label={`Xóa section ${sectionIndex + 1}`}
+                  className="text-gray-700 hover:bg-red-50 hover:text-red-600"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="space-y-5 px-5 py-5">
