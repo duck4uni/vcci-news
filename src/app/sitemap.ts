@@ -63,8 +63,8 @@ type PagedRows<T> = {
 };
 
 const fetchAllNewsPosts = async (): Promise<PostRow[]> => {
-  const pageSize = 100;
-  const maxPages = 50;
+  const pageSize = 5000;
+  const maxPages = 20;
   const all: PostRow[] = [];
 
   for (let page = 1; page <= maxPages; page++) {
@@ -82,7 +82,8 @@ const fetchAllNewsPosts = async (): Promise<PostRow[]> => {
 
       const count = Number(response?.responseData?.count ?? 0);
       if (rows.length < pageSize || all.length >= count) break;
-    } catch {
+    } catch (error) {
+      console.warn("[sitemap] Failed to fetch posts page", page, error);
       break;
     }
   }
