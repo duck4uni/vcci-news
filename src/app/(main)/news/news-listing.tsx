@@ -147,12 +147,12 @@ export default function NewsListing() {
                           className="group grid items-center gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
                         >
                           <div className="relative aspect-[25/15] overflow-hidden rounded-md bg-[#edf1f5] sm:aspect-[5/3]">
-                            <Image
+                            <img
                               src={getDynamicPostSeoImage(item)}
                               alt={item.title}
-                              width={520}
-                              height={360}
+                              onError={(e) => { e.currentTarget.src = "/thumbnail.png"; }}
                               className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                              loading="lazy"
                             />
                           </div>
 
@@ -267,3 +267,5 @@ export default function NewsListing() {
     </div>
   );
 }
+
+
