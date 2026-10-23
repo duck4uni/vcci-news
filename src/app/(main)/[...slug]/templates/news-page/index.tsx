@@ -18,6 +18,7 @@ import {
   findDisplayCategoryForPost,
   getDynamicPostExcerpt,
   resolveDynamicPostImage,
+  getDynamicPostSeoImage,
 } from "../data";
 import type { DynamicCategoryRouteItem } from "../types";
 import type { DynamicPostItem } from "@/api/vcci-news/types/post";
@@ -159,7 +160,7 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
                         >
                           <div className="relative overflow-hidden rounded-md bg-[#edf1f5] aspect-[25/15] sm:aspect-[5/3]">
                             <Image
-                              src={resolveDynamicPostImage(item.thumbnail)}
+                              src={getDynamicPostSeoImage(item)}
                               alt={item.title}
                               width={520}
                               height={360}

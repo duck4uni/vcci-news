@@ -407,6 +407,12 @@ export function resolveDynamicPostImage(thumbnail?: DynamicPostThumbnail) {
   return Links.resolveImageUrl(value);
 }
 
+const extractFirstImageFromHtml = (html?: string | null): string | null => {
+  if (!html) return null;
+  const match = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return match?.[1]?.trim() || null;
+};
+
 export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
   if (!post) return "/thumbnail.png";
 
@@ -415,7 +421,18 @@ export function getDynamicPostSeoImage(post: DynamicPostItem | null): string {
     if (resolved && resolved !== "/thumbnail.png") return resolved;
   }
 
+  // 1. First image embedded in the raw HTML content.
+  const contentImage = extractFirstImageFromHtml(post.content);
+  if (contentImage) return Links.resolveImageUrl(contentImage);
+
+  // 2. First image embedded in any section's HTML content.
   const sections = post.content_structure?.post_content ?? [];
+  for (const section of sections) {
+    const sectionImage = extractFirstImageFromHtml(section.content);
+    if (sectionImage) return Links.resolveImageUrl(sectionImage);
+  }
+
+  // 3. First structured section image.
   for (const section of sections) {
     for (const item of section.images) {
       const url = item.image?.url;
