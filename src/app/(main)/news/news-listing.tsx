@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import {
   buildDynamicPostHref,
   resolveDynamicPostImage,
+  getDynamicPostSeoImage,
   stripHtml,
 } from "../[...slug]/templates/data";
 
@@ -147,7 +148,7 @@ export default function NewsListing() {
                         >
                           <div className="relative aspect-[25/15] overflow-hidden rounded-md bg-[#edf1f5] sm:aspect-[5/3]">
                             <Image
-                              src={resolveDynamicPostImage(item.thumbnail)}
+                              src={getDynamicPostSeoImage(item)}
                               alt={item.title}
                               width={520}
                               height={360}
