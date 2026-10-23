@@ -63,7 +63,7 @@ const toConnectionPost = (post: RawConnectionPost): MemberConnectionPost => {
       post.id ? String(post.id) : "",
     ),
     createdAt: String(post.created_at ?? ""),
-    publishedAt: String(post.published_at ?? post.release_at ?? post.created_at ?? ""),
+    publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
     categoryName: String(post.categories?.[0]?.name ?? ""),
     thumbnail: thumbnailPath
       ? { url: resolveAssetUrl(thumbnailPath), alt: title }

@@ -101,7 +101,7 @@ export default function DynamicPageClient() {
     {
       page: 1,
       pageSize: 1,
-      sortField: "release_at",
+      sortField: "published_at",
       sortOrder: "desc",
       filters: detailFilters,
     },
@@ -135,7 +135,7 @@ export default function DynamicPageClient() {
     {
       page: 1,
       pageSize: 1,
-      sortField: "release_at",
+      sortField: "published_at",
       sortOrder: "desc",
       filters: singlePageFilters,
     },

@@ -40,7 +40,7 @@ const getTagClassName = (index: number) => {
 
 function SearchResultItem({ item, index }: { item: DynamicPostItem; index: number }) {
   const description = getDynamicPostExcerpt(item);
-  const date = formatPostDate(item.release_at || item.published_at || item.created_at);
+  const date = formatPostDate(item.published_at || item.published_at || item.created_at);
   const categoryName = item.categories[0]?.name || "Tin tức";
 
   return (
@@ -115,7 +115,7 @@ export default async function SearchListing({ searchParams }: SearchListingProps
     const response = (await getApiV10Post({
       page,
       pageSize: PAGE_SIZE,
-      sortField: "release_at",
+      sortField: "published_at",
       sortOrder: "desc",
       filters,
     })) as {

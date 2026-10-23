@@ -22,7 +22,7 @@ export default function NewsDetailPage({
   category,
   allCategories,
 }: NewsDetailPageProps) {
-  const publishedDate = dayjs(post.release_at ?? post.published_at ?? post.created_at).format("DD/MM/YYYY");
+  const publishedDate = dayjs(post.published_at ?? post.published_at ?? post.created_at).format("DD/MM/YYYY");
   const primaryCategory = findDisplayCategoryForPost(post, category, allCategories)?.name || category?.name || "Tin tức";
 
   return (

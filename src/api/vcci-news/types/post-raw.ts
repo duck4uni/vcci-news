@@ -23,7 +23,6 @@ export type RawPost = {
   title?: string | null;
   slug?: string | null;
   published_at?: string | null;
-  release_at?: string | null;
   created_at?: string | null;
   categories?: RawPostCategory[] | null;
 };

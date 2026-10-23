@@ -74,7 +74,7 @@ const toNewsPostItem = (post: RawNewsPost): NewsPostItem => {
       "",
     ),
     createdAt: String(post.created_at ?? ""),
-    publishedAt: String(post.published_at ?? post.release_at ?? post.created_at ?? ""),
+    publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
     categoryName: String(post.categories?.[0]?.name ?? ""),
     thumbnail: thumbnailPath
       ? { url: resolveAssetUrl(thumbnailPath), alt: title }
@@ -280,12 +280,6 @@ export function News() {
               </button>
             );
           })}
-          <Link
-            href={overviewLink}
-            className="ml-auto text-[#24469c] transition-colors hover:text-[#1b55a1] xl:hidden"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Link>
         </div>
       </div>
 

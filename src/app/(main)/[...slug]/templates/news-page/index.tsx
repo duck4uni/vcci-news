@@ -145,7 +145,7 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
                     );
                     const tagIndex = categoryIndexMap.get(primaryCategory?.id ?? "") ?? index;
                     const date = formatPostDate(
-                      item.release_at ?? item.published_at ?? item.created_at,
+                      item.published_at ?? item.published_at ?? item.created_at,
                     );
 
                     return (

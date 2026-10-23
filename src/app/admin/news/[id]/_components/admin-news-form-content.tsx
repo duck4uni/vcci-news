@@ -118,7 +118,7 @@ function mapPostRowToAdminNewsItem(item: any): AdminNewsItem {
     is_hidden: Boolean(item.is_hidden),
     created_at: item.created_at ?? "",
     updated_at: item.updated_at ?? "",
-    published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+    published_at: normalizeDateTimeInput(item.published_at ?? item.published_at),
     expired_at: normalizeDateTimeInput(item.expired_at),
     started_at: normalizeDateTimeInput(item.started_at),
     ended_at: normalizeDateTimeInput(item.ended_at),
@@ -386,7 +386,7 @@ export function AdminNewsFormContent() {
       is_hidden: Boolean(post.is_hidden),
       created_at: post.created_at ?? "",
       updated_at: post.updated_at ?? "",
-      published_at: normalizeDateTimeInput(post.published_at ?? post.release_at),
+      published_at: normalizeDateTimeInput(post.published_at ?? post.published_at),
       expired_at: normalizeDateTimeInput(post.expired_at),
       started_at: normalizeDateTimeInput(post.started_at),
       ended_at: normalizeDateTimeInput(post.ended_at),
@@ -697,7 +697,6 @@ export function AdminNewsFormContent() {
         participation_fee: form.participation_fee.trim() || null,
         event_dates: (form.event_dates ?? []).length > 0 ? form.event_dates : null,
         release_mode: form.published_at ? "SCHEDULED" : "NOW",
-        release_at: toIsoWithLocalOffset(form.published_at),
         content_structure: {
           post_content: form.post_content.map((section, index) => ({
             ...section,

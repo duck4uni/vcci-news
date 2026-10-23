@@ -78,7 +78,7 @@ export default function AnPham({ category, allCategories }: AnPhamProps) {
   const { data: postsData, isLoading: postsLoading } = useGetApiV10Post({
     page,
     pageSize,
-    sortField: "release_at",
+    sortField: "published_at",
     sortOrder: "desc",
     filters: filters || undefined,
   });

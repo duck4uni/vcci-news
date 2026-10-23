@@ -95,7 +95,7 @@ function mapRowToAdminNewsItem(item: any): AdminNewsItem {
     is_hidden: Boolean(item.is_hidden),
     created_at: item.created_at ?? "",
     updated_at: item.updated_at ?? "",
-    published_at: normalizeDateTimeInput(item.published_at ?? item.release_at),
+    published_at: normalizeDateTimeInput(item.published_at ?? item.published_at),
     expired_at: normalizeDateTimeInput(item.expired_at),
     started_at: normalizeDateTimeInput(item.started_at),
     ended_at: normalizeDateTimeInput(item.ended_at),

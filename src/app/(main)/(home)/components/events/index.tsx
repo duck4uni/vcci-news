@@ -104,7 +104,7 @@ const toEventItem = (post: RawEventCalendarPost): EventItem => {
       post.id ? String(post.id) : "",
     ),
     createdAt: String(post.created_at ?? ""),
-    publishedAt: String(post.published_at ?? post.release_at ?? post.created_at ?? ""),
+    publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
     startedAt: String(post.started_at ?? ""),
     endedAt: String(post.ended_at ?? ""),
     contentText,

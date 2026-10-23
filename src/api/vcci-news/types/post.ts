@@ -153,7 +153,6 @@ export type DynamicPostItem = {
   slug: string;
   content: string;
   summary: string;
-  release_at: string | null;
   published_at: string | null;
   created_at: string | null;
   started_at: string | null;

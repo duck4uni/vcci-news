@@ -88,7 +88,7 @@ const mapRawPostToEventCalendarItem = (item: RawHomePost): EventCalendarItem => 
       ""
     ),
     createdAt: String(item.created_at ?? ""),
-    publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+    publishedAt: String(item.published_at ?? item.published_at ?? item.created_at ?? ""),
     startedAt: String(item.started_at ?? ""),
     endedAt: String(item.ended_at ?? ""),
     registrationDeadline: String(item.registration_deadline ?? ""),
