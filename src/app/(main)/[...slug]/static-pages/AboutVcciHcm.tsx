@@ -87,7 +87,6 @@ type TinVcciApiRow = {
   title?: string | null;
   slug?: string | null;
   published_at?: string | null;
-  release_at?: string | null;
   created_at?: string | null;
   thumbnail?: {
     path?: string | null;
@@ -116,7 +115,7 @@ export default function AboutVcciHcm({ post, category, allCategories }: AboutVcc
   const { data: tinVcciData, isLoading: tinVcciLoading } = useGetApiV10Post({
     page: 1,
     pageSize: 3,
-    sortField: "release_at",
+    sortField: "published_at",
     sortOrder: "desc",
     filters: tinVcciFilters || undefined,
   });
@@ -125,7 +124,7 @@ export default function AboutVcciHcm({ post, category, allCategories }: AboutVcc
     id: String(item.id ?? ""),
     title: String(item.title ?? "").trim(),
     externalLink: buildDynamicPostHref(item.slug?.trim() || "#", item.id ? String(item.id) : ""),
-    publishedAt: String(item.published_at ?? item.release_at ?? item.created_at ?? ""),
+    publishedAt: String(item.published_at ?? item.published_at ?? item.created_at ?? ""),
     thumbnailUrl:
       links.resolveImageUrl(
         item.thumbnail?.url?.trim() ||

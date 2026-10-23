@@ -13,6 +13,24 @@ export default function PostContent({ post }: PostContentProps) {
     .slice()
     .sort((left, right) => left.position - right.position);
 
+  if (sections.length === 0 && post.content?.trim()) {
+    return (
+      <div className="overflow-hidden">
+        <TextSection
+          section={{
+            id: "content",
+            type: "text",
+            content: post.content,
+            position: 1,
+            image_rows: 1,
+            image_columns: 1,
+            images: [],
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-hidden">
       {sections.map((section) => {

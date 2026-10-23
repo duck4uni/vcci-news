@@ -55,7 +55,6 @@ type RawPostItem = {
   slug?: string | null;
   content?: string | null;
   summary?: string | null;
-  release_at?: string | null;
   published_at?: string | null;
   created_at?: string | null;
   started_at?: string | null;
@@ -225,7 +224,6 @@ export const mapPost = (item: RawPostItem): DynamicPostItem => ({
   slug: String(item.slug ?? "").trim(),
   content: String(item.content ?? ""),
   summary: String(item.summary ?? ""),
-  release_at: item.release_at ?? null,
   published_at: item.published_at ?? null,
   created_at: item.created_at ?? null,
   started_at: item.started_at ?? null,
@@ -285,7 +283,7 @@ export async function fetchDynamicPostList(params: {
   const response = await getApiV10Post({
     page,
     pageSize,
-    sortField: params.sortField ?? "release_at",
+    sortField: params.sortField ?? "published_at",
     sortOrder: (params.sortOrder ?? "desc") as "asc" | "desc",
     filters: params.filters?.trim() || undefined,
   });

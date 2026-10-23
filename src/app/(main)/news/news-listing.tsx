@@ -131,7 +131,7 @@ export default function NewsListing() {
                 {posts.length ? (
                   posts.map((item) => {
                     const date = formatPostDate(
-                      item.release_at ?? item.published_at ?? item.created_at,
+                      item.published_at ?? item.published_at ?? item.created_at,
                     );
                     const categoryName = item.categories?.[0]?.name ?? "";
                     const excerpt = stripHtml(item.summary) || "";

@@ -51,7 +51,6 @@ type PostRow = {
   slug?: string | null;
   title?: string | null;
   published_at?: string | null;
-  release_at?: string | null;
   updated_at?: string | null;
 };
 
@@ -72,7 +71,7 @@ const fetchAllNewsPosts = async (): Promise<PostRow[]> => {
       const response = (await getApiV10Post({
         page,
         pageSize,
-        sortField: "release_at",
+        sortField: "published_at",
         sortOrder: "desc",
         filters: "is_hidden==false,is_active==true,type==news",
       })) as unknown as PagedRows<PostRow>;
@@ -151,7 +150,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     entries.push({
       url: `${SITE_URL}/${slug}`,
-      lastModified: toIso(post.updated_at) ?? toIso(post.published_at) ?? toIso(post.release_at) ?? now,
+      lastModified: toIso(post.updated_at) ?? toIso(post.published_at) ?? toIso(post.published_at) ?? now,
       changeFrequency: "weekly",
       priority: 0.7,
     });

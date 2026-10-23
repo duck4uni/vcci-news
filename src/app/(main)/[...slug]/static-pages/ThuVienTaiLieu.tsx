@@ -78,7 +78,7 @@ export default function ThuVienTaiLieu({ category, allCategories }: ThuVienTaiLi
   const { data: postsData, isLoading: postsLoading } = useGetApiV10Post({
     page,
     pageSize,
-    sortField: "release_at",
+    sortField: "published_at",
     sortOrder: "desc",
     filters: filters || undefined,
   });

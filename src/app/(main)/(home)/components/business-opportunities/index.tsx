@@ -48,7 +48,7 @@ const toBusinessOpportunityItem = (post: RawPost): BusinessOpportunityItem => {
       "#",
     ),
     createdAt: String(post.created_at ?? ""),
-    publishedAt: String(post.published_at ?? post.release_at ?? post.created_at ?? ""),
+    publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
   };
 };
 
