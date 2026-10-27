@@ -214,7 +214,7 @@ export function AdminSidebar() {
             {isOpen ? (
               <div className="min-w-0">
                 <div className="truncate text-[13px] font-bold uppercase tracking-[0.22em] text-[#063e8e]">
-                  {logoData?.logo_name || "VCCI News"}
+                  VCCI News
                 </div>
                 <div className="mt-1 text-sm leading-5 text-slate-600">
                   Trang quản trị website

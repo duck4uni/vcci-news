@@ -61,30 +61,44 @@ type PagedRows<T> = {
   };
 };
 
-const fetchAllNewsPosts = async (): Promise<PostRow[]> => {
-  const pageSize = 5000;
-  const maxPages = 20;
-  const all: PostRow[] = [];
+// Chia nhỏ request để tránh nginx trả 504 khi lấy quá nhiều bản ghi một lúc
+const POST_PAGE_SIZE = 500;
+const POST_MAX_PAGES = 100; // đủ cho 50.000 bài viết
+const POST_PAGE_RETRIES = 3;
+const RETRY_DELAY_MS = 1500;
 
-  for (let page = 1; page <= maxPages; page++) {
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const fetchPostPage = async (page: number): Promise<PagedRows<PostRow> | null> => {
+  for (let attempt = 1; attempt <= POST_PAGE_RETRIES; attempt++) {
     try {
-      const response = (await getApiV10Post({
+      return (await getApiV10Post({
         page,
-        pageSize,
+        pageSize: POST_PAGE_SIZE,
         sortField: "published_at",
         sortOrder: "desc",
         filters: "is_hidden==false,is_active==true,type==news",
       })) as unknown as PagedRows<PostRow>;
-
-      const rows = response?.responseData?.rows ?? [];
-      all.push(...rows);
-
-      const count = Number(response?.responseData?.count ?? 0);
-      if (rows.length < pageSize || all.length >= count) break;
     } catch (error) {
-      console.warn("[sitemap] Failed to fetch posts page", page, error);
-      break;
+      console.warn(`[sitemap] Failed to fetch posts page ${page} (attempt ${attempt}/${POST_PAGE_RETRIES})`, error);
+      if (attempt < POST_PAGE_RETRIES) await sleep(RETRY_DELAY_MS);
     }
+  }
+  return null;
+};
+
+const fetchAllNewsPosts = async (): Promise<PostRow[]> => {
+  const all: PostRow[] = [];
+
+  for (let page = 1; page <= POST_MAX_PAGES; page++) {
+    const response = await fetchPostPage(page);
+    if (!response) break;
+
+    const rows = response?.responseData?.rows ?? [];
+    all.push(...rows);
+
+    const count = Number(response?.responseData?.count ?? 0);
+    if (rows.length < POST_PAGE_SIZE || (count > 0 && all.length >= count)) break;
   }
 
   return all;
