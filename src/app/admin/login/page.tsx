@@ -1,7 +1,6 @@
 "use client";
 
-import { FormEvent, Suspense, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -34,24 +33,10 @@ type ErrorResponse = {
   };
 };
 
-const DEFAULT_REDIRECT = "/admin";
 const authFieldClassName =
   "h-11 rounded-xl border-[#063e8e]/15 bg-white text-gray-700 placeholder:text-gray-400 shadow-sm focus-visible:ring-[#063e8e]/30";
 const authButtonClassName =
   "h-11 rounded-xl bg-[#063e8e] text-white shadow-[0_12px_24px_rgba(6,62,142,0.16)] hover:bg-[#052f6c]";
-
-function normalizeRedirectPath(redirect: string | null) {
-  if (
-    !redirect ||
-    !redirect.startsWith("/admin") ||
-    redirect === "/admin/login" ||
-    redirect === "/admin/change-password"
-  ) {
-    return DEFAULT_REDIRECT;
-  }
-
-  return redirect;
-}
 
 function getAuthErrorMessage(error: unknown, fallback: string) {
   const apiError = error as {
@@ -73,12 +58,12 @@ function normalizeUser(
   user: any,
   mustChangePassword: boolean,
 ): AuthenticatedAdminUser | null {
-  if (!user?.id || !user.email || !user.username) return null;
+  if (!user?.id) return null;
 
   return {
-    id: user.id,
-    email: user.email,
-    username: user.username,
+    id: String(user.id),
+    email: String(user.email ?? ""),
+    username: String(user.username ?? user.email ?? ""),
     first_name: user.first_name ?? null,
     last_name: user.last_name ?? null,
     roles: Array.isArray(user.roles)
@@ -116,15 +101,7 @@ function InlineMessage({ type, message }: {
 }
 
 function AdminLoginPageContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirect = useMemo(
-    () => normalizeRedirectPath(searchParams.get("redirect")),
-    [searchParams],
-  );
-
   const hasHydrated = useAuthStore((state) => state._hasHydrated);
-  const isLoggedIn = useAuthStore((state) => state.appIsLoggedIn);
   const rememberState = useAuthStore((state) => state.appUserRemember);
   const setAuthSession = useAuthStore((state) => state.setAuthSession);
   const setAppUser = useUserStore((state) => state.setAppUser);
@@ -154,17 +131,6 @@ function AdminLoginPageContent() {
     setRemember(true);
   }, [rememberState]);
 
-  useEffect(() => {
-    if (!hasHydrated || !isLoggedIn) return;
-
-    const currentUser = useUserStore.getState().appUser;
-    if (currentUser?.must_change_password) {
-      router.replace("/admin/change-password");
-    } else {
-      router.replace(redirect);
-    }
-  }, [hasHydrated, isLoggedIn, redirect, router]);
-
   const { mutate: login, isPending: loginLoading } = usePostApiV10AuthLogin({
     mutation: {
       onSuccess: async (res: any) => {
@@ -174,9 +140,6 @@ function AdminLoginPageContent() {
           setLoginError("Thiếu dữ liệu phiên đăng nhập từ API.");
           return;
         }
-
-        const mustChangePassword = loginData.must_change_password === true;
-
         setAuthSession({
           accessToken: loginData.access_token,
           refreshToken: loginData.refresh_token,
@@ -189,6 +152,8 @@ function AdminLoginPageContent() {
           remember,
         );
 
+        const mustChangePassword = loginData.must_change_password === true;
+
         try {
           const profile = await getProfile();
           const profileData =
@@ -196,25 +161,36 @@ function AdminLoginPageContent() {
             (profile.data as any)?.data?.responseData;
 
           const normalizedUser = normalizeUser(profileData, mustChangePassword);
-          if (normalizedUser) {
-            setAppUser(normalizedUser);
-          } else if (loginData.user) {
+
+          if (normalizedUser) setAppUser(normalizedUser);
+
+          else if (loginData.user) {
             const fallbackUser = normalizeUser(loginData.user, mustChangePassword);
             if (fallbackUser) setAppUser(fallbackUser);
+          }
+
+          if (mustChangePassword) {
+            toast.success("Đăng nhập thành công. Vui lòng đổi mật khẩu để tiếp tục.");
+          } else {
+            toast.success("Đăng nhập quản trị thành công");
           }
         } catch {
-          if (loginData.user) {
-            const fallbackUser = normalizeUser(loginData.user, mustChangePassword);
+          const stillLoggedIn = useAuthStore.getState().appIsLoggedIn;
+          let fallbackUser: AuthenticatedAdminUser | null = null;
+
+          if (stillLoggedIn && loginData.user) {
+            fallbackUser = normalizeUser(loginData.user, mustChangePassword);
             if (fallbackUser) setAppUser(fallbackUser);
           }
-        }
 
-        if (mustChangePassword) {
-          toast.success("Đăng nhập thành công. Vui lòng đổi mật khẩu để tiếp tục.");
-          router.replace("/admin/change-password");
-        } else {
-          toast.success("Đăng nhập quản trị thành công");
-          router.replace(redirect);
+          if (!fallbackUser) {
+            useAuthStore.getState().resetStore();
+            useUserStore.getState().clearUser();
+            setLoginError(
+              "Không tải được thông tin tài khoản. Vui lòng thử đăng nhập lại.",
+            );
+            return;
+          }
         }
       },
       onError: (err: any) => {
@@ -228,6 +204,9 @@ function AdminLoginPageContent() {
   const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLoginError(null);
+    // Do not let a stale profile from a previous session trigger the login
+    // layout redirect before the new profile request has completed.
+    useUserStore.getState().clearUser();
     login({
       data: {
         email: email.trim(),

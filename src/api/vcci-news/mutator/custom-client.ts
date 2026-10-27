@@ -92,12 +92,13 @@ instance.interceptors.response.use(
         useUserStore.getState().clearUser();
         if (typeof window !== "undefined") {
           const currentPath = `${window.location.pathname}${window.location.search}`;
-          const redirect =
-            currentPath.startsWith("/admin") &&
-              currentPath !== "/admin/login"
+          const isLoginPage = window.location.pathname === "/admin/login";
+          if (!isLoginPage) {
+            const redirect = currentPath.startsWith("/admin")
               ? `?redirect=${encodeURIComponent(currentPath)}`
               : "";
-          window.location.replace(`/admin/login${redirect}`);
+            window.location.replace(`/admin/login${redirect}`);
+          }
         }
         return Promise.reject(error);
       }
