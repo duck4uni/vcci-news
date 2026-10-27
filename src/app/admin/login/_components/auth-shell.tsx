@@ -64,7 +64,7 @@ export function AuthShell({
                   </div>
                   <div>
                     <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#063e8e]">
-                      {logoData?.logo_name || "VCCI News"}
+                      VCCI News
                     </div>
                     <div className="mt-1 text-sm text-gray-700">
                       Trang quản trị website
@@ -118,7 +118,7 @@ export function AuthShell({
                 </div>
                 <div>
                   <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#063e8e]">
-                    {logoData?.logo_name || "VCCI News"}
+                    VCCI News
                   </div>
                   <div className="text-sm text-gray-700">
                     Trang quản trị website
