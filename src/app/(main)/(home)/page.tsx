@@ -62,7 +62,7 @@ export default function HomePage() {
             <MemberConnection />
           </Suspense>
         </section>
-        <section className="flex flex-col gap-6 pb-10 xl:flex-row xl:items-stretch">
+        <section className="flex flex-col gap-6 pb-10 xl:grid xl:grid-cols-[minmax(0,1fr)_43%] xl:grid-rows-[auto_1fr] xl:gap-x-6 xl:gap-y-5">
           <Suspense fallback={<VideosSkeleton />}>
             <Videos />
           </Suspense>

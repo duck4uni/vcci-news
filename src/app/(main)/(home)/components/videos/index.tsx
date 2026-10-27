@@ -45,8 +45,8 @@ const fetchVideos = async (): Promise<VideoItem[]> => {
 
 export function VideosSkeleton() {
   return (
-    <div className="flex-1">
-      <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="flex-1 xl:contents">
+      <div className="mb-5 flex items-center justify-between gap-3 xl:col-start-1 xl:row-start-1 xl:mb-0">
         <div>
           <h2 className="client-section-title uppercase text-[#24469c]">
             Video
@@ -62,7 +62,7 @@ export function VideosSkeleton() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:col-start-1 xl:row-start-2">
         {Array.from({ length: 2 }, (_, index) => (
           <div
             key={`video-skeleton-${index}`}
@@ -78,8 +78,8 @@ export async function Videos() {
   const videos = await fetchVideos();
 
   return (
-    <div className="flex-1">
-      <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="flex-1 xl:contents">
+      <div className="mb-5 flex items-center justify-between gap-3 xl:col-start-1 xl:row-start-1 xl:mb-0">
         <div>
           <h2 className="client-section-title uppercase text-[#24469c]">
             Video
@@ -95,7 +95,7 @@ export async function Videos() {
         </Link>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 xl:col-start-1 xl:row-start-2">
         {videos.length ? (
           videos.map((video) => (
             <a
