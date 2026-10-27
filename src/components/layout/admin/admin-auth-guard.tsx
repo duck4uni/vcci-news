@@ -79,10 +79,11 @@ export function AdminAuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (hasHydrated && !isLoggedIn && pathname !== LOGIN_PATH) {
       const currentPath = `${window.location.pathname}${window.location.search}`;
+      const isLoginPage = window.location.pathname === LOGIN_PATH;
       const isChangePasswordPage = currentPath.startsWith(CHANGE_PASSWORD_PATH);
       const redirect =
         currentPath.startsWith("/admin") &&
-          currentPath !== LOGIN_PATH &&
+          !isLoginPage &&
           !isChangePasswordPage
           ? `?redirect=${encodeURIComponent(currentPath)}`
           : "";
@@ -126,10 +127,11 @@ export function useAdminAuthStatus() {
   useEffect(() => {
     if (hasHydrated && !isLoggedIn && pathname !== LOGIN_PATH) {
       const currentPath = `${window.location.pathname}${window.location.search}`;
+      const isLoginPage = window.location.pathname === LOGIN_PATH;
       const isChangePasswordPage = currentPath.startsWith(CHANGE_PASSWORD_PATH);
       const redirect =
         currentPath.startsWith("/admin") &&
-          currentPath !== LOGIN_PATH &&
+          !isLoginPage &&
           !isChangePasswordPage
           ? `?redirect=${encodeURIComponent(currentPath)}`
           : "";
