@@ -159,12 +159,13 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
                           className="group grid items-center gap-5 sm:grid-cols-[250px_minmax(0,1fr)]"
                         >
                           <div className="relative overflow-hidden rounded-md bg-[#edf1f5] aspect-[25/15] sm:aspect-[5/3]">
-                            <img
+                            <Image
                               src={getDynamicPostSeoImage(item)}
                               alt={item.title}
+                              fill
+                              sizes="(min-width: 640px) 250px, 100vw"
                               onError={(e) => { e.currentTarget.src = "/thumbnail.png"; }}
-                              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                              loading="lazy"
+                              className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                             />
                           </div>
 
