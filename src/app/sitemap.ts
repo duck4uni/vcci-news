@@ -25,6 +25,15 @@ const STATIC_PAGE_SLUGS = [
   "video",
 ];
 
+// Mỗi file sitemap con chứa tối đa 2.000 bài (giới hạn của Google: 50.000 URL/file)
+const POSTS_PER_SITEMAP = 2000;
+const POST_PAGE_SIZE = 100;
+const POST_PAGES_PER_SITEMAP = POSTS_PER_SITEMAP / POST_PAGE_SIZE;
+const POST_PAGE_RETRIES = 3;
+const RETRY_DELAY_MS = 1500;
+
+const POST_FILTERS = "is_hidden==false,is_active==true,type==news";
+
 const normalizePath = (value?: string | null) => {
   const trimmed = value?.trim() ?? "";
   if (!trimmed || trimmed === "/") return "/";
@@ -61,13 +70,25 @@ type PagedRows<T> = {
   };
 };
 
-// Chia nhỏ request để tránh nginx trả 504 khi lấy quá nhiều bản ghi một lúc
-const POST_PAGE_SIZE = 500;
-const POST_MAX_PAGES = 100; // đủ cho 50.000 bài viết
-const POST_PAGE_RETRIES = 3;
-const RETRY_DELAY_MS = 1500;
-
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const fetchPostsCount = async (): Promise<number> => {
+  try {
+    const response = (await getApiV10Post({
+      page: 1,
+      pageSize: 1,
+      sortField: "published_at",
+      sortOrder: "desc",
+      priorityFeatured: false,
+      filters: POST_FILTERS,
+    })) as unknown as PagedRows<PostRow>;
+
+    return Math.max(0, Number(response?.responseData?.count ?? 0));
+  } catch (error) {
+    console.warn("[sitemap] Failed to fetch posts count, falling back to static sitemap only", error);
+    return 0;
+  }
+};
 
 const fetchPostPage = async (page: number): Promise<PagedRows<PostRow> | null> => {
   for (let attempt = 1; attempt <= POST_PAGE_RETRIES; attempt++) {
@@ -77,7 +98,8 @@ const fetchPostPage = async (page: number): Promise<PagedRows<PostRow> | null> =
         pageSize: POST_PAGE_SIZE,
         sortField: "published_at",
         sortOrder: "desc",
-        filters: "is_hidden==false,is_active==true,type==news",
+        priorityFeatured: false,
+        filters: POST_FILTERS,
       })) as unknown as PagedRows<PostRow>;
     } catch (error) {
       console.warn(`[sitemap] Failed to fetch posts page ${page} (attempt ${attempt}/${POST_PAGE_RETRIES})`, error);
@@ -87,24 +109,19 @@ const fetchPostPage = async (page: number): Promise<PagedRows<PostRow> | null> =
   return null;
 };
 
-const fetchAllNewsPosts = async (): Promise<PostRow[]> => {
-  const all: PostRow[] = [];
+export async function generateSitemaps(): Promise<{ id: number }[]> {
+  const ids = [{ id: 0 }];
 
-  for (let page = 1; page <= POST_MAX_PAGES; page++) {
-    const response = await fetchPostPage(page);
-    if (!response) break;
-
-    const rows = response?.responseData?.rows ?? [];
-    all.push(...rows);
-
-    const count = Number(response?.responseData?.count ?? 0);
-    if (rows.length < POST_PAGE_SIZE || (count > 0 && all.length >= count)) break;
+  const count = await fetchPostsCount();
+  const totalPostSitemaps = Math.ceil(count / POSTS_PER_SITEMAP);
+  for (let i = 0; i < totalPostSitemaps; i++) {
+    ids.push({ id: i + 1 });
   }
 
-  return all;
-};
+  return ids;
+}
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+const buildStaticSitemap = async (): Promise<MetadataRoute.Sitemap> => {
   const now = new Date().toISOString();
 
   const entries: MetadataRoute.Sitemap = [
@@ -126,16 +143,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  // Danh mục + bài viết (chạy song song)
-  const [categoryResponse, posts] = await Promise.all([
-    getApiV10Category({
-      page: 1,
-      pageSize: 200,
-      sortField: "sort_order",
-      sortOrder: "asc",
-    }).catch(() => null),
-    fetchAllNewsPosts(),
-  ]);
+  // Danh mục
+  const categoryResponse = await getApiV10Category({
+    page: 1,
+    pageSize: 200,
+    sortField: "sort_order",
+    sortOrder: "asc",
+  }).catch(() => null);
 
   const categoryRows =
     ((categoryResponse as unknown as PagedRows<CategoryRow> | null)?.responseData?.rows ?? []) as CategoryRow[];
@@ -155,20 +169,46 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
-  const seenPostSlugs = new Set<string>();
-  for (const post of posts) {
-    const slug = post.slug?.trim();
-    if (!slug || !post.id || !post.title) continue;
-    if (seenPostSlugs.has(slug)) continue;
-    seenPostSlugs.add(slug);
+  return entries;
+};
 
-    entries.push({
-      url: `${SITE_URL}/${slug}`,
-      lastModified: toIso(post.updated_at) ?? toIso(post.published_at) ?? toIso(post.published_at) ?? now,
-      changeFrequency: "weekly",
-      priority: 0.7,
-    });
+const buildPostsSitemap = async (chunk: number): Promise<MetadataRoute.Sitemap> => {
+  const now = new Date().toISOString();
+  const entries: MetadataRoute.Sitemap = [];
+  const seenPostSlugs = new Set<string>();
+
+  const startPage = chunk * POST_PAGES_PER_SITEMAP + 1;
+  const endPage = startPage + POST_PAGES_PER_SITEMAP - 1;
+
+  for (let page = startPage; page <= endPage; page++) {
+    const response = await fetchPostPage(page);
+    // Dừng khi một page fail hết retry để không lệch thứ tự phân trang
+    if (!response) break;
+
+    const rows = response?.responseData?.rows ?? [];
+    if (!rows.length) break;
+
+    for (const post of rows) {
+      const slug = post.slug?.trim();
+      if (!slug || !post.id || !post.title) continue;
+      if (seenPostSlugs.has(slug)) continue;
+      seenPostSlugs.add(slug);
+
+      entries.push({
+        url: `${SITE_URL}/${slug}`,
+        lastModified: toIso(post.updated_at) ?? toIso(post.published_at) ?? now,
+        changeFrequency: "weekly",
+        priority: 0.7,
+      });
+    }
   }
 
   return entries;
+};
+
+export default async function sitemap({ id = 0 }: { id?: number } = {}): Promise<MetadataRoute.Sitemap> {
+  const chunk = Math.max(0, Number(id) || 0);
+
+  if (chunk === 0) return buildStaticSitemap();
+  return buildPostsSitemap(chunk - 1);
 }
