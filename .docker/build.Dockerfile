@@ -16,7 +16,7 @@ COPY . .
 RUN pnpm run build
 
 # ----------------- Production stage -----------------
-FROM node:22-alpine AS production
+FROM node:24.22.1-alpine AS productionn
 WORKDIR /app
 
 ARG NEXT_PUBLIC_BACKEND_HOST=https://vcci-hcm.org.vn
