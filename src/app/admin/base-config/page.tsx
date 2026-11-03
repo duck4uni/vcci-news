@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BrandingTab } from "./_components/BrandingTab";
 import { BannerTab } from "./_components/BannerTab";
-import { ContactTab } from "./_components/ContactTab";
 import { SocialTab } from "./_components/SocialTab";
 
 export default function AdminBaseConfigPage() {
@@ -28,12 +27,6 @@ export default function AdminBaseConfigPage() {
               Banner trang chủ
             </TabsTrigger>
             <TabsTrigger
-              value="contact"
-              className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
-            >
-              Thông tin liên hệ
-            </TabsTrigger>
-            <TabsTrigger
               value="social"
               className="rounded-xl px-4 py-2.5 text-sm font-semibold text-slate-600 hover:text-[#063e8e] data-[state=active]:bg-white data-[state=active]:text-[#063e8e]"
             >
@@ -42,10 +35,9 @@ export default function AdminBaseConfigPage() {
           </TabsList>
         </div>
         <div className="space-y-5">
-          <BrandingTab />
-          <BannerTab />
-          <ContactTab />
-          <SocialTab />
+          {activeTab === "branding" && <BrandingTab />}
+          {activeTab === "banner" && <BannerTab />}
+          {activeTab === "social" && <SocialTab />}
         </div>
       </Tabs>
     </div>

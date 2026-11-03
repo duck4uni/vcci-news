@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import {
@@ -12,6 +12,7 @@ import {
   Twitter,
   Youtube,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { postApiV10NewsletterSubscription } from "@/api/vcci-news/endpoints/newsletter-subscription";
@@ -30,6 +31,22 @@ type SocialItem = {
   key: string;
   url: string;
   icon: React.ReactNode;
+};
+
+type FooterBranchLink = {
+  label: string;
+  url: string;
+};
+
+type FooterBranch = {
+  branch_name: string;
+  address: string;
+  telephone?: string;
+  fax?: string;
+  email?: string;
+  zalo?: FooterBranchLink;
+  facebook?: FooterBranchLink;
+  qr_image?: string;
 };
 
 const fallbackSocials: SocialItem[] = [
@@ -100,35 +117,31 @@ function Footer() {
   const siteInformation = getEnvelopeData<SiteInformationData>(
     siteInformationResponse,
   );
-  const primaryBranch =
-    siteInformation?.branches?.find((branch) => branch?.is_active) ??
-    siteInformation?.branches?.[0] ??
-    null;
-  const branches = (siteInformation?.branches ?? [])
-    .filter((branch) => branch?.is_active ?? true)
-    .sort((left, right) => (left.sort_order ?? 0) - (right.sort_order ?? 0));
-  const extraBranches = branches.filter(
-    (branch) => branch?.id && branch?.id !== primaryBranch?.id,
-  );
-
-  const contactInfo = {
-    name:
-      primaryBranch?.branch_name ??
-      siteInformation?.website_name ??
+  const footerBranches: FooterBranch[] = [
+  {
+    branch_name:
       "LIÊN ĐOÀN THƯƠNG MẠI & CÔNG NGHIỆP VIỆT NAM - CHI NHÁNH KHU VỰC THÀNH PHỐ HỒ CHÍ MINH",
-    address:
-      siteInformation?.address ??
-      primaryBranch?.address ??
-      "171 Võ Thị Sáu, Phường Xuân Hòa, TP. HCM",
-    telephone:
-      siteInformation?.telephone ??
-      primaryBranch?.telephone ??
-      primaryBranch?.hotline ??
-      "+84 28 3932 6598",
-    fax: primaryBranch?.fax ?? "+84 28 3932 5472",
-    email:
-      siteInformation?.email ?? primaryBranch?.email ?? "info@vcci-hcm.org.vn",
-  };
+    address: "Số 171 Võ Thị Sáu, Phường Xuân Hoà, TP. Hồ Chí Minh",
+    telephone: "+84 28 3932 6598",
+    fax: "+84 28 3932 5472",
+    email: "info@vcci-hcm.org.vn",
+  },
+  {
+    branch_name: "Cơ sở 2",
+    address: "Số 155 Nguyễn Thái Học, Phường Tam Thắng, TP. Hồ Chí Minh",
+    telephone: "+84 254 3852 710",
+    email: "vccihcm.cs2@gmail.com",
+    zalo: {
+      label: "VCCI HCM CS2",
+      url: "https://zalo.me/vccivungtau",
+    },
+    facebook: {
+      label: "Liên đoàn Thương mại và Công nghiệp Việt Nam, Chi nhánh KV TP.HCM, Cơ sở 2",
+      url: "https://www.facebook.com/vccivt",
+    },
+    qr_image: "/qr-footer/qr-zl.jpg",
+  },
+];
 
   const socialLinks = (() => {
     const socials =
@@ -213,7 +226,7 @@ function Footer() {
                 <input
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
-                  className="h-12 flex-1 rounded-[4px] border border-[#31458d] bg-[#29418f] px-4 text-[15px] text-white placeholder:text-[#84a1ef] outline-hidden"
+                  className="h-12 flex-1 rounded-[4px] border border-[#31458d] bg-[#29418f] px-4 text-[14px] text-white placeholder:text-[#84a1ef] outline-hidden"
                   type="email"
                   placeholder="Nhập email của bạn"
                 />
@@ -241,7 +254,7 @@ function Footer() {
                   className="h-4 w-4 rounded border-white/30 bg-transparent accent-[#f7b500]"
                 />
                 <label
-                  className="text-[13px] text-[#86b8ff]"
+                  className="text-[14px] text-[#86b8ff]"
                   htmlFor="footer-check"
                 >
                   Đồng ý với Điều khoản nhận email
@@ -256,7 +269,7 @@ function Footer() {
 
               {message ? (
                 <div
-                  className={`mt-3 flex items-center gap-2 rounded-[6px] px-4 py-3 text-[13px] font-medium ${messageType === "success"
+                  className={`mt-3 flex items-center gap-2 rounded-[6px] px-4 py-3 text-[14px] font-medium ${messageType === "success"
                     ? "bg-[#1a8754] text-white"
                     : "bg-[#c0392b] text-white"
                     }`}
@@ -275,49 +288,93 @@ function Footer() {
             <div className="mt-2.5 h-[4px] w-[48px] rounded-full bg-[#f7b500]" />
 
             <div className="mt-5 space-y-4">
-              <p className="max-w-[420px] text-[16px] font-semibold leading-[1.5] text-[#dce7ff]">
-                {contactInfo.name}
-              </p>
-
-              <div className="space-y-2.5 text-[15px] text-[#c7d8ff]">
-                <div className="flex items-start gap-3">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#f7b500]" />
-                  <span>{contactInfo.address}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
-                  <span>{contactInfo.telephone}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
-                  <span>{contactInfo.fax}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Mail className="h-4 w-4 shrink-0 text-[#f7b500]" />
-                  <a href={`mailto:${contactInfo.email}`}>
-                    {contactInfo.email}
-                  </a>
-                </div>
-              </div>
-
-              {extraBranches.length > 0 ? (
-                <div className="pt-4">
-                  <p className="text-[14px] font-semibold uppercase text-[#dce7ff]">
-                    Các chi nhánh khác
-                  </p>
-                  <div className="mt-3 space-y-3 text-[14px] text-[#c7d8ff]">
-                    {extraBranches.map((branch) => (
-                      <div key={branch.id} className="space-y-1">
-                        {branch.branch_name ? (
-                          <p className="font-semibold text-[#dce7ff]">
-                            {branch.branch_name}
-                          </p>
-                        ) : null}
+              {footerBranches.map((branch) => (
+                <div key={branch.branch_name} className="space-y-2">
+                  {branch.branch_name ? (
+                    <p className="font-semibold text-[#dce7ff]">
+                      {branch.branch_name}
+                    </p>
+                  ) : null}
+                  {branch.address ? (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#f7b500]" />
+                      <span className="text-[14px] leading-[1.5] text-[#c7d8ff]">
+                        {branch.address}
+                      </span>
+                    </div>
+                  ) : null}
+                  {branch.telephone ? (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                      <span className="text-[14px] leading-[1.5] text-[#c7d8ff]">
+                        {branch.telephone}
+                      </span>
+                    </div>
+                  ) : null}
+                  {branch.fax ? (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                      <span className="text-[14px] leading-[1.5] text-[#c7d8ff]">
+                        {branch.fax}
+                      </span>
+                    </div>
+                  ) : null}
+                  {branch.email ? (
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-4 w-4 shrink-0 text-[#f7b500]" />
+                      <a
+                        href={`mailto:${branch.email}`}
+                        className="text-[14px] leading-[1.5] text-[#86b8ff] hover:text-white"
+                      >
+                        {branch.email}
+                      </a>
+                    </div>
+                  ) : null}
+                  {branch.zalo ? (
+                    <div className="flex items-start gap-2">
+                      <span className="text-[14px] leading-[1.5] text-[#c7d8ff]">
+                        Zalo OA:{" "}
+                        <a
+                          href={branch.zalo.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#86b8ff] hover:text-white"
+                        >
+                          {branch.zalo.label}
+                        </a>
+                      </span>
+                    </div>
+                  ) : null}
+                  {branch.facebook ? (
+                    <div className="flex items-start gap-2">
+                      <span className="text-[14px] leading-[1.5] text-[#c7d8ff]">
+                        Facebook:{" "}
+                        <a
+                          href={branch.facebook.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-[#86b8ff] hover:text-white"
+                        >
+                          {branch.facebook.label}
+                        </a>
+                      </span>
+                    </div>
+                  ) : null}
+                  {branch.qr_image ? (
+                    <div className="flex items-start gap-2">
+                      <div className="relative h-28 w-28 overflow-hidden rounded-md bg-white p-1">
+                        <Image
+                          src={branch.qr_image}
+                          alt={`Mã QR Zalo ${branch.branch_name}`}
+                          fill
+                          sizes="112px"
+                          className="object-contain"
+                        />
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ) : null}
                 </div>
-              ) : null}
+              ))}
             </div>
           </div>
 
@@ -339,7 +396,7 @@ function Footer() {
               ))}
             </div>
 
-            <div className="mt-5 space-y-2 text-[15px] text-[#c7d8ff]">
+            <div className="mt-5 space-y-2 text-[14px] text-[#c7d8ff]">
               {quickLinks.map((item) => (
                 <Link
                   key={item.href}
