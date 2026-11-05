@@ -125,6 +125,7 @@ function Footer() {
     telephone: "+84 28 3932 6598",
     fax: "+84 28 3932 5472",
     email: "info@vcci-hcm.org.vn",
+    qr_image: "/qr-footer/ggmaptsc.png",
   },
   {
     branch_name: "Cơ sở 2",
@@ -139,7 +140,7 @@ function Footer() {
       label: "Liên đoàn Thương mại và Công nghiệp Việt Nam, Chi nhánh KV TP.HCM, Cơ sở 2",
       url: "https://www.facebook.com/vccivt",
     },
-    qr_image: "/qr-footer/qr-zl.jpg",
+    qr_image: "/qr-footer/ggmapcs2.jpg",
   },
 ];
 
@@ -365,7 +366,7 @@ function Footer() {
                       <div className="relative h-28 w-28 overflow-hidden rounded-md bg-white p-1">
                         <Image
                           src={branch.qr_image}
-                          alt={`Mã QR Zalo ${branch.branch_name}`}
+                          alt={`Mã QR Google Maps ${branch.branch_name}`}
                           fill
                           sizes="112px"
                           className="object-contain"
