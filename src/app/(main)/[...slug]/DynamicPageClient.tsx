@@ -21,7 +21,7 @@ import Fees from "./static-pages/Fees";
 import Locations from "./static-pages/Locations";
 import Contact from "./static-pages/Contact";
 import MemberDirectory from "./static-pages/MemberDirectory";
-import SoDoToChuc from "./static-pages/SoDoToChuc";
+import SoDoToChuc from "./static-pages/so-do-to-chuc/SoDoToChuc";
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
 import { useGetApiV10Category } from "@/api/vcci-news/endpoints/category";
 import type { DynamicCategoryRouteItem } from "./templates/types";
