@@ -27,6 +27,10 @@ declare module "d3-org-chart" {
     nodeBottomY(node: OrgChartLayoutNode): number;
   }
 
+  interface OrgChartLinkDatum<T> {
+    data: T & { _upToTheRootHighlighted?: boolean };
+  }
+
   export class OrgChart<T> {
     container(container: HTMLElement): this;
     data(data: T[]): this;
@@ -51,6 +55,8 @@ declare module "d3-org-chart" {
     svgWidth(width: number): this;
     svgHeight(height: number): this;
     fit(options?: { animate?: boolean; scale?: boolean }): this;
+    // Hook runtime để chỉnh link DOM (setter tự sinh từ attrs của thư viện)
+    linkUpdate(callback: (this: SVGPathElement, d: OrgChartLinkDatum<T>, i: number, arr: unknown[]) => void): this;
     getChartState(): {
       root: { descendants(): OrgChartLayoutNode[] } | null;
       layout: string;
