@@ -11,6 +11,7 @@ import {
   Layers,
   Mail,
   Megaphone,
+  Network,
   Newspaper,
   Settings,
   Sparkles,
@@ -90,6 +91,12 @@ const navigation: NavItem[] = [
     icon: Megaphone,
     permission: "advertisements:read",
   },
+  //   {
+  //     name: "Sơ đồ tổ chức",
+  //     href: "/admin/so-do-to-chuc",
+  //     icon: Network,
+  //     permission: "settings:read",
+  //   },
 ];
 
 // Admin system menu - chỉ system_admin thấy
