@@ -13,6 +13,7 @@ import {
 	useNodesState,
 	useOnSelectionChange,
 	useReactFlow,
+	useUpdateNodeInternals,
 	type Connection,
 	type Edge,
 	type NodeChange,
@@ -100,6 +101,7 @@ function EditorInner({
 	onReady?: (controller: OrgChartEditorController) => void;
 }) {
 	const { screenToFlowPosition, fitView, deleteElements } = useReactFlow();
+	const updateNodeInternals = useUpdateNodeInternals();
 
 	// Normalize document cũ (members → rows) trước khi nạp vào canvas
 	const normalizedDocument = useMemo(
@@ -128,6 +130,46 @@ function EditorInner({
 		nodesRef.current = nodes;
 		edgesRef.current = edges;
 	});
+
+	// iOS Safari fix (như viewer): ảnh + font load chậm hơn lần đo đầu của RF →
+	// edge neo sai vị trí "đáy card cũ". Đợi assets load xong → đo lại node
+	// internals để edge vẽ lại theo vị trí handle thật.
+	useEffect(() => {
+		let cancelled = false;
+
+		const remeasure = () => {
+			if (cancelled) return;
+			nodesRef.current
+				.filter((n) => n.type === "org-card")
+				.forEach((n) => updateNodeInternals(n.id));
+		};
+
+		const fontsReady =
+			typeof window !== "undefined" && window.document.fonts
+				? window.document.fonts.ready.then(() => undefined)
+				: Promise.resolve();
+
+		const imagesReady = Promise.allSettled(
+			Array.from(window.document.querySelectorAll<HTMLElement>(".react-flow__node img")).map(
+				(img) =>
+					img instanceof HTMLImageElement && !img.complete
+						? new Promise<void>((resolve) => {
+								img.addEventListener("load", () => resolve(), { once: true });
+								img.addEventListener("error", () => resolve(), { once: true });
+							})
+						: Promise.resolve(),
+			),
+		);
+
+		Promise.all([fontsReady, imagesReady])
+			.then(() => new Promise((resolve) => requestAnimationFrame(() => resolve(null))))
+			.then(() => new Promise((resolve) => setTimeout(resolve, 50)))
+			.then(remeasure);
+
+		return () => {
+			cancelled = true;
+		};
+	}, [updateNodeInternals]);
 
 	const notifyDocumentChange = useCallback(() => {
 		documentChangeCb.current?.();
