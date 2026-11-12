@@ -153,7 +153,7 @@ export function FeaturedNewsSkeleton() {
               ))}
             </div>
 
-            <HorizontalAdBanner />
+            <HorizontalAdBanner index={1} count={1} />
           </div>
         </div>
       </div>
@@ -283,7 +283,7 @@ export async function FeaturedNews() {
               )}
             </div>
 
-            <HorizontalAdBanner />
+            <HorizontalAdBanner index={1} count={1} />
           </div>
         </div>
       </div>
