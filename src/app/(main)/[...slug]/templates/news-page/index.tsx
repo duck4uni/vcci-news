@@ -251,7 +251,7 @@ export default function NewsPage({ category, allCategories }: NewsPageProps) {
 
               <EventsCalendar compact className="xl:w-full xl:min-w-0" />
 
-              <SidebarAdvertisements count={5} startIndex={0} />
+              <SidebarAdvertisements count={3} startIndex={0} />
             </aside>
           </div>
         </div>

@@ -31,7 +31,7 @@ export default function HomePage() {
           <Advertisements count={3} startIndex={0} />
         </section >
 
-        <HorizontalAdBanner />
+        <HorizontalAdBanner index={0} count={1} />
 
         <section className="flex flex-col gap-5 xl:flex-row xl:items-stretch" >
           <Suspense fallback={<EventsSkeleton />}>
