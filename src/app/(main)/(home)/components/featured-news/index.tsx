@@ -1,12 +1,12 @@
 import { getApiV10Post } from "@/api/vcci-news/endpoints/post";
 import type {
-  RawPostWithThumbnail,
+  RawPostWithContentAndThumbnail,
 } from "@/api/vcci-news/types/post-raw";
 import type { PagedResult } from "@/api/vcci-news/types/paged-result";
 import {
   buildPostLink,
   normalizeLink,
-  resolveAssetUrl,
+  resolvePostThumbnail,
 } from "@/lib/utils/post";
 import { MOCK_HOME_POSTS } from "@/mockdata/home-posts";
 import dayjs from "dayjs";
@@ -40,9 +40,8 @@ type FeaturedNewsItem = {
   thumbnail: { url: string; alt: string } | null;
 };
 
-const toFeaturedNewsItem = (post: RawPostWithThumbnail): FeaturedNewsItem => {
+const toFeaturedNewsItem = (post: RawPostWithContentAndThumbnail): FeaturedNewsItem => {
   const title = String(post.title ?? "").trim();
-  const thumbnailPath = post.thumbnail?.path ?? post.thumbnail?.original ?? null;
 
   return {
     id: String(post.id ?? ""),
@@ -54,14 +53,12 @@ const toFeaturedNewsItem = (post: RawPostWithThumbnail): FeaturedNewsItem => {
     createdAt: String(post.created_at ?? ""),
     publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
     categoryName: String(post.categories?.[0]?.name ?? ""),
-    thumbnail: thumbnailPath
-      ? { url: resolveAssetUrl(thumbnailPath), alt: title }
-      : null,
+    thumbnail: { url: resolvePostThumbnail(post), alt: title },
   };
 };
 
 /** Link danh mục Tin VCCI lấy từ chính danh sách posts, fallback nếu không có. */
-const resolveSectionLink = (posts: RawPostWithThumbnail[]) => {
+const resolveSectionLink = (posts: RawPostWithContentAndThumbnail[]) => {
   for (const post of posts) {
     const category = post.categories?.find(
       (item) => item?.id === TIN_VCCI_CATEGORY_ID && item?.url && item.url !== "#",
@@ -79,7 +76,7 @@ const fetchFeaturedNewsPosts = async (): Promise<{
   try {
     const response = await getApiV10Post(SECTION_PARAMS);
     const rows =
-      (response as PagedResult<RawPostWithThumbnail> | undefined)?.responseData?.rows ?? [];
+      (response as PagedResult<RawPostWithContentAndThumbnail> | undefined)?.responseData?.rows ?? [];
     if (rows.length === 0) throw new Error("Empty rows");
 
     return {

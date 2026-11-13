@@ -6,8 +6,8 @@ import SidebarAdvertisements from "@/components/shared/sidebar-advertisements";
 import {
   buildDynamicPostHref,
   getDynamicPostExcerpt,
+  getDynamicPostSeoImage,
   mapPost,
-  resolveDynamicPostImage,
 } from "../[...slug]/templates/data";
 import type { DynamicPostItem } from "@/api/vcci-news/types/post";
 import SearchForm from "./search-form";
@@ -51,7 +51,7 @@ function SearchResultItem({ item, index }: { item: DynamicPostItem; index: numbe
       >
         <div className="overflow-hidden rounded-md bg-[#edf1f5]">
           <Image
-            src={resolveDynamicPostImage(item.thumbnail)}
+            src={getDynamicPostSeoImage(item)}
             alt={item.title}
             width={520}
             height={360}

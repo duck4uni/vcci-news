@@ -3,11 +3,11 @@
 import {
   useGetApiV10Post,
 } from "@/api/vcci-news/endpoints/post";
-import type { RawPostWithThumbnail } from "@/api/vcci-news/types/post-raw";
+import type { RawPostWithContentAndThumbnail } from "@/api/vcci-news/types/post-raw";
 import {
   buildPostLink,
   normalizeLink,
-  resolveAssetUrl,
+  resolvePostThumbnail,
 } from "@/lib/utils/post";
 import { MOCK_HOME_POSTS } from "@/mockdata/home-posts";
 import dayjs from "dayjs";
@@ -37,8 +37,7 @@ const CONNECTION_POSTS_PARAMS = {
   ].join(","),
 } as const;
 
-type RawConnectionPost = RawPostWithThumbnail & {
-};
+type RawConnectionPost = RawPostWithContentAndThumbnail;
 
 export type MemberConnectionPost = {
   id: string;
@@ -53,7 +52,6 @@ export type MemberConnectionPost = {
 
 const toConnectionPost = (post: RawConnectionPost): MemberConnectionPost => {
   const title = String(post.title ?? "").trim();
-  const thumbnailPath = post.thumbnail?.path ?? post.thumbnail?.original ?? null;
 
   return {
     id: String(post.id ?? ""),
@@ -65,9 +63,7 @@ const toConnectionPost = (post: RawConnectionPost): MemberConnectionPost => {
     createdAt: String(post.created_at ?? ""),
     publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
     categoryName: String(post.categories?.[0]?.name ?? ""),
-    thumbnail: thumbnailPath
-      ? { url: resolveAssetUrl(thumbnailPath), alt: title }
-      : null,
+    thumbnail: { url: resolvePostThumbnail(post), alt: title },
   };
 };
 

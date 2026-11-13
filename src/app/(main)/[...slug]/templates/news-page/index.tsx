@@ -17,7 +17,6 @@ import {
   buildDynamicCategoryMenu,
   findDisplayCategoryForPost,
   getDynamicPostExcerpt,
-  resolveDynamicPostImage,
   getDynamicPostSeoImage,
 } from "../data";
 import type { DynamicCategoryRouteItem } from "../types";

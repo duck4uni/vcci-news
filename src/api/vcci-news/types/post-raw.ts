@@ -39,9 +39,11 @@ export type RawPostWithContent = RawPost & {
   content_structure?: RawPostContentStructure | null;
 };
 
+/** Post có đủ dữ liệu để hiển thị ảnh thumbnail kể cả khi CMS chưa gán thumbnail. */
+export type RawPostWithContentAndThumbnail = RawPostWithThumbnail & RawPostWithContent;
+
 /** Post sự kiện (kèm thumbnail + started_at). */
-export type RawEventPost = RawPostWithThumbnail &
-  RawPostWithContent & {
+export type RawEventPost = RawPostWithContentAndThumbnail & {
     started_at?: string | null;
   };
 
