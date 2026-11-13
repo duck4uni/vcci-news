@@ -13,7 +13,6 @@ import { Spinner } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import {
   buildDynamicPostHref,
-  resolveDynamicPostImage,
   getDynamicPostSeoImage,
   stripHtml,
 } from "../[...slug]/templates/data";

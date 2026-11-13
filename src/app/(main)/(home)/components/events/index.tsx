@@ -4,7 +4,7 @@ import type { PagedResult } from "@/api/vcci-news/types/paged-result";
 import {
   buildPostLink,
   normalizeLink,
-  resolveAssetUrl,
+  resolvePostThumbnail,
   stripHtml,
 } from "@/lib/utils/post";
 import { MOCK_HOME_POSTS } from "@/mockdata/home-posts";
@@ -87,7 +87,6 @@ const pickUpcomingEvents = (items: EventItem[], now: number) => {
 const toEventItem = (post: RawEventCalendarPost): EventItem => {
   const title = String(post.title ?? "").trim();
   const categories = post.categories ?? [];
-  const thumbnailPath = post.thumbnail?.path ?? post.thumbnail?.original ?? null;
   const contentText = String(
     post.content_structure?.post_content?.[0]?.content ??
     post.summary ??
@@ -111,9 +110,7 @@ const toEventItem = (post: RawEventCalendarPost): EventItem => {
     summary,
     excerpt: stripHtml(contentText || summary),
     categoryName: String(categories[0]?.name ?? ""),
-    thumbnail: thumbnailPath
-      ? { url: resolveAssetUrl(thumbnailPath), alt: title }
-      : null,
+    thumbnail: { url: resolvePostThumbnail(post), alt: title },
   };
 };
 

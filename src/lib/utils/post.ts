@@ -33,6 +33,30 @@ export const resolveAssetUrl = (value?: string | null) => {
   return Links.resolveImageUrl(trimmed);
 };
 
+/** Resolve a post card image: explicit thumbnail first, then the first image in post content. */
+export const resolvePostThumbnail = (post?: {
+  thumbnail?: { path?: string | null; original?: string | null } | null;
+  content?: string | null;
+  summary?: string | null;
+  content_structure?: { post_content?: Array<{ content?: string | null }> | null } | null;
+} | null) => {
+  if (!post) return resolveAssetUrl();
+
+  const thumbnail = post.thumbnail?.path ?? post.thumbnail?.original;
+  if (thumbnail?.trim()) return resolveAssetUrl(thumbnail);
+
+  const sections = post.content_structure?.post_content ?? [];
+  const htmlCandidates = [post.content, ...sections.map((section) => section?.content), post.summary];
+  for (const html of htmlCandidates) {
+    if (!html) continue;
+    const match = html.match(/<img\b[^>]*?src\s*=\s*["']([^"']+)["']/i);
+    const imageUrl = match?.[1]?.trim();
+    if (imageUrl) return resolveAssetUrl(imageUrl);
+  }
+
+  return resolveAssetUrl();
+};
+
 /** Bỏ caption/figure/img/tags + entities, trả text thuần dùng cho excerpt. */
 export const stripHtml = (raw?: string | null) =>
   (raw ?? "")

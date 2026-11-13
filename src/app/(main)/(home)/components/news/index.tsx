@@ -1,11 +1,11 @@
 'use client';
 
 import { useGetApiV10Post } from "@/api/vcci-news/endpoints/post";
-import type { RawPostWithContent } from "@/api/vcci-news/types/post-raw";
+import type { RawPostWithContentAndThumbnail } from "@/api/vcci-news/types/post-raw";
 import {
   buildPostLink,
   normalizeLink,
-  resolveAssetUrl,
+  resolvePostThumbnail,
   stripHtml,
 } from "@/lib/utils/post";
 import { MOCK_HOME_POSTS } from "@/mockdata/home-posts";
@@ -39,9 +39,7 @@ const NEWS_CATEGORY_ALIASES = {
 
 type NewsCategoryKey = keyof typeof NEWS_CATEGORY_IDS;
 
-type RawNewsPost = RawPostWithContent & {
-  thumbnail?: { path?: string | null; original?: string | null } | null;
-};
+type RawNewsPost = RawPostWithContentAndThumbnail;
 
 type NewsPostItem = {
   id: string;
@@ -57,7 +55,6 @@ type NewsPostItem = {
 
 const toNewsPostItem = (post: RawNewsPost): NewsPostItem => {
   const title = String(post.title ?? "").trim();
-  const thumbnailPath = post.thumbnail?.path ?? post.thumbnail?.original ?? null;
 
   return {
     id: String(post.id ?? ""),
@@ -76,9 +73,7 @@ const toNewsPostItem = (post: RawNewsPost): NewsPostItem => {
     createdAt: String(post.created_at ?? ""),
     publishedAt: String(post.published_at ?? post.published_at ?? post.created_at ?? ""),
     categoryName: String(post.categories?.[0]?.name ?? ""),
-    thumbnail: thumbnailPath
-      ? { url: resolveAssetUrl(thumbnailPath), alt: title }
-      : null,
+    thumbnail: { url: resolvePostThumbnail(post), alt: title },
   };
 };
 
