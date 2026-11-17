@@ -1,19 +1,24 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useGetApiV10AdvertisementPublic } from "@/api/vcci-news/endpoints/advertisement";
+import { getApiV10AdvertisementPublic } from "@/api/vcci-news/endpoints/advertisement";
+import type { Advertisement } from "@/api/vcci-news/models/advertisement";
 import links from "@/links";
 
 const FALLBACK_HREF = links.externalApiOrigin;
 const FALLBACK_SRC = "/quang-cao/qc-1.jpg";
 
-export function HorizontalAdBanner({ index = 0, count = 1 }: { index?: number; count?: number }) {
-  const { data } = useGetApiV10AdvertisementPublic(
-    { type: "horizontal", limit: Math.min(index + count, 100) },
-    { query: { refetchOnMount: false } },
-  );
-  const ads = data?.responseData ?? [];
+const fetchHorizontalAds = async (limit: number): Promise<Advertisement[]> => {
+  try {
+    const response = await getApiV10AdvertisementPublic({ type: "horizontal", limit });
+    return response?.responseData ?? [];
+  } catch (error) {
+    console.warn("[HorizontalAdBanner] CMS unavailable, using fallback", error);
+    return [];
+  }
+};
+
+export async function HorizontalAdBanner({ index = 0, count = 1 }: { index?: number; count?: number }) {
+  const ads = await fetchHorizontalAds(Math.min(index + count, 100));
   const ad = ads.slice(index, index + count)[0] ?? null;
 
   const href = ad?.link || FALLBACK_HREF;

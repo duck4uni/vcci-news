@@ -1,13 +1,21 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useGetApiV10AdvertisementPublic } from "@/api/vcci-news/endpoints/advertisement";
+import { getApiV10AdvertisementPublic } from "@/api/vcci-news/endpoints/advertisement";
 import type { Advertisement } from "@/api/vcci-news/models/advertisement";
 import links from "@/links";
 import { getFallbackImage } from "@/lib/utils/fallback-image";
 
 const FALLBACK_HREF = links.externalApiOrigin;
+
+const fetchSquareAds = async (): Promise<Advertisement[]> => {
+  try {
+    const response = await getApiV10AdvertisementPublic({ type: "square", limit: 20 });
+    return response?.responseData ?? [];
+  } catch (error) {
+    console.warn("[Advertisements] CMS unavailable, using fallback", error);
+    return [];
+  }
+};
 
 function AdItem({ item, fallbackSrc }: { item: Advertisement; fallbackSrc: string }) {
   const src = item.file?.path ? links.resolveImageUrl(item.file.path) : fallbackSrc;
@@ -55,17 +63,12 @@ function FallbackAdItem({ src }: { src: string }) {
   );
 }
 
-export function Advertisements({ count = 2, startIndex = 0 }: { count?: number; startIndex?: number }) {
-  const { data } = useGetApiV10AdvertisementPublic(
-    { type: "square", limit: 20 },
-    { query: { refetchOnMount: false } },
-  );
-  const ads = data?.responseData ?? [];
+export async function Advertisements({ count = 2, startIndex = 0 }: { count?: number; startIndex?: number }) {
+  const ads = await fetchSquareAds();
   const visibleAds = ads.slice(startIndex, startIndex + count);
 
   const fallbackSrcs = Array.from({ length: count }, (_, i) => getFallbackImage(i));
 
-  // Luôn render đủ `count` khung hình: vị trí nào API không có data thì dùng random fallback.
   const items = Array.from({ length: count }, (_, i) => {
     const ad = visibleAds[i];
     if (ad) return <AdItem key={ad.id} item={ad} fallbackSrc={fallbackSrcs[i]} />;

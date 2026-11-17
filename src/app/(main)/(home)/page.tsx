@@ -13,6 +13,8 @@ import { MemberConnection, MemberConnectionSkeleton } from "./components/member-
 import { Videos, VideosSkeleton } from "./components/videos";
 import { Partners } from "./components/partners";
 
+export const revalidate = 60;
+
 export default function HomePage() {
   return (
     <div>
