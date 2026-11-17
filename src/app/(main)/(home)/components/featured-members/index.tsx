@@ -1,13 +1,12 @@
 "use client";
 
-import { getOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
+import { useGetOrganizations } from "@/api/vcci-hcm/endpoints/organizations";
 import type { Organization } from "@/api/vcci-hcm/models";
 import memberImages from "@/constants/memberImages";
 import { MOCK_FEATURED_MEMBERS_RESPONSE } from "@/mockdata/bff-fallback";
 import { ChevronRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -38,29 +37,27 @@ const getMemberDetailUrl = (orgLink: string | null | undefined) => {
   return null;
 };
 
-/** Khối "Hội viên tiêu biểu": dữ liệu từ Organizations API, bắt buộc client vì Swiper autoplay. */
 export function FeaturedMembers() {
-  const { data: organizationsResponse, isLoading: featuredMembersLoading } =
-    useQuery<Organization[] | undefined>({
-      queryKey: [
-        "featured-members",
-        "status-36ca1cc5-7b6e-4f9f-b973-69c5207deb62",
-      ] as const,
-      queryFn: async () => {
-        const response = await getOrganizations({
-          filters: "users.status_id==36ca1cc5-7b6e-4f9f-b973-69c5207deb62",
-          pageSize: "12",
-          sortField: "created_at",
-          sortOrder: "DESC",
-        });
-        const rows = ((response as any)?.responseData?.rows ?? []) as Organization[];
-        return rows.length > 0 ? rows : MOCK_FEATURED_MEMBER_ROWS;
+  const { data: featuredMembers, isLoading: featuredMembersLoading } =
+    useGetOrganizations(
+      {
+        filters: "users.status_id==36ca1cc5-7b6e-4f9f-b973-69c5207deb62",
+        pageSize: "12",
+        sortField: "created_at",
+        sortOrder: "DESC",
       },
-      staleTime: 60 * 1000,
-    });
+      {
+        query: {
+          staleTime: 60 * 1000,
+          select: (response) => {
+            const rows = ((response?.responseData?.rows ?? []) as Organization[]);
+            return rows.length > 0 ? rows : MOCK_FEATURED_MEMBER_ROWS;
+          },
+        },
+      },
+    );
 
-  const featuredMembers = organizationsResponse ?? MOCK_FEATURED_MEMBER_ROWS;
-  const displayMembers = featuredMembers.slice(0, 9);
+  const displayMembers = (featuredMembers ?? MOCK_FEATURED_MEMBER_ROWS).slice(0, 9);
 
   return (
     <aside className="flex-1 rounded-[16px] bg-[#f7b500] p-4 shadow-[0_18px_34px_rgba(247,181,0,0.18)] md:p-5">
